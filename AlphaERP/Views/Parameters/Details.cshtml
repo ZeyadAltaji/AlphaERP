@@ -1,0 +1,49 @@
+﻿@model List<AlphaERP.Models.ProdCost_Parameter>
+<style>
+    #ProdCost_ParametersHFDataTable th, td {
+        text-align: center
+    }
+
+    #ProdCost_ParametersHFDataTable tbody tr td.details {
+        padding: 0 !important
+    }
+
+    tr.details {
+        max-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+</style>
+
+<div id="ProdCost_ParametersHFDataTable_@ViewBag.ParmID">
+    <div style="width: 100%; padding: 7px; background: #fff !important ">
+        <table class="table table-hover " id="ProdCost_ParametersHFDataTable_@ViewBag.ParmID" style="background:lightgray;width:100%">
+            <thead>
+                <tr>
+                    <th>@Resources.Resource.Id</th>
+                    <th>@Html.Recource(66)</th>
+                    <th>@Html.Recource(118)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr ParmID="@item.ParmCode">
+                        <td>@item.ParmCode</td>
+                        <td>@item.LocalDesc</td>
+                        <td>@item.EngDesc</td>
+                        <td>
+                            <button class="btn-ed" onclick="EditProdCost_ParametersHF('@item.ParmID','@item.ParmCode',this)">
+                                <i class="fa fa-pencil-alt"></i>
+                            </button>
+                            <button disabled class="btn-de" onclick="DeleteProdCost_ParametersHF('@item.ParmID','@item.ParmCode', this)">
+                                <i class="fa fa-trash-alt" aria-hidden="true"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

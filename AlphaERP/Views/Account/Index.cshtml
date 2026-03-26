@@ -1,0 +1,273 @@
+﻿@{
+    string lan = (string)Session["language"];
+    Layout = null;
+
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>@Resources.Resource.title</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="icon" href="~/Images/logo.png" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="~/Content/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="~/Content/font-awesome.min.css">
+    @if (lan == "en")
+    {
+        <link rel="stylesheet" type="text/css" href="~/Content/login.css">
+    }
+    else
+    {
+        <link rel="stylesheet" type="text/css" href="~/Content/loginAr.css">
+    }
+    <style>
+        .carousel-item {
+            height: 250px;
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+            input:: -webkit-outer-spin-button, input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        #Logindiv {
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            position: relative;
+        }
+    </style>
+
+
+
+    @if (lan != "en")
+    {
+        <style>
+            body {
+                direction: rtl
+            }
+
+            .input100 {
+                padding: 0 68px 0 30px;
+            }
+
+            .symbol-input100 {
+                padding-right: 35px;
+            }
+        </style>
+    }
+ 
+
+    <script>
+        function makeid(length) {
+            var result = '';
+            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            var charactersLength = characters.length;
+            for (var i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
+        }
+    </script>
+
+</head>
+<body>
+    <script src="~/Scripts/jquery-3.3.1.min.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <div class="limiter">
+        <div class="container-login100">
+            <div class="wrap-login100">
+                <div class="login100-pic js-tilt" data-tilt="" style="font-family:Poppins-RegularE !important">
+                    <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
+                        <ol class="carousel-indicators">
+                            <li data-target="#carouselExampleIndicators" data-slide-to="0" class="active"></li>
+                            <li data-target="#carouselExampleIndicators" data-slide-to="1"></li>
+                            <li data-target="#carouselExampleIndicators" data-slide-to="2"></li>
+                        </ol>
+                        <div class="carousel-inner">
+                            <div class="carousel-item active">
+                                <p style="margin-bottom: 10px">
+                                    <img src="data:image/png;base64,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">
+                                </p>
+                                Alpha ERP
+                                <x style="color:#000">AlphaERP</x>
+                                <p>
+                                    Design your production plan
+                                </p>
+                                <p>
+                                    calculate all the time and materials needed
+                                </p>
+                            </div>
+
+                            <div class="carousel-item">
+                                <p style="margin-bottom: 10px">
+                                    <img src="data:image/png;base64,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">
+                                </p>
+                                Alpha ERP
+                                <x style="color:#000">AlphaERP</x>
+                                <p>
+                                    The plan will go through several stages
+                                </p>
+                                <p>
+                                    where the study and approval took place
+                                </p>
+                            </div>
+                            <div class="carousel-item">
+                                <p style="margin-bottom: 10px">
+                                    <img src="data:image/png;base64,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">
+                                </p>
+                                Alpha ERP
+                                <x style="color:#000">AlphaERP</x>
+                                <p>
+                                    The most suitable plan of action will be chosen
+                                </p>
+                                <p>
+                                    your business is ready to start
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                </div>
+                <div class="login100-form validate-form" style="height:100%">
+                    <form id="Logindiv" onsubmit="return validateForm()" action="../../../Account/Index" method="post">
+                        <div>
+                            <span class="login100-form-title">
+                                @Html.Translate("تسجيل الدخول","System login")
+                            </span>
+                            <label style="width: 100% ; text-align: center">
+                                @Resources.Resource.TypeLogin
+                            </label>
+                            <div class="wrap-input100 validate-input" data-validate="Valid email is required: ex@abc.xyz">
+                                <input autofocus class="input100" type="text" id="Email" name="UserID" placeholder="@Resources.Resource.UserName"
+                                       autocomplete="off">
+                                <span class="focus-input100"></span>
+                                <span class="symbol-input100">
+                                    <i class="fa fa-envelope" aria-hidden="true"></i>
+                                </span>
+                            </div>
+
+                            <div class="wrap-input100 validate-input" data-validate="Password is required">
+                                <input class="input100" type="password" id="password" name="UserPWD" placeholder="@Resources.Resource.Password">
+                                <span class="focus-input100"></span>
+                                <span class="symbol-input100">
+                                    <i class="fa fa-lock" aria-hidden="true"></i>
+                                </span>
+                            </div>
+                            @{
+                                string alig = "    background-position-x: left;";
+                                if (Session["language"].ToString() == "en")
+                                {
+                                    alig = "    background-position-x: right;";
+                                }
+                            }
+                            <div hidden style="display:none" class="wrap-input100 validate-input" data-validate="Captcha is required">
+                                <input value="000000" autocomplete="off" maxlength="6" style="@alig background-image:url(../../../Account/Captcha);    background-repeat: no-repeat;background-position-y: center; unset;" class="input100" type="number" id="Captcha" name="Captcha" placeholder="@Resources.Resource.Captcha">
+                                <span class="focus-input100"></span>
+                                <span class="symbol-input100" onclick="alert(0)">
+                                    <i style="cursor:default !important" class="fa fa-repeat" aria-hidden="true"></i>
+                                </span>
+                                <label onclick="RefReshCaptcha()" style="width: 50px;height: 50px;position: absolute;top: 0;">
+
+                                </label>
+                            </div>
+                            @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                            <div class="container-login100-form-btn">
+                                <input id="submit" type="submit" class="login100-form-btn" value="@Resources.Resource.Login" />
+                            </div>
+                            <div class="text-center p-t-12">
+                                <a style="font-family:Poppins-RegularE !important" class="txt2" onclick="ChangeLangauge('ar-JO')"> @Resources.Resource.ChangeLan </a>
+                            </div>
+                            <div class="text-center p-t-12">
+                                   <a class="txt2" target="_blank" href="http://gcesoft.com.jo" style="background-color: #666666;
+    -webkit-background-clip: text;
+    -moz-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: rgba(255, 255, 255, 0.23) -1px 2px 0px;
+    pointer-events: none;user-select:none">@Resources.Resource.Copyright</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>
+<style>
+</style>
+
+
+
+<script>
+    $("#Captcha").keypress(function (event) {
+        var ew = event.which;
+        if (ew == 13)
+            submit.click();
+        if (48 <= ew && ew <= 57)
+            return true;
+        if (65 <= ew && ew <= 90)
+            return true;
+        if (97 <= ew && ew <= 122)
+            return true;
+        return false;
+    });
+    
+    
+    function ChangeLangauge(l) {
+        $.ajax({
+            type: "POST",
+            url: '../../../Account/ChangeLanguage',
+            data: { lanuage: l },
+            success: function (response) {
+                $('body').attr('data-lan', l);
+                location.reload();
+            },
+        });
+    }
+    function validateForm() {
+        if (Email.value.toString().trim() == "") {
+            Email.focus();
+            Email.select();
+            return false;
+        }
+        if (password.value == "") {
+            password.focus();
+            password.select();
+            return false;
+        }
+        if (Captcha.value.length < 6) {
+            Captcha.focus();
+            Captcha.select();
+            return false;
+        }
+    }
+    function RefReshCaptcha() {
+        var rnd = makeid(15)
+        Captcha.value = '';
+        Captcha.focus();
+        Captcha.style.backgroundImage = "url('../../../Account/Captcha?" + rnd + "')";
+    }
+    //$('.carousel').carousel();
+
+</script>
+

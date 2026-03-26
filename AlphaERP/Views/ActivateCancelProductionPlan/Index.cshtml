@@ -1,0 +1,193 @@
+﻿<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-6">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="SAVE_RequestsActivateCancelProductionPlain_Year">@Resources.Resource.Year </label>
+                <input style="width:165px !important;" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" required="true" type="number" id="SAVE_RequestsActivateCancelproductionPlain_Year" value="@DateTime.Now.Year" placeholder="@Resources.Resource.Year" onblur="Checkyear()" maxLength="4" />
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="SAVE_RequestsActivateCancelproductionPlain">@Resources.Resource.RequestType </label>
+                <select style="width:100%" id="SAVE_RequestsActivateCancelproductionPlain" required="true" onchange="GetChangeRequestsproductionPlain()">
+                    <option value="1">
+                        @Html.Translate("تفعيل", "Activate")
+                    </option>
+                    <option value="2">
+                        @Html.Translate("إلغاء تفعيل", "Deactivate")
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable"></label>
+                <button class="btn btn-success btn-block" onclick="AddRequestsActivateCancelproductionPlain()">
+                    @Html.Recource(975)
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="RequestsActiveDeactiveproductionPlainDiv">
+
+    </div>
+</div>
+<div class="modal fade" id="Model_Requests_productionPlain">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="Requests_productionPlainDiv">
+
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal fade" id="Model_RequestActivate_productionPlain">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div id="RequestActivate_productionPlainDiv">
+
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal fade" id="Model_RequestDeactivate_productionPlain">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div id="RequestDeactivate_productionPlainDiv">
+
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#SAVE_RequestsActivateCancelproductionPlain').select2();
+    $('#Model_Requests_productionPlain').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_RequestActivate_productionPlain').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_RequestDeactivate_productionPlain').draggable({
+        handle: ".modal-header",
+    });
+    function CheckValue(ID) {
+        if (document.getElementById(ID).getAttribute('required') == 'true') {
+            if (document.getElementById(ID).value == '') {
+                document.getElementById(ID).focus();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    function Checkyear() {
+        if (SAVE_RequestsActivateCancelproductionPlain_Year.value < 2000) {
+            SAVE_RequestsActivateCancelproductionPlain_Year.value = "@DateTime.Now.Year"
+            SAVE_RequestsActivateCancelproductionPlain_Year.focus();
+		}
+    }
+    function GetChangeRequestsproductionPlain() {
+        AddRequestsActivateCancelproductionPlain();
+    }
+    function AddRequestsActivateCancelproductionPlain() {
+        if (CheckValue('SAVE_RequestsActivateCancelproductionPlain')) { return; }
+        if (CheckValue('SAVE_RequestsActivateCancelproductionPlain_Year')) { return; }
+        RequestsActiveDeactiveproductionPlainDiv.innerHTML = "";
+        $('#RequestsActiveDeactiveproductionPlainDiv').load('../../../ActivateCancelProductionPlan/RequestProductionPlain?RequestType=' + SAVE_RequestsActivateCancelproductionPlain.value + '&year=' + SAVE_RequestsActivateCancelproductionPlain_Year.value);
+        //$('#Requests_productionPlainDiv').load('../../../ActivateCancelProductionPlan/RequestProductionPlain?RequestType=' + SAVE_RequestsActivateCancelproductionPlain.value + '&year=' + SAVE_RequestsActivateCancelproductionPlain_Year.value);
+        //$('#Model_Requests_productionPlain').modal('show');
+    }
+    function LoadActivatePlan(r) {
+        RequestActivate_productionPlainDiv.innerHTML = "";
+        RequestDeactivate_productionPlainDiv.innerHTML = "";
+        $('#Model_Requests_productionPlain').modal('hide');
+        $('#Model_RequestDeactivate_productionPlain').modal('hide');
+        $('#RequestActivate_productionPlainDiv').html(r);
+        $('#Model_RequestActivate_productionPlain').modal('show');
+        done();
+    }
+    function LoadDeactivatePlan(r) {
+        RequestActivate_productionPlainDiv.innerHTML = "";
+        RequestDeactivate_productionPlainDiv.innerHTML = "";
+        $('#Model_Requests_productionPlain').modal('hide');
+        $('#Model_RequestActivate_productionPlain').modal('hide');
+        $('#RequestDeactivate_productionPlainDiv').html(r);
+        $('#Model_RequestDeactivate_productionPlain').modal('show');
+        done();
+    }
+    function ExcuteSave_ActivatePlan() {
+        if (CheckValue('ActivatePlan_save_OrderNote')) { return; }
+
+        wait();
+
+        var ActivePlan = {
+            ReqNo: 0,
+            ReqDate:ActivatePlan_save_OrderDate.value,
+            BUID:ActivatePlan_save_BU.value,
+            PlanYear:ActivatePlan_save_PlanYear.value,
+            PlanNo:ActivatePlan_save_PlanNo.value,
+            Activiate:true,
+            Notes: ActivatePlan_save_OrderNote.value,
+            ReqStatus:false
+        }
+        if (confirm('@Resources.Resource.ActivatePostRequestPlan')) {
+            burn({ MRPActivate: ActivePlan }, '../../../ActivateCancelProductionPlan/Save_ActivatePlan', '', ReloadActivatePlan, false);
+        }
+    }
+    function ExcuteSave_DeactivatePlan() {
+        if (CheckValue('DeactivatePlan_save_ReasonSuspension')) { return; }
+        if (CheckValue('DeactivatePlan_save_OrderNote')) { return; }
+
+        wait();
+
+        var DeActivePlan = {
+            ReqNo: 0,
+            ReqDate:DeactivatePlan_save_OrderDate.value,
+            BUID: DeactivatePlan_save_BU.value,
+            PlanYear:DeactivatePlan_save_PlanYear.value,
+            PlanNo:DeactivatePlan_save_PlanNo.value,
+            Activiate:false,
+            Reasoun: DeactivatePlan_save_ReasonSuspension.value,
+            Notes: DeactivatePlan_save_OrderNote.value,
+            ReqStatus:false
+        }
+
+        if (confirm('@Resources.Resource.DeactivatePostRequestPlan')) {
+            burn({ MRPDeActivate: DeActivePlan }, '../../../ActivateCancelProductionPlan/Save_DeactivatePlan', '', ReloadDeactivatePlan, false);
+        }
+    }
+    function ReloadActivatePlan() {
+        done();
+        MsgBox('@Html.Recource(475)d', 'green');
+        $('#Model_RequestActivate_productionPlain').modal('hide');
+        AddRequestsActivateCancelproductionPlain();
+    }
+    function ReloadDeactivatePlan() {
+        done();
+        MsgBox('@Html.Recource(475)d', 'green');
+        $('#Model_RequestDeactivate_productionPlain').modal('hide');
+        AddRequestsActivateCancelproductionPlain();
+    }
+</script>
+

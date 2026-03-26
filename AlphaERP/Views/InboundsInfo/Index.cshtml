@@ -1,0 +1,111 @@
+﻿<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-6">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-1">
+                <label class="unselectable" for="Ord_InboundsInfo_OrdYear">@Resources.Resource.Year </label>
+            </div>
+            <div class="col-md-2">
+                <input onblur="Checkyear()" type="number" id="Ord_InboundsInfo_OrdYear" value="@DateTime.Now.Year" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" />
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-success btn-block" onclick="SerachPurchOrd()">
+                    @Resources.Resource.Search
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="Ord_InboundsInfoDiv">
+
+    </div>
+</div>
+
+<script>
+    function Checkyear() {
+        if (Ord_InboundsInfo_OrdYear.value < 2000) {
+            Ord_InboundsInfo_OrdYear.value = "@DateTime.Now.Year"
+            Ord_InboundsInfo_OrdYear.focus();
+        }
+    }
+    SerachPurchOrd();
+    function SerachPurchOrd() {
+        Ord_InboundsInfoDiv.innerHTML = "";
+        $('#Ord_InboundsInfoDiv').load('../../../InboundsInfo/InboundsInfoList?OrdYear=' + Ord_InboundsInfo_OrdYear.value);
+    }
+
+    function DeleteInboundsInfo(OrdYear, OrdNo, TawreedNo, InboundSer) {
+        if (confirm('@Resources.Resource.ConfirmDeleteDialog')) {
+            burn({ OrdYear: OrdYear, OrderNo: OrdNo, TawreedNo: TawreedNo, InboundSer: InboundSer }, '../../../InboundsInfo/Del_InboundsInfo', '', ReloadDelInboundsInfo, false);
+        }
+    }
+    function ReloadDelInboundsInfo(r) {
+        MsgBox('@Html.Recource(2598)', 'red');
+        var table = $("#InboundsInfoTable tbody");
+        var trs = table.find('tr');
+
+        var TawreedNo = r.TawreedNo;
+
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i])[0].getAttribute('OrdYear') == r.OrdYear && $(trs[i])[0].getAttribute('OrderNo') == r.OrdNo && $(trs[i])[0].getAttribute('TawreedNo') == TawreedNo) {
+                var nTr = $(trs[i])[0];
+                wait();
+                $(this).attr("opened", "details_close");
+                var OrdYear = $(trs[i])[0].getAttribute('OrdYear');
+                var OrderNo = $(trs[i])[0].getAttribute('OrderNo');
+                var TawreedNo = $(trs[i])[0].getAttribute('TawreedNo');
+
+                $.get("../../../../InboundsInfo/DetailsInboundsInfo?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo, function (data) {
+                    InboundsInfoTable.fnOpen(nTr, data, 'details');
+                    done();
+                });
+            }
+        }
+    }
+
+    function ApprovalInboundsInfo(OrdYear, OrdNo, TawreedNo, InboundSer) {
+        if (confirm('@Resources.Resource.ApprovalVoucIssue')) {
+            burn({ OrdYear: OrdYear, OrderNo: OrdNo, TawreedNo: TawreedNo, InboundSer: InboundSer }, '../../../InboundsInfo/Approval_InboundsInfo', '', ReloadApprovalInboundsInfo, false);
+        }
+    }
+
+    function ReloadApprovalInboundsInfo(r) {
+        MsgBox('@Html.Recource(475)', 'green');
+        var table = $("#InboundsInfoTable tbody");
+        var trs = table.find('tr');
+
+        var TawreedNo = r.TawreedNo;
+
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i])[0].getAttribute('OrdYear') == r.OrdYear && $(trs[i])[0].getAttribute('OrderNo') == r.OrdNo && $(trs[i])[0].getAttribute('TawreedNo') == TawreedNo) {
+                var nTr = $(trs[i])[0];
+                wait();
+                $(this).attr("opened", "details_close");
+                var OrdYear = $(trs[i])[0].getAttribute('OrdYear');
+                var OrderNo = $(trs[i])[0].getAttribute('OrderNo');
+                var TawreedNo = $(trs[i])[0].getAttribute('TawreedNo');
+
+                $.get("../../../../InboundsInfo/DetailsInboundsInfo?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo, function (data) {
+                    InboundsInfoTable.fnOpen(nTr, data, 'details');
+                    done();
+                });
+            }
+        }
+    }
+
+    function ClosedInboundsInfo(OrdYear, OrdNo, TawreedNo) {
+        if (confirm('@Resources.Resource.Approve2')) {
+            burn({ OrdYear: OrdYear, OrderNo: OrdNo, TawreedNo: TawreedNo }, '../../../InboundsInfo/Closed_InboundsInfo', '', ReloadClosedInboundsInfo, false);
+        }
+    }
+
+    function ReloadClosedInboundsInfo(r) {
+        MsgBox('@Html.Recource(475)', 'green');
+        SerachPurchOrd();
+    }
+
+</script>

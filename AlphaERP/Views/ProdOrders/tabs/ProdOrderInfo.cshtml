@@ -1,0 +1,222 @@
+@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+    User me = (User)Session["me"];
+    List<BusunisUnit> BU = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("SELECT BusUnitID as Id, BusUnitDescAr as DescAr, BusUnitDescEng as DescEn FROM Alpha_BusinessUnitDef  WHERE CompNo = '{0}' AND BusUnitID IN (SELECT BusUnit From Alpha_BusUnitUserPermissions  WHERE (CompNo =  '{0}') AND (UserID = '{1}') AND ((AllPerm = 1) OR (ProdOrder = 1)))", company.comp_num, me.UserID)).ToList();
+
+}
+<style>
+    .GroupTitle {
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        background-color: lightblue;
+    }
+</style>
+
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_OrderYear">@Html.Recource(2063) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <input onblur="GetProdOrder_Checkyear(1)" type="number" id="Prod_ProdOrder_Add_OrderYear" value="@DateTime.Now.Year" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" />
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" style="margin: 0px 20px 0px 20px;" for="Prod_ProdOrder_Add_OrderNo">@Html.Recource(8610) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <input style="width:100%;" type="text" id="Prod_ProdOrder_Add_OrderNo" placeholder="@Html.Recource(8610)" disabled />
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_OrderDate">@Html.Recource(2065)</label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <input value="@DateTime.Now.ToString("yyyy-MM-dd")" required="false" type="date" id="Prod_ProdOrder_Add_OrderDate" placeholder="@Html.Recource(2065)" />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_formulacode">@Html.Recource(4286) </label>
+    </div>
+    <div class="col-md-2">
+        <input required="true" type="text" id="Prod_ProdOrder_Add_formulacode" placeholder="@Html.Recource(282)" disabled />
+    </div>
+    <div class="col-md-7">
+        <input style="width: 100%;margin: 0px 30px 0px 30px;" required="true" type="text" id="Prod_ProdOrder_Add_formulaDesc" placeholder="@Html.Recource(360)" disabled />
+    </div>
+    <div class="col-md-1">
+        <button style="width: 150%;margin: 0px 5px 0px 5px;" type="button" class="btn btn-success btn-block" onclick="SearchProdOrder_FormulaCode(1)">
+            @Html.Recource(975)
+        </button>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_ItemNo">@Html.Recource(306) </label>
+    </div>
+    <div class="col-md-2">
+        <input type="text" id="Prod_ProdOrder_Add_ItemNo" placeholder="@Html.Recource(4276)" disabled />
+    </div>
+    <div class="col-md-8">
+        <input style="width: 99%;margin: 0px 30px 0px 30px;" type="text" id="Prod_ProdOrder_Add_ItemDesc" placeholder="@Html.Recource(5495)" disabled />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_Qty">@Html.Recource(49) </label>
+    </div>
+    <div class="col-md-2">
+        <input required="true" type="number" id="Prod_ProdOrder_Add_Qty" placeholder="@Html.Recource(49)" onblur="GetValueProdOrder_Qty()" />
+    </div>
+    <div class="col-md-2">
+        <label style="margin: 0px 20px 0px 20px;" class="unselectable" for="Prod_ProdOrder_Add_WasteQty">@Html.Recource(4405) </label>
+    </div>
+    <div class="col-md-2">
+        <input style="width: 100%;" type="number" id="Prod_ProdOrder_Add_WasteQty" placeholder="@Html.Recource(4405)" onblur="GetValueProdOrder_WasteQty()" />
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_SQ">@Html.Recource(9255) </label>
+    </div>
+    <div class="col-md-2">
+        <input style="width: 125%;" type="text" id="Prod_ProdOrder_Add_SQ" value="0.000" placeholder="@Html.Recource(9255)" disabled />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_StoreNo">@Html.Recource(1) </label>
+    </div>
+    <div class="col-md-2">
+        <input required="true" type="text" id="Prod_ProdOrder_Add_StoreNo" placeholder="@Html.Recource(41)" disabled />
+    </div>
+    <div class="col-md-7">
+        <input style="width: 99%;margin: 0px 30px 0px 30px;" required="true" type="text" id="Prod_ProdOrder_Add_StoreDesc" placeholder="@Html.Recource(31)" disabled />
+    </div>
+    <div class="col-md-1">
+        <button style="width:68px;" type="button" class="btn btn-success btn-block" onclick="SearchProdOrder_StoreNo()">
+            @Html.Recource(975)
+        </button>
+    </div>
+
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_SalesOrder">@Html.Recource(241) </label>
+    </div>
+    <div class="col-md-1">
+        <input value="@DateTime.Now.Year" required="true" style="width: 126%;" type="number" id="Prod_ProdOrder_Add_SalesOrderYear" placeholder="@Html.Recource(204)" />
+    </div>
+    <div class="col-md-2">
+        <input style="width: 103%;margin: 0px -19px 0px 19px;" required="true" type="text" id="Prod_ProdOrder_Add_SalesOrderNo" placeholder="@Html.Recource(205)" />
+    </div>
+    @*<div class="col-md-2">
+            <button style="width: 77%;margin: 0px -42px 0px 42px;" type="button" class="btn btn-success btn-block" >
+                @Html.Recource(6377)
+            </button>
+        </div>*@
+    <div class="col-md-2">
+        <label style="margin: 0 -35px 0px 35px;" class="unselectable" for="Prod_ProdOrder_Add_BusUnitID">@Html.Recource(5667)</label>
+    </div>
+    <div class="col-md-5">
+        <select style="width:120%" id="Prod_ProdOrder_Add_BusUnitID" required="true">
+            @foreach (var item in BU)
+            {
+                <option value="@item.Id">@Html.Translate(item.DescAr, item.DescEn) </option>
+            }
+        </select>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_Notes"> @Html.Recource(70)</label>
+    </div>
+    <div class="col-md-10" style="margin-bottom: 5px;">
+        <textarea style="width: 100%;height:55px !important;" id="Prod_ProdOrder_Add_Notes" placeholder="@Html.Recource(70)"></textarea>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_RefNo1">@Html.Translate("رقم مرجعي 1", "Reference No 1")</label>
+    </div>
+    <div class="col-md-4">
+        <input style="width: 100%;" type="text" id="Prod_ProdOrder_Add_RefNo1"/>
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_RefNo2">@Html.Translate("رقم مرجعي 2", "Reference No 2")</label>
+    </div>
+    <div class="col-md-4">
+        <input style="width: 100%;" type="text" id="Prod_ProdOrder_Add_RefNo2"/>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12 GroupTitle">
+        @Html.Recource(9408)
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_Year"> @Html.Recource(59)</label>
+    </div>
+    <div class="col-md-2">
+        <input onblur="GetProdOrder_Checkyear(2)" type="number" id="Prod_ProdOrder_Add_Year" value="@DateTime.Now.Year" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" />
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_Month"> @Html.Recource(1198)</label>
+    </div>
+    <div class="col-md-2">
+        <input style="width:30% !important;" type="number" id="Prod_ProdOrder_Add_Month" value="@DateTime.Now.Month" max="12" min="1" onblur="GetChangeMonth()" />
+    </div>
+</div>
+
+
+<script>
+    $('#Prod_ProdOrder_Add_BusUnitID').select2();
+    function GetProdOrder_Checkyear(type) {
+        if (type == 1) {
+            if (Prod_ProdOrder_Add_OrderYear.value < 2000) {
+                Prod_ProdOrder_Add_OrderYear.value = '@DateTime.Now.Year';
+                Prod_ProdOrder_Add_OrderYear.focus();
+            }
+        }
+        if (type == 2) {
+            if (Prod_ProdOrder_Add_Year.value < 2000) {
+                Prod_ProdOrder_Add_Year.value = '@DateTime.Now.Year';
+                Prod_ProdOrder_Add_Year.focus();
+            }
+        }
+    }
+    function GetValueProdOrder_Qty() {
+        if (Prod_ProdOrder_Add_Qty.value != '') {
+            if (Prod_ProdOrder_Add_Qty.value < 0) {
+                alert('@Html.Translate("لا يجوز ان تكون الكمية اقل من 0", "The amount of the equation may not be less than 0")');
+                Prod_ProdOrder_Add_Qty.value = 0
+                Prod_ProdOrder_Add_Qty.focus()
+                return false;
+            }
+        }
+        else {
+            Prod_ProdOrder_Add_Qty.value = 0
+        }
+        GetDataRMDeatails(Prod_ProdOrder_Add_Qty.value,1);
+    }
+    function GetValueProdOrder_WasteQty() {
+        if (Prod_ProdOrder_Add_WasteQty.value != '') {
+            if (Prod_ProdOrder_Add_WasteQty.value < 0) {
+                alert('@Html.Translate("لا يجوز ان تكون كمية الهدر اقل من 0", "The Waste Qty of the equation may not be less than 0")');
+                Prod_ProdOrder_Add_WasteQty.value = 0
+                Prod_ProdOrder_Add_WasteQty.focus()
+                return false;
+            }
+        }
+        else {
+            Prod_ProdOrder_Add_WasteQty.value = 0
+        }
+    }
+    function GetChangeMonth() {
+        if (Prod_ProdOrder_Add_Month.value < 1 || Prod_ProdOrder_Add_Month.value > 12) {
+            Prod_ProdOrder_Add_Month.value = "@DateTime.Now.Month"
+            Prod_ProdOrder_Add_Month.focus();
+		}
+    }
+</script>
+
+

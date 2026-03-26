@@ -1,0 +1,1411 @@
+﻿@using AlphaERP.Models;
+@using System.Linq
+@{
+    User Me = (User)Session["me"];
+
+    Company company = (Company)Session["company"];
+    User m = new MDB().Users.Where(x => x.UserID == Me.UserID).FirstOrDefault();
+    Me = m;
+    Session["me"] = m;
+    string lang = Session["language"].ToString();
+    List<Alpha_WorkFlowLog> logs = new MDB().Alpha_WorkFlowLog.SqlQuery(string.Format("select * from Alpha_WorkFlowLog where BUUser = '{0}' and CompNo = '{1}' and FID = '50' and RAction = 'cr' and BUUserAction is null", Me.UserID, company.comp_num)).ToList();
+
+}
+<!DOCTYPE html>
+<html style="overflow: hidden !important; height: auto; min-height: 100%;">
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Content-Language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta property="fb:admins" content="100001590293635" />
+    <!-- Favicon -->
+    <link rel="icon" href="~/Images/logo.png" type="image/x-icon">
+    <!-- social network metas -->
+    <meta property="site_name" content="ERP" />
+    <meta property="description" content="ERP system" />
+    <title>@Resources.Resource.title</title>
+    <link href="~/Content/_Layout.css?version=2.6" rel="stylesheet" />
+    <link rel="stylesheet" href="~/Content/themes/AdminLTE/bower_components/bootstrap/dist/css/bootstrap.css?version=2.9">
+    <link href="~/Content/baloon.css?version=2.6" rel="stylesheet" />
+    <link href="~/Content/toastr.min.css?version=2.6" rel="stylesheet" />
+    @if (lang == "en")
+    {
+        <style>
+            table.dataTable thead th {
+                /*padding-left:18px !important;*/
+            }
+
+            .logo-lg span {
+                position: absolute;
+                left: 5px;
+            }
+
+            .logo-lg label {
+                position: absolute;
+                left: 50px;
+            }
+
+            .TabNameLB {
+                margin: 0 0 0 5px !important;
+            }
+
+            .Pro_1 {
+                border-left: solid 7px red !important;
+            }
+
+            .Pro_2 {
+                border-left: solid 7px orange !important;
+            }
+
+            .Pro_3 {
+                border-left: solid 7px transparent !important;
+            }
+        </style>
+    }
+    else
+    {
+        <style>
+            table.dataTable thead th {
+                /*padding-right: 18px !important;*/
+            }
+
+            .logo-lg span {
+                position: absolute;
+                right: 5px;
+            }
+
+            .logo-lg label {
+                position: absolute;
+                right: 50px;
+            }
+
+            .TabNameLB {
+                margin: 0 5px 0 0 !important;
+            }
+
+            .Pro_1 {
+                border-right: solid 7px red !important;
+            }
+
+            .Pro_2 {
+                border-right: solid 7px orange !important;
+            }
+
+            .Pro_3 {
+                border-right: solid 7px transparent !important;
+            }
+ 
+        </style>
+    }
+    <style>
+        .without_ampm::-webkit-datetime-edit-ampm-field {
+            display: none;
+        }
+
+        input[type=time]::-webkit-clear-button {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            -o-appearance: none;
+            -ms-appearance: none;
+            appearance: none;
+            margin: -10px;
+        }
+
+        tr td:not([class=details]) {
+           padding:0 4px !important
+        }
+
+        @Html.Translate("td{text-align:right}","")
+        .swal2-popup {
+            border: solid 0.5px #9E9E9E !important
+        }
+
+        .wideBom {
+            width: 1055px !important;
+        }
+
+            .wideBom > .modal-dialog {
+                width: 100% !important;
+            }
+
+        #MainUL li a label {
+            cursor: pointer !important;
+        }
+
+        table thead {
+            border-bottom: solid 0.5px gray
+        }
+
+        td {
+            word-break: break-all !important;
+        }
+
+        #MainUL li.active a i {
+            filter: opacity(1) !important
+        }
+
+        a.danger {
+            background: rgb(60, 141, 188) !important;
+            color: #fff !important
+        }
+
+
+
+
+        .QuickAdd {
+            background: transparent;
+            padding: 0;
+            margin: 0 10px;
+            border: 0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+            .QuickAdd :hover {
+                color: green !important;
+                background: red
+            }
+
+        .wrapper {
+            overflow: hidden;
+            background: #fff;
+            height: 100% !important;
+            min-height: 100%;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        body {
+            padding: 0 !important
+        }
+    </style>
+
+
+    <link rel="stylesheet" href="~/Content/@Html.Translate("Ar.css","En.css")?version=2.6">
+    <link rel="stylesheet" href="~/Content/themes/AdminLTE/dist/css/@Html.Translate("AdminLTEar.css","AdminLTE.css")?version=2.91">
+    <link rel="stylesheet" href="~/Content/select2.min.css?version=2.6" />
+    <link rel="stylesheet" href="~/Content/themes/docs.css?version=2.6">
+    <!-- Fonts -->
+    <link rel="stylesheet" href="~/Content/all.css?version=2.7">
+    <!--
+    [if lt IE 9]>
+    <script src="js/html5shiv.min.js"></script>
+    <script src="js/respond.min.js"></script>
+    <![endif]
+    -->
+    <link rel="stylesheet" type="text/css" href="~/Content/jquery.dataTables.css?version=2.6">
+    <link href="~/Content/themes/AdminLTE/dist/css/pace.min.css?version=2.6" rel="stylesheet" />
+    <script src="~/Scripts/jquery-3.3.1.min.js"></script>
+
+    <script src="~/scripts/select2.min.js"></script>
+    <script src="~/Scripts/Main.js"></script>
+    <script src="~/Scripts/themes/AdminLTE/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/Scripts/themes/AdminLTE/dist/js/adminlte.min.js"></script>
+    <script src="~/Scripts/themes/docs.js"></script>
+    <script src="~/scripts/jquery.nestable.js"></script>
+    <script src="~/scripts/moments.js"></script>
+    <script src="~/scripts/toastr.min.js"></script>
+
+
+    <script src="~/scripts/jquery.@Html.Translate("dataTablesAR.js","dataTables.js")"></script>
+    <script src="~/scripts/@Html.Translate("introAR.js","intro.js")"></script>
+
+    <script>
+
+
+        function AREN(ar, en) {
+            if ('@lang' == 'en') {
+                return en;
+            } else {
+                return ar;
+            }
+        }
+        function toggleFullscreen(event) {
+  var element = document.body;
+
+	if (event instanceof HTMLElement) {
+		element = event;
+	}
+
+	var isFullscreen = document.webkitIsFullScreen || document.mozFullScreen || false;
+
+	element.requestFullScreen = element.requestFullScreen || element.webkitRequestFullScreen || element.mozRequestFullScreen || function () { return false; };
+	document.cancelFullScreen = document.cancelFullScreen || document.webkitCancelFullScreen || document.mozCancelFullScreen || function () { return false; };
+
+	isFullscreen ? document.cancelFullScreen() : element.requestFullScreen();
+}
+        function ar(aRabic, eNglish) {
+            if ('@lang' == "en") {
+                return eNglish;
+            } else {
+                return aRabic;
+            }
+        }
+        function compareDates(from_, to_) {
+            input1 = document.getElementById(from_);
+            input2 = document.getElementById(to_);
+            date1 = input1.valueAsDate;
+            date2 = input2.valueAsDate;
+            if (date1 > date2) {
+                input2.focus();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        function DaysDeff(from_, to_) {
+            const oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
+            input1 = document.getElementById(from_);
+            input2 = document.getElementById(to_);
+            firstDate = input1.valueAsDate;
+            secondDate = input2.valueAsDate;
+            if (firstDate < secondDate) {
+                var t = Math.round(Math.abs((firstDate - secondDate) / oneDay));
+                return t + ' @Html.Recource(5260)';
+            }
+                return '';
+        }
+        function DaysDeffNumber(from_, to_) {
+            const oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
+            input1 = document.getElementById(from_);
+            input2 = document.getElementById(to_);
+            firstDate = input1.valueAsDate;
+            secondDate = input2.valueAsDate;
+            if (firstDate < secondDate) {
+                var t = Math.round(Math.abs((firstDate - secondDate) / oneDay));
+                return t ;
+            }
+                return '';
+        }
+        function formatJSONDate(jsonDate) {
+            var dt = eval(jsonDate.replace(/\/Date\((\d+)\)\//gi, "new Date($1)"));
+            var datez = formatDate(dt);
+            return datez;
+        }
+        function formatDate(date) {
+            var d = new Date(date),
+                month = '' + (d.getMonth() + 1),
+                day = '' + d.getDate(),
+                year = d.getFullYear();
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+            return [year, month, day].join('-');
+        }
+        function guid() {
+            myguid = ('c' + S4() + S4() + "-" + S4() + "-4" + S4().substr(0, 3) + "-" + S4() + "-" + S4() + S4() + S4()).toLowerCase();
+            return (myguid);
+        }
+        function S4() {
+            return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+        }
+        function Selected(id, valueToSelect) {
+            d = false;
+            var list = document.getElementById(id);
+            for (i = 0; i < list.length; i++) {
+                if (list.options[i].value == valueToSelect) {
+                    list.options[i].setAttribute("selected", "selected");
+                    list.selectedIndex = i;
+                    d = true;
+                }
+            }
+            if (d == false) {
+                list.value = "";
+            }
+        }
+        function format(e, x) {
+            if (x == null) {
+                e.value = Number(e.value).toFixed(3);
+            } else {
+                e.value = Number(e.value).toFixed(Number(x));
+            }
+        }
+
+
+        //function showOverlay() {
+        //    document.getElementById('overlay').style.display = 'block';
+        //}
+
+        //// Function to hide the overlay
+        //function hideOverlay() {
+        //    document.getElementById('overlay').style.display = 'none';
+        //}
+
+
+            /*
+            */
+    </script>
+    <link href="~/Content/bootstrap-slider.css?version=2.6" rel="stylesheet" />
+    <link href="~/Content/introjs.css?version=2.6" rel="stylesheet" />
+    <script src="~/scripts/sweetalert.js?v=2.6"></script>
+    <script src="~/scripts/bootstrap-slider.js"></script>
+    <script src="~/scripts/jquery.blockUI.js"></script>
+
+
+    <script>
+        function EditTable(e,TableID) {
+          if (cntrlIsPressed) {
+            EditTablePermission(TableID)
+           }
+         }
+        function ColumnV(MYtable, c, v) {
+            if (v == true || v == false) {
+            var column = MYtable.column(c);
+            column.visible(v);
+            }
+        }
+        function EditTablePermission(e) {
+
+            document.getElementById('ThisTableID').value = e;
+            burn({ id: e }, '../../../Home/GetTableColumns', '', xxxxx, true);
+
+
+        }
+        function xxxxx(p) {
+            $('#ColumnsCheckBoxes').empty();
+            var table = document.getElementById('MyColumsTable')
+            for (var i = 0; i < p.p.length; i++) {
+                var att = "";
+                if (p.p[i].Visible.toString().toLowerCase() == 'true') {
+                    att =' checked = "true" ';
+                }
+                $(table).find('tbody').append("<tr>" +
+                    '<td style="text-align:@Html.Translate("right","left") !important ; direction:@Html.Translate("rtl","ltr")"><label>' +
+                    '<input type="checkbox" ColumnID="' + p.p[i].ColumnID + '" ' + att + '>' +
+                    p.p[i].DescAr +
+                    '</label></td></tr> ');
+            }
+            $('#SetTablePermission').modal('show')
+        }
+        function SaveTablePermission() {
+            var xtrS = ColumnsCheckBoxes.getElementsByTagName("tr");
+            var TablePermissions = new Array();
+            for (var i = 0; i < xtrS.length; i++) {
+                var TablePermission = {
+                        ComID: 1,
+                    TableID: document.getElementById('ThisTableID').value,
+                    ColumnID: xtrS[i].cells[0].children[0].children[0].getAttribute('ColumnID'),
+                        Visible : xtrS[i].cells[0].children[0].children[0].checked
+                    };
+                    TablePermissions.push(TablePermission);
+            }
+            burn({ PS: TablePermissions }, '../../../Home/SaveTablePermissions', 'SetTablePermission', ReLoAdPaGe, true)
+        }
+        function ReLoAdPaGe() {
+            window.location.reload();
+        }
+    </script>
+    <script src="~/Scripts/jquery-ui.min.js"></script>
+    <script src="~/Scripts/jquery.ui.touch-punch.min.js"></script>
+
+    <style>
+        .wide {
+            width: 900px !important;
+        }
+
+            .wide > .modal-dialog {
+                width: 100% !important;
+            }
+
+        .col-md-8 > input[type=text] {
+            width: 100%;
+        }
+
+        .refresh {
+            cursor: pointer;
+            -webkit-transition: color 0.5s;
+            -moz-transition: color 0.5s;
+            -ms-transition: color 0.5s;
+            -o-transition: color 0.5s;
+            transition: color 0.5s;
+        }
+
+            .refresh:hover {
+                color: darkslategray;
+            }
+    </style>
+
+    <script src="~/scripts/ckeditor.js"></script>
+
+    <script src="~/Scripts/jquery.maskedinput.js"></script>
+</head>
+
+<body id="body" class="@Session["Theme"] pace-progress" style="height: auto; min-height: 100%;">
+
+
+
+    <style>
+        .slim {
+            padding: 7px 10px 0px;
+            border-bottom: 0 !important;
+            border-radius: 0 !important;
+        }
+
+        button[hidden="hidden"] {
+            display: none;
+        }
+
+        .menu {
+            width: 120px;
+            box-shadow: 0 4px 5px 3px rgba(0, 0, 0, 0.2);
+            position: relative;
+            display: none;
+            z-index: 99999;
+            background: white;
+            position: absolute;
+        }
+
+        .menu-options {
+            list-style: none;
+            padding: 0px;
+        }
+
+        .menu-option {
+            font-weight: 500;
+            font-size: 14px;
+            padding: 5px 10px 5px 10px;
+            cursor: pointer;
+        }
+
+            .menu-option > i {
+                width: 20px;
+            }
+
+            .menu-option:hover {
+                background: rgba(0, 0, 0, 0.2);
+            }
+    </style>
+
+    <div id="pace" class="pace  pace-inactive">
+        <div class="pace-progress" data-progress-text="0%" data-progress="99" style="transform: translate3d(0%, 0px, 0px);">
+            <div class="pace-progress-inner"></div>
+        </div>
+        <div class="pace-activity"></div>
+    </div>
+
+    <style>
+        .slow-animation {
+            animation: swal2-show 0s !important;
+        }
+    </style>
+
+    <script>
+        var lan = '@lang';
+    function wait() {
+            GetBadges();
+            Swal.fire({
+        allowOutsideClick: false,
+        animation: false,
+        allowEscapeKey: false,
+        title: '@Resources.Resource.wait',
+        onBeforeOpen: () => {
+            Swal.showLoading()
+        }
+    })
+        }
+        function done() {
+            Swal.close();
+        }
+        function saved(url) {
+            Swal.fire({
+                timer: 2000,
+                type: 'success',
+                title: '@Html.Recource(475)d',
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                background: '#fff',
+                onClose: function () {
+                    if (!url == "") {
+                        document.location.href = url;
+                    }
+                }
+            })
+        }
+        function pop(str) {
+            Swal.fire({
+                timer: 2000,
+                title: str,
+                animation: false,
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                background: '#fff',
+                onClose: function () {
+
+                }
+            })
+        }
+        var menus = [];
+
+    </script>
+    <div class="wrapper" style="overflow: hidden;    background: rgb(239, 239, 239);    height: auto;    min-height: 100%;">
+        <header class="main-header">
+            <a id="home" class="logo" onclick="CloseAllTabs()">
+                <span class="logo-lg noselect">
+                    <span>
+                        <img src="~/Images/Logo.png" style="width:32px;height:32px" />
+
+                    </span>
+                    <label> @Resources.Resource.title </label>
+                </span>
+                <span class="logo-mini" style="text-align: center">
+                    <img src="~/Images/Logo.png" style="width:32px;height:32px;filter: grayscale(1);" />
+                </span>
+            </a>
+            <nav class="navbar navbar-static-top" role="navigation">
+                <a class="sidebar-toggle" data-toggle="push-menu" role="button" onclick="SVM()">
+                    <span class="sr-only">Toggle navigation</span>
+                    <i class="fa fa-bars"></i>
+                </a>
+                <div class="navbar-custom-menu">
+                    <ul class="nav navbar-nav">
+                        <li style="filter: drop-shadow(2px 4px 6px black);">
+                            <a class="nav-link dropdown-toggle" role="button" onclick="showD()"
+                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fa fa-th" aria-hidden="true"></i>
+                            </a>
+
+                        </li>
+                    </ul>
+                </div>
+                <div class="navbar-custom-menu" title="Full screen">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a class="nav-link dropdown-toggle" role="button" onclick="toggleFullscreen()"
+                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fa fa-expand" aria-hidden="true"></i>
+                                <span style="display:none; background:red;padding:0 3px;border-radius:999px">44</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="navbar-custom-menu">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button"
+                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                @Html.Translate(Me.UserName, Me.UserName)
+                            </a>
+                        </li>
+
+                        <li id="tparent">
+                            @Html.Partial("~/Views/Shared/TotalNotifications.cshtml")
+                        </li>
+
+                    </ul>
+                </div>
+            </nav>
+        </header>
+        <aside class="main-sidebar">
+            <section class="sidebar" id="sidebar">
+                @Html.Partial("~/Views/Shared/Menu.cshtml")
+            </section>
+        </aside>
+
+        <article class="content-wrapper" style="min-height: 708px;">
+            <div class="content container-fluid">
+                <div class="row">
+                    <ul class="nav nav-tabs" id="MainUL"></ul>
+ 
+                                <div class="tab-content" id="MainDIV">
+
+                                </div>
+                              <section style="display:none" class="unselectable" id="MainContentf">
+                                @RenderBody()
+                            </section>
+
+                            <div class="modal fade wide" id="WFHDIALG">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">×</span>
+                                            </button>
+                                            <label class="modal-title">@Resources.Resource.Preview</label>
+                                        </div>
+                                        <div class="modal-body row">
+                                            <div id="WFHDIALGBD">
+
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="col-md-4">
+                                                    <label class="unselectable" for="WFHDIALG_Note">@Html.Recource(7854) </label>
+                                                </div>
+                                                <div class="col-md-8" style="margin-bottom: 5px;">
+                                                    <textarea style="width:100%;height:100px" required="false" type="number" id="WFHDIALG_Note" placeholder="@Html.Recource(7854)"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" onclick="MRP_WF_APRV('C')" class="btn btn-primary">@Html.Recource(3769)</button>
+                                            <button type="button" onclick="MRP_WF_APRV('R')" class="btn btn-danger">@Html.Recource(6439)</button>
+                                            <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="modal fade wide" id="MRP_GeneralPlanInfoH_view_MRP_GeneralPlanInfoH">
+                                <div class="modal-dialog">
+                                    <form class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">×</span>
+                                            </button>
+                                            <label class="modal-title">@Html.Translate("الخطة", "The plan")</label>
+                                        </div>
+                                        <div class="modal-body row">
+                                            <div class="form-group">
+                                                <div class="col-md-2">
+                                                    <label class="unselectable" for="MRP_GeneralPlanInfoH_view_PlanYear">@Html.Recource(5293) </label>
+                                                </div>
+                                                <div class="col-md-4" style="margin-bottom: 5px;">
+                                                    <input disabled id="MRP_GeneralPlanInfoH_view_PlanYear" placeholder="@Html.Recource(5293)" />
+                                                </div>
+
+                                                <div class="col-md-2">
+                                                    <label class="unselectable" for="MRP_GeneralPlanInfoH_view_PlanNo">@Html.Recource(6678) </label>
+                                                </div>
+                                                <div class="col-md-4" style="margin-bottom: 5px;">
+                                                    <input disabled id="MRP_GeneralPlanInfoH_view_PlanNo" placeholder="@Html.Recource(6678)" />
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="col-md-2">
+                                                    <label class="unselectable" for="MRP_GeneralPlanInfoH_view_StartDate">@Resources.Resource.StartDate </label>
+                                                </div>
+                                                <div class="col-md-4" style="margin-bottom: 5px;">
+                                                    <input disabled id="MRP_GeneralPlanInfoH_view_StartDate" />
+                                                </div>
+
+                                                <div class="col-md-2">
+                                                    <label class="unselectable" for="MRP_GeneralPlanInfoH_view_EndDate">@Resources.Resource.EndDate </label>
+                                                </div>
+                                                <div class="col-md-2" style="margin-bottom: 5px;">
+                                                    <input disabled id="MRP_GeneralPlanInfoH_view_EndDate" />
+                                                </div>
+                                                <div class="col-md-2" style="margin-bottom: 5px;">
+                                                    <label class="unselectable" id="view_MasterPlanDays"></label>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="col-md-2">
+                                                    <label class="unselectable" for="MRP_GeneralPlanInfoH_view_PlanNotes">@Html.Recource(973) </label>
+                                                </div>
+                                                <div class="col-md-8" style="margin-bottom: 5px;">
+                                                    <input style="width:100%" disabled id="MRP_GeneralPlanInfoH_view_PlanNotes" />
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="unselectable">
+                                                        <input disabled id="MRP_GeneralPlanInfoH_view_PlanActive" type="checkbox" />
+                                                        @Html.Recource(3394)
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="col-md-12">
+                                                    <label class="unselectable">@Html.Recource(4756) :</label>
+                                                </div>
+                                                <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+                                                    <table class="table table-hover" id="view_MasterPlanItems">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>@Html.Recource(44)</th>
+                                                                <th>@Html.Recource(74)</th>
+                                                                <th>@Html.Recource(4286)</th>
+                                                                <th>@Html.Recource(283)</th>
+                                                                <th>@Html.Recource(67)</th>
+                                                                <th>@Html.Recource(5693)</th>
+                                                                <th></th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="view_MasterSelectItemTableBody"></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+                </article>
+                <footer class="main-footer" id="TaskBar" style="height:43px;">
+                    <div style="direction: rtl;float: right;" class="unselectable">
+
+                        <a onclick="window.location = '/Company'">@company.comp_name</a>
+
+                    </div>
+                    <strong>
+                        <a style="background-color: #666666;
+            -webkit-background-clip: text;
+            -moz-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: rgba(255, 255, 255, 0.23) -1px 2px 0px;
+            pointer-events: none;">@Resources.Resource.Copyright</a>
+
+        </strong>
+        </footer>
+        </div>
+        <div id="snackbar" hidden class="" style="background-color: red;">MsGBox</div>
+        <style>
+            .blurredElement {
+                filter: blur(1px);
+                filter: url("blur.svg#gaussian_blur");
+                -webkit-filter: blur(1px);
+            }
+        </style>
+        @Html.Partial("~/Views/Shared/notifications.cshtml")
+
+
+
+        <script>
+                $('#MRP_GeneralPlanInfoH_view_MRP_GeneralPlanInfoH').draggable({
+                    handle: '.modal-header'
+                });
+                function PrintGreport(CompNo, PlanYear,PlanNo,MRT) {
+                    var url ='../../../Reports?CompNo=' + CompNo + '&PlanYear=' + PlanYear + '&PlanNo=' + PlanNo + '&MRT=' + MRT
+                    var win = window.open(url, '_blank');
+                    win.focus();
+
+                }
+
+                $('#WFHDIALG').draggable({ handle: ".modal-header" });
+                    for (var i = 0; i < menus.length; i++) {
+                var cls = localStorage.getItem(menus[i]);
+                if (!cls == "") {
+                    var e = document.getElementById(menus[i]);
+                    e.className = localStorage.getItem(menus[i]);
+                    if (e.className.includes('open')) {
+                        e.children[1].style.display = "block";
+                    }
+                }
+            }
+                    $('#QuickAddR_save_QuickAddR').draggable({
+                handle: ".modal-header"
+            });
+
+
+
+
+                    function DrowBadges() {
+                        var lis = document.getElementById("mmenu").getElementsByTagName("a");
+                        for (var i = 0; i < lis.length; i++) {
+                            console.log(lis[i].getAttribute('title'))
+                        }
+                    }
+
+            function GetOpenedWindows() {
+                var lis = document.getElementById("MainUL").getElementsByTagName("li");
+                for (var i = 0; i < lis.length; i++) {
+                    alert(lis[i].getAttribute('orginal'))
+                }
+            }
+
+            function MsgBox(msg, color) {
+                 snackbar.style.backgroundColor = color;
+                 snackbar.innerHTML = msg;
+                 $("#snackbar").fadeIn(500);
+                 $("#snackbar").delay(1500).fadeOut(500);
+            }
+        var Focused;
+        $('input,select,textarea').focus(function() {
+            Focused = this;
+        });
+        $('input,a,button,select,textarea').blur(function() {
+            Focused = null;
+        });
+        $('a').click(function() {
+            if (this.getAttribute("href") != null && this.getAttribute("href") != "" && this.getAttribute("href") != "#") {
+
+            }
+        });
+        $(window).bind('beforeunload', function() {
+            wait()
+
+        });
+        $(":input").bind('keydown', function(e) {
+            if (this.getAttribute("type") == "number") {
+                var keyCode = e.which;
+
+                if (keyCode == 109 || keyCode == 69) {
+                    return false;
+                }
+                if (this.value.includes('.')) {
+                    if (keyCode == 190 || keyCode == 110) {
+                        return false;
+                    }
+                }
+            }
+        });
+        $(":input").bind('blur', function() {
+            if (this.getAttribute("type") == "number") {
+                if (this.getAttribute("min") != null) {
+                    if (Number(this.value < Number(this.getAttribute("min")))) {
+                        this.value = this.getAttribute("min")
+                    }
+                }
+
+                if (this.getAttribute("max") != null) {
+                    if (Number(this.value > Number(this.getAttribute("max")))) {
+                        this.value = this.getAttribute("max")
+                    }
+                }
+
+
+                if (this.value < 0) {
+                    this.value = 0
+                }
+                if (this.getAttribute("m0") != null) {
+                    this.value = Number(this.value).toFixed(0);
+                }
+                if (this.getAttribute("m1") != null) {
+                    this.value = Number(this.value).toFixed(1);
+                }
+                if (this.getAttribute("m2") != null) {
+                    this.value = Number(this.value).toFixed(3);
+                }
+                if (this.getAttribute("m3") != null) {
+                    this.value = Number(this.value).toFixed(3);
+                }
+                if (this.getAttribute("m4") != null) {
+                    this.value = Number(this.value).toFixed(4);
+                }
+                if (this.getAttribute("m5") != null) {
+                    this.value = Number(this.value).toFixed(5);
+                }
+                if (this.getAttribute("m6") != null) {
+                    this.value = Number(this.value).toFixed(6);
+                }
+                if (this.getAttribute("m7") != null) {
+                    this.value = Number(this.value).toFixed(7);
+                }
+                if (this.getAttribute("m8") != null) {
+                    this.value = Number(this.value).toFixed(8);
+                }
+                if (this.getAttribute("m9") != null) {
+                    this.value = Number(this.value).toFixed(9);
+                }
+                if (this.getAttribute("m10") != null) {
+                    this.value = Number(this.value).toFixed(10);
+                }
+            }
+        });
+        $('body').on('keydown', 'button', function(e) {
+            if (this.innerHTML.includes("fa fa-trash-alt")) {
+                e.preventDefault();
+                var self = $(this),
+                    form = self.parents('form:eq(0)'),
+                    focusable, next;
+                focusable = form.find('input,a,button,select,textarea').filter(':visible:enabled');
+                next = focusable.eq(focusable.index(this) + 1);
+                if (next.length) {
+                    next.focus();
+                }
+            }
+        });
+        $('body').on('keydown', 'input, select', function(e) {
+            var self = $(this),
+                form = self.parents('form:eq(0)'),
+                focusable, next;
+            if (e.keyCode == 13) {
+                focusable = form.find('input,a,button,select,textarea').filter(':visible:enabled');
+                next = focusable.eq(focusable.index(this) + 1);
+                if (next.length) {
+                    next.focus();
+                } else {
+                    form.submit();
+                }
+                return false;
+            }
+        });
+        $('body').on('keydown', function(e) {
+            if (e.keyCode == 107) {
+                if (!Focused) {
+                    try {
+                        document.getElementById('addb').click();
+                    } catch (err) {
+
+                    }
+
+                }
+            }
+        });
+
+        function isempty(eid) {
+            if (document.getElementById(eid)) {
+                if (document.getElementById(eid).value == "") {
+                    document.getElementById(eid).focus();
+                    return true
+                } else {
+                    return false
+                }
+            } else {
+                return false
+            }
+
+        }
+
+        function setfocus(eid) {
+            if (document.getElementById(eid)) {
+                document.getElementById(eid).focus()
+            }
+
+        }
+
+        function gt(eid) {
+            if (document.getElementById(eid)) {
+                return document.getElementById(eid).value;
+            } else {
+                return '';
+            }
+
+        }
+
+        function stv(eid, value) {
+            document.getElementById(eid).value = value;
+        }
+
+        function setselected(eid, value) {
+            var dd = document.getElementById(eid);
+            for (var i = 0; i < dd.options.length; i++) {
+                if (dd.options[i].text === value) {
+                    dd.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+
+        function SVM(p) {
+            debugger
+            var cls = body.className;
+            if (p != 't') {
+                if (cls.includes('sidebar-collapse')) {
+                    cls = cls.replace('sidebar-collapse', '')
+                } else {
+                    cls = cls + ' sidebar-collapse'
+                }
+            }
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {}
+            }
+            xhr.open("POST", "../../../../../Home/SetTheme", true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({
+                theme: cls
+            }));
+        }
+        document.addEventListener("keydown", function(zEvent) {
+            if (zEvent.ctrlKey && zEvent.altKey /*&&  zEvent.key === "e"*/ ) { // case sensitive
+                RUN()
+            }
+        });
+
+        function GetNotifications() {
+
+        }
+
+        function SetNotification(MYID, VALUE) {
+            var element = document.getElementById(MYID);
+            if (element) {
+                prefix = 'badge-'
+                var regx = new RegExp('\\b' + prefix + '.*?\\b', 'g');
+                element.className = element.className.replace(regx, '');
+                element.classList.add('badge-' + VALUE);
+                element.innerHTML = VALUE;
+            }
+        }
+
+        function GetLi(link, Name) {
+            var tli = '';
+            tli += '<li>';
+            tli += '<a href="~/' + link + '">';
+            tli += Name;
+            tli += '</a>';
+            tli += '</li>';
+            return tli;
+        }
+
+        function RemoveRow(e) {
+            if (confirm('@Resources.Resource.DeleteConfirm')) {
+                var p = e.parentNode.parentNode;
+                p.parentNode.parentNode.deleteRow(p.rowIndex);
+                return true;
+            }
+            return false;
+        }
+
+        function AskDelete() {
+            if (confirm('@Resources.Resource.DeleteConfirm')) {
+                return true;
+            }
+            return false;
+        }
+
+        function RowRemove(e) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+        }
+                var TmPId = 0;
+                var TmPmsg = 0;
+                function SendMsg2(id) {
+                    TmPId = id;
+                    var msg = document.getElementById('msg_' + id)
+                    TmPmsg = msg;
+                    if (msg.value == "") { msg.focus(); return; }
+
+                    burn({ id: "@Me.UserID", TicketID: id, msg: msg.value }, '../../../Tickets/SendMsg', '', SendedMsg, true)
+
+
+                }
+
+                function SendedMsg(data) {
+                    Loadmsgs(TmPId)
+                    var msg = TmPmsg;
+                        msg.focus();
+                        msg.value = "";
+
+                        WF.invoke('notify', data.t.Id,data.t.Id,data.t.Id);
+                        WF.invoke('notify', data.t.UserId,data.t.UserId,data.t.UserId);
+                        WF.invoke('notify', data.t.ClientID,data.t.ClientID,data.t.ClientID);
+
+                }
+
+                var TID_ = 0;
+
+                function MRP_WF_APRV(UserAction) {
+                    UserNotes = document.getElementById('WFHDIALG_Note').value;
+                    burn({ UserAction: UserAction, UserNotes: UserNotes, TID: TID_ }, '../../../WF/WF', '', WFDONE_, true)
+                }
+
+            function WFDONE_() {
+                $('#tparent').load('../../../Home/TotalNotifications');
+                $('#WFHDIALG').modal('hide');
+                MsgBox('@Html.Translate("تم الحفظ بنجاح", "Saved Successfully")','green')
+            }
+                function burn(data, url, modalName, callBack, Silent) {
+
+            var token = $('[name=__RequestVerificationToken]').val();
+            data.__RequestVerificationToken = token;
+            var settings = {
+                'async': true,
+                'crossDomain': true,
+                'url': '../../../' + url,
+                'method': 'POST',
+                'data': data,
+                beforeSend: function() {
+
+                },
+                complete: function() {
+                    if (!modalName == '') {
+                        HideModal(modalName)
+                    }
+                }
+            }
+            $.ajax(settings)
+                .done(function(response) {
+                    if (response) {
+                        if (!response.error == "") {
+                            alert(response.error)
+                        }
+                        if (!modalName == '') {
+                            HideModal(modalName)
+                        }
+                        done();
+                        if (isFunction(callBack)) {
+                            if (!response.error == "") {} else {
+
+                                callBack(response)
+                            }
+                        }
+
+                    } else {
+                        alert('error');
+                    }
+                });
+
+        }
+
+        function isFunction(functionToCheck) {
+            return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
+        }
+
+        function HideModal(ID) {
+            $('#' + ID).modal('hide')
+        }
+        $(document).keydown(function(event) {
+            if (event.which == "17")
+                cntrlIsPressed = true;
+        });
+        $(document).keyup(function() {
+            cntrlIsPressed = false;
+        });
+        var cntrlIsPressed = false;
+                function TableHeight2(i) {
+
+            var el = document.getElementsByClassName('content-wrapper')[0]
+            var MyHeight = (window.getComputedStyle(el, null).getPropertyValue("min-height"))
+            MyHeight = Number(MyHeight.replace('px', '') - i) + 'px'
+            return (MyHeight)
+        }
+        function TableHeight() {
+            var el = document.getElementsByClassName('content-wrapper')[0]
+            var MyHeight = (window.getComputedStyle(el, null).getPropertyValue("min-height"))
+            MyHeight = Number(MyHeight.replace('px', '') - 200) + 'px'
+            return (MyHeight)
+        }
+                function GenRow(tds) {
+                    var row = '';
+                    row = '<tr>';
+                    for (var i = 0; i < tds.length; i++) {
+                        row += '<td>' + tds[i] + '</td>'
+                    }
+                    row += '</tr>'
+                    return row;
+                }
+        function TableHeightS() {
+            var el = document.getElementsByClassName('content-wrapper')[0]
+            var MyHeight = (window.getComputedStyle(el, null).getPropertyValue("min-height"))
+            MyHeight = Number(MyHeight.replace('px', '') - 310) + 'px'
+            return (MyHeight)
+        }
+
+
+            function executeFunctionByName(functionName, context /*, args */) {
+                var args = Array.prototype.slice.call(arguments, 2);
+                var namespaces = functionName.split(".");
+                var func = namespaces.pop();
+                for(var i = 0; i < namespaces.length; i++) {
+                  context = context[namespaces[i]];
+                }
+               // return context[func].apply(context, args);
+            }
+
+
+
+
+
+
+                function RefreshWindow(e) {
+            LoadingP();
+                    var ID = e.id.replace('li_', '')
+
+                    //document.getElementById("DIV_" + ID).classList.add('busy');
+                    var Li = e.id
+            var link = document.getElementById(Li).getAttribute('url').replace('#', '')
+            var wicon = document.getElementById(Li).getAttribute('wicon');
+            var wtitle = document.getElementById(Li).getAttribute('wtitle');
+            $.get('../../..' + link, function (data) {
+                data = data.replace('MyTilTle', wtitle);
+                data = data.replace('MYICON', wicon);
+                $("#DIV_" + ID).html(data);
+                ULoadingP();
+                //document.getElementById("DIV_" + ID).classList.remove('busy');
+            });
+
+                }
+
+
+        Element.prototype.remove = function() {
+            this.parentElement.removeChild(this);
+        }
+        NodeList.prototype.remove = HTMLCollection.prototype.remove = function() {
+            for (var i = this.length - 1; i >= 0; i--) {
+                if (this[i] && this[i].parentElement) {
+                    this[i].parentElement.removeChild(this[i]);
+                }
+            }
+                }
+        function now() {
+            var now = new Date();
+            var month = (now.getMonth() + 1);
+            var day = now.getDate();
+            if (month < 10)
+                month = "0" + month;
+            if (day < 10)
+                day = "0" + day;
+            return now.getFullYear() + '-' + month + '-' + day;
+        }
+        $('#SetTablePermission').draggable({});
+
+
+        </script>
+        @Html.Partial("~/Views/Shared/MyMenu.cshtml")
+
+
+        <div id="sound" hidden style="display:none"></div>
+
+        <script src="~/Scripts/jquery.signalR-2.4.1.js"></script>
+        <script src="~/signalr/hubs"></script>
+        <script>
+            $('#NotifyModal').draggable({
+                handle: ".modal-header"
+            });
+
+            var WF = $.connection.chatHub;
+                WF.client.notify = function (you, me, msg) {
+                    if (me == "@Me.UserID") {
+                        playSound();
+                        $('#tparent').load('../../../Home/TotalNotifications');
+                    }
+                }
+
+                function playSound()
+                {
+                    var mp3Source = '<source src="../../../Uploads/deduction.mp3" type="audio/mpeg">';
+                    var oggSource = '<source src="../../../Uploads/deduction.ogg" type="audio/ogg">';
+                    var embedSource = '<embed hidden="true" autostart="true" loop="false" src="../../../Uploads/deduction.mp3">';
+                    document.getElementById("sound").innerHTML='<audio autoplay="autoplay">' + mp3Source + oggSource + embedSource + '</audio>';
+                }
+                $.connection.hub.start();
+
+        function SetImage(Id, tp, url, img, pdf, id2) {
+            if (Id == 0) {
+                return;
+            }
+            var inpt = document.createElement('input')
+            inpt.setAttribute('type', 'file')
+            if (pdf == true) {
+                inpt.setAttribute("accept", "image/jpeg,image/gif,image/png,application/pdf")
+            } else {
+                inpt.setAttribute("accept", "image/*")
+            }
+            inpt.setAttribute('onchange', "DoUpdateImg(this,'" + Id + "','" + url + "','" + tp + "','" + img + "','" + id2 + "')")
+            inpt.click();
+        }
+
+        function DoUpdateImg(e, Id, url, tp, img, Id2) {
+            var file = e.files[0];
+            if (Number(Id2) > 0) {
+                data = {
+                    Id: Id,
+                    Id2: Id2
+                };
+            } else {
+                readURL(e, img)
+                data = {
+                    Id: Id
+                };
+            }
+            var formdata = new FormData();
+            formdata.append("file", file);
+            formdata.append(tp + "[Id]", data.Id);
+            if (Number(Id2) > 0) {
+
+                formdata.append(tp + "[AppId]", data.Id2);
+
+            }
+            serviceClientImg(formdata, url, Id2, img).then(
+                function(data) {},
+                function(err) {
+                    alert(err);
+                });
+        }
+
+        function serviceClientImg(data, url, Id2, img) {
+            wait()
+            document.getElementById(img).innerHTML = "";
+            var deff = jQuery.Deferred();
+            $.ajax({
+                type: "POST",
+                dataType: 'json',
+                url: url,
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function(resp) {
+                    done()
+                    deff.resolve(resp);
+                    if (Number(Id2) > 0) {
+                        EALoadFiles0()
+                    }
+                    //MsgBox('@Resources.Resource.Uploaded','green')
+                },
+                error: function(err) {
+                    done()
+                    alert(err.statusText)
+                    deff.resolve(err);
+                }
+            });
+            return deff.promise();
+        }
+
+        function readURL(input, img) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function(e) {
+                    $('#' + img).attr('src', e.target.result);
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+
+
+        function randomString(length) {
+           var result           = '';
+           var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+           var charactersLength = characters.length;
+           for ( var i = 0; i < length; i++ ) {
+              result += characters.charAt(Math.floor(Math.random() * charactersLength));
+           }
+           return result;
+        }
+        </script>
+
+        @{
+            string v = Guid.NewGuid().ToString();
+        }
+        <script src="~/SPA/hasanSPA.js?v=1.1"></script>
+        <script>
+            $('#MainContentf').hasanSPA();
+        </script>
+        </body>
+
+
+        </html>
+        @functions{
+
+            string CheckEd(int value, int x)
+            {
+                if (x == value)
+                {
+                    return "checked";
+                }
+                else
+                {
+                    return "";
+                }
+            }
+        }
+
+
+
+        <script>
+            $('#MainContentf').html('');
+            $('#MainUL li').click(function () {
+                alert('')
+                window.history.pushState(null, null, 'a')
+            });
+            $("MainUL").on("click", "li a", function () {
+                alert($(this).find("span.t").text());
+            });
+            $('#MainContentf').html('');
+            console.error("%cلأسباب امنية تم تعطيل هذه الخاصية", "font: 2em sans-serif; color: yellow; background-color: red;");
+        </script>
+
+
+

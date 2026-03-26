@@ -1,0 +1,59 @@
+﻿@model IEnumerable<AlphaERP.Models.MRP_ProductionPlain>
+
+<table class="table" id="ProductionPlanTable">
+    <thead>
+        <tr>
+            <th>@Resources.Resource.PlanNo</th>
+            <th>@Resources.Resource.StartDatePlan</th>
+            <th>@Resources.Resource.EndDatePlan</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="ProductionPlantbody">
+        @foreach (var P in Model)
+        {
+            <tr>
+                <td>@P.PlanNo</td>
+                <td>@P.StartDate.ToString("yyyy-MM-dd")</td>
+                <td>@P.EndDate.ToString("yyyy-MM-dd")</td>
+                <td>
+                    <button class="btn btn-po" onclick="SelectionProductionPlanDiv('@P.PlanNo','@P.PlanYear', 
+                     '@P.PlanNotes', '@P.StartDate.ToString("yyyy-MM-dd")','@P.EndDate.ToString("yyyy-MM-dd")')" >
+                        <i class="fa fa-location-arrow"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    $('#ProductionPlanTable').DataTable({
+        "scrollY": 'calc( 100vh - 280px)',
+        "paging": true,
+        "pageLength": 25, "ordering": false
+    });
+    function SelectionProductionPlanDiv(PlanNo, PlanYear, PlanNotes, StartDate, EndDate) {
+        if (SAVE_RequestsActivateCancelproductionPlain_Year.value != PlanYear) {
+            AddRequestsActivateCancelproductionPlain();
+            return false;
+        }
+
+        wait();
+
+        var ProductionPlan = {
+            PlanYear: PlanYear,
+            PlanNo: PlanNo,
+            StartDate: StartDate,
+            EndDate: EndDate,
+            PlanNotes: PlanNotes
+        };
+
+        if (SAVE_RequestsActivateCancelproductionPlain.value == 1) {
+            burn({ ActivateProdPlan: ProductionPlan }, '../../../ActivateCancelProductionPlan/ActivatePlan', '', LoadActivatePlan, true);
+        }
+        else {
+            burn({ DeactivateProdPlan: ProductionPlan }, '../../../ActivateCancelProductionPlan/DeactivatePlan', '', LoadDeactivatePlan, true);
+        }
+    }
+</script>

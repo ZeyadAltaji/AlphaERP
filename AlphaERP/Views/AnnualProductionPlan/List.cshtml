@@ -1,0 +1,98 @@
+@model AlphaERP.Models.YearPlanDetlsH
+@using System.Data.SqlClient
+@using AlphaERP.Models
+
+
+
+<div class="form-group">
+    <div class="col-md-1">
+        <button class="btn btn-primary" onclick="AnnualProductionPlan_AddItem()">
+            <i class="fa fa-plus"></i>
+            @Html.Recource(32)
+        </button>
+    </div>
+    <div class="col-md-1">
+        <button class="btn btn-success" id="AnnualProductionPlanUpdate" onclick="AnnualProductionPlanUpdateClick()">
+            <i class="fa fa-save"></i>
+            @Html.Recource(151)
+        </button>
+    </div>
+</div>
+
+
+<table id="AnnualProductionPlanDataTable" class="table table-hover dataTable">
+    <thead>
+        <tr>
+            <th>@Html.Recource(44)</th>
+            <th>@Html.Recource(74)</th>
+            <th>@Html.Recource(4286)</th>
+            <th>@Html.Recource(360)</th>
+            <th>@Html.Recource(67)</th>
+            <th style="text-align:center">@Html.Recource(3733)</th>
+            <th style="text-align:center">@Html.Recource(3734)</th>
+            <th style="text-align:center">@Html.Recource(3735)</th>
+            <th style="text-align:center">@Html.Recource(3736)</th>
+            <th style="text-align:center">@Html.Recource(3737)</th>
+            <th style="text-align:center">@Html.Recource(3738)</th>
+            <th style="text-align:center">@Html.Recource(3739)</th>
+            <th style="text-align:center">@Html.Recource(3740)</th>
+            <th style="text-align:center">@Html.Recource(3741)</th>
+            <th style="text-align:center">@Html.Recource(3742)</th>
+            <th style="text-align:center">@Html.Recource(3742)</th>
+            <th style="text-align:center">@Html.Recource(3744)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="AnnualProductionPlanDataTableTB">
+        @{
+            string ItemDesc = "";
+
+            string query = string.Format("exec MRP_WEB_AnnualProductionPlan {0},{1}", Model.CompNo, Model.PlanYear);
+            using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+            {
+                SqlCommand cmd = new SqlCommand(query, cn);
+                cn.Open();
+                SqlDataReader rdr = cmd.ExecuteReader();
+                if (rdr.HasRows)
+                {
+                    while (rdr.Read())
+                    {
+                        <tr>
+                            <td>@rdr["ItemNo"]</td>
+                            <td>@Html.Translate(rdr["ItemDesc"].ToString(), rdr["ItemDesc_Ara"].ToString())</td>
+                            <td>@rdr["FormCode"]</td>
+                            <td>@rdr["formula_desc"]</td>
+                            <td>@rdr["UnitCode"]</td>
+                            <td style="text-align:center"><input value="@rdr["MQty1"]" type="number" style="width:50px !important" /></td>
+                            <td style="text-align:center"><input value="@rdr["MQty2"]" type="number" style="width:50px !important" /></td>
+                            <td style="text-align:center"><input value="@rdr["MQty3"]" type="number" style="width:50px !important" /></td>
+                            <td style="text-align:center"><input value="@rdr["MQty4"]" type="number" style="width:50px !important" /></td>
+                            <td style="text-align:center"><input value="@rdr["MQty5"]" type="number" style="width:50px !important" /></td>
+                            <td style="text-align:center"><input value="@rdr["MQty6"]" type="number" style="width:50px !important" /></td>
+                            <td style="text-align:center"><input value="@rdr["MQty7"]" type="number" style="width:50px !important" /></td>
+                            <td style="text-align:center"><input value="@rdr["MQty8"]" type="number" style="width:50px !important" /></td>
+                            <td style="text-align:center"><input value="@rdr["MQty9"]" type="number" style="width:50px !important" /></td>
+                            <td style="text-align:center"><input value="@rdr["MQty10"]" type="number" style="width:50px !important" /></td>
+                            <td style="text-align:center"><input value="@rdr["MQty11"]" type="number" style="width:50px !important" /></td>
+                            <td style="text-align:center"><input value="@rdr["MQty12"]" type="number" style="width:50px !important" /></td>
+                            <td><button class="btn-de" onclick="RemoveRow(this)"><i class="fa fa-trash-alt"></i></button></td>
+                        </tr>
+                    }
+                }
+            }
+
+
+        }
+    </tbody>
+</table>
+
+
+<script>
+    var APPTable = $('#AnnualProductionPlanDataTable').DataTable({
+        "scrollY": '53vh',
+        "paging": true,
+        "pageLength": 100,
+        "order": []
+    });
+
+</script>

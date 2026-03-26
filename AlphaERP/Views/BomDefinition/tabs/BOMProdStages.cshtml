@@ -1,0 +1,72 @@
+﻿<style>
+    #ProdItemStagesTBody td:nth-child(1) {
+        border-right: 1px solid #ccc;
+    }
+    #ProdItemStagesTBody td:nth-child(7) {
+        border-right: 3px solid #ccc;
+    }
+    .truncate-text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .popover-container {
+    position: relative;
+    display: inline-block;
+    }
+
+    .popover-content {
+    display: none;
+    position: absolute;
+    top: 2.2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #f0f0f0;
+    padding: 10px;
+    border: 1px solid #000;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    width: 100px;
+    }
+    .popover-content::before {
+    content: "";
+    position: absolute;
+    top: -10px; /* Adjust the value to position the arrow */
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-bottom-color: #000000;
+}
+    .popover-container:hover .popover-content {
+    display: block;
+    }
+</style>
+<div class="form-group">
+    <div class="col-md-12">
+        <label class="unselectable">@Html.Recource(2551) :</label>
+        <button onclick="Add_ProdItemStages(4)" type="button" class="btn btn-default">@Html.Recource(2551)</button>
+    </div>
+    <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+        <table class="table table-hover" id="ProdItemStagesTable">
+            <thead>
+                <tr>
+                    <th style="width: 6%;">@Html.Translate("تسلسل", "Ser")</th>
+                    <th style="width: 14%;">@Html.Recource(2558)</th>
+                    <th style="width: 40%;">@Html.Recource(2559)</th>
+                    <th style="width: 10%;text-align: center;">@Html.Recource(2560)</th>
+                    <th style="width: 10%;text-align: center;">@Html.Recource(2561)</th>
+                    <th style="width: 10%;text-align: center;">@Html.Recource(9573)</th>
+                    <th style="width: 15%;text-align: center;">@Html.Recource(9574)</th>
+                    <th style="width: 10%; padding-right:10px;">@Html.Translate("ضبط الجودة", "QC")</th>
+               
+                    <th style="width: 10%;text-align: center;">@Html.Translate("ضمان الجودة","QA")</th>
+
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="ProdItemStagesTBody">
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,46 @@
+﻿@model IEnumerable<AlphaERP.Models.PROrder>
+
+    <div class="form-group">
+        <div class="col-md-12">
+            <table class="table table-hover" id="Ord_PROrderTable">
+                <thead>
+                    <tr>
+                        <th>@Html.Recource(3197)</th>
+                        <th>@Html.Recource(3797)</th>
+                        <th>@Html.Recource(206)</th>
+                        <th>@Html.Recource(3768)</th>
+                        <th>@Html.Translate("حالة الاستلام", "Receipt Status")</th>
+                        <th>@Html.Recource(517)</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="OrdPO_AccTbody">
+                    @foreach (var item in Model)
+                    {
+                        <tr onclick="Select_finPROrder(this)" ondblclick="Select_PROrder(this)" OrderNo="@item.OrderNo" TawreedNo="@item.TawreedNo" VendorNo="@item.VendorNo"  VenName="@Html.Translate(item.VenName,item.VenName_Eng)">
+                            <td id="PROrder_OrderNo">@item.OrderNo</td>
+                            <td id="PROrder_TawreedNo">@item.TawreedNo</td>
+                            <td id="PROrder_OrderDate">@item.OrderDate.ToShortDateString()</td>
+                            <td id="PROrder_BuyerName">@Html.Translate(item.BuyerName, item.BuyerName_Eng).ToString()</td>
+                            <td id="PROrder_DlvState">@Html.Translate(item.DlvState, item.DlvState_Eng).ToString()</td>
+                            <td id="PROrder_VenName">@Html.Translate(item.VenName, item.VenName_Eng).ToString()</td>
+                            <td></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+<script>
+    var Ord_PROrderTable;
+    Ord_PROrderTable = $('#Ord_PROrderTable').dataTable({
+        "scrollY": 'calc( 100vh - 485px)',
+        "paging": true,
+        "pageLength": 25,
+        "order": [[0, "desc"], [1, "desc"]],
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+
+</script>

@@ -1,0 +1,170 @@
+@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+}
+
+
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(100vh - 210px) !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="RevisionSetup_save_ItemNo">@Html.Recource(42) </label>
+                    </div>
+                    <div class="col-md-2">
+                        <input required="false" style="width: 100% !important;" type="text" id="RevisionSetup_save_ItemNo" disabled />
+                    </div>
+                    <div class="col-md-6">
+                        <input required="false" style="width: 100% !important;" type="text" id="RevisionSetup_save_ItemDesc" disabled value="" />
+                    </div>
+                    <div class="col-md-2">
+                        <button onclick="RevisionSetup_GetInvItemsMFs()" type="button" class="btn btn-default">@Html.Recource(4756)</button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <button onclick="Add_Specs()" type="button" class="btn btn-default">@Html.Recource(5696)</button>
+                </div>
+                <div class="col-md-12" style="height:calc(100vh - 480px) !important;overflow-y:auto" id="loadDataRevisionSetup">
+                    
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="ExcuteSave_RevisionSetup()" class="btn btn-primary">@Resources.Resource.Save</button>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="Model_RevisionSetupInvItemsMF">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4756)</label>
+            </div>
+            <div class="box-body box-profile">
+                <div class="modal-body row">
+                    <div class="form-group">
+                        <div class="col-md-12" id="RevisionSetupInv_ItemsMF">
+
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="SelectingRevisionSetup_InvItemsMF()" class="btn btn-primary">@Html.Recource(4599)</button>
+                    <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+
+    function Add_Specs() {
+        if (RevisionSetup_save_ItemNo.value.trim() == "") {
+            alert('@Html.Translate("يجب إدخال المادة", "You Must Enter Item")');
+            return;
+        }
+        var row = '';
+        row = '<tr>';
+        row += '<td style="width: 20%;"><input id="RevisionNo" type="text" class="form-control" /></td>'
+        row += '<td style="width: 10%;text-align:center"><input type="checkbox" id="flagProd" class="check-prod"></td>'
+        row += '<td style="width: 10%;text-align:center"><input type="checkbox" id="flagPPurchase" class="check-purchase"></td>'
+        row += '<td style="text-align:end"><button class="btn-de" onclick="RemoveRow(this)" type="button"><i class="fa fa-trash-alt"></i></button></td>'
+        row += '</tr>'
+        $("#RevisionSetupPropertyTBody").append(row);
+    }
+    
+    // Delegated event handlers for dynamically added rows
+    $(document).on('change', '.check-prod', function () {
+        if ($(this).is(':checked')) {
+            $('.check-prod').not(this).prop('checked', false);
+        }
+    });
+
+    $(document).on('change', '.check-purchase', function () {
+        if ($(this).is(':checked')) {
+            $('.check-purchase').not(this).prop('checked', false);
+        }
+    });
+
+    function RevisionSetup_GetInvItemsMFs() {
+        $('#RevisionSetupInv_ItemsMF').empty();
+        $('#RevisionSetupItemsTable tr').removeClass("selected");
+        $('#RevisionSetupInv_ItemsMF').load('../../../RevisionSetup/ItemsList');
+        $('#Model_RevisionSetupInvItemsMF').modal('show');
+    }
+    function SelectingRevisionSetup_InvItemsMF() {
+        var trs = $('#RevisionSetupItemsTable tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة", "Select one Item")');
+            return;
+        }
+
+        RevisionSetup_save_ItemNo.value = trs[0].getAttribute('ItemNo');
+        RevisionSetup_save_ItemDesc.value = trs[0].getAttribute('ItemDesc');
+
+        wait();
+        $('#loadDataRevisionSetup').load('../../../RevisionSetup/RevisionSetuplist?ItemNo=' + RevisionSetup_save_ItemNo.value, function () {
+            done();
+            $('#Model_RevisionSetupInvItemsMF').modal('hide');
+        })
+    }
+
+    function ExcuteSave_RevisionSetup() {
+
+        if (RevisionSetup_save_ItemNo.value.trim() == "") {
+            alert('@Html.Translate("يجب إدخال المادة", "You Must Enter Item")');
+            return;
+        }
+        var table = $('#RevisionSetupPropertyTBody tr');
+        var trs = table;
+        if (trs.length == 0) {
+            alert('@Html.Translate("يجب إدخال الخصائص", "Properties must be entered")');
+            return false;
+        }
+
+        var obj = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            obj.push({
+                CompNo: '@company.comp_num',
+                ItemNo: RevisionSetup_save_ItemNo.value,
+                RevisionNo: $(trs[i]).closest('tr').find('#RevisionNo')[0].value,
+                ProductionFlag: $(trs[i]).closest('tr').find('#flagProd')[0].checked,
+                PurchasingFlag: $(trs[i]).closest('tr').find('#flagPPurchase')[0].checked
+            });
+        }
+
+
+        wait();
+        if (confirm('@Resources.Resource.Confirm')) {
+            burn({ RevisionSetup: obj }, '../../../RevisionSetup/SaveRevisionSetup', '', ReloadRevisionSetup, false);
+        }
+        else {
+            done();
+        }
+    }
+    function ReloadRevisionSetup() {
+        MsgBox('@Resources.Resource.Saved', 'green');
+        done();
+    }
+</script>

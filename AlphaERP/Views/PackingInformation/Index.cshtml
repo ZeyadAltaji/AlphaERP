@@ -1,0 +1,485 @@
+﻿@using System.Data.SqlClient;
+@using System.Configuration;
+@using AlphaERP.Models;
+@{
+    short CompNo = Convert.ToInt16(Html.CompNo().ToString());
+}
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-10" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2 col-sm-2">
+                <button class="btn btn-primary btn-block" onclick="CreateNewProdCost_PackingRequestHF()">
+                    <i class="fa fa-plus"></i> @Resources.Resource.Add
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="PackingInformationListTableDiv">
+        @Html.Partial("~/Views/PackingInformation/List.cshtml")
+    </div>
+</div>
+
+<div class="modal fade wideBom" id="ProdCost_PackingRequestHF_save_ProdCost_PackingRequestHF">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(9277)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-1">
+                        <label class="unselectable" for="ProdCost_PackingRequestHF_save_OrderYear">@Html.Recource(59) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input onblur="GetOrdPackReqSr()" value="@DateTime.Now.Year" required="false" type="number" id="ProdCost_PackingRequestHF_save_OrderYear" placeholder="@Html.Recource(59)" />
+                    </div>
+
+                    <div class="col-md-1">
+                        <label class="unselectable" for="ProdCost_PackingRequestHF_save_OrderNo">@Html.Recource(8610) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input type="number" style="width:50px" onblur="GetOrdPackReqSr()" id="ProdCost_PackingRequestHF_save_OrderNo" />
+                        /
+                        <input style="width:50px" disabled required="false" type="number" id="ProdCost_PackingRequestHF_save_SrNo" />
+                        <button class="btn-de" type="button" onclick="SerachSr()">
+                            <i style="color:#000 !important;font-weight:600!important" class="fa fa-search" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                    <div class="col-md-1">
+                        <label class="unselectable" for="ProdCost_PackingRequestHF_save_TransDate">@Html.Recource(58) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" type="date" id="ProdCost_PackingRequestHF_save_TransDate" placeholder="@Html.Recource(58)" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label style="display: contents;" class="unselectable" for="ProdCost_PackingRequestHF_save_TxtQty">@Html.Recource(4287) </label>
+                        <input disabled style="width:100px;float:@Html.Translate("left","right")" required="false" id="ProdCost_PackingRequestHF_save_TxtQty" placeholder="" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-1">
+                        <label class="unselectable" for="ProdCost_PackingRequestHF_TxtFormCode">@Html.Recource(4286) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input disabled required="false" id="ProdCost_PackingRequestHF_TxtFormCode" />
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <input disabled style="width:100%" required="false" id="ProdCost_PackingRequestHF_LblFormDesc" />
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label style="display: contents;" class="unselectable" for="ProdCost_PackingRequestHF_save_txtCalculatedSG">@Html.Recource(9255) </label>
+                        <input disabled style="width:100px;float:@Html.Translate("left","right")" required="false" type="number" id="ProdCost_PackingRequestHF_save_txtCalculatedSG" />
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <div class="col-md-1">
+                        <label class="unselectable" for="ProdCost_PackingRequestHF_save_TxtFinItemCode">@Html.Recource(306) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input disabled required="false" id="ProdCost_PackingRequestHF_save_TxtFinItemCode" />
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <input disabled style="width:100%" required="false" id="ProdCost_PackingRequestHF_save_LblFinItem" />
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label style="display: contents;" class="unselectable" for="ProdCost_PackingRequestHF_save_txtActual_SG">@Html.Translate("الكثافة الفعلية", "Actual density") </label>
+                        <input disabled style="width:100px;float:@Html.Translate("left","right")" required="false" type="number" id="ProdCost_PackingRequestHF_save_txtActual_SG" placeholder="" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="ProdCost_PackingRequestHF_save_CboPermAcc">@Html.Recource(7831) </label>
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+
+                        <select style="width:100%" required="false" id="ProdCost_PackingRequestHF_save_CboPermAcc">
+                            <option value=""></option>
+                            @{
+                                int Comp_num = Convert.ToInt32(Html.CompNo().ToString());
+                                string query = string.Format("Admin_GetUsersIssueAccounts {0},'{1}'", Comp_num, Html.UserID());
+                                using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                {
+                                    SqlCommand cmd = new SqlCommand(query, cn);
+                                    cn.Open();
+                                    SqlDataReader rdr = cmd.ExecuteReader();
+                                    if (rdr.HasRows)
+                                    {
+                                        while (rdr.Read())
+                                        {
+                                            <option value="@rdr["ID"]">@Html.Translate(rdr["acc_desc"].ToString(), rdr["acc_edesc"].ToString()) - @rdr["DEP_NAME"]</option>
+                                        }
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="unselectable" for="ProdCost_PackingRequestHF_save_StoreNo">@Html.Recource(1) </label>
+                    </div>
+
+                    @{
+                        List<InvStoresMF> List_InvStoresMFs = new MDB().InvStoresMFs.Where(x => x.CompNo == CompNo).ToList();
+                    }
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <input value="@List_InvStoresMFs.FirstOrDefault().StoreNo" style="width:100%" onblur="StoreChange()" type="number" id="ProdCost_PackingRequestHF_save_StoreNo" />
+                    </div>
+                    <div class="col-md-3" style="margin-bottom: 5px;">
+
+                        <select onchange="$('#ProdCost_PackingRequestHF_save_StoreNo').val(this.value)" style="width:100%" required="false" id="ProdCost_PackingRequestHF_save_StoreDesc">
+                            @foreach (var InvStoresMF_ in List_InvStoresMFs)
+                            {
+                                <option value="@InvStoresMF_.StoreNo">@Html.Translate(InvStoresMF_.StoreName, InvStoresMF_.StoreNameEng)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable">@Html.Recource(220) </label>
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(219) </label>
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(5667) </label>
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <input value="@List_InvStoresMFs.FirstOrDefault().StoreNo" style="width:100%" onblur="BUChange()" type="number" id="ProdCost_PackingRequestHF_save_txtBusnUnit" />
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select onchange="$('#ProdCost_PackingRequestHF_save_txtBusnUnit').val(this.value)" style="width:100%" id="ProdCost_PackingRequestHF_save_CboBusnUnit">
+                            @Html.MyBusinessUnits()
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="unselectable" id="PackingInformation_DepNo">
+                            1
+                        </label>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable">
+                            الدائرة العامة
+                        </label>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" id="PackingInformation_AccNo">
+                            11000001
+                        </label>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable">
+                            جاري البنك العربي
+                        </label>
+                    </div>
+
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+
+                    </div>
+                </div>
+                <div class="form-group" style="height:100px">
+                    <table class="table table-hover" style="width:100%" id="PackingInformationTB">
+                        <thead>
+                            <tr>
+                                <th>@Html.Recource(9258)</th>
+                                <th>@Html.Recource(9257)</th>
+                                <th>@Html.Recource(1494)</th>
+                                <th>@Html.Recource(4276)</th>
+                                <th>@Html.Recource(5495)</th>
+                                <th>@Html.Recource(9256)</th>
+                                <th>@Html.Recource(7355)</th>
+                                <th>@Html.Translate("اجمالي الكمية المطلوبة", "")</th>
+                                <th>@Html.Translate("اجمالي الكمية المصروفة", "")</th>
+                                <th>@Html.Recource(49)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="PackingInformationTBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteProdCost_PackingRequestHF_save_ProdCost_PackingRequestHF()" class="btn btn-primary">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div class="modal fade wideBom" id="Mrp_SearchSr_save_Mrp_SearchSr">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Resources.Resource.Search</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" style="width:100%" id="Mrp_SearchSr_save_Mrp_SearchSrTB">
+                            <thead>
+                                <tr>
+                                    <th>@Html.Recource(2063)</th>
+                                    <th>@Html.Recource(8610)</th>
+                                    <th>@Html.Recource(2065)</th>
+                                    <th>@Html.Recource(44)     </th>
+                                    <th>@Html.Recource(74)    </th>
+                                    <th>@Html.Recource(49) </th>
+                                    <th>@Html.Recource(307) </th>
+                                    <th>@Html.Recource(70)        </th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    string query0 = string.Format("exec Sp_Search {0},' WHERE (dbo.prod_prepare_info.comp_no = {0}  and dbo.prod_prepare_info.prepare_year = {1}) ',85", Comp_num,DateTime.Now.Year);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query0, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                <tr ondblclick="$('#ProdCost_PackingRequestHF_save_OrderYear').val('@rdr["prepare_year"]'); $('#ProdCost_PackingRequestHF_save_OrderNo').val('@rdr["prepare_code"]'); GetOrdPackReqSr();$('#Mrp_SearchSr_save_Mrp_SearchSr').modal('hide')">
+                                                    <td>@rdr["prepare_year"]</td>
+                                                    <td>@rdr["prepare_code"]</td>
+                                                    <td>@Convert.ToDateTime( rdr["prepare_date"].ToString()).ToString("yyyy/MM/dd")</td>
+                                                    <td>@rdr["item_no"]</td>
+                                                    <td>@rdr["ItemDesc"]</td>
+                                                    <td>@rdr["qty_prepare"]</td>
+                                                    @if (Convert.ToBoolean(rdr["ClosingStat"].ToString()))
+                                                    {
+                                                        <td>
+                                                            <i class="fa fa-check"></i>
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td></td>
+                                                    }
+                                                    <td>@rdr["Note"]</td>
+                                                    <td></td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+    $('#Mrp_SearchSr_save_Mrp_SearchSr').draggable({
+        handle: '.modal-header'
+    });
+    $('#Mrp_SearchSr_save_Mrp_SearchSrTB').DataTable({
+        "paging": true,
+        "pageLength": 100
+    });
+    function SerachSr() {
+        $('#Mrp_SearchSr_save_Mrp_SearchSr').modal('show')
+    }
+    function StoreChange() {
+        
+        $('#ProdCost_PackingRequestHF_save_StoreDesc').val($('#ProdCost_PackingRequestHF_save_StoreNo').val())
+    }
+    function BUChange() {
+        var v = $('#ProdCost_PackingRequestHF_save_txtBusnUnit').val();
+        $('#ProdCost_PackingRequestHF_save_CboBusnUnit').val(v)
+    }
+
+    function GetOrdPackReqSr() {
+        $("#PackingInformationTB > tbody").empty();
+        $('#ProdCost_PackingRequestHF_save_SrNo').val('')
+        $('#ProdCost_PackingRequestHF_TxtFormCode').val('')
+        $('#ProdCost_PackingRequestHF_LblFormDesc').val('')
+        $('#ProdCost_PackingRequestHF_save_TxtQty').val('')
+        $('#ProdCost_PackingRequestHF_save_txtCalculatedSG').val('')
+        $('#ProdCost_PackingRequestHF_save_TxtFinItemCode').val('')
+        $('#ProdCost_PackingRequestHF_save_LblFinItem').val('')
+        $('#ProdCost_PackingRequestHF_save_txtActual_SG').val('')
+        if ($('#ProdCost_PackingRequestHF_save_OrderYear').val()) {
+            burn({ serial: sr, OrderYear: $('#ProdCost_PackingRequestHF_save_OrderYear').val(), OrderNo: $('#ProdCost_PackingRequestHF_save_OrderNo').val() }, '../../../PackingInformation/GetOrdPackReqSr', '', SetOrdPackReqSr, true)
+        }
+    }
+    function SetOrdPackReqSr(r) {
+        $('#ProdCost_PackingRequestHF_save_SrNo').val(r.SR)
+        $('#ProdCost_PackingRequestHF_TxtFormCode').val(r.FormCode)
+        $('#ProdCost_PackingRequestHF_LblFormDesc').val(r.FormDesc)
+        $('#ProdCost_PackingRequestHF_save_TxtQty').val(r.Qty)
+        $('#ProdCost_PackingRequestHF_save_txtCalculatedSG').val(r.CalculatedSG)
+        $('#ProdCost_PackingRequestHF_save_TxtFinItemCode').val(r.FinItemCode)
+        $('#ProdCost_PackingRequestHF_save_LblFinItem').val(r.FinItem)
+        $('#ProdCost_PackingRequestHF_save_txtActual_SG').val(r.Actual_SG)
+        $("#PackingInformationTB > tbody").empty();
+        $.each(r.Items, function (i, item) {
+            var newarray = [];
+            newarray.push(item.PackItem)
+            newarray.push(item.PK_desc)
+            newarray.push(item.AvlQty)
+            newarray.push(item.FinItem)
+            newarray.push(item.FinItemDesc)
+            if (item.IsLiter) {
+                newarray.push('<i class="fa fa-check"></i>')
+            } else {
+                newarray.push('<i class="fa fa-times"></i>')
+            }
+            newarray.push(item.Capacity)
+            newarray.push(item.TotReqQty)
+            newarray.push(item.IssuedQty)
+            newarray.push('<input type="number" style="width:50px" value="' + item.Qty + '" />')
+            newarray.push('')
+            $("#PackingInformationTB > tbody").append(
+                GenRow(newarray)
+            );
+        });
+        $('#ProdCost_PackingRequestHF_save_ProdCost_PackingRequestHF').modal('show')
+
+
+    }
+    $('#ProdCost_PackingRequestHF_save_ProdCost_PackingRequestHF').draggable({
+        handle: '.modal-header'
+    });
+
+    $('#ProdCost_PackingRequestHF_save_ProdCost_PackingRequestHF').on('shown.bs.modal', function () {
+        $('#ProdCost_PackingRequestHF_save_OrderYear').focus();
+        $('#ProdCost_PackingRequestHF_save_OrderYear').select();
+    });
+    var sr = 0;
+    var code = 0;
+    var func = "add";
+    function CreateNewProdCost_PackingRequestHF() {
+        sr = 0;
+        code = 0;
+        func = "add";
+        $("#PackingInformationTB > tbody").empty();
+        $('#ProdCost_PackingRequestHF_save_OrderNo').val('')
+        $('#ProdCost_PackingRequestHF_save_SrNo').val('')
+        $('#ProdCost_PackingRequestHF_TxtFormCode').val('')
+        $('#ProdCost_PackingRequestHF_LblFormDesc').val('')
+        $('#ProdCost_PackingRequestHF_save_TxtQty').val('')
+        $('#ProdCost_PackingRequestHF_save_txtCalculatedSG').val('')
+        $('#ProdCost_PackingRequestHF_save_TxtFinItemCode').val('')
+        $('#ProdCost_PackingRequestHF_save_LblFinItem').val('')
+        $('#ProdCost_PackingRequestHF_save_txtActual_SG').val('')
+        $('#ProdCost_PackingRequestHF_save_OrderNo').prop('disabled', false)
+        $('#ProdCost_PackingRequestHF_save_OrderYear').prop('disabled', false)
+        $('#ProdCost_PackingRequestHF_save_ProdCost_PackingRequestHF').modal('show')
+    }
+    function ExcuteProdCost_PackingRequestHF_save_ProdCost_PackingRequestHF() {
+        if (document.getElementById('ProdCost_PackingRequestHF_save_OrderYear').value == '') { document.getElementById('ProdCost_PackingRequestHF_save_OrderYear').focus(); return; }
+        if (document.getElementById('ProdCost_PackingRequestHF_save_OrderNo').value == '') { document.getElementById('ProdCost_PackingRequestHF_save_OrderNo').focus(); return; }
+        if (document.getElementById('ProdCost_PackingRequestHF_save_SrNo').value == '') { document.getElementById('ProdCost_PackingRequestHF_save_SrNo').focus(); return; }
+        if (document.getElementById('ProdCost_PackingRequestHF_save_TransDate').value == '') { document.getElementById('ProdCost_PackingRequestHF_save_TransDate').focus(); return; }
+        if (document.getElementById('ProdCost_PackingRequestHF_save_CboPermAcc').value == '') { document.getElementById('ProdCost_PackingRequestHF_save_CboPermAcc').focus(); return; }
+        if (document.getElementById('ProdCost_PackingRequestHF_save_StoreNo').value == '') { document.getElementById('ProdCost_PackingRequestHF_save_StoreNo').focus(); return; }
+        var items_list = new Array();
+        var trs = document.getElementById('PackingInformationTBody').getElementsByTagName("tr");
+        for (var i = 0; i < trs.length; i++) {
+            var inpt = trs[i].cells[9].children[0]
+            items_list.push
+                ({
+                    CompNo: '@Html.CompNo()',
+                    OrderYear: $('#ProdCost_PackingRequestHF_save_OrderYear').val(),
+                    OrderNo: $('#ProdCost_PackingRequestHF_save_OrderNo').val(),
+                    Serial: $('#ProdCost_PackingRequestHF_save_SrNo').val(),
+                    PackItem: trs[i].cells[0].innerHTML,
+                    FinItem: trs[i].cells[3].innerHTML,
+                    UnitCode: trs[i].cells[0].innerHTML,
+                    UnitSerial: trs[i].cells[0].innerHTML,
+                    FillQty: inpt.value,
+                });
+        }
+        burn({
+            SR: $('#ProdCost_PackingRequestHF_save_SrNo').val(),
+            OrderYear: $('#ProdCost_PackingRequestHF_save_OrderYear').val(),
+            OrderNo: $('#ProdCost_PackingRequestHF_save_OrderNo').val(),
+            Date: $('#ProdCost_PackingRequestHF_save_TransDate').val(),
+            StoreNo: $('#ProdCost_PackingRequestHF_save_StoreNo').val(),
+            BusnUnit: $('#ProdCost_PackingRequestHF_save_txtBusnUnit').val(),
+            DeptNo: $('#PackingInformation_DepNo').html().trim(),
+            AccNo: $('#PackingInformation_AccNo').html().trim(),
+            FormCode: $('#ProdCost_PackingRequestHF_TxtFormCode').val(),
+            FormDesc: $('#ProdCost_PackingRequestHF_LblFormDesc').val(),
+            items_list: items_list,
+            func: func
+        }, '../../../PackingInformation/AddRec', '', LoadProdCost_PackingRequestHF, false)
+    }
+    function LoadProdCost_PackingRequestHF() {
+        $('#PackingInformationListTableDiv').load('../../../PackingInformation/List');
+        $('#ProdCost_PackingRequestHF_save_ProdCost_PackingRequestHF').modal('hide')
+    }
+    function EditMRP_PackingInformation(year_, code_, serial_, e) {
+        sr = serial_;
+        code = code_;
+        func = "edit";
+        $('#ProdCost_PackingRequestHF_save_OrderNo').empty()
+        $('#ProdCost_PackingRequestHF_save_OrderNo').append('<option value="' + code_ + '">' + code_ + '</option>');
+        $('#ProdCost_PackingRequestHF_save_OrderNo').val(code_)
+
+        $('#ProdCost_PackingRequestHF_save_OrderNo').prop('disabled', true)
+        $('#ProdCost_PackingRequestHF_save_OrderYear').prop('disabled', true)
+        $('#ProdCost_PackingRequestHF_save_OrderYear').val(year_);
+        $('#ProdCost_PackingRequestHF_save_SrNo').val(serial_);
+        GetOrdPackReqSr();
+        //GetOrdPackReqSr();
+
+    }
+
+    function DeleteMRP_PackingInformation(OrderYear_, OrderNo_, SR_, e) {
+        if (RemoveRow(e)) {
+            var items_list = new Array();
+            burn({
+                SR: SR_,
+                OrderYear: OrderYear_,
+                OrderNo: OrderNo_,
+                Date: '@DateTime.Now.ToString("yyyy-MM-dd")',
+                StoreNo: 0,
+                BusnUnit: 0,
+                DeptNo: 0,
+                AccNo: 0,
+                FormCode: 0,
+                FormDesc: 0,
+                items_list: items_list,
+                func: 'delete'
+            }, '../../../PackingInformation/AddRec', '', LoadProdCost_PackingRequestHF, false)
+        }
+    }
+</script>

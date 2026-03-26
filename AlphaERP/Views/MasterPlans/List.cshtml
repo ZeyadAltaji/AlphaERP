@@ -1,0 +1,119 @@
+@model List<AlphaERP.Models.MRP_GeneralPlanInfoH>
+
+<table id="MRP_GeneralPlanInfoHDataTable" class="table table-hover dataTable">
+    <thead>
+        <tr>
+            <th>@Html.Recource(5293)</th>
+            <th>@Html.Recource(6678)</th>
+            <th>@Resources.Resource.StartDate</th>
+            <th>@Resources.Resource.EndDate</th>
+            <th>@Html.Recource(737)</th>
+            <th>@Html.Recource(771)</th>
+            <th>@Html.Recource(973)</th>
+            <th>@Html.Recource(3394)</th>
+            <th>@Html.Recource(7472)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="MasterPlanTBBD">
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.PlanYear</td>
+                <td>@item.PlanNo</td>
+                <td>@item.StartDate.Value.ToString("yyyy/MM/dd")</td>
+                <td>@item.EndDate.Value.ToString("yyyy/MM/dd")</td>
+                <td>@item.UserID</td>
+                <td>@item.EntryDate.Value.ToString("yyyy/MM/dd")</td>
+                <td>@item.PlanNotes</td>
+                <td>
+                    @if (item.PlanActive)
+                    {
+                        <i class="fa fa-check"></i>
+                    }
+                </td>
+                <td>
+                    @{double x = (item.EndDate.Value - item.StartDate.Value).TotalDays;}
+                    @x
+                </td>
+                <td>
+                    <button @Html.EditButton() class="btn-ed" onclick="EditMRP_GeneralPlanInfoH('@item.CompNo', '@item.PlanYear', '@item.PlanNo')">
+                        <i class="fa fa-pencil-alt"></i>
+                    </button>
+                    <button class="btn-ed" onclick="PrintSelectionModel('@item.CompNo', '@item.PlanYear', '@item.PlanNo')">
+                        <i class="fa fa-print"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="modal fade" id="Model_MasterPlanReport">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+               
+            </div>
+            <div class="box-body box-profile" id="MasterPlanReportDiv">
+                <div class="modal-body row">
+                    <div class="form-group">
+                        <input type="number" id="MasterPlanReport_CompNo" hidden />
+                        <input type="number" id="MasterPlanReport_Planyear" hidden />
+                        <input type="number" id="MasterPlanReport_PlanNo" hidden />
+                        <div class="col-md-6">
+                            <label class="unselectable" for="MasterPlanReport_PreviewTotalPlan">
+                                <input id="MasterPlanReport_PreviewTotalPlan" type="radio" name="MRP_MasterPlanReport" checked>
+                                @Resources.Resource.PreviewTotalPlan
+                            </label>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="unselectable" for="MasterPlanReport_PreviewDetailsPlan">
+                                <input name="MRP_MasterPlanReport" type="radio" id="MasterPlanReport_PreviewDetailsPlan" />
+                                @Resources.Resource.PreviewDdetailsPlan
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" onclick="PrintMasterPlanReport()">
+                        <i class="fa fa-print"></i>
+                        @Html.Recource(9565)
+                    </button>
+                    <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+  
+    var table = $('#MRP_GeneralPlanInfoHDataTable').DataTable({
+        "order": [[0, "desc"], [1, "desc"]],
+        "scrollY": TableHeight(),
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    $('#Model_MasterPlanReport').draggable({
+        handle: ".modal-header",
+    });
+    function PrintSelectionModel(CompNo, PlanYear, PlanNo) {
+        MasterPlanReport_CompNo.value = CompNo;
+        MasterPlanReport_Planyear.value = PlanYear;
+        MasterPlanReport_PlanNo.value = PlanNo;
+        MasterPlanReport_PreviewTotalPlan.checked = true;
+        $('#Model_MasterPlanReport').modal('show');
+    }
+
+    function PrintMasterPlanReport() {
+        if (MasterPlanReport_PreviewTotalPlan.checked == true) {
+            PrintGreport(MasterPlanReport_CompNo.value, MasterPlanReport_Planyear.value, MasterPlanReport_PlanNo.value,'MasterPlansReport')
+        }
+        else if (MasterPlanReport_PreviewDetailsPlan.checked == true) {
+            PrintGreport(MasterPlanReport_CompNo.value, MasterPlanReport_Planyear.value, MasterPlanReport_PlanNo.value, 'MasterPlansDetailed')
+        }
+    }
+</script>

@@ -1,0 +1,218 @@
+﻿<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-4">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-1">
+                <label class="unselectable" for="Ord_VoucIssue_OrdYear">@Resources.Resource.Year </label>
+            </div>
+            <div class="col-md-2">
+                <input onblur="Checkyear()" type="number" id="Ord_VoucIssue_OrdYear" value="@DateTime.Now.Year" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" />
+            </div>
+            <div class="col-md-1">
+                <label class="unselectable" for="Ord_Vouc_OrderType">@Resources.Resource.PurchaseType </label>
+            </div>
+            <div class="col-md-2">
+                <select style="width:100%" id="Ord_Vouc_OrderType" onchange="SerachVoucIssue()">
+                    <option value="0">@Html.Translate("أمر صرف", "Payment Order")</option>
+                    <option value="1">@Html.Translate("أمر اتلاف","WriteOff Order")</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-success btn-block" onclick="SerachVoucIssue()">
+                    @Resources.Resource.Search
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="Ord_VoucIssueDiv">
+
+    </div>
+</div>
+
+
+
+<script>
+    
+    SerachVoucIssue()
+    function Checkyear() {
+        if (Ord_VoucIssue_OrdYear.value < 2000) {
+            Ord_VoucIssue_OrdYear.value = "@DateTime.Now.Year"
+            Ord_VoucIssue_OrdYear.focus();
+        }
+    }
+    function SerachVoucIssue() {
+        wait();
+        if (Ord_Vouc_OrderType.value == 0) {
+            Ord_VoucIssueDiv.innerHTML = "";
+            $('#Ord_VoucIssueDiv').load('../../../VoucIssue/VocPaymentOrdList?OrdYear=' + Ord_VoucIssue_OrdYear.value);
+            done();
+        }
+        else {
+            Ord_VoucIssueDiv.innerHTML = "";
+            $('#Ord_VoucIssueDiv').load('../../../VoucIssue/VocWriteOffList?OrdYear=' + Ord_VoucIssue_OrdYear.value);
+            done();
+        }
+    }
+
+
+    function SelectionOrdRec_PaymentOrder(OrdYear, OrderNo, TawreedNo) {
+        wait();
+        burn({ OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo }, '../../../VoucIssue/ChoosePaymentOrderRec', '', LoadChoosePaymentOrderRec, true);
+    }
+    function LoadChoosePaymentOrderRec(r) {
+        Ord_VoucIssueDiv.innerHTML = "";
+        $('#Ord_VoucIssueDiv').html(r);
+        $('#Model_Vouc_PaymentOrder').modal('hide');
+        done();
+    }
+
+    function SelectionOrdRec_WriteOff(OrdYear, OrderNo, TawreedNo, ShipSer) {
+        wait();
+        burn({ OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo, ShipSer: ShipSer }, '../../../VoucIssue/ChooseWriteOffRec', '', LoadChooseWriteOffRec, true);
+    }
+    function LoadChooseWriteOffRec(r) {
+        Ord_VoucIssueDiv.innerHTML = "";
+        $('#Ord_VoucIssueDiv').html(r);
+        $('#Model_Vouc_WriteOffOrder').modal('hide');
+        done();
+    }
+    var _OrdYear = 0;
+    var _OrderNo = 0;
+    var _TawreedNo = 0;
+    var _ShipSer = 0;
+
+    function DeleteVoucIssue(OrdYear, OrderNo, TawreedNo, VouNo, VouType) {
+        if (confirm('@Resources.Resource.ConfirmDeleteDialog')) {
+            _OrdYear = OrdYear;
+            _OrderNo = OrderNo;
+            _TawreedNo = TawreedNo;
+            burn({ OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo, VouNo: VouNo, VouType: VouType }, '../../../VoucIssue/Del_PaymentOrder', '', ReloadDelPaymentOrderInfo, false);
+        }
+    }
+    function ReloadDelPaymentOrderInfo() {
+        MsgBox('@Html.Recource(2598)', 'red');
+        $('#VoucIssueInfoTBody').empty();
+        var table = $("#OrdVoucIssueTable tbody");
+        var trs = table.find('tr');
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i])[0].getAttribute('OrdYear') == _OrdYear && $(trs[i])[0].getAttribute('OrderNo') == _OrderNo && $(trs[i])[0].getAttribute('TawreedNo') == _TawreedNo) {
+                var nTr = $(trs[i])[0];
+                wait();
+                $(this).attr("opened", "details_close");
+                var OrdYear = _OrdYear;
+                var OrderNo = _OrderNo;
+                var TawreedNo = _TawreedNo;
+
+                $.get("../../../../VoucIssue/DetailsPaymentOrderRec?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo, function (data) {
+                    OrdVoucIssueTable.fnOpen(nTr, data, 'details');
+                    done();
+                });
+            }
+        }
+    }
+
+    function PostedVoucIssue(OrdYear, OrderNo, TawreedNo, VouNo, VouType) {
+        if (confirm('@Resources.Resource.ApprovalVoucIssue')) {
+            _OrdYear = OrdYear;
+            _OrderNo = OrderNo;
+            _TawreedNo = TawreedNo;
+            burn({ OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo, VouNo: VouNo, VouType: VouType }, '../../../VoucIssue/Posted_PaymentOrder', '', ReloadPostedPaymentOrderInfo, false);
+        }
+    }
+    function ReloadPostedPaymentOrderInfo() {
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#VoucIssueInfoTBody').empty();
+        var table = $("#OrdVoucIssueTable tbody");
+        var trs = table.find('tr');
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i])[0].getAttribute('OrdYear') == _OrdYear && $(trs[i])[0].getAttribute('OrderNo') == _OrderNo && $(trs[i])[0].getAttribute('TawreedNo') == _TawreedNo) {
+                var nTr = $(trs[i])[0];
+                wait();
+                $(this).attr("opened", "details_close");
+                var OrdYear = _OrdYear;
+                var OrderNo = _OrderNo;
+                var TawreedNo = _TawreedNo;
+
+                $.get("../../../../VoucIssue/DetailsPaymentOrderRec?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo, function (data) {
+                    OrdVoucIssueTable.fnOpen(nTr, data, 'details');
+                    done();
+                });
+            }
+        }
+    }
+
+
+    function DeleteWriteOff(OrdYear, OrderNo, TawreedNo, ShipSer, VouNo, VouType) {
+        if (confirm('@Resources.Resource.ConfirmDeleteDialog')) {
+            _OrdYear = OrdYear;
+            _OrderNo = OrderNo;
+            _TawreedNo = TawreedNo;
+            _ShipSer = ShipSer;
+
+            burn({ OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo, ShipSer: ShipSer, VouNo: VouNo, VouType: VouType }, '../../../VoucIssue/Del_WriteOff', '', ReloadDelWriteOffInfo, false);
+        }
+    }
+    function ReloadDelWriteOffInfo() {
+        MsgBox('@Html.Recource(2598)', 'red');
+        $('#Ord_WriteOffInfoTBody').empty();
+        var table = $("#OrdWriteOffTable tbody");
+        var trs = table.find('tr');
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i])[0].getAttribute('OrdYear') == _OrdYear && $(trs[i])[0].getAttribute('OrderNo') == _OrderNo && $(trs[i])[0].getAttribute('TawreedNo') == _TawreedNo && $(trs[i])[0].getAttribute('ShipSer') == _ShipSer) {
+                var nTr = $(trs[i])[0];
+                wait();
+                $(this).attr("opened", "details_close");
+                var OrdYear = _OrdYear;
+                var OrderNo = _OrderNo;
+                var TawreedNo = _TawreedNo;
+                var ShipSer = _ShipSer;
+
+                $.get("../../../../VoucIssue/DetailsWriteOffRec?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo + '&ShipSer=' + ShipSer, function (data) {
+                    OrdWriteOffTable.fnOpen(nTr, data, 'details');
+                    done();
+                });
+            }
+        }
+    }
+
+    function PostedWriteOff(OrdYear, OrderNo, TawreedNo, ShipSer, VouNo, VouType) {
+        if (confirm('@Resources.Resource.ApprovalVoucIssue')) {
+            _OrdYear = OrdYear;
+            _OrderNo = OrderNo;
+            _TawreedNo = TawreedNo;
+            _ShipSer = ShipSer;
+
+            burn({ OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo, ShipSer: ShipSer, VouNo: VouNo, VouType: VouType }, '../../../VoucIssue/Posted_WriteOff', '', ReloadPostedWriteOffInfo, false);
+        }
+    }
+    function ReloadPostedWriteOffInfo() {
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#Ord_WriteOffInfoTBody').empty();
+        var table = $("#OrdWriteOffTable tbody");
+        var trs = table.find('tr');
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i])[0].getAttribute('OrdYear') == _OrdYear && $(trs[i])[0].getAttribute('OrderNo') == _OrderNo && $(trs[i])[0].getAttribute('TawreedNo') == _TawreedNo && $(trs[i])[0].getAttribute('ShipSer') == _ShipSer) {
+                var nTr = $(trs[i])[0];
+                wait();
+                $(this).attr("opened", "details_close");
+                var OrdYear = _OrdYear;
+                var OrderNo = _OrderNo;
+                var TawreedNo = _TawreedNo;
+                var ShipSer = _ShipSer;
+
+                $.get("../../../../VoucIssue/DetailsWriteOffRec?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo + '&ShipSer=' + ShipSer, function (data) {
+                    OrdWriteOffTable.fnOpen(nTr, data, 'details');
+                    done();
+                });
+            }
+        }
+    }
+
+
+
+</script>

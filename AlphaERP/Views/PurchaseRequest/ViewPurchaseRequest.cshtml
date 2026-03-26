@@ -1,0 +1,498 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    string ReqNo = ViewBag.ReqNo;
+    int ReqYear = ViewBag.ReqYear;
+    Company company = (Company)Session["company"];
+
+    List<BusunisUnit> BU = ViewBag.BusunisUnit;
+
+    Ord_RequestHF OrdRequestHF = new MDB().Ord_RequestHF.Where(x => x.CompNo == company.comp_num && x.ReqYear == ReqYear && x.ReqNo == ReqNo).FirstOrDefault();
+    List<Ord_RequestDF> OrdRequestDF = new MDB().Ord_RequestDF.Where(x => x.CompNo == company.comp_num && x.ReqYear == ReqYear && x.ReqNo == ReqNo).ToList();
+    string RBBDesc = BU.Where(x => x.Id == OrdRequestHF.ReqBU).Select(O => Html.Translate(O.DescAr, O.DescEn)).FirstOrDefault().ToString();
+    string ABBDesc = BU.Where(x => x.Id == OrdRequestHF.AuthBU).Select(O => Html.Translate(O.DescAr, O.DescEn)).FirstOrDefault().ToString();
+    List<InvItemsMF> Mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+    double TotalAll = new MDB().Ord_RequestDF.Where(x => x.CompNo == company.comp_num && x.ReqYear == ReqYear && x.ReqNo == ReqNo).Sum(o => o.TotalValue).Value;
+    string OrderPriortyDesc = "";
+    if (OrdRequestHF.OrderPriority == 0)
+    {
+        OrderPriortyDesc = Html.Translate("عادي", "Normal").ToString();
+    }
+    else if (OrdRequestHF.OrderPriority == 1)
+    {
+        OrderPriortyDesc = Html.Translate("متوسط", "Medium").ToString();
+    }
+    else if (OrdRequestHF.OrderPriority == 2)
+    {
+        OrderPriortyDesc = Html.Translate("عاجل", "Urgently").ToString();
+    }
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+
+    List<PayCodes> Currency = ViewBag.Currency;
+    List<PayCodes> PrdType = ViewBag.PrdType;
+    List<PayCodes> Purpose = ViewBag.Purpose;
+
+    double QtyOH = 0;
+    double ResQty = 0;
+    DataTable Dt = new DataTable();
+
+    DataTable DtAttachment = new DataTable();
+    DtAttachment = ViewBag.Arch;
+    
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+
+    var Count = 1;
+}
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="ProdCost_PurchaseReqHF_v_ReqDate">@Html.Recource(58) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        @OrdRequestHF.ReqDate.Value.ToShortDateString()
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="ProdCost_PurchaseReqHF_v_ReqDeliveryDate">@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        @OrdRequestHF.ReqDeliveryDate.Value.ToShortDateString()
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="ProdCost_PurchaseReqHF_v_ReferenceNo">@Html.Recource(96) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important; " type="text" id="ProdCost_PurchaseReqHF_v_ReferenceNo" value="@OrdRequestHF.RefNo" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(9700) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input disabled style="width:100%" type="text" id="ProdCost_PurchaseReqHF_v_txtReqBUName" value="@RBBDesc" />
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(9701) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input disabled style="width:100%" type="text" id="ProdCost_PurchaseReqHF_v_txtAuthBUName" value="@ABBDesc" />
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3242) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="ProdCost_PurchaseReqHF_Edit_CboPurpose" disabled>
+                            @foreach (var v in Purpose)
+                            {
+                                if (v.Id == OrdRequestHF.Purpose.Value)
+                                {
+                                    <option value="@v.Id" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                                else
+                                {
+                                    <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(9704) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input disabled style="width:100%" type="text" id="ProdCost_PurchaseReqHF_v_txtOrderPriorityName" value="@OrderPriortyDesc" />
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(1671) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="ProdCost_PurchaseReqHF_v_CboCurrCode" disabled>
+                            @foreach (var v in Currency)
+                            {
+                                if (v.Id == OrdRequestHF.CurrNo.Value)
+                                {
+                                    <option value="@v.Id" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                                else
+                                {
+                                    <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3265) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="ProdCost_PurchaseReqHF_Edit_CboOrderType" disabled>
+                            @foreach (var v in PrdType)
+                            {
+                                if (v.sys_minor == OrdRequestHF.OrderType.Value.ToString())
+                                {
+                                    <option value="@v.sys_minor" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                                else
+                                {
+                                    <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="ProdCost_PurchaseReqHF_v_ReqNotes">@Html.Recource(70)</label>
+                    </div>
+                    <div class="col-md-8">
+                        <textarea disabled required="true" style="width: 100%;height:75px !important;" id="ProdCost_PurchaseReqHF_v_ReqNotes">@OrdRequestHF.Note</textarea>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary btn-block" onclick="ViewDocuments()">
+                            @Html.Recource(539)
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+                    <table class="table table-hover" id="vPurchaseReqItemTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%; text-align: center !important;">@Html.Recource(44)</th>
+                                <th style="width: 20%; text-align: center !important;">@Html.Recource(74)</th>
+                                <th style="text-align: center !important;">@Html.Recource(67)</th>
+                                <th style="width: 90px !important; text-align: center !important;">@Html.Recource(3773)</th>
+                                <th style="width: 90px !important; text-align: center !important;">@Html.Recource(5432)</th>
+                                @if (CActive.ClientNo == 335)
+                                {
+                                    <th style="text-align: center !important;">@Html.Recource(5693)</th>
+                                }
+                                else
+                                {
+                                    <th style="text-align: center !important;">@Html.Recource(49)</th>
+                                }
+                                @if (compMF.UseQty2 == true)
+                                {
+                                    if (CActive.ClientNo == 335)
+                                    {
+                                        <th style="text-align: center !important;">@Html.Recource(442)</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="text-align: center !important;">@Html.Recource(72)</th>
+                                    }
+                                }
+                                else
+                                {
+                                    <th style="text-align: center !important;" hidden>@Html.Recource(72)</th>
+                                }
+                                <th style="text-align: center !important;">@Html.Translate("السعر المبدئي", "Budgetary Price")</th>
+                                <th style="text-align: center !important;">@Html.Recource(68)</th>
+                                <th style="text-align: center !important;">@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</th>
+                                <th style="text-align: center !important;">@Html.Recource(70)</th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <th style="text-align: center !important;"></th>
+                                <th style="text-align: center !important;"></th>
+                                <th style="text-align: center !important;"></th>
+                                <th style="text-align: center !important;"></th>
+                                <th style="text-align: center !important;"></th>
+                                <th style="text-align: center !important;"></th>
+                                @if (compMF.UseQty2 == true)
+                                {
+                                    <th style="text-align: center !important;"></th>
+                                }
+                                else
+                                {
+                                    <th style="text-align: center !important;" hidden></th>
+                                }
+                                <th style="text-align: center !important;">Total</th>
+                                <th style="text-align: center !important;" id="TotalAll">@TotalAll</th>
+                                <th style="text-align: center !important;"></th>
+                                <th style="text-align: center !important;"></th>
+                                <th style="text-align: center !important;"></th>
+                                <th style="text-align: center !important;"></th>
+                            </tr>
+                        </tfoot>
+                        <tbody id="vPurchaseReqItemTBody">
+                            @foreach (Ord_RequestDF item in OrdRequestDF)
+                            {
+                                {
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        Dt = new DataTable();
+                                        cn.Open();
+                                        using (SqlCommand cmd = new SqlCommand())
+                                        {
+                                            cmd.Connection = cn;
+                                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                            cmd.CommandText = "Ord_GetItemUnitCost";
+                                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                            cmd.Parameters.Add(new SqlParameter("@ItemNo", System.Data.SqlDbType.VarChar, 20)).Value = item.ItemNo;
+                                            cmd.Parameters.Add(new SqlParameter("@UnitSerial", System.Data.SqlDbType.SmallInt, 4)).Value = item.UnitSerial;
+                                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                            {
+                                                DA.Fill(Dt);
+                                            }
+                                        }
+                                    }
+                                    foreach (DataRow row in Dt.Rows)
+                                    {
+                                        QtyOH = Convert.ToDouble(row["AvlQty"]);
+                                        ResQty = Convert.ToDouble(row["ResQty"]);
+                                    }
+                                }
+                                string ItemDesc = Mf.Where(x => x.ItemNo == item.ItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                                if(item.IsReject == true)
+                                {
+                                    <tr style="background-color:red;">
+                                    <td style="word-wrap: break-word; white-space: normal; text-align: center !important;" id="vPurchaseRequest_ItemNo">@item.ItemNo</td>
+                                    <td style="word-wrap: break-word; white-space: normal; text-align: center !important;">@ItemDesc</td>
+                                    <td style="text-align: center;">
+                                        @item.TUnit
+                                    </td>
+                                    <td style="text-align: center;">
+                                        @item.QtyStock
+                                    </td>
+                                    <td style="text-align: center;">
+                                        @ResQty.ToString("0.000")
+                                    </td>
+                                    <td style="text-align: center;">
+                                        @item.Qty.Value
+                                    </td>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        if (item.Qty2 == null)
+                                        {
+                                            <td style="text-align: center;">0</td>
+                                        }
+                                        else
+                                        {
+                                            <td style="text-align: center;">@item.Qty2.Value</td>
+                                        }
+
+                                    }
+                                    else
+                                    {
+                                        if (item.Qty2 == null)
+                                        {
+                                            <td style="text-align: center;" hidden>0</td>
+                                        }
+                                        else
+                                        {
+                                            <td style="text-align: center;" hidden>@item.Qty2.Value</td>
+                                        }
+                                    }
+                                    <td style="text-align: center;">
+                                        @item.Price.Value
+                                    </td>
+                                    <td style="text-align: center;">@item.TotalValue.Value</td>
+                                    <td style="text-align: center;">
+                                        @item.ReqDeliveryDate.ToString("yyyy-MM-dd")
+                                    </td>
+                                    <td style="word-wrap: break-word; white-space: normal; text-align: center !important;">
+                                        @item.Note
+                                    </td>
+                                        <td style="word-wrap: break-word; white-space: normal; text-align: center !important;">
+                                            @Html.Translate("تم إرجاع المادة : " + item.RejectReason , "Item returned: " + item.RejectReason)
+                                        </td>
+                                    <td></td>
+                                </tr>
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td style="word-wrap: break-word; white-space: normal; text-align: center !important;" id="vPurchaseRequest_ItemNo">@item.ItemNo</td>
+                                        <td style="word-wrap: break-word; white-space: normal; text-align: center !important;">@ItemDesc</td>
+                                        <td style="text-align: center;">
+                                            @item.TUnit
+                                        </td>
+                                        <td style="text-align: center;">
+                                            @item.QtyStock
+                                        </td>
+                                        <td style="text-align: center;">
+                                            @ResQty.ToString("0.000")
+                                        </td>
+                                        <td style="text-align: center;">
+                                            @item.Qty.Value
+                                        </td>
+                                        @if (compMF.UseQty2 == true)
+                                        {
+                                            if (item.Qty2 == null)
+                                            {
+                                                <td style="text-align: center;">0</td>
+                                            }
+                                            else
+                                            {
+                                                <td style="text-align: center;">@item.Qty2.Value</td>
+                                            }
+
+                                        }
+                                        else
+                                        {
+                                            if (item.Qty2 == null)
+                                            {
+                                                <td style="text-align: center;" hidden>0</td>
+                                            }
+                                            else
+                                            {
+                                                <td style="text-align: center;" hidden>@item.Qty2.Value</td>
+                                            }
+                                        }
+                                        <td style="text-align: center;">
+                                            @item.Price.Value
+                                        </td>
+                                        <td style="text-align: center;">@item.TotalValue.Value</td>
+                                        <td style="text-align: center;">
+                                            @item.ReqDeliveryDate.ToString("yyyy-MM-dd")
+                                        </td>
+                                        <td style="word-wrap: break-word; white-space: normal; text-align: center !important;">
+                                            @item.Note
+                                        </td>
+                                        <td style="word-wrap: break-word; white-space: normal; text-align: center !important;"></td>
+                                        <td></td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@*-----------------------------Model Documents-------------------------------------*@
+<div class="modal fade" id="Model_vPR_DocumentsArchive">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أرشفة الوثائق", "Archive Documents")</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="vPR_DocumentArchiveTable">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(66)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5629)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5630)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5631)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5632)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5633)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="vPR_DocumentArchiveTbody" style="border-top: 1px solid #ddd;">
+                                @foreach (DataRow row in DtAttachment.Rows)
+                                {
+                                    DateTime date = Convert.ToDateTime(row["DataUpload"].ToString());
+                                    <tr id="vPR_DocumentArchive_@Count">
+                                        <td>
+                                            <input id="vPR_EditDocumentArchive_FileId" type="hidden" value="@Count" />
+                                        </td>
+                                        <td>
+                                            <input type="text" style="width: 115px !important; text-align: center !important" id="vPR_EditDocumentArchive_Description_@Count" value="@row["Description"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <a onclick="DownloadFile('@row["FileName"].ToString()','@Convert.ToBase64String((byte[])row["ArchiveData"])')"><span class="glyphicon glyphicon-download"></span></a>
+                                        </td>
+                                        <td>
+                                            <input id="vPR_EditAttachmentFiles_FileName_@Count" type="text" style="text-align: center !important" value="@row["FileName"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="vPR_EditDocumentArchive_UploadDate_@Count" type="text" style="width: 95px; text-align: center !important" value="@date.ToShortDateString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="vPR_EditDocumentArchive_FileSize_@Count" type="text" style="width: 70px; text-align: center !important" value="@row["FileSize"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="vPR_EditDocumentArchive_FileType_@Count" type="text" style="width: 55px; text-align: center !important" value="@row["ContentType"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input type="hidden" id="InputSerial" value="@(Count++)" />
+                                        </td>
+                                    </tr>
+                                }
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ViewPRDocumentArchive()" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var DocumentsArchiveValue = 0;
+    $('#Model_vPR_DocumentsArchive').draggable({
+        handle: ".modal-header",
+    });
+    function ViewDocuments() {
+        $('#Model_vPR_DocumentsArchive').modal('show')
+    }
+
+    function DownloadFile(FileName, base64) {
+        var binaryString = window.atob(base64);
+        var binaryLen = binaryString.length;
+        var bytes = new Uint8Array(binaryLen);
+        for (var i = 0; i < binaryLen; i++) {
+            var ascii = binaryString.charCodeAt(i);
+            bytes[i] = ascii;
+        }
+        saveByteArray(FileName, bytes)
+    }
+    function saveByteArray(reportName, byte) {
+        var blob = new Blob([byte], { type: "application/pdf" });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        var fileName = reportName;
+        link.download = fileName;
+        link.click();
+    }
+    function ViewPRDocumentArchive() {
+        $('#ViewPRDocumentArchive').modal('hide')
+    }
+</script>
+@*--------------------------------END Model Documents -----------------------------*@

@@ -1,0 +1,108 @@
+﻿@using System.Data.SqlClient;
+@using AlphaERP.Models
+
+@{
+    int OrdYear = ViewBag.OrdYear;
+    int OrderNo = ViewBag.OrderNo;
+    string TawreedNo = ViewBag.TawreedNo;
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    List<int> store = new MDB().InvStoreUsers.Where(x => x.CompNo == company.comp_num && x.UserID == me.UserID && x.AllPerm == true).Select(o => o.StoreNo).ToList();
+    List<Ord_InboundsInfoHF> InboundsInfoHF = new MDB().Ord_InboundsInfoHF.Where(x => x.CompNo == company.comp_num && x.OrderYear == OrdYear
+&& x.OrderNo == OrderNo && x.TawreedNo == TawreedNo && store.Contains(x.InboundStoreNo.Value)).ToList();
+    int Srial = 1;
+}
+
+
+<style>
+    tr.details {
+        max-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    tr.details {
+        background-color: gray !important;
+        border-style: solid !important;
+    }
+</style>
+
+<div id="InboundsInfoHFTable_@TawreedNo">
+    <div style="width: 100%; padding: 1px; background: #fff !important ">
+        <table class="table table-hover" id="InboundsInfoHFTable_@TawreedNo" style="background:lightgray;width:100%">
+            <thead>
+                <tr>
+                    <th style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center !important;">@Html.Translate("رقم الواردة", "Inbound No.")</th>
+                    <th style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center !important;">@Html.Recource(206)</th>
+                    <th style="width: 15%; text-align: center !important;">@Html.Recource(1)</th>
+                    <th style="width: 15%; text-align: center !important;">@Html.Recource(70)</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (Ord_InboundsInfoHF item in InboundsInfoHF)
+                {
+                    InvStoresMF StoreM = new MDB().InvStoresMFs.Where(x => x.CompNo == item.CompNo && x.StoreNo == item.InboundStoreNo).FirstOrDefault();
+                <tr id="nboundsInfoHF_@Srial">
+                    <td style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center;direction:ltr;" id="InboundsInfo_InboundNo_@Srial">@item.InboundSer</td>
+                    <td style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center;" id="InboundsInfo_InboundDate_@Srial">@item.InboundDate.ToString("yyyy-MM-dd")</td>
+                    <td style="width: 15%; text-align: center; word-wrap: break-word; white-space: normal;" id="InboundsInfo_InboundStores_@Srial">@Html.Translate(StoreM.StoreName, StoreM.StoreNameEng)</td>
+                    <td style="word-wrap: break-word; white-space: normal; width: 20%; text-align: center;">@item.InboundNotes</td>
+                    <td>
+                        @if (item.IsApproval == false)
+                        {
+                            if (item.IsClosed == false)
+                            {
+                                <button onclick="EditInboundsInfo('@item.OrderYear', '@item.OrderNo', '@item.TawreedNo', '@item.InboundSer')" type="button" class="btn btn-ed ex" title=" @Html.Translate("تعديل المعلومات الواردة", "Edit Inbounds Info")">
+                                    <i class="fa fa-pencil-alt"></i>
+                                </button>
+                                <button id="eInboundsInfo" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                                    @Html.Translate("تعديل المعلومات الواردة", "Edit Inbounds Info")
+                                </button>
+                                <button type="button" class="btn-de" onclick="DeleteInboundsInfo('@item.OrderYear','@item.OrderNo', '@item.TawreedNo','@item.InboundSer')" title=" @Html.Translate("حذف المعلومات الواردة", "Delete Inbounds Info")">
+                                    <i class="fa fa-trash-alt" aria-hidden="true"></i>
+                                </button>
+                                <button class="btn btn-ed ex" title="@Html.Translate("اعتماد", "Approval")" onclick="ApprovalInboundsInfo(@item.OrderYear,@item.OrderNo,'@item.TawreedNo','@item.InboundSer')">
+                                    <i class="fa fa-check" style="color: red;"></i>
+                                </button>
+                            }
+
+                        }
+                        else
+                        {
+                            if (item.IsClosed == false)
+                            {
+                                <button disabled type="button" class="btn btn-ed ex" title=" @Html.Translate("تعديل المعلومات الواردة", "Edit Inbounds Info")">
+                                    <i class="fa fa-pencil-alt"></i>
+                                </button>
+                                <button id="eInboundsInfo" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                                    @Html.Translate("تعديل المعلومات الواردة", "Edit Inbounds Info")
+                                </button>
+                                <button type="button" class="btn btn-de ex" disabled title=" @Html.Translate("حذف المعلومات الواردة", "Delete Inbounds Info")">
+                                    <i class="fa fa-trash-alt" aria-hidden="true"></i>
+                                </button>
+                                <button class="btn btn-ed ex" title="@Html.Translate("اعتماد", "Approval")" disabled>
+                                    <i class="fa fa-check" style="color: red;"></i>
+                                </button>
+                            }
+                        }
+                        <button class="btn btn-default ex" title="عرض" href="/InboundsInfo/ViewInboundsInfo?OrdYear=@item.OrderYear&OrderNo=@item.OrderNo&TawreedNo=@item.TawreedNo&InboundSer=@item.InboundSer" target="_blank">
+                            <i style="font-weight:100" class="fa fa-folder"></i>
+                            @Html.Translate("عرض", "View")
+                        </button>
+                        <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function EditInboundsInfo(OrdYear, OrdNo, TawreedNo, InboundSer) {
+        $('#eInboundsInfo').attr("href", '/InboundsInfo/EditInboundsInfo?OrdYear=' + OrdYear + '&OrderNo=' + OrdNo + '&TawreedNo=' + TawreedNo + '&InboundSer=' + InboundSer + '');
+        $('#eInboundsInfo').click();
+    }
+</script>

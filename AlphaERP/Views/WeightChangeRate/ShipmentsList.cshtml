@@ -1,0 +1,129 @@
+﻿@using System.Data.SqlClient;
+@using AlphaERP.Models
+@{
+    int OrdYear = 0;
+    if (ViewBag.OrdYear == null)
+    {
+        OrdYear = DateTime.Now.Year;
+    }
+    else
+    {
+        OrdYear = ViewBag.OrdYear;
+    }
+
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    List<PurchaseOrderInfo> lShipments = new MDB().Database.SqlQuery<PurchaseOrderInfo>(string.Format("SELECT OrderHF.OrdYear,OrderHF.OrderNo ,OrderHF.TawreedNo,Ord_OrderShippingHF.ShipSer,convert(date,OrderHF.EnterDate) as EnterDate ,OrderHF.VendorNo,OrderHF.RefNo  " +
+    "FROM Ord_OrderShippingHF INNER JOIN OrderHF on Ord_OrderShippingHF.CompNo = OrderHF.CompNo AND Ord_OrderShippingHF.OrderYear = OrderHF.OrdYear " +
+    "AND Ord_OrderShippingHF.OrderNo = OrderHF.OrderNo AND Ord_OrderShippingHF.TawreedNo = OrderHF.TawreedNo " +
+    "where (Ord_OrderShippingHF.CompNo = '{0}') AND (Ord_OrderShippingHF.OrderYear = '{1}') AND (OrderHF.Approved = 1) GROUP BY OrderHF.OrdYear,OrderHF.OrderNo ,OrderHF.TawreedNo,Ord_OrderShippingHF.ShipSer ,convert(date,OrderHF.EnterDate),OrderHF.VendorNo,OrderHF.RefNo order by OrderHF.OrdYear,OrderHF.OrderNo desc ,OrderHF.TawreedNo desc,Ord_OrderShippingHF.ShipSer asc ", company.comp_num, OrdYear)).ToList();
+}
+
+<table class="table" id="WeightRateTable">
+    <thead>
+        <tr>
+            <th>@Html.Recource(3197)</th>
+            <th>@Html.Recource(3797)</th>
+            <th>@Html.Recource(696)</th>
+            <th>@Html.Recource(3833)</th>
+            <th>@Html.Recource(517)</th>
+            <th>@Html.Recource(96)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="WeightRateTbody">
+        @foreach (PurchaseOrderInfo P in lShipments)
+        {
+            Vendor v = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.VendorNo == P.VendorNo).FirstOrDefault();
+        <tr OrdYear="@P.OrdYear" OrderNo="@P.OrderNo" TawreedNo="@P.TawreedNo" ShipSer="@P.ShipSer">
+            <td>@P.OrderNo</td>
+            <td>@P.TawreedNo</td>
+            <td>@P.ShipSer</td>
+            <td>@P.EnterDate.ToString("yyyy-MM-dd")</td>
+            <td>@Html.Translate(v.Name, v.Eng_Name)</td>
+            <td>@P.RefNo</td>
+            <td>
+                <button onclick="btnexWeightRate(this)" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default ex" title="@Html.Recource(769)">
+                    <i style="font-weight:100" class="fa fa-folder"></i>
+                </button>
+                @*<button style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default ex" title="@Html.Recource(769)">
+                    <i style="font-weight:100" class="fa fa-folder"></i>
+                </button>*@
+                <button onclick="CreateWeightRate('@P.OrdYear', '@P.OrderNo', '@P.TawreedNo', '@P.ShipSer')" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default" title=" @Html.Translate("اضافة محضر استلام", "Add Order Receipt")">
+                    <i class="fa fa-plus"></i>
+                </button>
+                <button id="AddWeightRate" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                    @Html.Translate("اضافة معدل الوزن", "Add Weight Rate")
+                </button>
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+    var WeightRateTable;
+    WeightRateTable = $('#WeightRateTable').dataTable({
+        "scrollY": 'calc( 100vh - 270px)',
+        "paging": true,
+        "pageLength": 25,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+
+    function btnexWeightRate(e) {
+        var nTr = e.parentNode.parentNode;
+        if ($(e).attr("opened") == 'details_close') {
+            WeightRateTable.fnClose(nTr);
+            $(e).attr("opened", "details_open");
+        }
+        else {
+            wait();
+            $(e).attr("opened", "details_close");
+            var OrdYear = $(e.parentNode.parentNode).attr("OrdYear");
+            var OrderNo = $(e.parentNode.parentNode).attr("OrderNo");
+            var TawreedNo = $(e.parentNode.parentNode).attr("TawreedNo");
+            var ShipSer = $(e.parentNode.parentNode).attr("ShipSer");
+
+            $.get("../../../../WeightChangeRate/DetailsWeightChangeRate?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo + '&ShipSer=' + ShipSer, function (data) {
+                WeightRateTable.fnOpen(nTr, data, 'details');
+                done();
+            });
+        }
+    }
+
+    //$('#WeightRateTable tbody td button.ex').click(function () {
+    //    var nTr = this.parentNode.parentNode;
+    //    if ($(this).attr("opened") == 'details_close') {
+    //        WeightRateTable.fnClose(nTr);
+    //        $(this).attr("opened", "details_open");
+    //    }
+    //    else {
+    //        wait();
+    //        $(this).attr("opened", "details_close");
+    //        var OrdYear = $(this.parentNode.parentNode).attr("OrdYear");
+    //        var OrderNo = $(this.parentNode.parentNode).attr("OrderNo");
+    //        var TawreedNo = $(this.parentNode.parentNode).attr("TawreedNo");
+    //        var ShipSer = $(this.parentNode.parentNode).attr("ShipSer");
+
+    //        $.get("../../../../WeightChangeRate/DetailsWeightChangeRate?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo + '&ShipSer=' + ShipSer, function (data) {
+    //            WeightRateTable.fnOpen(nTr, data, 'details');
+    //            done();
+    //        });
+    //    }
+    //});
+
+    function CreateWeightRate(OrdYear, OrdNo, TawreedNo, ShipSer) {
+        $('#AddWeightRate').attr("href", '/WeightChangeRate/AddWeightChangeRate?OrdYear=' + OrdYear + '&OrderNo=' + OrdNo + '&TawreedNo=' + TawreedNo +  '&ShipSer=' + ShipSer + '')
+        $('#AddWeightRate').click();
+    }
+    
+</script>
+
+
+
+
+
+

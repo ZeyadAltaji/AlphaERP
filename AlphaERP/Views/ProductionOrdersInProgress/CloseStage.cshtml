@@ -1,0 +1,138 @@
+﻿@model AlphaERP.Models.ProdCost_GetOrderStagesStatus_webView
+@using AlphaERP.Models;
+
+@{
+    var OrderNo = ViewBag.OrderNo;
+    string lang = Session["language"].ToString();
+    Byte ReqOp = 2;
+    Company company = (Company)Session["company"];
+    var OrderYear = ViewBag.OrderYear;
+    User me = (User)Session["me"];
+
+
+
+}
+<div class="form-group">
+    <div class="myfrom">
+        <div class="form-group">
+            <div class="col-md-4">
+                <label class="unselectable" for="OrderNo">@Html.Translate("رقم الأمر", "Order No")</label>
+            </div>
+            <div class="col-md-8" style="margin-bottom: 5px;">
+                <input type="text" id="OrderNo" value="@OrderNo" name="OrderNo" data-desc="@OrderNo" disabled />
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-4">
+                <label class="unselectable" for="stage_desc">@Html.Translate("وصف المرحلة", "stage Description")</label>
+            </div>
+            <div class="col-md-8" style="margin-bottom: 5px;">
+                <input type="text" id="stage_desc" value="@Model.stage_desc" name="stage_desc" disabled />
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-4">
+                <label class="unselectable" for="begin_date">@Html.Translate("تاريخ البدء", "begin date")</label>
+            </div>
+            <div class="col-md-8" style="margin-bottom: 5px;">
+                <input type="text" id="begin_date" value="@Model.begin_date" name="begin_date" disabled />
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-4">
+                <label class="unselectable" for="SelectDate_Time">@Html.Translate("حدد التاريخ والوقت", "Select Date & Time")</label>
+            </div>
+            <div class="col-md-8" style="margin-bottom: 5px;">
+                <input type="datetime-local" id="SelectDate_Time" name="SelectDate_Time" step="1" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" onblur="calculateNetTime()"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-4">
+                <label class="unselectable" for="netTimeDisplay">@Html.Translate("صافي الوقت", "Net Time")</label>
+            </div>
+            <div class="col-md-8" style="margin-bottom: 5px;">
+                <span id="netTimeDisplay"></span>
+            </div>
+        </div>
+    </div>
+    <div>
+        <button type="button" onclick="CloseStage(@company.comp_num,@OrderYear,@OrderNo,@Model.StageSer,@Model.stage_code,@ReqOp,'@me.UserID')" class="btn btn-primary">@Html.Translate("أغلاق", "Close")</button>
+    </div>
+</div>
+
+
+
+<script src="~/Scripts/jquery.signalR-2.4.1.js"></script>
+<script src="~/signalr/hubs"></script>
+<script>
+
+        $('#Model_CloseStage').draggable({
+            handle: ".modal-header",
+        });
+        //Calculate Time and show
+    function calculateNetTime() {
+        debugger;
+        var beginDateValue = moment(document.getElementById('begin_date').value, "DD/MM/YYYY h:mm:ss A");
+        var selectedDateTimeValue = moment(document.getElementById('SelectDate_Time').value);
+
+        if (!beginDateValue.isValid() || !selectedDateTimeValue.isValid()) {
+            alert('@Html.Translate("التاريخ والوقت غير صالحان !", "Date and time are invalid !")');
+        }   else {
+            debugger;
+            var duration = moment.duration(selectedDateTimeValue - beginDateValue);
+
+            var totalHours = duration.asHours();
+            var hours = Math.floor(totalHours);
+            var minutes = Math.floor((totalHours - hours) * 60);
+            var seconds = Math.floor((totalHours - hours - minutes / 60) * 3600);
+
+            var netTimeString = '@Html.Translate(" _ساعات ساعة  _دقائق دقيقة  _ثواني ثانية ", "_hours hours  _minutes minutes _seconds seconds")';
+
+            netTimeString = netTimeString.replace('_hours', hours)
+                .replace('_minutes', minutes)
+                .replace('_seconds', seconds)
+                .replace('_ساعات', hours)
+                .replace('_دقائق', minutes)
+                .replace('_ثواني', seconds);
+
+            $("#netTimeDisplay").text(netTimeString);
+        }
+    }
+    calculateNetTime();
+      function CloseStage(CompNo, OrderYear, OrderNo, StageSer, stage_code, ReqOp, UserID)
+    {
+         var beginDateValue = moment(document.getElementById('begin_date').value, "DD/MM/YYYY h:mm:ss A");
+         var selectedDateTimeValue = moment(document.getElementById('SelectDate_Time').value);
+
+         if (!beginDateValue.isValid() || !selectedDateTimeValue.isValid()) {
+             alert('@Html.Translate("التاريخ والوقت غير صالحان !", "Date and time are invalid !")');
+             return
+         } else if (selectedDateTimeValue.isBefore(beginDateValue)) {
+             alert('@Html.Translate("التاريخ والوقت لا يجب أن يكونا أقدم من التاريخ البدء.", "The date and time should not be older than the begin date.")');
+             return
+         }
+            var StageDate = document.getElementById("SelectDate_Time").value;
+                wait();
+                if (confirm('@Resources.Resource.ConfirmBOMDef'))
+                {
+                     burn({ CompNo: CompNo, OrderYear: OrderYear, OrderNo: OrderNo, StageSer: StageSer, stage_code: stage_code, StageDate: StageDate, ReqOp: ReqOp, UserID: UserID },
+                        '../../../ProductionOrdersInProgress/SendDataCloseStage',
+                        '',
+                        function (response) {
+                            hub.server.updateOrderStages(OrderYear, OrderNo);
+                            handleResponse(response);
+                            $('#Model_CloseStage').modal('hide');
+                                done();
+                            },
+                        false
+                    );
+               } else {done();}
+    }
+        function handleResponse(response) {
+            var message = response.ok;
+            if (message) {
+                alert(message);
+            }
+        }
+
+</script>

@@ -1,0 +1,359 @@
+﻿@model AlphaERP.Models.prod_formula_header_info
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    DataTable Dt = new DataTable();
+    List<ProdCost_Parameter> lProdCost = new MDB().ProdCost_Parameters.Where(x => x.CompNo == company.comp_num && x.ParmID == 1).ToList();
+    InvItemsMF InvItemsMF = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == Model.item_no).FirstOrDefault();
+
+}
+<style>
+    .GroupTitle {
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        background-color: lightblue;
+    }
+</style>
+
+
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_BOMH_Edit_formula_code">@Html.Recource(4286) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <input required="true" type="text" id="Prod_BOMH_Edit_formula_code" disabled value="@Model.formula_code" />
+    </div>
+    <div class="col-md-7" style="margin-bottom: 5px;">
+        <input style="width: 105%;" required="true" type="text" id="Prod_BOMH_Edit_formula_codeDesc" value="@Model.formula_desc" />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_BOMH_Edit_item_no">@Html.Recource(306) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <input required="true" type="text" id="Prod_BOMH_Edit_item_no" disabled value="@Model.item_no" />
+    </div>
+    <div class="col-md-7" style="margin-bottom: 5px;">
+        <input required="true" style="width: 105%;" type="text" id="Prod_BOMH_Edit_item_Desc" disabled value="@Html.Translate(InvItemsMF.ItemDesc,InvItemsMF.ItemDesc_Ara)"  />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_BOMH_Edit_Date">@Html.Recource(58) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <input type="date" value="@Model.formula_date.Value.ToString("yyyy-MM-dd")" id="Prod_BOMH_Edit_Date" />
+    </div>
+    <div class="col-md-1">
+        <label class="unselectable" for="Prod_BOMH_Edit_UnitCode">@Html.Recource(67) </label>
+    </div>
+    <div class="col-md-2">
+        <select style="width:100%" id="Prod_BOMH_Edit_UnitCode" required="true">
+            @{
+                using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                {
+                    Dt = new DataTable();
+                    cn.Open();
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        cmd.Connection = cn;
+                        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                        cmd.CommandText = "InvT_LoadItemUnits";
+                        cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                        cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = Model.item_no;
+                        using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                        {
+                            DA.Fill(Dt);
+                        }
+                    }
+                }
+            }
+            @foreach (DataRow row in Dt.Rows)
+            {
+                if (@row["UnitSerial"].ToString() == Model.UnitSerial.ToString())
+                {
+                    <option value="@row["UnitSerial"].ToString()" selected>
+                        @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                    </option>
+                }
+                else
+                {
+                    <option value="@row["UnitSerial"].ToString()">
+                        @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                    </option>
+                }
+
+            }
+        </select>
+    </div>
+    <div class="col-md-1">
+        <label class="unselectable">
+            @if (Model.SusFlag == true)
+            {
+                <input id="Prod_BOMH_Edit_Hult" type="checkbox" value="@Model.SusFlag" checked />
+            }
+            else
+            {
+                <input id="Prod_BOMH_Edit_Hult" type="checkbox" value="@Model.SusFlag" />
+            }
+            @Html.Recource(9404)
+        </label>
+    </div>
+    <div class="col-md-1"></div>
+    <div class="col-md-1">
+        <label class="unselectable">
+            @if (Model.StandardCost == true)
+            {
+                <input id="Prod_BOMH_Edit_StdCost" type="checkbox" value="@Model.StandardCost" checked />
+            }
+            else
+            {
+                <input id="Prod_BOMH_Edit_StdCost" type="checkbox" value="@Model.StandardCost" />
+            }
+            @Html.Recource(6717)
+        </label>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_BOMH_Edit_FormQty">@Html.Recource(2544) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <input required="true" type="number" id="Prod_BOMH_Edit_FormQty" value="@Model.best_qty" onblur="eGetValueFormQty()" />
+    </div>
+    <div class="col-md-1">
+        <label class="unselectable" for="Prod_BOMH_Edit_Group">@Html.Recource(1734) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <select style="width:100%" id="Prod_BOMH_Edit_Group" required="true">
+            @foreach (var G in lProdCost)
+            {
+                if (G.ParmCode == Model.GroupId)
+                {
+                    <option value="@G.ParmCode" selected>@Html.Translate(G.LocalDesc,G.EngDesc) </option>
+                }
+                else
+                {
+                    <option value="@G.ParmCode">@Html.Translate(G.LocalDesc, G.EngDesc)</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_BOMH_Edit_ExpiryDate">@Html.Recource(2585) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        @if (Model.ExpiryDate == null)
+        {
+            <input type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" id="Prod_BOMH_Edit_ExpiryDate" />
+        }
+        else
+        {
+            <input type="date" value="@Model.ExpiryDate.Value.ToString("yyyy-MM-dd")" id="Prod_BOMH_Edit_ExpiryDate" />
+        }
+    </div>
+</div>
+@*<div class="form-group">
+    <div class="col-md-12 GroupTitle">
+        @Html.Recource(2545)
+    </div>
+</div>*@
+<div class="form-group" id="BOM_eQtyPer_Div">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_BOMH_Edit_Passed">@Html.Recource(2546) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <input required="true" type="number" id="Prod_BOMH_Edit_Passed" value="@Model.Qty1" onblur="eGetValuePassed()" />
+    </div>
+    <div class="col-md-1">
+        <label class="unselectable" for="Prod_BOMH_Edit_Waste">@Html.Recource(2547) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <input required="true" style="width: 114px;" type="number" id="Prod_BOMH_Edit_Waste" value="@Model.Qty2" onblur="eGetValueWaste()" />
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_BOMH_Edit_Rejected">@Html.Recource(2548) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <input required="true" type="number" id="Prod_BOMH_Edit_Rejected" value="@Model.Qty3" onblur="eGetValueRejected()" />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-6">
+        <label class="unselectable">@Html.Recource(6445) :</label>
+        <button onclick="Edit_InvItemsMF(1)" type="button" class="btn btn-primary">@Html.Recource(6445)</button>
+    </div>
+    <div class="col-md-6">
+        <button onclick="OpenPacking()" type="button" class="btn btn-primary" style="width:100px !important">
+            @Html.Recource(4402)
+        </button>
+    </div>
+    <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+        <table class="table table-hover" id="eItemRawMaterialTable">
+            <thead>
+                <tr>
+                    <th style="width: 14%;">@Html.Recource(44)</th>
+                    <th style="width: 45%;">@Html.Recource(74)</th>
+                    <th>@Html.Recource(67)</th>
+                    <th>@Html.Recource(49)</th>
+                    <th>@Html.Recource(2584)</th>
+                    <th>@Html.Recource(50)</th>
+                    <th>@Html.Recource(9575)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="eItemRawMaterialTBody">
+                @foreach (prod_formula_detail_info item in Model.prod_formula_detail_info.Where(x=>x.formula_code == Model.formula_code))
+                {
+                    InvItemsMF mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == item.rawmaterial_no).FirstOrDefault();
+                    <tr>
+                        <td style="width: 14%;" id="BOMInfo_ItemNo">@item.rawmaterial_no</td>
+                        <td style="width: 45%;">@Html.Translate(mf.ItemDesc, mf.ItemDesc_Ara)</td>
+                        <td style="width: 10%;text-align: center;">
+                            <select style="width:100%" class="ItemRawMaterial_Unit">
+                                @{
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        Dt = new DataTable();
+                                        cn.Open();
+                                        using (SqlCommand cmd = new SqlCommand())
+                                        {
+                                            cmd.Connection = cn;
+                                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                            cmd.CommandText = "InvT_LoadItemUnits";
+                                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                            cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = item.rawmaterial_no;
+                                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                            {
+                                                DA.Fill(Dt);
+                                            }
+                                        }
+                                    }
+                                }
+                                @foreach (DataRow row in Dt.Rows)
+                                {
+                                    if (@row["UnitSerial"].ToString() == item.UnitSerial.ToString())
+                                    {
+                                        <option value="@row["UnitSerial"].ToString()" selected>
+                                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                        </option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@row["UnitSerial"].ToString()">
+                                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                        </option>
+                                    }
+                                }
+                            </select>
+                        </td>
+                        <td style="width: 10%;text-align: center;">
+                            <input id="BOMInfo_Qty" value="@item.best_qty" type="number" style="width:75px !important" onblur="eGetValuebestqty(this,'@item.best_qty')" />
+                        </td>
+                        <td style="width: 10%;text-align: center;">
+                            <input id="BOMInfo_LossPerc" value="@item.LossPerc.Value.ToString("0.000")" type="number" style="width:75px !important" onblur="eGetValueLossPerc(this,'@item.LossPerc.Value.ToString("0.000")')" />
+                        </td>
+                        <td style="width: 14%;" id="BOMInfo_ItemUnitCost">@mf.ItemUnitCost.Value.ToString("0.000")</td>
+                        <td style="width: 14%;" id="BOMInfo_SG">
+                            @if ( mf.SG == null)
+                            {
+                                <text>0.000</text>
+                            }
+                            else
+                            {
+                                @mf.SG.Value.ToString("0.000")
+                            }
+                        </td>
+                        <td>
+                            <button class="btn-de" onclick="RemoveRow(this)"><i class="fa fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<script>
+    $("#BOM_eQtyPer_Div").hide();
+    $('#Prod_BOMH_Edit_Group').select2();
+    $('#Prod_BOMH_Edit_UnitCode').select2();
+    $('#ItemRawMaterial_Unit').select2();
+    Edit_BOMNotes.value = '@Model.BomNotes';
+    function eGetValueFormQty() {
+        if (Prod_BOMH_Edit_FormQty.value != '') {
+            if (Number(Prod_BOMH_Edit_FormQty.value) != Number('@Model.best_qty')) {
+                if (Prod_BOMH_Edit_FormQty.value < 0) {
+                    alert('@Html.Translate("لا يجوز ان تكون كمية المعادلة اقل من 0", "The amount of the equation may not be less than 0")');
+                    Prod_BOMH_Edit_FormQty.value = Number('@Model.best_qty')
+                    Prod_BOMH_Edit_FormQty.focus()
+                    return false;
+                }
+                else {
+                    Prod_BOMH_Edit_Passed.value = Prod_BOMH_Edit_FormQty.value
+                    Prod_BOMH_Edit_Waste.value = 0
+                    Prod_BOMH_Edit_Rejected.value = 0
+                }
+            }
+        }
+        else {
+            Prod_BOMH_Edit_Passed.value = 0
+            Prod_BOMH_Edit_Waste.value = 0
+            Prod_BOMH_Edit_Rejected.value = 0
+        }
+    }
+    function eGetValuePassed() {
+        if (Number(Prod_BOMH_Edit_Passed.value) != Number('@Model.Qty1')) {
+            if (Prod_BOMH_Edit_Passed.value < 0) {
+                alert('@Html.Translate("لا يجوز ان تكون قيمة الصالح اقل من 0", "The value of the Passed may not be less than 0")');
+                Prod_BOMH_Edit_Passed.value = Number('@Model.Qty1')
+                Prod_BOMH_Edit_Passed.focus()
+                return false;
+            }
+        }
+    }
+    function eGetValueWaste() {
+        if (Number(Prod_BOMH_Edit_Waste.value) != Number('@Model.Qty1')) {
+            if (Prod_BOMH_Edit_Waste.value < 0) {
+                alert('@Html.Translate("لا يجوز ان تكون قيمة التالف اقل من 0", "The value of the Waste may not be less than 0")');
+                Prod_BOMH_Edit_Waste.value = Number('@Model.Qty2')
+                Prod_BOMH_Edit_Waste.focus()
+                return false;
+            }
+        }
+    }
+    function eGetValueRejected() {
+        if (Number(Prod_BOMH_Edit_Rejected.value) != Number('@Model.Qty3')) {
+            if (Prod_BOMH_Edit_Rejected.value < 0) {
+                alert('@Html.Translate("لا يجوز ان تكون قيمة المرفوض اقل من 0", "The value of the Rejected may not be less than 0")');
+                Prod_BOMH_Edit_Rejected.value = Number('@Model.Qty3')
+                Prod_BOMH_Edit_Rejected.focus()
+                return false;
+            }
+        }
+    }
+    function eGetValuebestqty(e, val) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون الكمية اقل من 0", "The value of the Rejected may not be less than 0")');
+            e.value = val;
+            e.focus()
+            return false;
+        }
+    }
+    function eGetValueLossPerc(e,val) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون نسبة الفاقد اقل من 0", "The value of the Rejected may not be less than 0")');
+            e.value = val;
+            e.focus()
+            return false;
+        }
+    }
+</script>
+
+

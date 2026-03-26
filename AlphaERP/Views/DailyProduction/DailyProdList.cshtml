@@ -1,0 +1,62 @@
+﻿@model IEnumerable<AlphaERP.Models.ProdCost_DailyProductionH>
+@using AlphaERP.Models
+
+<table id="Prod_DailyProduction" class="table table-hover">
+    <thead>
+        <tr>
+            <th>@Html.Recource(59)</th>
+            <th>@Html.Recource(1222)</th>
+            <th>@Html.Recource(58)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            int flag = new MDB().ProdCost_DailyProductionD.Where(x => x.CompNo == item.CompNo && x.ReportYear == item.ReportYear && x.ReportNo == item.ReportNo && x.PostFlag == true).Count();
+        <tr>
+    <td>@item.ReportYear</td>
+    <td>@item.ReportNo</td>
+    <td>@item.Prod_Date.Value.ToString("yyyy-MM-dd")</td>
+    <td>
+        <button class="btn-ed" onclick="Edit_DailyProd('@item.CompNo','@item.ReportYear','@item.ReportNo')">
+            <i class="fa fa-pencil-alt"></i>
+        </button>
+        <button class="btn-de" onclick="Del_DailyProd('@item.CompNo','@item.ReportYear','@item.ReportNo',@flag)">
+            <i class="fa fa-trash-alt"></i>
+        </button>
+    </td>
+</tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+    var Total = 0;
+    $('#Prod_DailyProduction').DataTable({
+        "scrollY": 302,
+        "paging": true,
+        "pageLength": 25,
+        "ordering": false
+    });
+    function Edit_DailyProd(CompNo, Report_Year, Report_No) {
+        wait();
+        eDailyProductionDiv.innerHTML = "";
+        $('#eDailyProductionDiv').load('../../../DailyProduction/eDailyProd?CompNo=' + CompNo + '&ReportYear=' + Report_Year + '&ReportNo=' + Report_No, function () {
+            $('#Prod_DailyProduction_Model').modal('hide')
+            $('#Prod_eDailyProduction_Model').modal('show');
+            done();
+        });
+    }
+    function Del_DailyProd(CompNo, Report_Year, Report_No, flag) {
+        if (flag != 0) {
+            MsgBox('@Resources.Resource.CeckDeleteDailyProd', 'red');
+        }
+
+        if (confirm('@Resources.Resource.ConfirmDeleteDialog')) {
+            burn({ comp_no: CompNo, ReportYear: Report_Year, ReportNo: Report_No }, '../../../DailyProduction/Delete_DailyProduction', '', DelReloadDailyProd, true);
+        }
+    }
+    
+</script>

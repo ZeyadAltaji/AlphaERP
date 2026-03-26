@@ -1,0 +1,141 @@
+﻿@model AlphaERP.Models.Prod_ItemStages
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@{
+    Company company = (Company)Session["company"];
+    List<Prod_ItemStagesTestQuality> ProdItemStagesQty = new MDB().Prod_ItemStagesTestQuality.Where(x => x.CompNo == company.comp_num && x.Formula_code == Model.Formula_code
+    && x.Item_no == Model.Item_no && x.Stage_code == Model.Stage_code && x.StageSer == Model.StageSer).ToList();
+    List<ProdCost_Parameter> ListOfTestDef = new MDB().ProdCost_Parameters.Where(x => x.CompNo == company.comp_num && x.ParmID == 5).ToList();
+    string stage_desc = new MDB().prod_prodstage_info.Where(x => x.comp_no == company.comp_num && x.stage_code == Model.Stage_code).FirstOrDefault().stage_desc;
+
+}
+
+
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="SAVE_ItemStage_StageCode">@Html.Recource(2558) </label>
+    </div>
+    <div class="col-md-4" style="margin-bottom: 5px;">
+        <label title="@Model.Stage_code" class="unselectable" id="SAVE_ItemStage_StageCode" StageSer="@Model.StageSer">
+            @Model.Stage_code
+        </label>
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="SAVE_ItemStage_StageDesc">@Html.Recource(2559)</label>
+    </div>
+    <div class="col-md-4" style="margin-bottom: 5px;">
+        <label class="unselectable" for="SAVE_ItemStage_StageDesc">
+            @stage_desc
+        </label>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-6">
+        <button onclick="SelectQCTest()" type="button" class="btn btn-primary">@Html.Recource(9579)</button>
+    </div>
+    <div class="col-md-6">
+        <button onclick="SelectFormQCTest()" type="button" class="btn btn-primary">@Html.Recource(9580)</button>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+        <table class="table table-hover QCStageDetailsTable">
+            <thead>
+                <tr>
+                    <th>@Html.Recource(9259)</th>
+                    <th>@Html.Recource(9260)</th>
+                    <th>@Html.Recource(1892)</th>
+                    <th>@Html.Recource(4778)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="QCStageDetailsTbody">
+                @foreach (Prod_ItemStagesTestQuality item in ProdItemStagesQty)
+                {
+                    ProdCost_Parameter prodCostParameter = ListOfTestDef.Where(x => x.ParmCode == item.TestNo).FirstOrDefault();
+                    if (prodCostParameter != null)
+                    {
+                        string Desc = ListOfTestDef.Where(x => x.ParmCode == item.TestNo).FirstOrDefault().LocalDesc;
+                        string DescEn = ListOfTestDef.Where(x => x.ParmCode == item.TestNo).FirstOrDefault().EngDesc;
+                        <tr>
+                            <td>
+                                <label id="QCStageTestCode" style="width:125px !important">@item.TestNo</label>
+                            </td>
+                            <td>
+                                <label id="QCStageTestDesc" style="width:125px !important">@Html.Translate(Desc, DescEn)</label>
+                            </td>
+                            <td>
+                                <input id="QCFromNo" type="number" style="width:75px !important;text-align: center !important;" value="@item.FromNo" />
+                            </td>
+                            <td>
+                                <input id="QCToNo" type="number" style="width:75px !important;text-align: center !important;" value="@item.ToNo" />
+                            </td>
+                            <td>
+                                <button class="btn-de" onclick="RemoveRow(this)"><i class="fa fa-trash-alt"></i></button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+
+
+@*<script>
+    //function AddSubItem() {
+    //    var newarray = [];
+    //    newarray.push('<label id="QCStageTestCode" style="width:125px !important" />')
+    //    newarray.push('<label id="QCStageTestDesc" style="width:125px !important" />')
+    //    newarray.push('<input id="QCFromNo" type="number" style="width:75px !important;text-align: center !important;" />')
+    //    newarray.push('<input id="QCToNo" type="number" style="width:75px !important;text-align: center !important;" />')
+    //    newarray.push('<button class="btn-de" onclick="RemoveRow(this)"><i class= "fa fa-trash-alt"></i ></button>')
+    //    $("#QCTestDetTbody").append(
+    //        GenRow(newarray)
+    //    );
+    //}
+
+    function Save_QCTestBOM() {
+        var Total = 0;
+        var overlap =0;
+        var ItemSub = new Array();
+        var table = $('.QCStageDetailsTbody tr');
+        var trs = table;
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i]).closest('tr').find('#subItem_startdate')[0].value >= $(trs[i]).closest('tr').find('#subItem_Endtdate')[0].value) {
+                alert('@Html.Translate("تاريخ البداية اقل من تاريخ النهاية", "The start date is less than the end date")');
+                $(trs[i]).closest('tr').find('#subItem_startdate')[0].focus();
+                return false;
+            }
+
+            if (($(trs[i]).closest('tr').find('#subItem_startdate')[0].value < '@StartDate') || ($(trs[i]).closest('tr').find('#subItem_Endtdate')[0].value > '@EndDate')) {
+                alert('@Html.Translate("التاريخ ليس من ضمن فترة الخطة", "History is not part of the plan period")');
+                $(trs[i]).closest('tr').find('#subItem_startdate')[0].focus();
+                return false;
+            }
+
+            ItemSub.push({
+                PlanYear:  '@Model.PlanYear',
+                PlanNo: '@Model.PlanNo',
+                FormulaCode: '@Model.FormulaCode',
+                ItemNo: '@Model.ItemNo',
+                FromDate: $(trs[i]).closest('tr').find('#subItem_startdate')[0].value,
+                ToDate: $(trs[i]).closest('tr').find('#subItem_Endtdate')[0].value,
+                Qty: $(trs[i]).closest('tr').find('#subItem_Qty')[0].value
+            });
+            Total = Number(Total) + Number($(trs[i]).closest('tr').find('#subItem_Qty')[0].value);
+        }
+        Total = Number(Total).toFixed(3)
+        if (Total != Number('@Model.PQty').toFixed(3)) {
+            alert('@Html.Translate("الكمية المدخلة غير مطابقة للكمية المطلوبة", "The quantity entered does not match the required quantity")');
+            return false;
+        }
+
+        wait();
+        burn({ PlanSub: ItemSub }, '../../../MasterPlansAppendix/CreateGeneralPlanSub', '', LoadGeneralPlanSub, true);
+    }
+
+</script>*@

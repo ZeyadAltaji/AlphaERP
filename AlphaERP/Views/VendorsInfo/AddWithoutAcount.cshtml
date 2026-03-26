@@ -1,0 +1,1171 @@
+﻿@model IEnumerable<AlphaERP.Models.VendorsAccGroups>
+
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    string language = (string)HttpContext.Current.Session["language"];
+    Company company = (Company)Session["company"];
+    long AccountNo = 0;
+    string AccountName = ViewBag.AccountName;
+    string AccounteName = ViewBag.AccounteName;
+
+    List<PayCodes> SurTitle = new MDB().Database.SqlQuery<PayCodes>("select SYS_MINOR as SYS_MINORId ,SYS_DESC as DescAr,isnull(SYS_EDESC,'No Desc.') as DescEn from SYSTEM WHERE (SYS_MAJOR = 1000)").ToList();
+    List<BusunisUnit> PaymentM = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("select MCode as Id ,[Desc] as DescAr,isnull([EngDesc],'No Desc.') as DescEn from PayMethods where (Comp = '{0}')", company.comp_num)).ToList();
+    List<PayCodes> Currency = new MDB().Database.SqlQuery<PayCodes>("select CurrType as Id ,CurrName as DescAr,isnull(CurrNameE,'No Desc.') as DescEn from CurrType").ToList();
+    List<PayCodes> Groups = new MDB().Database.SqlQuery<PayCodes>(string.Format("select GroupNo as SYS_MINORId ,GroupName as DescAr,isnull(GroupName,'No Desc.') as DescEn from Ven_Groups  where (CompNo = '{0}')", company.comp_num)).ToList();
+    List<PayCodes> Country = new MDB().Database.SqlQuery<PayCodes>("select Country as SYS_MINORId ,[Desc] as DescAr,isnull(EngDesc,'No Desc.') as DescEn from Countries").ToList();
+    List<Vendor> Vend = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.IsHalt == false).ToList();
+    DataTable Dt = new DataTable();
+    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+    {
+        Dt = new DataTable();
+        cn.Open();
+        using (SqlCommand cmd = new SqlCommand())
+        {
+            cmd.Connection = cn;
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+            cmd.CommandText = "GLN_FillDepts";
+            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+            cmd.Parameters.Add(new SqlParameter("@UserID", SqlDbType.VarChar)).Value = me.UserID;
+            if (language == "en")
+            {
+                cmd.Parameters.Add(new SqlParameter("@RptLang", SqlDbType.Int)).Value = 2;
+            }
+            else
+            {
+                cmd.Parameters.Add(new SqlParameter("@RptLang", SqlDbType.Int)).Value = 1;
+            }
+            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+            {
+                DA.Fill(Dt);
+            }
+        }
+    }
+
+
+}
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="max-height: 68vh !important;">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item active">
+                    <a class="nav-link active" data-toggle="tab" href="#VendorWithoutAcount_MainInfo" role="tab">
+                        @Html.Recource(450)
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#VendorWithoutAcount_VendorAddress" role="tab">
+                        @Html.Recource(3204)
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content" style="height:390px;padding:10px">
+                <div class="tab-pane active" id="VendorWithoutAcount_MainInfo" role="tabpanel">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_VendorNo">@Html.Recource(3087)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" type="number" id="VendorWithoutAcount_save_VendorNo" value="" onblur="checkMaxValue()" />
+                            </div>
+                            <div class="col-md-4">
+                                <select onchange="ChangeAccGroups()" style="width: 62%" id="VendorWithoutAcount_save_CboAccGroups">
+                                    @foreach (VendorsAccGroups v in Model)
+                                    {
+                                        <option value="@v.GroupNo">@Html.Translate(v.acc_desc, v.acc_edesc)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <label class="unselectable" for="VendorWithoutAcount_save_SurName">@Html.Recource(1165)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <select style="width: 62%" id="VendorWithoutAcount_save_CboSurTitle">
+                                    @foreach (var v in SurTitle)
+                                    {
+                                        <option value="@Html.Translate(v.DescAr, v.DescEn)">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_VendorName">@Html.Recource(2114)</label>
+                            </div>
+                            <div class="col-md-6">
+                                <input required="true" type="text" id="VendorWithoutAcount_save_VendorName" value="" style="width:100%" onblur="changeVendorName()" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_VendorEngName">@Html.Recource(2115)</label>
+                            </div>
+                            <div class="col-md-6">
+                                <input required="true" type="text" id="VendorWithoutAcount_save_VendorEngName" value="" style="width:100%" />
+                            </div>
+                            <div class="col-md-2"></div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_SubjectToTax">
+                                    <input name="VendorWithoutAcount_save_VendorTax" type="checkbox" id="VendorWithoutAcount_save_SubjectToTax" />
+                                    @Html.Recource(1000)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable">@Html.Recource(5203)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Active">
+                                    <input id="VendorWithoutAcount_save_Active" type="radio" name="VendorWithoutAcount_VendorStatus" checked>
+                                    @Html.Recource(1153)
+                                </label>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Halt">
+                                    <input name="VendorWithoutAcount_VendorStatus" type="radio" id="VendorWithoutAcount_save_Halt" />
+                                    @Html.Recource(48)
+                                </label>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-block" onclick="AddWithoutAcountDocuments()" style="width:100px !important;">
+                                    @Html.Recource(7744)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_PaymentType">@Html.Recource(1874)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <select style="width: 62%" id="VendorWithoutAcount_save_CboPaymentType">
+                                    @foreach (var v in PaymentM)
+                                    {
+                                        <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_CurrCode">@Html.Recource(1671)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <select style="width: 62%" id="VendorWithoutAcount_save_CboCurrCode">
+                                    @foreach (var v in Currency)
+                                    {
+                                        <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Evaluated">
+                                    <input name="VendorWithoutAcount_save_VendorEvaluated" type="checkbox" id="VendorWithoutAcount_save_Evaluated" />
+                                    @Html.Recource(5205)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Group">@Html.Recource(1734)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <select style="width: 62%" id="VendorWithoutAcount_save_CboGroup">
+                                    @foreach (var v in Groups)
+                                    {
+                                        <option value="@v.SYS_MINORId">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_DueDays">@Html.Recource(7737)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" type="number" id="VendorWithoutAcount_save_DueDays" value="0" style="width:100%" />
+                            </div>
+                            <div class="col-md-1">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Discount">@Html.Recource(2124)</label>
+                            </div>
+                            <div class="col-md-1">
+                                <input required="true" type="number" id="VendorWithoutAcount_save_Discount" value="0" style="width:100%" />
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Notes">@Html.Recource(70) </label>
+                            </div>
+                            <div class="col-md-10" style="margin-bottom: 5px;">
+                                <textarea required="true" style="width: 103%;" id="VendorWithoutAcount_save_Notes"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="VendorWithoutAcount_VendorAddress" role="tabpanel">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Address">@Html.Recource(1042) </label>
+                            </div>
+                            <div class="col-md-10" style="margin-bottom: 5px;">
+                                <textarea required="true" style="width: 100%;" id="VendorWithoutAcount_save_Address"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Country">@Html.Recource(1143)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <select onchange="ChangeValueWithoutCountry()" style="width: 100%" id="VendorWithoutAcount_save_CboCountry">
+                                    @foreach (var v in Country)
+                                    {
+                                        <option value="@v.SYS_MINORId">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Area">@Html.Recource(1144)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <select onchange="ChangeValueWithoutArea()" style="width: 100%" id="VendorWithoutAcount_save_CboArea">
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_SubArea">@Html.Recource(1145)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <select onchange="ChangeValueWithoutSubArea()" style="width: 100%" id="VendorWithoutAcount_save_CboSubArea">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Street">@Html.Recource(2133)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <select  style="width: 62%" id="VendorWithoutAcount_save_CboStreet">
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Location">@Html.Translate("الموقع", "Location")</label>
+                            </div>
+                            <div class="col-md-6">
+                                <input required="true" style="width: 100%;" type="text" id="VendorWithoutAcount_save_Location" value="" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_ContactPerson">@Html.Recource(1166)</label>
+                            </div>
+                            <div class="col-md-4">
+                                <input required="true" style="width: 100%;" type="text" id="VendorWithoutAcount_save_ContactPerson" value="" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Beneficiary">@Html.Recource(3821)</label>
+                            </div>
+                            <div class="col-md-4">
+                                <input required="true" style="width: 100%;" type="text" id="VendorWithoutAcount_save_Beneficiary" value="" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Tel1">@Html.Recource(1029)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="number" id="VendorWithoutAcount_save_Tel1" value="" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Tel2">@Html.Recource(1031)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="number" id="VendorWithoutAcount_save_Tel2" value="" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Mobile">@Html.Recource(1123)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="number" id="VendorWithoutAcount_save_Mobile" value="" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Fax">@Html.Recource(165)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="text" id="VendorWithoutAcount_save_Fax" value="" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Telex">@Html.Recource(166)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="text" id="VendorWithoutAcount_save_Telex" value="" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_PostalCode">@Html.Recource(2139)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="text" id="VendorWithoutAcount_save_PostalCode" value="" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_POBox">@Html.Recource(2138)</label>
+                            </div>
+                            <div class="col-md-4">
+                                <input required="true" style="width: 100%;" type="text" id="VendorWithoutAcount_save_POBox" value="" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_Email">@Html.Recource(1124)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 219%;" type="email" id="VendorWithoutAcount_save_Email" value="" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorWithoutAcount_save_VendorInfo">@Html.Recource(5207) </label>
+                            </div>
+                            <div class="col-md-10" style="margin-bottom: 5px;">
+                                <textarea required="true" style="width: 100%;" id="VendorWithoutAcount_save_VendorInfo"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable">@Html.Recource(8983) </label>
+                            </div>
+                            <div class="col-md-1" style="min-width: 5% !important;">
+                                <input style="width: 87px;" type="text" id="VendorWithoutAcount_save_TransporterVendor" disabled />
+                            </div>
+                            <div class="col-md-3" style="min-width: 5% !important;">
+                                <input type="text" id="VendorWithoutAcount_save_TransporterVendorName" value="" disabled />
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-block" onclick="AddWithoutTransporter()">
+                                    @Html.Recource(8983)
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-block" onclick="AddWithoutContactPersons()">
+                                    @Html.Recource(5197)
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-block" onclick="AddWithoutBankInfo()">
+                                    @Html.Recource(5200)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="ExcuteSave_VendorWithoutAcount()" class="btn btn-primary">@Resources.Resource.Save</button>
+        </div>
+    </div>
+</div>
+
+@*-----------------------------Model WithoutAcountDocuments-------------------------------------*@
+<div class="modal fade" id="Model_VendorWithoutAcount_DocumentsArchive">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أرشفة الوثائق", "Archive Documents")</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <button onclick="AddWithoutAcountDocumentArchive()" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="WithoutAcountDocumentArchiveTable">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(66)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5628)</th>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(5629)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5630)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5631)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5632)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5633)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="VendorWithoutAcountDocumentArchiveTbody" style="border-top: 1px solid #ddd;">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SaveVendorWithoutAcountDocumentArchive()" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var DocumentsArchiveValue = 0;
+    var Count = 0;
+    $('#Model_VendorWithoutAcount_DocumentsArchive').draggable({
+        handle: ".modal-header",
+    });
+    function AddWithoutAcountDocuments(val) {
+        DocumentsArchiveValue = val;
+        $('#Model_VendorWithoutAcount_DocumentsArchive').modal('show')
+    }
+    function AddWithoutAcountDocumentArchive() {
+        Count++;
+        var newarray = [];
+        newarray.push('<input id="VendorWithoutAcount_DocumentArchive_FileId" type="hidden" value="' + Count + '" />')
+        newarray.push('<input id="VendorWithoutAcount_DocumentArchive_Description_' + Count + '" type="text" style="width: 115px !important;text-align: center !important" />')
+        newarray.push('<div class="image-upload"><label for="file-input"><span class="glyphicon glyphicon-upload" onclick="OpenFileUpload(this)"></span></label><input type="file" name="uploadFile_7" style="display:none" id="VendorWithoutAcount_DocumentArchive_File_' + Count + '" onchange="uploadFile(this,' + Count + ')" /></div>')
+        newarray.push('')
+        newarray.push('<a id="VendorWithoutAcount_DownloadFile_' + Count + '" onclick="DownloadFile()"><span class="glyphicon glyphicon-download"></span></a>')
+        newarray.push('<input id="VendorWithoutAcount_DocumentArchive_FileName_' + Count + '" type="text" style="text-align: center !important" disabled />')
+        newarray.push('<input id="VendorWithoutAcount_DocumentArchive_UploadDate_' + Count + '" type="text" style="width: 95px;text-align: center !important" disabled />')
+        newarray.push('<input id="VendorWithoutAcount_DocumentArchive_FileSize_' + Count + '" type="text" style="width: 70px;text-align: center !important" disabled />')
+        newarray.push('<input id="VendorWithoutAcount_DocumentArchive_FileType_' + Count + '" type="text" style="width: 55px;text-align: center !important" disabled />')
+        newarray.push('<button class="btn-de" onclick="RemoveRowUpload(this,' + Count + ')" type="button"><i class= "fa fa-trash-alt"></i ></button>')
+        $("#VendorWithoutAcountDocumentArchiveTbody").append(
+            GenRowDocumentArchive(newarray, 'VendorWithoutAcount_DocumentArchive_' + Count)
+        );
+    }
+    function GenRowDocumentArchive(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function OpenFileUpload(ID) {
+        if (VendorWithoutAcount_save_VendorNo.value == "") {
+            alert('@Html.Translate("يجب ادخال رقم المورد", "You Must Enter Vendor Number")');
+        }
+        else {
+            var $td = $(ID).closest("td");
+            $($td).find("input[type=file]").click();
+        }
+    }
+    function uploadFile(Elem, Count) {
+        var uploadDate = new Date($.now());
+        var shortDate = moment(uploadDate).format('DD/MM/YYYY');
+        var InputID = $(Elem).attr("id");
+        var file_size = $(Elem)[0].files[0].size;
+        var fileName = $("#VendorWithoutAcount_DocumentArchive_File_" + Count).val().replace(/C:\\fakepath\\/i, '');
+        var filetype = fileName.split('.').pop();
+
+        var tr = $("#VendorWithoutAcountDocumentArchiveTbody #VendorWithoutAcount_DocumentArchive_" + Count + "");
+        tr.find('#VendorWithoutAcount_DocumentArchive_FileName_' + Count)[0].value = fileName;
+        tr.find('#VendorWithoutAcount_DocumentArchive_UploadDate_' + Count)[0].value = shortDate;
+        tr.find('#VendorWithoutAcount_DocumentArchive_FileSize_' + Count)[0].value = file_size;
+        tr.find('#VendorWithoutAcount_DocumentArchive_FileType_' + Count)[0].value = "." + filetype;
+
+        var $file = document.getElementById(InputID);
+        $formData = new FormData();
+        if ($file.files.length > 0) {
+            for (var i = 0; i < $file.files.length; i++) {
+                $formData.append('file-' + i, $file.files[i]);
+            }
+            $formData.append('Id', Count);
+            $formData.append('VendorNo', VendorWithoutAcount_save_VendorNo.value);
+        }
+
+        $.ajax({
+            url: '@Url.Action("InsertFile", "VendorsInfo")',
+            type: 'POST',
+            data: $formData,
+            contentType: false,
+            processData: false,
+            success: function (r) {
+                var tr = $("#VendorWithoutAcountDocumentArchiveTbody #VendorWithoutAcount_DocumentArchive_" + Count + "");
+                tr.find('#VendorWithoutAcount_DownloadFile_' + Count)[0].setAttribute('onclick', 'DownloadFile("' + fileName + '","' + r + '")')
+            },
+            error: function (error) {
+            }
+        });
+    }
+    function RemoveRowUpload(e, Count) {
+        if (confirm('@Resources.Resource.DeleteConfirm')) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+            $.ajax({
+                type: "POST",
+                url:'@Url.Action("RemoveFile", "VendorsInfo")',
+                data: { Id: Count, VendorNo: VendorWithoutAcount_save_VendorNo.value },
+                success: function (response) {
+
+                },
+            });
+
+            return true;
+        }
+        return false;
+    }
+    function DownloadFile(FileName, base64) {
+        var binaryString = window.atob(base64);
+        var binaryLen = binaryString.length;
+        var bytes = new Uint8Array(binaryLen);
+        for (var i = 0; i < binaryLen; i++) {
+            var ascii = binaryString.charCodeAt(i);
+            bytes[i] = ascii;
+        }
+        saveByteArray(FileName, bytes)
+    }
+    function saveByteArray(reportName, byte) {
+        var blob = new Blob([byte], { type: "application/pdf" });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        var fileName = reportName;
+        link.download = fileName;
+        link.click();
+    }
+    function SaveVendorWithoutAcountDocumentArchive() {
+        $('#Model_VendorWithoutAcount_DocumentsArchive').modal('hide')
+    }
+</script>
+@*--------------------------------END Model Documents -----------------------------*@
+
+
+@*--------------------------------Model WithoutTransporter -------------------------------------------*@
+<div class="modal fade" id="Model_VendorWithoutAcount_VendorInfo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="VendorWithoutAcount_VendorInfoDiv">
+                <table class="table" id="SelectVendorWithoutAcount_VendorInfoTable">
+                    <thead>
+                        <tr>
+                            <th>@Html.Recource(318)</th>
+                            <th>@Html.Recource(321)</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="VendorWithoutAcount_VendorInfoTbody">
+                        @foreach (Vendor v in Vend)
+                        {
+                            <tr onclick="Select_VendorWithoutAcount(this)" VendorNo="@v.VendorNo" VendorName="@Html.Translate(v.Name, v.Eng_Name)">
+                                <td id="VendorNo">@v.VendorNo</td>
+                                <td>@Html.Translate(v.Name, v.Eng_Name)</td>
+                                <td></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selection_VendorWithoutAcount_VendorDiv()" class="btn btn-primary">@Resources.Resource.Choose</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_VendorWithoutAcount_VendorInfo').draggable({
+        handle: ".modal-header",
+    });
+    var table = $('#SelectVendorWithoutAcount_VendorInfoTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    function AddWithoutTransporter() {
+        $('#SelectVendorWithoutAcount_VendorInfoTable tr').removeClass("selected");
+        VendorWithoutAcount_save_TransporterVendor.value = "";
+        $('#Model_VendorWithoutAcount_VendorInfo').modal('show')
+    }
+    function Select_VendorWithoutAcount(e) {
+        var table = $('#SelectVendorWithoutAcount_VendorInfoTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Selection_VendorWithoutAcount_VendorDiv() {
+        var table = $('#SelectVendorWithoutAcount_VendorInfoTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مورد واحدة على الاقل", "Select one Vendor at least")');
+            return;
+        }
+
+        VendorWithoutAcount_save_TransporterVendor.value = trs[0].getAttribute('VendorNo');
+        VendorWithoutAcount_save_TransporterVendorName.value = trs[0].getAttribute('VendorName');
+
+        $('#Model_VendorWithoutAcount_VendorInfo').modal('hide')
+    }
+</script>
+@*--------------------------------END Model WithoutTransporter -------------------------------------------*@
+
+@*--------------------------------Model WithoutContactPersons -------------------------------------------*@
+<div class="modal fade" id="Model_VendorWithoutAcount_ContactPersons">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="VendorWithoutAcount_VendorInfoDiv">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2">
+                            <button onclick="AddWithoutContactPersonsModel()" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="width:535px !important ;overflow-y:auto">
+                        <table class="table table-hover" id="VendorWithoutAcount_ContactPersonsTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 90px !important; text-align:center; ">@Html.Recource(2429)</th>
+                                    <th style="width: 295% !important; text-align: center; ">@Html.Recource(5206)</th>
+                                    <th style="text-align:center;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="VendorWithoutAcount_ContactPersonsTbody" style="border-top: 1px solid #ddd;">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="save_VendorWithoutAcount_ContactPersons()" class="btn btn-primary">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_VendorWithoutAcount_ContactPersons').draggable({
+        handle: ".modal-header",
+    });
+    function AddWithoutContactPersons() {
+        $('#Model_VendorWithoutAcount_ContactPersons').modal('show')
+    }
+    var Count = 0;
+    function AddWithoutContactPersonsModel() {
+        ststaus = 1;
+        Count++;
+        var newarray = [];
+        newarray.push('<input id="VendorWithoutAcount_ContactPersons_SupervisorNo" onblur="CheckValueSupervisorNo(' + Count + ' )" type="number" style="width: 90px !important;" />')
+        newarray.push('<input id="VendorWithoutAcount_ContactPersons_SupervisorName" type="text" style="width: 95%  !important;" />')
+        newarray.push('<button class="btn-de" onclick="RemoveRow(this)" type="button"><i class= "fa fa-trash-alt"></i ></button> <input id="VendorWithoutAcount_ContactPersons_Input" type="hidden" value="' + Count + '"  />')
+        $("#VendorWithoutAcount_ContactPersonsTbody").append(
+            GenRowMas(newarray, 'WithoutContactPersons_' + Count)
+        );
+    }
+    function GenRowMas(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function CheckValueSupervisorNo(val) {
+        var tr = $("#VendorWithoutAcount_ContactPersonsTbody #WithoutContactPersons_" + val + "");
+        if (tr.find('#VendorWithoutAcount_ContactPersons_SupervisorNo')[0].value != '') {
+            if (tr.find('#VendorWithoutAcount_ContactPersons_SupervisorNo')[0].value < 0) {
+                MsgBox('@Html.Translate("لا يجوز ان يكون رقم المسؤول بالسالب", "The Supervisor number should not be negative")', 'red');
+                tr.find('#VendorWithoutAcount_ContactPersons_SupervisorNo')[0].focus();
+                return false;
+            }
+        }
+        if (tr.find('#VendorWithoutAcount_ContactPersons_SupervisorNo')[0].value == '') {
+            MsgBox('@Html.Translate("لا يجوز ان يكون رقم المسؤول فارغ", "The Supervisor number should not be Empty")', 'red');
+            tr.find('#VendorWithoutAcount_ContactPersons_SupervisorNo')[0].focus();
+            return false;
+        }
+        var ContactPersons = $('#VendorWithoutAcount_ContactPersonsTbody tr');
+        var trsContactPersons = ContactPersons;
+        for (var i = 0; i < trsContactPersons.length; i++) {
+            if ($(trsContactPersons[i]).closest('tr').find('#VendorWithoutAcount_ContactPersons_Input')[0].value != tr.find('#VendorWithoutAcount_ContactPersons_Input')[0].value) {
+                if ($(trsContactPersons[i]).closest('tr').find('#VendorWithoutAcount_ContactPersons_SupervisorNo')[0].value == tr.find('#VendorWithoutAcount_ContactPersons_SupervisorNo')[0].value) {
+                    alert('@Html.Translate("رقم المسؤول مكرر", "Duplicate Supervisor number")');
+                    tr.find('#VendorWithoutAcount_ContactPersons_SupervisorNo')[0].value = ""
+                    tr.find('#VendorWithoutAcount_ContactPersons_SupervisorNo')[0].focus();
+                    return false;
+                }
+            }
+        }
+    }
+
+    function save_VendorWithoutAcount_ContactPersons() {
+        $('#Model_VendorWithoutAcount_ContactPersons').modal('hide')
+    }
+</script>
+@*--------------------------------END Model WithoutContactPersons -------------------------------------------*@
+
+@*--------------------------------Model WithoutBankInfo -------------------------------------------*@
+<div class="modal fade wide" id="Model_VendorWithoutAcount_BankInfo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="VendorWithoutAcount_BankInfoDiv">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2">
+                            <button onclick="AddWithoutBankInfoModel()" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="VendorWithoutAcount_BankInfoTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:60px;text-align:center;">@Html.Recource(1222)</th>
+                                    <th style="width:225px;text-align:center;">@Html.Recource(1015)</th>
+                                    <th style="width:190px;text-align:center;">@Html.Recource(1023)</th>
+                                    <th style="width:285px;text-align:center;">IBAN</th>
+                                    <th style="text-align:center;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="VendorWithoutAcount_BankInfoTbody" style="border-top: 1px solid #ddd;">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="save_VendorWithoutAcount_BankInfo()" class="btn btn-primary">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_VendorWithoutAcount_BankInfo').draggable({
+        handle: ".modal-header",
+    });
+    function AddWithoutBankInfo() {
+        $('#Model_VendorWithoutAcount_BankInfo').modal('show')
+    }
+    var Count = 0;
+    function AddWithoutBankInfoModel() {
+        ststaus = 1;
+        Count++;
+        var newarray = [];
+        newarray.push('<input id="VendorWithoutAcount_BankInfo_Number" onblur="CheckValueBankInfoNo(' + Count + ' )" type="text" style="width: 60px !important;" />')
+        newarray.push('<input id="VendorWithoutAcount_BankInfo_BankName" type="text" style="width:225px !important;" />')
+        newarray.push('<input id="VendorWithoutAcount_BankInfo_BankAccount" type="number" style="width:190px !important;" />')
+        newarray.push('<input id="VendorWithoutAcount_BankInfo_BankIban" type="text" style="width:285px !important;" />')
+        newarray.push('<button class="btn-de" onclick="RemoveRow(this)" type="button"><i class= "fa fa-trash-alt"></i ></button> <input id="VendorWithoutAcount_BankInfo_Input" type="hidden" value="' + Count + '" />')
+        $("#VendorWithoutAcount_BankInfoTbody").append(
+            GenRowMas(newarray, 'WithoutBankInfo_' + Count)
+        );
+    }
+    function GenRowMas(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function CheckValueBankInfoNo(val) {
+        var tr = $("#VendorWithoutAcount_BankInfoTbody #WithoutBankInfo_" + val + "");
+        if (tr.find('#VendorWithoutAcount_BankInfo_Number')[0].value == '') {
+            MsgBox('@Html.Translate("لا يجوز ان يكون رقم فارغ", "The number should not be empty")', 'red');
+            tr.find('#VendorWithoutAcount_BankInfo_Number')[0].focus();
+            return false;
+        }
+
+        var BankInfo = $('#VendorWithoutAcount_BankInfoTbody tr');
+        var trsBankInfo = BankInfo;
+        for (var i = 0; i < trsBankInfo.length; i++) {
+            if ($(trsBankInfo[i]).closest('tr').find('#VendorWithoutAcount_BankInfo_Input')[0].value != tr.find('#VendorWithoutAcount_BankInfo_Input')[0].value) {
+                if ($(trsBankInfo[i]).closest('tr').find('#VendorWithoutAcount_BankInfo_Number')[0].value == tr.find('#VendorWithoutAcount_BankInfo_Number')[0].value) {
+                    alert('@Html.Translate("رقم البنك مكرر", "Duplicate Bank number")');
+                    tr.find('#VendorWithoutAcount_BankInfo_Number')[0].value = ""
+                    tr.find('#VendorWithoutAcount_BankInfo_Number')[0].focus();
+                    return false;
+                }
+            }
+        }
+
+    }
+    function save_VendorWithoutAcount_BankInfo() {
+        $('#Model_VendorWithoutAcount_BankInfo').modal('hide')
+    }
+</script>
+@*--------------------------------END Model WithoutBankInfo -------------------------------------------*@
+
+@*--------------------------------Model WithoutLinkDeptWithAccs -------------------------------------------*@
+<div class="modal fade" id="Model_VendorWithoutAcount_LinkDeptWithAccs">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="VendorWithoutAcount_LinkDeptWithAccsDiv">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2">
+                            <button onclick="SelectWithoutCheckAllDept()" type="button" class="btn btn-primary">@Html.Recource(498)</button>
+                        </div>
+                        <div class="col-md-2">
+                            <button onclick="UnSelectWithoutCheckAllDept()" type="button" class="btn btn-primary">@Html.Recource(499)</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="VendorWithoutAcount_LinkDeptWithAccsTable">
+                            <thead>
+                                <tr>
+                                    <th>@Html.Recource(110)</th>
+                                    <th>@Html.Recource(109)</th>
+                                    <th style="text-align:center;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="VendorWithoutAcount_LinkDeptWithAccsTbody" style="border-top: 1px solid #ddd;">
+                                @foreach (DataRow row in Dt.Rows)
+                                {
+                                    <tr onclick="$(this).toggleClass('selected');">
+                                        <td id="VendorWithoutAcount_LinkDeptWithAccs_DeptNo">@row["DEP_NUM"].ToString()</td>
+                                        <td id="VendorWithoutAcount_LinkDeptWithAccs_DeptName">@row["DEP_NAME"].ToString()</td>
+                                        <td></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="save_VendorWithoutAcount_LinkDeptWithAccs()" class="btn btn-primary">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+        $('#Model_VendorWithoutAcount_LinkDeptWithAccs').draggable({
+            handle: ".modal-header",
+        });
+        var oTable = $('#VendorWithoutAcount_LinkDeptWithAccsTable').dataTable({
+            stateSave: true,
+        })
+        function SelectWithoutCheckAllDept() {
+            var allPages = oTable.fnGetNodes();
+            $(allPages).addClass('selected');
+        }
+        function UnSelectWithoutCheckAllDept() {
+            var allPages = oTable.fnGetNodes();
+            $(allPages).removeClass('selected');
+        }
+        function CheckValueGridTotlal(NotEqualZero, Amt) {
+            if (NotEqualZero == '1') {
+                if (Amt == '' || Amt == null || Amt <= 0) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+                return false;
+            }
+            else {
+                if (Amt == '' || Amt == null) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+                return false;
+            }
+        }
+        function save_VendorWithoutAcount_LinkDeptWithAccs() {
+
+            $('#Model_VendorWithoutAcount_LinkDeptWithAccs').modal('hide')
+
+            if (CheckValueGridTotlal(0, VendorWithoutAcount_save_VendorNo.value)) {
+                alert('@Html.Translate("يجب إدخال رقم المورد", "You Must Enter Vendor Number")');
+                return;
+            }
+            if (CheckValueGridTotlal(0, VendorWithoutAcount_save_VendorName.value)) {
+                    alert('@Html.Translate("يجب إدخال اسم المورد", "You Must Enter Vendor Name")');
+                    return;
+            }
+
+
+            var allPages = oTable.fnGetNodes();
+            var trs = $(allPages).filter('.selected');
+
+            var GLCR = new Array();
+
+            for (var i = 0; i < trs.length; i++) {
+
+                GLCR.push({
+                    CompNo: '@company.comp_num',
+                    DeptNo: $(trs[i]).closest('tr').find('#VendorWithoutAcount_LinkDeptWithAccs_DeptNo')[0].innerHTML,
+                    AccNo: VendorWithoutAcount_save_VendorNo.value
+                });
+            }
+
+            var IsHalt;
+            if (VendorWithoutAcount_save_Active.checked == false) {
+                IsHalt = true;
+            }
+            else if (VendorWithoutAcount_save_Active.checked == true) {
+                IsHalt = false;
+            }
+
+            var Vendors = {
+                comp: '@company.comp_num',
+                VendorNo: VendorWithoutAcount_save_VendorNo.value,
+                Name: VendorWithoutAcount_save_VendorName.value,
+                Eng_Name: VendorWithoutAcount_save_VendorEngName.value,
+
+                Title: VendorWithoutAcount_save_CboSurTitle.value,
+                IsHalt: IsHalt,
+                Notes: VendorWithoutAcount_save_Notes.value,
+                Pmethod: VendorWithoutAcount_save_CboPaymentType.value,
+                Pay_Method: 1,
+                Cr_Lim: 0,
+                Curr: VendorWithoutAcount_save_CboCurrCode.value,
+                DelayDays: VendorWithoutAcount_save_DueDays.value,
+                VenLevel: 1,
+                Address: VendorWithoutAcount_save_Address.value,
+                Country: VendorWithoutAcount_save_CboCountry.value,
+                Area: VendorWithoutAcount_save_CboArea.value,
+                SArea: VendorWithoutAcount_save_CboSubArea.value,
+                Street_No: VendorWithoutAcount_save_CboStreet.value,
+                Location: VendorWithoutAcount_save_Location.value,
+                Resp_Person: VendorWithoutAcount_save_ContactPerson.value,
+                Tel1: VendorWithoutAcount_save_Tel1.value,
+                Tel2: VendorWithoutAcount_save_Tel2.value,
+                Mobile_No: VendorWithoutAcount_save_Mobile.value,
+                POBox: VendorWithoutAcount_save_POBox.value,
+                Postal_Code: VendorWithoutAcount_save_PostalCode.value,
+                Fax: VendorWithoutAcount_save_Fax.value,
+                Telex: VendorWithoutAcount_save_Telex.value,
+                EMail: VendorWithoutAcount_save_Email.value,
+                Disc: VendorWithoutAcount_save_Discount.value,
+                Penf: VendorWithoutAcount_save_Beneficiary.value,
+                Evaluated: VendorWithoutAcount_save_Evaluated.checked,
+                GroupNo: VendorWithoutAcount_save_CboGroup.value,
+                GenCondition: VendorWithoutAcount_save_VendorInfo.value,
+                TransporterNo: VendorWithoutAcount_save_TransporterVendor.value,
+                Taxable: VendorWithoutAcount_save_SubjectToTax.checked
+            }
+
+            var Ven_Contact = new Array();
+            var Ven_bankInfo = new Array();
+
+            var ContactPersons = $('#VendorWithoutAcount_ContactPersonsTbody tr');
+            var trsContactPersons = ContactPersons;
+            for (var i = 0; i < trsContactPersons.length; i++) {
+                if (CheckValueGridTotlal(1, $(trsContactPersons[i]).closest('tr').find('#VendorWithoutAcount_ContactPersons_SupervisorNo')[0].value)) {
+                    alert('@Html.Translate("يجب إدخال رقم المسؤول", "You Must Enter Supervisor Number")');
+                    return;
+                }
+
+                Ven_Contact.push({
+                    CompNo: '@company.comp_num',
+                    VendorNo: VendorWithoutAcount_save_VendorNo.value,
+                    ContactNo: $(trsContactPersons[i]).closest('tr').find('#VendorWithoutAcount_ContactPersons_SupervisorNo')[0].value,
+                    ContactName: $(trsContactPersons[i]).closest('tr').find('#VendorWithoutAcount_ContactPersons_SupervisorName')[0].value
+                })
+            }
+
+            var BankInfo = $('#VendorWithoutAcount_BankInfoTbody tr');
+            var trsBankInfo = BankInfo;
+            for (var i = 0; i < trsBankInfo.length; i++) {
+                if (CheckValueGridTotlal(1, $(trsBankInfo[i]).closest('tr').find('#VendorWithoutAcount_BankInfo_Number')[0].value)) {
+                    alert('@Html.Translate("يجب إدخال رقم البنك", "You Must Enter Bank Number")');
+                    return;
+                }
+
+                Ven_bankInfo.push({
+                    CompNo: '@company.comp_num',
+                    VendorNo: VendorWithoutAcount_save_VendorNo.value,
+                    ID: $(trsBankInfo[i]).closest('tr').find('#VendorWithoutAcount_BankInfo_Number')[0].value,
+                    BankName: $(trsBankInfo[i]).closest('tr').find('#VendorWithoutAcount_BankInfo_BankName')[0].value,
+                    AccNo: $(trsBankInfo[i]).closest('tr').find('#VendorWithoutAcount_BankInfo_BankAccount')[0].value,
+                    Iban: $(trsBankInfo[i]).closest('tr').find('#VendorWithoutAcount_BankInfo_BankIban')[0].value
+                })
+            }
+
+            var DocumentArchivetable = $('#VendorWithoutAcountDocumentArchiveTbody tr');
+            var trsDocumentArchive = DocumentArchivetable;
+            var DocumentArchive = new Array();
+
+            for (var i = 0; i < trsDocumentArchive.length; i++) {
+                var InputSerial = $(trsDocumentArchive[i]).closest('tr').find('#VendorWithoutAcount_DocumentArchive_FileId')[0].value;
+                DocumentArchive.push({
+                    VendorNo: VendorWithoutAcount_save_VendorNo.value,
+                    FileId: InputSerial,
+                    Description: $(trsDocumentArchive[i]).closest('tr').find('#VendorWithoutAcount_DocumentArchive_Description_' + InputSerial)[0].value,
+                    DateUploded: $(trsDocumentArchive[i]).closest('tr').find('#VendorWithoutAcount_DocumentArchive_UploadDate_' + InputSerial)[0].value,
+                    ContentType: $(trsDocumentArchive[i]).closest('tr').find('#VendorWithoutAcount_DocumentArchive_FileType_' + InputSerial)[0].value
+                })
+            }
+
+
+            wait();
+            burn({ AccGroups: VendorWithoutAcount_save_CboAccGroups.value, Vendors: Vendors, GLCRs: GLCR, VenContact: Ven_Contact, VenbankInfo: Ven_bankInfo, FileArchive: DocumentArchive }, '../../../VendorsInfo/CreateWithoutVendorsInfo', '', ReloadWithoutVendorsInfo, true);
+        }
+    function ReloadWithoutVendorsInfo(r) {
+            done();
+            MsgBox('@Html.Recource(475)', 'green');
+            CloseWindow('/VendorsInfo/AddWithoutAcount');
+            $('#Ord_VendorsInfoListDiv').load('../../../VendorsInfo/VendorsInfoList');
+        }
+</script>
+@*--------------------------------END Model WithoutBankInfo -------------------------------------------*@
+
+
+<script>
+    $('#VendorWithoutAcount_save_CboCountry').select2();
+    $('#VendorWithoutAcount_save_CboArea').select2();
+    $('#VendorWithoutAcount_save_CboSubArea').select2();
+    $('#VendorWithoutAcount_save_CboStreet').select2();
+    $('#VendorWithoutAcount_save_CboPaymentType').select2();
+    $('#VendorWithoutAcount_save_CboCurrCode').select2();
+    $('#VendorWithoutAcount_save_CboGroup').select2();
+    $('#VendorWithoutAcount_save_CboSurTitle').select2();
+    $('#VendorWithoutAcount_save_CboAccGroups').select2();
+
+    function changeVendorName() {
+        VendorWithoutAcount_save_VendorEngName.value = VendorWithoutAcount_save_VendorName.value
+    }
+    ChangeValueWithoutCountry()
+    ChangeAccGroups()
+    function checkMaxValue() {
+        if (VendorWithoutAcount_save_VendorNo.value.length > 10) {
+            alert('@Html.Translate("رقم المورد اكبر من الحد المطلوب", "The Vendor number is greater than the required limit")');
+            VendorWithoutAcount_save_VendorNo.value = @AccountNo;
+            return false;
+        }
+    }
+    function ChangeAccGroups() {
+        burn({ AccGroups: VendorWithoutAcount_save_CboAccGroups.value }, '../../../VendorsInfo/VendorAccGroups', '', ReloadAccGroups, true);
+    }
+    function ReloadAccGroups(r) {
+        VendorWithoutAcount_save_VendorNo.value = r.LastAccNo
+    }
+    function ChangeValueWithoutCountry() {
+        burn({ CountryId: VendorWithoutAcount_save_CboCountry.value,srl:0 }, '../../../VendorsInfo/LoadArea', '', GetLoadArea, true);
+    }
+    function GetLoadArea(r) {
+        $('#VendorWithoutAcount_save_CboArea').empty();
+
+        for (var i = 0; i < r.Area.length; i++) {
+            var newOption = new Option(r.Area[i].DescAr, r.Area[i].Id, false, false);
+            $('#VendorWithoutAcount_save_CboArea').append(newOption).trigger('change');
+        }
+        ChangeValueWithoutArea()
+    }
+    function ChangeValueWithoutArea() {
+        burn({ CountryId: VendorWithoutAcount_save_CboCountry.value, AreaId: VendorWithoutAcount_save_CboArea.value, srl: 0 }, '../../../VendorsInfo/LoadSubArea', '', GetLoadSubArea, true);
+    }
+    function GetLoadSubArea(r) {
+        $('#VendorWithoutAcount_save_CboSubArea').empty();
+
+        for (var i = 0; i < r.SAreas.length; i++) {
+            var newOption = new Option(r.SAreas[i].DescAr, r.SAreas[i].Id, false, false);
+            $('#VendorWithoutAcount_save_CboSubArea').append(newOption).trigger('change');
+        }
+        ChangeValueWithoutSubArea()
+    }
+    function ChangeValueWithoutSubArea() {
+        burn({ CountryId: VendorWithoutAcount_save_CboCountry.value, AreaId: VendorWithoutAcount_save_CboArea.value, SubAreaId: VendorWithoutAcount_save_CboSubArea.value, srl: 0 }, '../../../VendorsInfo/LoadStreet', '', GetLoadStreet, true);
+    }
+    function GetLoadStreet(r) {
+        $('#VendorWithoutAcount_save_CboStreet').empty();
+
+        for (var i = 0; i < r.Street.length; i++) {
+            var newOption = new Option(r.Street[i].DescAr, r.Street[i].Id, false, false);
+            $('#VendorWithoutAcount_save_CboStreet').append(newOption).trigger('change');
+        }
+    }
+    function ExcuteSave_VendorWithoutAcount() {
+        if (CheckValueGridTotlal(0, VendorWithoutAcount_save_VendorNo.value)) {
+            alert('@Html.Translate("يجب إدخال رقم المورد", "You Must Enter Vendor Number")');
+            return;
+        }
+        if (CheckValueGridTotlal(0, VendorWithoutAcount_save_VendorName.value)) {
+            alert('@Html.Translate("يجب إدخال اسم المورد", "You Must Enter Vendor Name")');
+            return;
+        }
+        var allPages = oTable.fnGetNodes();
+        $(allPages).addClass('selected');
+        $('#Model_VendorWithoutAcount_LinkDeptWithAccs').modal('show')
+    }
+</script>

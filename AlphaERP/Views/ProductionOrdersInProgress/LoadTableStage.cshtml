@@ -1,0 +1,48 @@
+﻿@using AlphaERP.Models;
+@using System.Data
+@model System.Data.DataSet
+@{
+    Company company = (Company)Session["company"];
+
+}
+<table class="table table-hover" id="LoadTableStage" >
+    <thead>
+        <tr>
+            <th style="text-align:center;">@Html.Translate("رمز المادة", "Item No")</th>
+            <th style="text-align:center;">@Html.Translate("الوصف", "Description")</th>
+            <th style="text-align:center;"></th>
+            <th style="text-align:center;">@Html.Translate("الوحدة", "Unit Code")</th>
+            <td style="display:none;"></td>
+            <th style="text-align:center;"></th>
+            <th style="text-align:center;">@Html.Translate("الحزمة", "Batch")</th>
+            <th style="text-align:center;">@Html.Translate("الكمية المتوفرة", "Avl Qty")</th>
+            <th style="text-align:center;">@Html.Translate("الكمية المطلوبة ", "Prod Qty")</th>
+            <th style="text-align:center;">@Html.Translate("الكمية المصروفة", "Issued Qty")</th>
+            <th style="text-align:center;">@Html.Translate("الكمية المتبقية", "Rem Qty")</th>
+            <th style="text-align:center;">@Html.Translate("الكمية", "Qty")</th>
+            <th></th>
+          </tr>
+    </thead>
+    <tbody id="BodyStageANDAdditiveItems">
+        @foreach (DataRow Dr in Model.Tables["LoadTableStage"].Rows)
+        {
+            <tr>
+                <td>@Dr["ItemNo"]</td>
+                <td>@Dr["ItemDesc"]</td>
+                <td><button></button></td>
+                <td>@Dr["UnitCode"]</td>
+                <td style="display:none;">@Dr["UnitSerial"]</td>
+                <td><button onclick="LoadBatch('@company.comp_num','@Dr["ItemNo"]','@Dr["UnitSerial"]')">Batch</button></td>
+                <td><input class="batch-input" type="text" value="@Dr["Batch"]" /></td>
+                <td>@Dr["AvlQty"]</td>
+                <td>@Dr["ProdQty"]</td>
+                <td>@Dr["IssuedQty"]</td>
+                <td>@Dr["RemQty"]</td>
+                <td><input style="width: 33px !important;" id="Qty" type="number" value="@Dr["Qty"]" /></td>
+                <td></td>
+
+             </tr>
+        }
+
+    </tbody>
+</table>

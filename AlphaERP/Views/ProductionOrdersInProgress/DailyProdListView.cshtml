@@ -1,0 +1,48 @@
+﻿
+@model List<AlphaERP.Models.ProductionReceivingView>
+
+<table id="DailyProdListTB" class="LoadViewRawMateriaTB table dataTable table table-hover">
+    <thead>
+        <tr>
+            <th></th>
+            <th>@Html.Translate("رمز المادة", "ItemNo")</th>
+            <th>@Html.Translate("وصف المادة", "ItemDesc")</th>
+            <th>@Html.Translate("الوحدة", "UnitName")</th>
+            <th>@Html.Translate("اخر كلفة", "LastRecCost")</th>
+            <th>@Html.Translate("اجمالي الكمية المصروفة", "RecQty")</th>
+            <th>@Html.Translate("الكمية المعياريه", "StdQty")</th>
+            <th>@Html.Translate("الكمية المتباينة", "QtyVar")</th>
+            <th>@Html.Translate("كلفة الصرف", "RecCost")</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var Dr in Model)
+            {
+            <tr>
+                <td></td>
+                <td>@Dr.ItemNo</td>
+                <td>@Html.Translate(Dr.ItemDesc_Ara, Dr.ItemDesc)</td>
+                <td>@Dr.UnitName</td>
+                <td>@Dr.lastreccost</td>
+                <td>@Dr.RecCost</td>
+                <td>@Dr.stdqty</td>
+                <td>@Dr.qtyvar</td>
+                <td>@Dr.RecQty</td>
+                <td></td>
+            </tr>
+        }
+
+    </tbody>
+
+</table>
+@*<script>
+    var DailyProdListTB = $('#DailyProdListTB').DataTable({
+        "scrollY": 200,
+        "paging": false,
+        "searching": false,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+</script>*@

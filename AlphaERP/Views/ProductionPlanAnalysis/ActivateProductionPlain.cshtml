@@ -1,0 +1,67 @@
+﻿@model IEnumerable<AlphaERP.Models.MRP_ProductionPlain>
+
+<table class="table" id="ProductionPlanActivateTable">
+    <thead>
+        <tr>
+            <th>@Resources.Resource.PlanNo</th>
+            <th>@Resources.Resource.StartDatePlan</th>
+            <th>@Resources.Resource.EndDatePlan</th>
+            <th>@Html.Recource(973)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="ProductionPlanActivateTbody">
+        @foreach (var P in Model)
+        {
+            <tr onclick="Select_ProductionPlan(this)" id="@P.PlanNo" PlanYear="@P.PlanYear" >
+                <td>@P.PlanNo</td>
+                <td>@P.StartDate.ToString("yyyy-MM-dd")</td>
+                <td>@P.EndDate.ToString("yyyy-MM-dd")</td>
+                <td>@P.PlanNotes</td>
+                <td>
+                    
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="modal-footer">
+    <button type="button" onclick="SelectionProductionPlanDiv()" class="btn btn-primary">@Resources.Resource.Choose</button>
+    <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+</div>
+
+<script>
+    $('#ProductionPlanActivateTable').DataTable({
+        "scrollY": TableHeight2(300),
+        "paging": true,
+        "pageLength": 25,
+    });
+     function Select_ProductionPlan(e) {
+         var table = $('#ProductionPlanActivateTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function SelectionProductionPlanDiv() {
+        var table = $('#ProductionPlanActivateTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+
+        if (trs.length == 0) {
+            MsgBox('@Resources.Resource.NoPlanWasChosen', 'red');
+            done();
+            return false
+        }
+
+        var PlanYear = trs[0].getAttribute('PlanYear');
+        var PlanNo = trs[0].getAttribute('id');
+
+        AddProductionPlanAnalysisDiv(PlanYear, PlanNo);
+    }
+</script>

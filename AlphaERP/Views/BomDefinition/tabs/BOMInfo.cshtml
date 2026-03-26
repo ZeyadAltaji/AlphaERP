@@ -1,0 +1,202 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@{
+    Company company = (Company)Session["company"];
+    string date = DateTime.Now.ToString("yyyy-MM-dd");
+    List<InvUnitCode> UC = new MDB().InvUnitCodes.Where(x => x.CompNo == company.comp_num).ToList();
+    List<ProdCost_Parameter> lProdCost = new MDB().ProdCost_Parameters.Where(x => x.CompNo == company.comp_num && x.ParmID == 1).ToList();
+}
+<style>
+    .GroupTitle {
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        background-color: lightblue;
+    }
+</style>
+
+
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_BOMH_save_formula_code">@Html.Recource(4286) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <input required="true" type="text" id="Prod_BOMH_save_formula_code" placeholder="@Html.Recource(282)" />
+    </div>
+    <div class="col-md-7" style="margin-bottom: 5px;">
+        <input style="width: 105%;" required="true" type="text" id="Prod_BOMH_save_formula_codeDesc" placeholder="@Html.Recource(360)" />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_BOMH_save_item_no">@Html.Recource(306) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <input required="true" type="text" id="Prod_BOMH_save_item_no" disabled />
+    </div>
+    <div class="col-md-6" style="margin-bottom: 5px;">
+        <input required="true" style="width: 107%;" type="text" id="Prod_BOMH_save_item_Desc" placeholder="@Html.Recource(306)" />
+    </div>
+    <div class="col-md-1">
+        <button style="width: 146%;" type="button" class="btn btn-success btn-block" onclick="SearchProd_item_no()">
+            @Html.Recource(975)
+        </button>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_BOMH_save_Date">@Html.Recource(58) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <input type="date" value="@date" id="Prod_BOMH_save_Date" placeholder="@Html.Recource(306)" />
+    </div>
+    <div class="col-md-1">
+        <label class="unselectable" for="Prod_BOMH_save_UnitCode">@Html.Recource(67) </label>
+    </div>
+    <div class="col-md-2">
+        <select style="width:100%" id="Prod_BOMH_save_UnitCode" required="true">
+            
+        </select>
+    </div>
+    <div class="col-md-1">
+        <label class="unselectable">
+            <input id="Prod_BOMH_save_Hult" type="checkbox" />
+            @Html.Recource(9404)
+        </label>
+    </div>
+    <div class="col-md-1"></div>
+    <div class="col-md-1">
+        <label class="unselectable">
+            <input id="Prod_BOMH_save_StdCost" type="checkbox" />
+            @Html.Recource(6717)
+        </label>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_BOMH_save_FormQty">@Html.Recource(2544) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <input required="true" type="number" id="Prod_BOMH_save_FormQty" placeholder="@Html.Recource(2544)" onblur="GetValueFormQty()" />
+    </div>
+    <div class="col-md-1">
+        <label class="unselectable" for="Prod_BOMH_save_Group">@Html.Recource(1734) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <select style="width:100%" id="Prod_BOMH_save_Group" required="true">
+            @foreach (var G in lProdCost)
+            {
+                <option value="@G.ParmCode">@Html.Translate(G.LocalDesc,G.EngDesc) </option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_BOMH_save_ExpiryDate">@Html.Recource(2585) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <input type="date" value="@date" id="Prod_BOMH_save_ExpiryDate" />
+    </div>
+</div>
+ 
+<div class="form-group" id="BOM_QtyPer_Div">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_BOMH_save_Passed">@Html.Recource(2546) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <input required="true" type="number" id="Prod_BOMH_save_Passed" placeholder="@Html.Recource(2546)" onblur="GetValuePassed()" />
+    </div>
+    <div class="col-md-1">
+        <label class="unselectable" for="Prod_BOMH_save_Waste">@Html.Recource(2547) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <input required="true" style="width: 114px;" type="number" id="Prod_BOMH_save_Waste" placeholder="@Html.Recource(2547)" onblur="GetValueWaste()" />
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_BOMH_save_Rejected">@Html.Recource(2548) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <input required="true" type="number" id="Prod_BOMH_save_Rejected" placeholder="@Html.Recource(2548)" onblur="GetValueRejected()" />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12">
+        <label class="unselectable">@Html.Recource(6445) :</label>
+        <button onclick="Add_InvItemsMF(1)" type="button" class="btn btn-default">@Html.Recource(6445)</button>
+    </div>
+    <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+        <table class="table table-hover" id="ItemRawMaterialTable">
+            <thead>
+                <tr>
+                    <th style="width: 14%;">@Html.Recource(44)</th>
+                    <th style="width: 45%;">@Html.Recource(74)</th>
+                    <th>@Html.Recource(67)</th>
+                    <th>@Html.Recource(49)</th>
+                    <th>@Html.Recource(2584)</th>
+                    <th>@Html.Recource(50)</th>
+                    <th>@Html.Recource(9575)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="ItemRawMaterialTBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<script>
+
+
+
+     const formulaCodeInput = document.getElementById("Prod_BOMH_save_formula_code");
+        formulaCodeInput.addEventListener("focusout", function () {
+             const formulaCodeValue = formulaCodeInput.value; 
+        });
+
+     $("#BOM_QtyPer_Div").hide();
+    function GetValueFormQty() {
+        if (Prod_BOMH_save_FormQty.value != '') {
+            if (Prod_BOMH_save_FormQty.value < 0) {
+                alert('@Html.Translate("لا يجوز ان تكون كمية المعادلة اقل من 0", "The amount of the equation may not be less than 0")');
+                Prod_BOMH_save_FormQty.value = 0
+                Prod_BOMH_save_FormQty.focus()
+                return false;
+            }
+            else {
+                Prod_BOMH_save_Passed.value = Prod_BOMH_save_FormQty.value
+                Prod_BOMH_save_Waste.value = 0
+                Prod_BOMH_save_Rejected.value = 0
+            }
+        }
+        else {
+            Prod_BOMH_save_Passed.value = 0
+            Prod_BOMH_save_Waste.value = 0
+            Prod_BOMH_save_Rejected.value = 0
+        }
+    }
+    function GetValuePassed() {
+        if (Prod_BOMH_save_Passed.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون قيمة الصالح اقل من 0", "The value of the Passed may not be less than 0")');
+            Prod_BOMH_save_Passed.value = Prod_BOMH_save_FormQty.value
+            Prod_BOMH_save_Passed.focus()
+            return false;
+        }
+    }
+    function GetValueWaste() {
+        if (Prod_BOMH_save_Waste.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون قيمة التالف اقل من 0", "The value of the Waste may not be less than 0")');
+            Prod_BOMH_save_Waste.value = 0
+            Prod_BOMH_save_Waste.focus()
+            return false;
+        }
+    }
+    function GetValueRejected() {
+        if (Prod_BOMH_save_Rejected.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون قيمة المرفوض اقل من 0", "The value of the Rejected may not be less than 0")');
+            Prod_BOMH_save_Rejected.value = 0
+            Prod_BOMH_save_Rejected.focus()
+            return false;
+        }
+    }
+</script>
+

@@ -1,0 +1,101 @@
+﻿@model IEnumerable<AlphaERP.Models.prod_prodstage_info>
+@using AlphaERP.Models;
+ @{ 
+     string lang = Session["language"].ToString();
+
+ }
+  
+ @foreach (prod_prodstage_info item in Model)
+{
+    <tr  draggable="true" ondragstart="start()" ondragover="dragover()">
+        <td style="width: 6%;" id="ProdItemStages_Stag______srl" StageSer="@item.GroupID">@item.GroupID</td>
+        <td style="width: 14%;" id="ProdItemStages_StageCode" StageCode="@item.stage_code">@item.stage_code</td>
+        <td style="width: 40%;">@item.stage_desc</td>
+        <td style="width: 10%;text-align: center;">
+            <input id="ProdItemStages_SatndardTimeHr" value="0" type="number" style="width:75px !important" />
+        </td>
+        <td style="width: 10%;text-align: center;">
+            <input id="ProdItemStages_SatndardTimeMin" value="0" type="number" style="width:75px !important" />
+        </td>
+        <td style="width: 10%;text-align: center;">
+            <label class="unselectable">
+                    <input id="ProdItemStages_FixedTime" type="checkbox" />
+            </label>
+        </td>
+        <td style="width: 10%;text-align: center;">
+            <label class="unselectable">
+                    <input id="ProdItemStages_ClosePStage" type="checkbox" />
+            </label>
+        </td>
+        <td style="display: flex;">
+            <div class="popover-container">
+                <button style="width: 100px;" data-original-Test="@Html.Translate("فحص","Test")" id="NameTest_@item.stage_code" onclick="SelectFormQCTest('','',@item.stage_code)" type="button" class="btn btn-primary truncate-text">
+                    @Html.Translate("فحص", "Test")
+                </button>
+                <div class="popover-content" id="txtpopover_@item.stage_code" onclick="SelectFormQCTest('','',@item.stage_code)" data-original-Test="@Html.Translate("فحص","Test")">
+                    @Html.Translate("فحص", "Test")
+                </div>
+
+           </div>
+            <button class="btn-de btn-deQC" id="btn-deQC_@item.stage_code" type="button" onclick="deleteSelectQC('@item.stage_code')" style="position: relative; z-index: 2; right: @(lang == "en" ? "2.6rem" : "-2.6rem"); top: -0.4rem;"><i style="color: white !important; font-size:20px !important;" class="fa fa-times-circle"></i></button>
+
+        </td>
+
+        <td style="display: none;">
+            <input type="hidden" id="qaProcNoInput_@item.stage_code" class="_qaProcNoInput" />
+            <input type="hidden" id="QCFromNoInput_@item.stage_code" class="_QCFromNoInput" />
+             <input type="hidden" id="stageSerInput_@item.stage_code" value="@item.stage_code" />
+        </td>
+        <td class="QAclass">
+          <div style="display:flex;">
+              <div class="popover-container">
+
+                  <button style="width: 100px;" id="qaButton_@item.stage_code" data-original-text="@Html.Translate("أختيار", "Select")" onclick="GetQASetBystagetoadd('1','@item.stage_code')" type="button" class="btn btn-primary truncate-text " value="">
+
+                      @Html.Translate("أختيار", "Select")
+
+                  </button>
+                  <div class="popover-content" id="txtpopoveer_@item.stage_code" onclick="GetQASetBystagetoadd('1','@item.stage_code')" data-original-text="@Html.Translate("أختيار", "Select")">
+                      @Html.Translate("أختيار", "Select")
+                  </div>
+              </div>
+              <button class="btn-de" id="btn-deQA_@item.stage_code" type="button" onclick="deleteSelectQA('@item.stage_code')" style="position: relative; z-index: 2; right: @(lang == "en" ? "2.6rem" : "-2.6rem"); top: -0.4rem;"><i style="color: white !important; font-size:20px !important;" class="fa fa-times-circle"></i></button>
+          </div>
+
+        </td>
+
+         <td style="border-left: 1px solid #ccc; width: 6%;">
+              <button class="btn-de" onclick="DeleteRow(this, @item.GroupID)"><i class="fa fa-trash-alt"></i></button>
+
+        </td>
+    </tr>
+}
+<script>
+     var row;
+    var tableBody = document.getElementById("ProdItemStagesTBody");
+
+    function start() {
+
+        row = event.target;
+    }
+
+    function dragover() {
+
+        var e = event;
+        e.preventDefault();
+        let children = Array.from(e.target.parentNode.parentNode.children);
+        if (children.indexOf(e.target.parentNode) > children.indexOf(row)) {
+            e.target.parentNode.after(row);
+        } else {
+            e.target.parentNode.before(row);
+        }
+    }
+
+
+
+     if (@Model.Count() == 1) {
+         tableBody.removeAttribute("draggable");
+        tableBody.removeAttribute("ondragstart");
+        tableBody.removeAttribute("ondragover");
+    }
+</script>

@@ -1,0 +1,1833 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
+  <Import Project="..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props" Condition="Exists('..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{021048C2-73FC-4340-9BA1-6ED283640B3F}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>AlphaERP</RootNamespace>
+    <AssemblyName>AlphaERP</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <MvcBuildViews>false</MvcBuildViews>
+    <UseIISExpress>true</UseIISExpress>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <UseGlobalApplicationHostFile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <Use64BitIISExpress />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Alpha_ERP_DataSet.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Alpha_ERP_DataSet.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="App_GlobalResources\Resource.designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
+    <Compile Include="App_GlobalResources\Resource.en.designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.en.resx</DependentUpon>
+    </Compile>
+    <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\ActivateCancelProductionPlanController.cs" />
+    <Compile Include="Controllers\AnnualProductionPlanController.cs" />
+    <Compile Include="Controllers\AuthorizationFailedController.cs" />
+    <Compile Include="Controllers\BomDefinitionController.cs" />
+    <Compile Include="Controllers\CalcuQtyAnnualPlanController.cs" />
+    <Compile Include="Controllers\Captcha.cs" />
+    <Compile Include="Controllers\CompanyController.cs" />
+    <Compile Include="Controllers\ConItemsToPurchOrdController.cs" />
+    <Compile Include="Controllers\controller.cs" />
+    <Compile Include="Controllers\ConvertToPurchOrdController.cs" />
+    <Compile Include="Controllers\CrystalReportViewerController.cs" />
+    <Compile Include="Controllers\DailyProductionController.cs" />
+    <Compile Include="Controllers\DefVendorEvalItemsController.cs" />
+    <Compile Include="Controllers\ErrorController.cs" />
+    <Compile Include="Controllers\ErrorsController.cs" />
+    <Compile Include="Controllers\EvalVendorsController.cs" />
+    <Compile Include="Controllers\ExpensesDistributionController.cs" />
+    <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\HtmlHelperExtensions.cs" />
+    <Compile Include="Controllers\InboundManagementController.cs" />
+    <Compile Include="Controllers\InboundsInfoController.cs" />
+    <Compile Include="Controllers\InqItemBalanceController.cs" />
+    <Compile Include="Controllers\InqPurchaseOrderController.cs" />
+    <Compile Include="Controllers\LinkPrchOrdItemsController.cs" />
+    <Compile Include="Controllers\LinkPrchOrdUsersController.cs" />
+    <Compile Include="Controllers\LinkPurchOrdersAccController.cs" />
+    <Compile Include="Controllers\MasterPlansAppendixController.cs" />
+    <Compile Include="Controllers\MasterPlansController.cs" />
+    <Compile Include="Controllers\MenuController.cs" />
+    <Compile Include="Controllers\OrdReceiptController.cs" />
+    <Compile Include="Controllers\PackingDefentionController.cs" />
+    <Compile Include="Controllers\PackingInformationController.cs" />
+    <Compile Include="Controllers\ParametersController.cs" />
+    <Compile Include="Controllers\PermissionsController.cs" />
+    <Compile Include="Controllers\PortInfoController.cs" />
+    <Compile Include="Controllers\PriceOffersAnalysisController.cs" />
+    <Compile Include="Controllers\PriceOffersApprovalController.cs" />
+    <Compile Include="Controllers\ProdCost_QAController.cs" />
+    <Compile Include="Controllers\ProdOrdersController.cs" />
+    <Compile Include="Controllers\ProductionOrdersInProgressController.cs" />
+    <Compile Include="Controllers\ProductionPlanAnalysisController.cs" />
+    <Compile Include="Controllers\ProductionStagesController.cs" />
+    <Compile Include="Controllers\PurchaseOrderController.cs" />
+    <Compile Include="Controllers\PurchaseRequestController.cs" />
+    <Compile Include="Controllers\PurchOrdExpensesController.cs" />
+    <Compile Include="Controllers\QAProceduresDefinitionController.cs" />
+    <Compile Include="Controllers\QATestDefinitionController.cs" />
+    <Compile Include="Controllers\ReleaseOrdersController.cs" />
+    <Compile Include="Controllers\ReportsController.cs" />
+    <Compile Include="Controllers\RevisionSetupController.cs" />
+    <Compile Include="Controllers\SettingsController.cs" />
+    <Compile Include="Controllers\ShipmentsControlController.cs" />
+    <Compile Include="Controllers\ShipmentsInfoController.cs" />
+    <Compile Include="Controllers\SlaughterOrderController.cs" />
+    <Compile Include="Controllers\StageAccExpLinkController.cs" />
+    <Compile Include="Controllers\StagesQcInProcessController.cs" />
+    <Compile Include="Controllers\TransferDailyProdController.cs" />
+    <Compile Include="Controllers\VendorsInfoController.cs" />
+    <Compile Include="Controllers\VendorsOffersInfoController.cs" />
+    <Compile Include="Controllers\VoucIssueController.cs" />
+    <Compile Include="Controllers\WeightChangeRateController.cs" />
+    <Compile Include="Controllers\WFController.cs" />
+    <Compile Include="Filter\AuthorizationFilter.cs" />
+    <Compile Include="Filter\BrowserCaching.cs" />
+    <Compile Include="Filter\CheckCompany.cs" />
+    <Compile Include="Filter\LogoutNoCach.cs" />
+    <Compile Include="Filter\NoCache.cs" />
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Helpers\JsonpResult.cs" />
+    <Compile Include="Hubs\ChatHub.cs" />
+    <Compile Include="Hubs\OrderStagesHub.cs" />
+    <Compile Include="Models\Acc.cs" />
+    <Compile Include="Models\AccAllow.cs" />
+    <Compile Include="Models\AllStores.cs" />
+    <Compile Include="Models\AlphaERP_UserPermissions.cs" />
+    <Compile Include="Models\AlphaOrd_Email.cs" />
+    <Compile Include="Models\AlphaWeb_Menu.cs" />
+    <Compile Include="Models\AlphaWeb_UserPermissions.cs" />
+    <Compile Include="Models\Alpha_BusinessUnitDef.cs" />
+    <Compile Include="Models\Alpha_Language.cs" />
+    <Compile Include="Models\Alpha_WorkFlowFunctions.cs" />
+    <Compile Include="Models\Alpha_WorkFlowLog.cs" />
+    <Compile Include="Models\AttachmentFiles.cs" />
+    <Compile Include="Models\BOM_FinPackingInfo.cs" />
+    <Compile Include="Models\BOM_GetFormStagesView.cs" />
+    <Compile Include="Models\BOM_PakingInfo.cs" />
+    <Compile Include="Models\BusunisUnit.cs" />
+    <Compile Include="Models\cc.cs" />
+    <Compile Include="Models\ClientsActive.cs" />
+    <Compile Include="Models\Company.cs" />
+    <Compile Include="Models\CRequestforQuotation.cs" />
+    <Compile Include="Models\EmpStage.cs" />
+    <Compile Include="Models\EvalVenodrs.cs" />
+    <Compile Include="Models\ExpCodes.cs" />
+    <Compile Include="Models\glactmf.cs" />
+    <Compile Include="Models\GLCOMMF.cs" />
+    <Compile Include="Models\GLCR.cs" />
+    <Compile Include="Models\GLDEPMF.cs" />
+    <Compile Include="Models\GLN_UsersDept.cs" />
+    <Compile Include="Models\InfoItems.cs" />
+    <Compile Include="Models\InqDetPurch.cs" />
+    <Compile Include="Models\InvCompMF.cs" />
+    <Compile Include="Models\InvDocType.cs" />
+    <Compile Include="Models\InvItemsMF.cs" />
+    <Compile Include="Models\InvKit.cs" />
+    <Compile Include="Models\InvLink.cs" />
+    <Compile Include="Models\InvStoresMF.cs" />
+    <Compile Include="Models\InvStoresMFView.cs" />
+    <Compile Include="Models\InvStoreUser.cs" />
+    <Compile Include="Models\InvT_GetPrepDetlForIssueOrderView.cs" />
+    <Compile Include="Models\InvT_IssueOrderDF.cs" />
+    <Compile Include="Models\InvT_IssueOrderHFView.cs" />
+    <Compile Include="Models\Invt_OutlaySlaughter.cs" />
+    <Compile Include="Models\Invt_SlaughterOrderDF.cs" />
+    <Compile Include="Models\Invt_SlaughterOrderHF.cs" />
+    <Compile Include="Models\InvUnitCode.cs" />
+    <Compile Include="Models\LicensedModule.cs" />
+    <Compile Include="Models\LInboundsInfo.cs" />
+    <Compile Include="Models\ListEventsummary.cs" />
+    <Compile Include="Models\LoadTestDetQcDfView.cs" />
+    <Compile Include="Models\LoginResult.cs" />
+    <Compile Include="Models\LPROrder.cs" />
+    <Compile Include="Models\MDB.cs" />
+    <Compile Include="Models\Menu.cs" />
+    <Compile Include="Models\MRPActivatePlan.cs" />
+    <Compile Include="Models\MRP_Calculation.cs" />
+    <Compile Include="Models\MRP_GeneralPlanInfoD.cs" />
+    <Compile Include="Models\MRP_GeneralPlanInfoH.cs" />
+    <Compile Include="Models\MRP_GeneralPlanSubDtls.cs" />
+    <Compile Include="Models\MRP_ProdPlanDetails.cs" />
+    <Compile Include="Models\MRP_ProductionPlain.cs" />
+    <Compile Include="Models\MRP_Web_OrdCopyInfo.cs" />
+    <Compile Include="Models\OnlineUser.cs" />
+    <Compile Include="Models\OrdCompMF.cs" />
+    <Compile Include="Models\OrdCondsGuaranty.cs" />
+    <Compile Include="Models\OrdCopy.cs" />
+    <Compile Include="Models\OrdCopyInfo.cs" />
+    <Compile Include="Models\OrderDF.cs" />
+    <Compile Include="Models\OrderDFShipDate.cs" />
+    <Compile Include="Models\OrderHF.cs" />
+    <Compile Include="Models\Order_HF.cs" />
+    <Compile Include="Models\OrdOfferDF.cs" />
+    <Compile Include="Models\OrdOfferHF.cs" />
+    <Compile Include="Models\OrdPreOrder.cs" />
+    <Compile Include="Models\OrdPreOrderDF.cs" />
+    <Compile Include="Models\OrdPreOrderHF.cs" />
+    <Compile Include="Models\OrdRecDF.cs" />
+    <Compile Include="Models\OrdReceiptInfo.cs" />
+    <Compile Include="Models\OrdRecHF.cs" />
+    <Compile Include="Models\OrdRequest.cs" />
+    <Compile Include="Models\OrdRequestDF.cs" />
+    <Compile Include="Models\Ord_glactmf.cs" />
+    <Compile Include="Models\Ord_InboundManagementDF.cs" />
+    <Compile Include="Models\Ord_InboundManagementHF.cs" />
+    <Compile Include="Models\Ord_InboundsInfoDF.cs" />
+    <Compile Include="Models\Ord_InboundsInfoHF.cs" />
+    <Compile Include="Models\Ord_LcExpCodes.cs" />
+    <Compile Include="Models\Ord_LinkPrchOrdUsers.cs" />
+    <Compile Include="Models\Ord_LinkRquestDFAndPO.cs" />
+    <Compile Include="Models\Ord_Menu.cs" />
+    <Compile Include="Models\Ord_OrderShippingDF.cs" />
+    <Compile Include="Models\Ord_OrderShippingHF.cs" />
+    <Compile Include="Models\Ord_OrdReceiptDF.cs" />
+    <Compile Include="Models\Ord_OrdReceiptHF.cs" />
+    <Compile Include="Models\Ord_POAttachments.cs" />
+    <Compile Include="Models\Ord_PortInfoDF.cs" />
+    <Compile Include="Models\Ord_PortInfoHF.cs" />
+    <Compile Include="Models\Ord_Programs.cs" />
+    <Compile Include="Models\Ord_PurchOrdExpensesDF.cs" />
+    <Compile Include="Models\Ord_PurchOrdExpensesHF.cs" />
+    <Compile Include="Models\Ord_ReleaseOrdersDF.cs" />
+    <Compile Include="Models\Ord_ReleaseOrdersHF.cs" />
+    <Compile Include="Models\Ord_RequestDF.cs" />
+    <Compile Include="Models\Ord_RequestHF.cs" />
+    <Compile Include="Models\Ord_UserActions.cs" />
+    <Compile Include="Models\Ord_UsersPermissions.cs" />
+    <Compile Include="Models\Ord_VoucIssueDF.cs" />
+    <Compile Include="Models\Ord_VoucIssueHF.cs" />
+    <Compile Include="Models\Ord_Web_EvalVenodrsDF.cs" />
+    <Compile Include="Models\Ord_Web_EvalVenodrsHF.cs" />
+    <Compile Include="Models\Ord_WeightChangeRate.cs" />
+    <Compile Include="Models\OutlaySlaugCode.cs" />
+    <Compile Include="Models\PayCodes.cs" />
+    <Compile Include="Models\PordCost_FormTest.cs" />
+    <Compile Include="Models\PordCost_FormTestView.cs" />
+    <Compile Include="Models\ProcOrderStagesView.cs" />
+    <Compile Include="Models\ProdCost_CompPara.cs" />
+    <Compile Include="Models\ProdCost_DailyProductionD.cs" />
+    <Compile Include="Models\ProdCost_DailyProductionH.cs" />
+    <Compile Include="Models\ProdCost_EmpWorkHoursD_Web.cs" />
+    <Compile Include="Models\ProdCost_EmpWorkHoursD_WebView.cs" />
+    <Compile Include="Models\ProdCost_EmpWorkHoursH_Web.cs" />
+    <Compile Include="Models\ProdCost_FormulaProperties.cs" />
+    <Compile Include="Models\ProdCost_GetEmpWorkHoursH_WebView.cs" />
+    <Compile Include="Models\ProdCost_GetOrderStagesStatusView.cs" />
+    <Compile Include="Models\ProdCost_GetOrderStagesStatus_webView.cs" />
+    <Compile Include="Models\ProdCost_GetProdOrderInfoView.cs" />
+    <Compile Include="Models\ProdCost_MachineInfo.cs" />
+    <Compile Include="Models\ProdCost_OrderExtended.cs" />
+    <Compile Include="Models\ProdCost_Parameter.cs" />
+    <Compile Include="Models\ProdCost_ParametersHF.cs" />
+    <Compile Include="Models\ProdCost_ProductionShift.cs" />
+    <Compile Include="Models\ProdCost_QAEventListDatasummary.cs" />
+    <Compile Include="Models\ProdCost_QAEvents.cs" />
+    <Compile Include="Models\ProdCost_QAEvent_SetupView.cs" />
+    <Compile Include="Models\ProdCost_QAProcHF.cs" />
+    <Compile Include="Models\ProdCost_QARequestDataModels.cs" />
+    <Compile Include="Models\ProdCost_QARequests.cs" />
+    <Compile Include="Models\ProdCost_QASetup.cs" />
+    <Compile Include="Models\ProdCost_QASetupHF.cs" />
+    <Compile Include="Models\ProdCost_QASetupHFVie.cs" />
+    <Compile Include="Models\ProdCost_QASetupHFView.cs" />
+    <Compile Include="Models\ProdCost_QASetupView.cs" />
+    <Compile Include="Models\ProdCost_QCInspDF.cs" />
+    <Compile Include="Models\ProdCost_QCInspHF.cs" />
+    <Compile Include="Models\ProdCost_StageAccExpLink.cs" />
+    <Compile Include="Models\ProdOrders.cs" />
+    <Compile Include="Models\ProductionReceivingView.cs" />
+    <Compile Include="Models\prod_approve_manufacure.cs" />
+    <Compile Include="Models\Prod_BomAdditionalRM.cs" />
+    <Compile Include="Models\Prod_BOMGroups.cs" />
+    <Compile Include="Models\prod_extend_item.cs" />
+    <Compile Include="Models\prod_formula_detail_info.cs" />
+    <Compile Include="Models\prod_formula_header_info.cs" />
+    <Compile Include="Models\prod_formula_header_infoView.cs" />
+    <Compile Include="Models\Prod_GetOrderNoteCloseView.cs" />
+    <Compile Include="Models\prod_hiring_prepare_info.cs" />
+    <Compile Include="Models\Prod_ItemStages.cs" />
+    <Compile Include="Models\Prod_ItemStagesTestQuality.cs" />
+    <Compile Include="Models\prod_prepare_info.cs" />
+    <Compile Include="Models\Prod_prepare_infoView.cs" />
+    <Compile Include="Models\Prod_prepare_info_detail.cs" />
+    <Compile Include="Models\prod_prodstage_info.cs" />
+    <Compile Include="Models\Prod_prodstage_infoView.cs" />
+    <Compile Include="Models\Prod_RevisionSetup.cs" />
+    <Compile Include="Models\PROrder.cs" />
+    <Compile Include="Models\PurchaseOrderInfo.cs" />
+    <Compile Include="Models\QAProceduresDefinitionView.cs" />
+    <Compile Include="Models\QASetupForEditViewModel.cs" />
+    <Compile Include="Models\ReportInfo.cs" />
+    <Compile Include="Models\ReportParams.cs" />
+    <Compile Include="Models\Shipments.cs" />
+    <Compile Include="Models\ShipmentsControl.cs" />
+    <Compile Include="Models\syscode.cs" />
+    <Compile Include="Models\sysdiagram.cs" />
+    <Compile Include="Models\TransferDailyProd.cs" />
+    <Compile Include="Models\UploadFile.cs" />
+    <Compile Include="Models\UploadFileInboundManagement.cs" />
+    <Compile Include="Models\UploadFileOrdRec.cs" />
+    <Compile Include="Models\UploadFilePO.cs" />
+    <Compile Include="Models\UploadFilePR.cs" />
+    <Compile Include="Models\UploadFileReleaseOrders.cs" />
+    <Compile Include="Models\UploadFileVendor.cs" />
+    <Compile Include="Models\UploadFileVoch.cs" />
+    <Compile Include="Models\Vendor.cs" />
+    <Compile Include="Models\VendorsAccGroups.cs" />
+    <Compile Include="Models\Ven_bankInfo.cs" />
+    <Compile Include="Models\Ven_Contact.cs" />
+    <Compile Include="Models\ViewRawMateria.cs" />
+    <Compile Include="Models\ViewWarehouseData.cs" />
+    <Compile Include="Models\YearPlanDetlsD.cs" />
+    <Compile Include="Models\YearPlanDetlsH.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Reports\CrystalViewer\CrystalImageHandler.aspx.cs">
+      <DependentUpon>CrystalImageHandler.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Reports\CrystalViewer\CrystalImageHandler.aspx.designer.cs">
+      <DependentUpon>CrystalImageHandler.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Reports\CrystalViewer\PrintReport.aspx.cs">
+      <DependentUpon>PrintReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Reports\CrystalViewer\PrintReport.aspx.designer.cs">
+      <DependentUpon>PrintReport.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Reports\CrystalViewer\ReportViewer.aspx.cs">
+      <DependentUpon>ReportViewer.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Reports\CrystalViewer\ReportViewer.aspx.designer.cs">
+      <DependentUpon>ReportViewer.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Reports\Ordering\Arabic_Report\RptOrdCopyInfo.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RptOrdCopyInfo.rpt</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Reports\Ordering\Arabic_Report\RptOrdReceipts.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RptOrdReceipts.rpt</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Reports\Ordering\Arabic_Report\RptPRInfo.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RptPRInfo.rpt</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Reports\Ordering\Arabic_Report\RptPurchOrderInfo - Copy %282%29.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RptPurchOrderInfo - Copy %282%29.rpt</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Reports\Ordering\Arabic_Report\RptPurchOrderInfo - Copy.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RptPurchOrderInfo - Copy.rpt</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Reports\Ordering\Arabic_Report\RptPurchOrderInfo.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RptPurchOrderInfo.rpt</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Reports\Ordering\Arabic_Report\RptPurchOrderInfoKASIH.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RptPurchOrderInfoKASIH.rpt</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Reports\Ordering\English_Report\RptOrdCopyInfoEng.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RptOrdCopyInfoEng.rpt</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Reports\Ordering\English_Report\RptOrdReceiptsEng.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RptOrdReceiptsEng.rpt</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Reports\Ordering\English_Report\RptPRInfoEng.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RptPRInfoEng.rpt</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Reports\Ordering\English_Report\RptPurchOrderInfoEng - Copy.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RptPurchOrderInfoEng - Copy.rpt</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Reports\Ordering\English_Report\RptPurchOrderInfoEng.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RptPurchOrderInfoEng.rpt</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Reports\Ordering\English_Report\RptPurchOrderInfoKASIHEnf.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RptPurchOrderInfoKASIHEnf.rpt</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Startup.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Content\all.css" />
+    <Content Include="Content\Ar.css" />
+    <Content Include="Content\baloon.css" />
+    <Content Include="Content\beyond.min.css" />
+    <Content Include="Content\bootstrap-slider.css" />
+    <Content Include="Content\bootstrap.css" />
+    <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\Chart\Chart.css" />
+    <Content Include="Content\Chart\Chart.js" />
+    <Content Include="Content\En.css" />
+    <Content Include="Content\font-awesome-4.7.0\css\font-awesome.css" />
+    <Content Include="Content\font-awesome-4.7.0\css\font-awesome.min.css" />
+    <Content Include="Content\font-awesome-4.7.0\fonts\fontawesome-webfont.svg" />
+    <Content Include="Content\font-awesome.min.css" />
+    <Content Include="Content\images\back_disabled.jpg" />
+    <Content Include="Content\images\back_enabled.jpg" />
+    <Content Include="Content\images\details_close.png" />
+    <Content Include="Content\images\details_open.png" />
+    <Content Include="Content\images\favicon.ico" />
+    <Content Include="Content\images\forward_disabled.jpg" />
+    <Content Include="Content\images\forward_enabled.jpg" />
+    <Content Include="Content\images\sort_asc.png" />
+    <Content Include="Content\images\sort_asc_disabled.png" />
+    <Content Include="Content\images\sort_both.png" />
+    <Content Include="Content\images\sort_desc.png" />
+    <Content Include="Content\images\sort_desc_disabled.png" />
+    <Content Include="Content\images\X.png" />
+    <Content Include="Content\introjs.css" />
+    <Content Include="Content\ionicons.min.css" />
+    <Content Include="Content\jquery.dataTables.css" />
+    <Content Include="Content\login.css" />
+    <Content Include="Content\loginAr.css" />
+    <Content Include="Content\Menu.css" />
+    <Content Include="Content\preview.css" />
+    <Content Include="Content\rate.css" />
+    <Content Include="Content\select2.min.css" />
+    <Content Include="Content\signin.css" />
+    <Content Include="Content\Site.css" />
+    <Content Include="Content\stickytooltip.css" />
+    <Content Include="Content\themes\AdminLTE\bower_components\bootstrap\dist\css\bootstrap.css" />
+    <Content Include="Content\themes\AdminLTE\bower_components\bootstrap\dist\css\bootstrap.min.css" />
+    <Content Include="Content\themes\AdminLTE\bower_components\bootstrap\dist\css\fonts\fontawesome-webfont.svg" />
+    <Content Include="Content\themes\AdminLTE\bower_components\bootstrap\dist\fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="Content\themes\AdminLTE\bower_components\bootstrap\dist\js\bootstrap.min.js" />
+    <Content Include="Content\themes\AdminLTE\dist\css\.gitignore.css" />
+    <Content Include="Content\themes\AdminLTE\dist\css\AdminLTE.css" />
+    <Content Include="Content\themes\AdminLTE\dist\css\AdminLTEar.css" />
+    <Content Include="Content\themes\AdminLTE\dist\css\pace.min.css" />
+    <Content Include="Content\themes\AdminLTE\dist\js\adminlte.min.js" />
+    <Content Include="Content\themes\compressed.js" />
+    <Content Include="Content\themes\docs.css" />
+    <Content Include="Content\themes\docs.js" />
+    <Content Include="Content\themes\jquery-1.9.1.min.js" />
+    <Content Include="Content\themes\jquery.slimscroll.js" />
+    <Content Include="Content\themes\jquery.slimscroll.min.js" />
+    <Content Include="Content\themes\jquery.toaster.js" />
+    <Content Include="Content\toastr.min.css" />
+    <Content Include="Content\util.css" />
+    <Content Include="Content\vendor\animate\animate.css" />
+    <Content Include="Content\vendor\bootstrap\css\bootstrap-grid.css" />
+    <Content Include="Content\vendor\bootstrap\css\bootstrap-grid.min.css" />
+    <Content Include="Content\vendor\bootstrap\css\bootstrap-reboot.css" />
+    <Content Include="Content\vendor\bootstrap\css\bootstrap-reboot.min.css" />
+    <Content Include="Content\vendor\bootstrap\css\bootstrap.css" />
+    <Content Include="Content\vendor\bootstrap\css\bootstrap.min.css" />
+    <Content Include="Content\vendor\bootstrap\js\bootstrap.js" />
+    <Content Include="Content\vendor\bootstrap\js\bootstrap.min.js" />
+    <Content Include="Content\vendor\bootstrap\js\popper.js" />
+    <Content Include="Content\vendor\bootstrap\js\popper.min.js" />
+    <Content Include="Content\vendor\bootstrap\js\tooltip.js" />
+    <Content Include="Content\vendor\css-hamburgers\hamburgers.css" />
+    <Content Include="Content\vendor\css-hamburgers\hamburgers.min.css" />
+    <Content Include="Content\vendor\jquery\jquery-3.2.1.min.js" />
+    <Content Include="Content\vendor\select2\select2.css" />
+    <Content Include="Content\vendor\select2\select2.js" />
+    <Content Include="Content\vendor\select2\select2.min.css" />
+    <Content Include="Content\vendor\select2\select2.min.js" />
+    <Content Include="Content\vendor\tilt\tilt.jquery.min.js" />
+    <Content Include="Content\_Layout.css" />
+    <Content Include="favicon.ico" />
+    <Content Include="fonts\font-awesome-4.7.0\css\font-awesome.css" />
+    <Content Include="fonts\font-awesome-4.7.0\css\font-awesome.min.css" />
+    <Content Include="fonts\font-awesome-4.7.0\fonts\fontawesome-webfont.svg" />
+    <Content Include="fonts\font-awesome-4.7.0\HELP-US-OUT.txt" />
+    <Content Include="fonts\fontawesome-webfont.svg" />
+    <Content Include="fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="fonts\montserrat\OFL.txt" />
+    <Content Include="Global.asax" />
+    <Content Include="Images\CrystalPrintIcon.ico" />
+    <Content Include="Images\GCE Soft Logo 1.jpg" />
+    <Content Include="Images\gcesoft_logo_400x400.png" />
+    <Content Include="Images\ImageRnR.png" />
+    <Content Include="Images\logo.png" />
+    <Content Include="Images\menu\check-box.png" />
+    <Content Include="Images\menu\feature.png" />
+    <Content Include="Images\menu\logout.png" />
+    <Content Include="Images\menu\mail.png" />
+    <Content Include="Images\menu\palette.png" />
+    <Content Include="Images\menu\password.png" />
+    <Content Include="Images\menu\Retest.png" />
+    <Content Include="Images\menu\star.png" />
+    <Content Include="Images\menu\statistics.png" />
+    <Content Include="Images\menu\stopmail.png" />
+    <Content Include="Images\menu\translate.png" />
+    <Content Include="Images\menu\unlock.png" />
+    <Content Include="Images\Spinner.gif" />
+    <Content Include="Images\table\favicon.ico" />
+    <Content Include="Images\table\sort_asc.png" />
+    <Content Include="Images\table\sort_asc_disabled.png" />
+    <Content Include="Images\table\sort_both.png" />
+    <Content Include="Images\table\sort_desc.png" />
+    <Content Include="Images\table\sort_desc_disabled.png" />
+    <Content Include="Images\unknown.png" />
+    <Content Include="Images\unknownf.png" />
+    <Content Include="Reports\CrystalViewer\CrystalImageHandler.aspx" />
+    <Content Include="Reports\CrystalViewer\PrintReport.aspx" />
+    <Content Include="Reports\CrystalViewer\ReportViewer.aspx" />
+    <Content Include="ApplicationInsights.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="fonts\font-awesome-4.7.0\fonts\fontawesome-webfont.eot" />
+    <Content Include="fonts\font-awesome-4.7.0\fonts\fontawesome-webfont.ttf" />
+    <Content Include="fonts\font-awesome-4.7.0\fonts\fontawesome-webfont.woff" />
+    <Content Include="fonts\font-awesome-4.7.0\fonts\fontawesome-webfont.woff2" />
+    <Content Include="fonts\font-awesome-4.7.0\fonts\FontAwesome.otf" />
+    <Content Include="fonts\font-awesome-4.7.0\less\animated.less" />
+    <Content Include="fonts\font-awesome-4.7.0\less\bordered-pulled.less" />
+    <Content Include="fonts\font-awesome-4.7.0\less\core.less" />
+    <Content Include="fonts\font-awesome-4.7.0\less\fixed-width.less" />
+    <Content Include="fonts\font-awesome-4.7.0\less\font-awesome.less" />
+    <Content Include="fonts\font-awesome-4.7.0\less\icons.less" />
+    <Content Include="fonts\font-awesome-4.7.0\less\larger.less" />
+    <Content Include="fonts\font-awesome-4.7.0\less\list.less" />
+    <Content Include="fonts\font-awesome-4.7.0\less\mixins.less" />
+    <Content Include="fonts\font-awesome-4.7.0\less\path.less" />
+    <Content Include="fonts\font-awesome-4.7.0\less\rotated-flipped.less" />
+    <Content Include="fonts\font-awesome-4.7.0\less\screen-reader.less" />
+    <Content Include="fonts\font-awesome-4.7.0\less\stacked.less" />
+    <Content Include="fonts\font-awesome-4.7.0\less\variables.less" />
+    <Content Include="fonts\font-awesome-4.7.0\scss\font-awesome.scss" />
+    <Content Include="fonts\font-awesome-4.7.0\scss\_animated.scss" />
+    <Content Include="fonts\font-awesome-4.7.0\scss\_bordered-pulled.scss" />
+    <Content Include="fonts\font-awesome-4.7.0\scss\_core.scss" />
+    <Content Include="fonts\font-awesome-4.7.0\scss\_fixed-width.scss" />
+    <Content Include="fonts\font-awesome-4.7.0\scss\_icons.scss" />
+    <Content Include="fonts\font-awesome-4.7.0\scss\_larger.scss" />
+    <Content Include="fonts\font-awesome-4.7.0\scss\_list.scss" />
+    <Content Include="fonts\font-awesome-4.7.0\scss\_mixins.scss" />
+    <Content Include="fonts\font-awesome-4.7.0\scss\_path.scss" />
+    <Content Include="fonts\font-awesome-4.7.0\scss\_rotated-flipped.scss" />
+    <Content Include="fonts\font-awesome-4.7.0\scss\_screen-reader.scss" />
+    <Content Include="fonts\font-awesome-4.7.0\scss\_stacked.scss" />
+    <Content Include="fonts\font-awesome-4.7.0\scss\_variables.scss" />
+    <Content Include="fonts\montserrat\Montserrat-Black.ttf" />
+    <Content Include="fonts\montserrat\Montserrat-BlackItalic.ttf" />
+    <Content Include="fonts\montserrat\Montserrat-Bold.ttf" />
+    <Content Include="fonts\montserrat\Montserrat-BoldItalic.ttf" />
+    <Content Include="fonts\montserrat\Montserrat-ExtraBold.ttf" />
+    <Content Include="fonts\montserrat\Montserrat-ExtraBoldItalic.ttf" />
+    <Content Include="fonts\montserrat\Montserrat-ExtraLight.ttf" />
+    <Content Include="fonts\montserrat\Montserrat-ExtraLightItalic.ttf" />
+    <Content Include="fonts\montserrat\Montserrat-Italic.ttf" />
+    <Content Include="fonts\montserrat\Montserrat-Light.ttf" />
+    <Content Include="fonts\montserrat\Montserrat-LightItalic.ttf" />
+    <Content Include="fonts\montserrat\Montserrat-Medium.ttf" />
+    <Content Include="fonts\montserrat\Montserrat-MediumItalic.ttf" />
+    <Content Include="fonts\montserrat\Montserrat-Regular.ttf" />
+    <Content Include="fonts\montserrat\Montserrat-SemiBold.ttf" />
+    <Content Include="fonts\montserrat\Montserrat-SemiBoldItalic.ttf" />
+    <Content Include="fonts\montserrat\Montserrat-Thin.ttf" />
+    <Content Include="fonts\montserrat\Montserrat-ThinItalic.ttf" />
+    <Content Include="fonts\poppins\Poppins-Black.ttf" />
+    <Content Include="fonts\poppins\Poppins-BlackItalic.ttf" />
+    <Content Include="fonts\poppins\Poppins-Bold.ttf" />
+    <Content Include="fonts\poppins\Poppins-BoldItalic.ttf" />
+    <Content Include="fonts\poppins\Poppins-ExtraBold.ttf" />
+    <Content Include="fonts\poppins\Poppins-ExtraBoldItalic.ttf" />
+    <Content Include="fonts\poppins\Poppins-ExtraLight.ttf" />
+    <Content Include="fonts\poppins\Poppins-ExtraLightItalic.ttf" />
+    <Content Include="fonts\poppins\Poppins-Italic.ttf" />
+    <Content Include="fonts\poppins\Poppins-Light.ttf" />
+    <Content Include="fonts\poppins\Poppins-LightItalic.ttf" />
+    <Content Include="fonts\poppins\Poppins-Medium.ttf" />
+    <Content Include="fonts\poppins\Poppins-MediumItalic.ttf" />
+    <Content Include="fonts\poppins\Poppins-Regular.ttf" />
+    <Content Include="fonts\poppins\Poppins-SemiBold.ttf" />
+    <Content Include="fonts\poppins\Poppins-SemiBoldItalic.ttf" />
+    <Content Include="fonts\poppins\Poppins-Thin.ttf" />
+    <Content Include="fonts\poppins\Poppins-ThinItalic.ttf" />
+    <Content Include="fonts\fontawesome-webfont.eot" />
+    <Content Include="fonts\fontawesome-webfont.ttf" />
+    <Content Include="fonts\fontawesome-webfont.woff" />
+    <Content Include="fonts\fontawesome-webfont.woff2" />
+    <Content Include="fonts\FontAwesome.otf" />
+    <Content Include="fonts\Poppins-Black.woff" />
+    <Content Include="fonts\Poppins-BlackItalic.woff" />
+    <Content Include="fonts\Poppins-Bold.woff" />
+    <Content Include="fonts\Poppins-BoldItalic.woff" />
+    <Content Include="fonts\Poppins-ExtraBold.woff" />
+    <Content Include="fonts\Poppins-ExtraBoldItalic.woff" />
+    <Content Include="fonts\Poppins-ExtraLight.woff" />
+    <Content Include="fonts\Poppins-ExtraLightItalic.woff" />
+    <Content Include="fonts\Poppins-Italic.woff" />
+    <Content Include="fonts\Poppins-Light.woff" />
+    <Content Include="fonts\Poppins-LightItalic.woff" />
+    <Content Include="fonts\Poppins-Medium.woff" />
+    <Content Include="fonts\Poppins-MediumItalic.woff" />
+    <Content Include="fonts\Poppins-Regular.woff" />
+    <Content Include="fonts\Poppins-SemiBold.woff" />
+    <Content Include="fonts\Poppins-SemiBoldItalic.woff" />
+    <Content Include="fonts\Poppins-Thin.woff" />
+    <Content Include="fonts\Poppins-ThinItalic.woff" />
+    <Content Include="fonts\SamsungSans-Bold.woff" />
+    <Content Include="fonts\SamsungSans-Light.woff" />
+    <Content Include="fonts\SamsungSans-Medium.woff" />
+    <Content Include="fonts\SamsungSans-Regular.woff" />
+    <Content Include="fonts\SamsungSans-Thin.woff" />
+    <Content Include="fonts\The-Sans-Plain.woff2" />
+    <Content Include="Scripts\ai.0.22.9-build00167.js" />
+    <Content Include="Scripts\ai.0.22.9-build00167.min.js" />
+    <Content Include="Scripts\bootstrap-slider.js" />
+    <Content Include="Scripts\bootstrap.js" />
+    <Content Include="Scripts\bootstrap.min.js" />
+    <Content Include="Scripts\chosen.jquery.js" />
+    <Content Include="Scripts\ckeditor.js" />
+    <Content Include="Scripts\config.js" />
+    <Content Include="Scripts\contents.css" />
+    <Content Include="Scripts\esm\popper-utils.js" />
+    <Content Include="Scripts\esm\popper-utils.min.js" />
+    <Content Include="Scripts\esm\popper.js" />
+    <Content Include="Scripts\esm\popper.min.js" />
+    <Content Include="Scripts\index.d.ts" />
+    <Content Include="Scripts\intro.js" />
+    <Content Include="Scripts\introAR.js" />
+    <Content Include="webfonts\fa-brands-400.svg" />
+    <Content Include="webfonts\fa-regular-400.svg" />
+    <Content Include="webfonts\fa-solid-900.svg" />
+    <Content Include="Alpha_ERP_DataSet.xsc">
+      <DependentUpon>Alpha_ERP_DataSet.xsd</DependentUpon>
+    </Content>
+    <None Include="Alpha_ERP_DataSet.xsd">
+      <Generator>MSDataSetGenerator</Generator>
+      <LastGenOutput>Alpha_ERP_DataSet.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </None>
+    <Content Include="Alpha_ERP_DataSet.xss">
+      <DependentUpon>Alpha_ERP_DataSet.xsd</DependentUpon>
+    </Content>
+    <Content Include="Content\font-awesome-4.7.0\fonts\fontawesome-webfont.eot" />
+    <Content Include="Content\font-awesome-4.7.0\fonts\fontawesome-webfont.ttf" />
+    <Content Include="Content\font-awesome-4.7.0\fonts\fontawesome-webfont.woff" />
+    <Content Include="Content\font-awesome-4.7.0\fonts\fontawesome-webfont.woff2" />
+    <Content Include="Content\font-awesome-4.7.0\fonts\FontAwesome.otf" />
+    <Content Include="Content\images\Sorting icons.psd" />
+    <Content Include="Content\themes\AdminLTE\bower_components\bootstrap\dist\css\fonts\fontawesome-webfont.eot" />
+    <Content Include="Content\themes\AdminLTE\bower_components\bootstrap\dist\css\fonts\fontawesome-webfont.ttf" />
+    <Content Include="Content\themes\AdminLTE\bower_components\bootstrap\dist\css\fonts\fontawesome-webfont.woff" />
+    <Content Include="Content\themes\AdminLTE\bower_components\bootstrap\dist\css\fonts\fontawesome-webfont.woff2" />
+    <Content Include="Content\themes\AdminLTE\bower_components\bootstrap\dist\css\fonts\The-Sans-Plain.woff2" />
+    <Content Include="Content\themes\AdminLTE\bower_components\bootstrap\dist\fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="Content\themes\AdminLTE\bower_components\bootstrap\dist\fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="Content\themes\AdminLTE\bower_components\bootstrap\dist\fonts\glyphicons-halflings-regular.woff2" />
+    <Content Include="Content\themes\AdminLTE\dist\fonts\0segoeui.ttf" />
+    <Content Include="Content\themes\AdminLTE\dist\fonts\The-Sans-Plain.otf" />
+    <Content Include="Content\themes\AdminLTE\dist\fonts\The-Sans-Plain.woff2" />
+    <Content Include="Content\themes\AdminLTE\package.json" />
+    <Content Include="Content\vendor\bootstrap\css\bootstrap-grid.css.map" />
+    <Content Include="Content\vendor\bootstrap\css\bootstrap-grid.min.css.map" />
+    <Content Include="Content\vendor\bootstrap\css\bootstrap-reboot.css.map" />
+    <Content Include="Content\vendor\bootstrap\css\bootstrap-reboot.min.css.map" />
+    <Content Include="Content\vendor\bootstrap\css\bootstrap.css.map" />
+    <Content Include="Content\vendor\bootstrap\css\bootstrap.min.css.map" />
+    <None Include="Properties\PublishProfiles\MRPNew.pubxml" />
+    <None Include="Scripts\jquery-1.10.2.intellisense.js" />
+    <Content Include="Scripts\jquery-1.10.2.js" />
+    <Content Include="Scripts\jquery-1.10.2.min.js" />
+    <Content Include="Scripts\jquery-3.3.1.min.js" />
+    <None Include="Scripts\jquery-3.4.1.intellisense.js" />
+    <Content Include="Scripts\jquery-3.4.1.js" />
+    <Content Include="Scripts\jquery-3.4.1.min.js" />
+    <Content Include="Scripts\jquery-3.4.1.slim.js" />
+    <Content Include="Scripts\jquery-3.4.1.slim.min.js" />
+    <Content Include="Scripts\jquery-ui.min.js" />
+    <Content Include="Scripts\jquery.blockUI.js" />
+    <Content Include="Scripts\jquery.dataTables.js" />
+    <Content Include="Scripts\jquery.dataTablesAR.js" />
+    <Content Include="Scripts\jquery.maskedinput.js" />
+    <Content Include="Scripts\jquery.nestable.js" />
+    <Content Include="Scripts\jquery.signalR-2.4.1.js" />
+    <Content Include="Scripts\jquery.signalR-2.4.1.min.js" />
+    <Content Include="Scripts\jquery.ui.touch-punch.min.js" />
+    <None Include="Scripts\jquery.validate-vsdoc.js" />
+    <Content Include="Scripts\jquery.validate.js" />
+    <Content Include="Scripts\jquery.validate.min.js" />
+    <Content Include="Scripts\jquery.validate.unobtrusive.js" />
+    <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
+    <Content Include="Scripts\lang\af.js" />
+    <Content Include="Scripts\lang\ar.js" />
+    <Content Include="Scripts\lang\az.js" />
+    <Content Include="Scripts\lang\bg.js" />
+    <Content Include="Scripts\lang\bn.js" />
+    <Content Include="Scripts\lang\bs.js" />
+    <Content Include="Scripts\lang\ca.js" />
+    <Content Include="Scripts\lang\cs.js" />
+    <Content Include="Scripts\lang\cy.js" />
+    <Content Include="Scripts\lang\da.js" />
+    <Content Include="Scripts\lang\de-ch.js" />
+    <Content Include="Scripts\lang\de.js" />
+    <Content Include="Scripts\lang\el.js" />
+    <Content Include="Scripts\lang\en-au.js" />
+    <Content Include="Scripts\lang\en-ca.js" />
+    <Content Include="Scripts\lang\en-gb.js" />
+    <Content Include="Scripts\lang\en.js" />
+    <Content Include="Scripts\lang\eo.js" />
+    <Content Include="Scripts\lang\es-mx.js" />
+    <Content Include="Scripts\lang\es.js" />
+    <Content Include="Scripts\lang\et.js" />
+    <Content Include="Scripts\lang\eu.js" />
+    <Content Include="Scripts\lang\fa.js" />
+    <Content Include="Scripts\lang\fi.js" />
+    <Content Include="Scripts\lang\fo.js" />
+    <Content Include="Scripts\lang\fr-ca.js" />
+    <Content Include="Scripts\lang\fr.js" />
+    <Content Include="Scripts\lang\gl.js" />
+    <Content Include="Scripts\lang\gu.js" />
+    <Content Include="Scripts\lang\he.js" />
+    <Content Include="Scripts\lang\hi.js" />
+    <Content Include="Scripts\lang\hr.js" />
+    <Content Include="Scripts\lang\hu.js" />
+    <Content Include="Scripts\lang\id.js" />
+    <Content Include="Scripts\lang\is.js" />
+    <Content Include="Scripts\lang\it.js" />
+    <Content Include="Scripts\lang\ja.js" />
+    <Content Include="Scripts\lang\ka.js" />
+    <Content Include="Scripts\lang\km.js" />
+    <Content Include="Scripts\lang\ko.js" />
+    <Content Include="Scripts\lang\ku.js" />
+    <Content Include="Scripts\lang\lt.js" />
+    <Content Include="Scripts\lang\lv.js" />
+    <Content Include="Scripts\lang\mk.js" />
+    <Content Include="Scripts\lang\mn.js" />
+    <Content Include="Scripts\lang\ms.js" />
+    <Content Include="Scripts\lang\nb.js" />
+    <Content Include="Scripts\lang\nl.js" />
+    <Content Include="Scripts\lang\no.js" />
+    <Content Include="Scripts\lang\oc.js" />
+    <Content Include="Scripts\lang\pl.js" />
+    <Content Include="Scripts\lang\pt-br.js" />
+    <Content Include="Scripts\lang\pt.js" />
+    <Content Include="Scripts\lang\ro.js" />
+    <Content Include="Scripts\lang\ru.js" />
+    <Content Include="Scripts\lang\si.js" />
+    <Content Include="Scripts\lang\sk.js" />
+    <Content Include="Scripts\lang\sl.js" />
+    <Content Include="Scripts\lang\sq.js" />
+    <Content Include="Scripts\lang\sr-latn.js" />
+    <Content Include="Scripts\lang\sr.js" />
+    <Content Include="Scripts\lang\sv.js" />
+    <Content Include="Scripts\lang\th.js" />
+    <Content Include="Scripts\lang\tr.js" />
+    <Content Include="Scripts\lang\tt.js" />
+    <Content Include="Scripts\lang\ug.js" />
+    <Content Include="Scripts\lang\uk.js" />
+    <Content Include="Scripts\lang\vi.js" />
+    <Content Include="Scripts\lang\zh-cn.js" />
+    <Content Include="Scripts\lang\zh.js" />
+    <Content Include="Scripts\login.js" />
+    <Content Include="Scripts\Main.js" />
+    <Content Include="Scripts\modernizr-2.6.2.js" />
+    <Content Include="Scripts\moments.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\a11yhelp.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\af.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\ar.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\az.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\bg.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\ca.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\cs.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\cy.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\da.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\de-ch.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\de.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\el.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\en-au.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\en-gb.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\en.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\eo.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\es-mx.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\es.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\et.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\eu.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\fa.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\fi.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\fo.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\fr-ca.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\fr.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\gl.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\gu.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\he.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\hi.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\hr.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\hu.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\id.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\it.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\ja.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\km.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\ko.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\ku.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\lt.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\lv.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\mk.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\mn.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\nb.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\nl.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\no.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\oc.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\pl.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\pt-br.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\pt.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\ro.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\ru.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\si.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\sk.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\sl.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\sq.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\sr-latn.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\sr.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\sv.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\th.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\tr.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\tt.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\ug.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\uk.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\vi.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\zh-cn.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\zh.js" />
+    <Content Include="Scripts\plugins\a11yhelp\dialogs\lang\_translationstatus.txt" />
+    <Content Include="Scripts\plugins\about\dialogs\about.js" />
+    <Content Include="Scripts\plugins\about\dialogs\hidpi\logo_ckeditor.png" />
+    <Content Include="Scripts\plugins\about\dialogs\logo_ckeditor.png" />
+    <Content Include="Scripts\plugins\clipboard\dialogs\paste.js" />
+    <Content Include="Scripts\plugins\dialog\dialogDefinition.js" />
+    <Content Include="Scripts\plugins\icons.png" />
+    <Content Include="Scripts\plugins\icons_hidpi.png" />
+    <Content Include="Scripts\plugins\image\dialogs\image.js" />
+    <Content Include="Scripts\plugins\image\images\noimage.png" />
+    <Content Include="Scripts\plugins\link\dialogs\anchor.js" />
+    <Content Include="Scripts\plugins\link\dialogs\link.js" />
+    <Content Include="Scripts\plugins\link\images\anchor.png" />
+    <Content Include="Scripts\plugins\link\images\hidpi\anchor.png" />
+    <Content Include="Scripts\plugins\magicline\images\hidpi\icon-rtl.png" />
+    <Content Include="Scripts\plugins\magicline\images\hidpi\icon.png" />
+    <Content Include="Scripts\plugins\magicline\images\icon-rtl.png" />
+    <Content Include="Scripts\plugins\magicline\images\icon.png" />
+    <Content Include="Scripts\plugins\pastefromword\filter\default.js" />
+    <Content Include="Scripts\plugins\scayt\dialogs\dialog.css" />
+    <Content Include="Scripts\plugins\scayt\dialogs\options.js" />
+    <Content Include="Scripts\plugins\scayt\dialogs\toolbar.css" />
+    <Content Include="Scripts\plugins\scayt\skins\moono-lisa\scayt.css" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\af.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\ar.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\az.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\bg.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\ca.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\cs.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\cy.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\da.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\de-ch.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\de.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\el.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\en-au.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\en-ca.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\en-gb.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\en.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\eo.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\es-mx.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\es.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\et.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\eu.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\fa.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\fi.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\fr-ca.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\fr.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\gl.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\he.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\hr.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\hu.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\id.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\it.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\ja.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\km.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\ko.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\ku.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\lt.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\lv.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\nb.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\nl.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\no.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\oc.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\pl.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\pt-br.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\pt.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\ro.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\ru.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\si.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\sk.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\sl.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\sq.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\sr-latn.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\sr.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\sv.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\th.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\tr.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\tt.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\ug.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\uk.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\vi.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\zh-cn.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\zh.js" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\lang\_translationstatus.txt" />
+    <Content Include="Scripts\plugins\specialchar\dialogs\specialchar.js" />
+    <Content Include="Scripts\plugins\tableselection\styles\tableselection.css" />
+    <Content Include="Scripts\plugins\tabletools\dialogs\tableCell.js" />
+    <Content Include="Scripts\plugins\table\dialogs\table.js" />
+    <Content Include="Scripts\plugins\widget\images\handle.png" />
+    <Content Include="Scripts\plugins\wsc\dialogs\ciframe.html" />
+    <Content Include="Scripts\plugins\wsc\dialogs\tmpFrameset.html" />
+    <Content Include="Scripts\plugins\wsc\dialogs\wsc.css" />
+    <Content Include="Scripts\plugins\wsc\dialogs\wsc.js" />
+    <Content Include="Scripts\plugins\wsc\dialogs\wsc_ie.js" />
+    <Content Include="Scripts\plugins\wsc\skins\moono-lisa\wsc.css" />
+    <Content Include="Scripts\popper-utils.js" />
+    <Content Include="Scripts\popper-utils.min.js" />
+    <Content Include="Scripts\popper.js" />
+    <Content Include="Scripts\popper.min.js" />
+    <Content Include="Scripts\respond.js" />
+    <Content Include="Scripts\respond.min.js" />
+    <Content Include="Scripts\sammy-0.7.4.js" />
+    <Content Include="Scripts\sammy-0.7.4.min.js" />
+    <Content Include="Scripts\select2.min.js" />
+    <Content Include="Scripts\skins\moono-lisa\dialog.css" />
+    <Content Include="Scripts\skins\moono-lisa\dialog_ie.css" />
+    <Content Include="Scripts\skins\moono-lisa\dialog_ie8.css" />
+    <Content Include="Scripts\skins\moono-lisa\dialog_iequirks.css" />
+    <Content Include="Scripts\skins\moono-lisa\editor.css" />
+    <Content Include="Scripts\skins\moono-lisa\editor_gecko.css" />
+    <Content Include="Scripts\skins\moono-lisa\editor_ie.css" />
+    <Content Include="Scripts\skins\moono-lisa\editor_ie8.css" />
+    <Content Include="Scripts\skins\moono-lisa\editor_iequirks.css" />
+    <Content Include="Scripts\skins\moono-lisa\icons.png" />
+    <Content Include="Scripts\skins\moono-lisa\icons_hidpi.png" />
+    <Content Include="Scripts\skins\moono-lisa\images\arrow.png" />
+    <Content Include="Scripts\skins\moono-lisa\images\close.png" />
+    <Content Include="Scripts\skins\moono-lisa\images\hidpi\close.png" />
+    <Content Include="Scripts\skins\moono-lisa\images\hidpi\lock-open.png" />
+    <Content Include="Scripts\skins\moono-lisa\images\hidpi\lock.png" />
+    <Content Include="Scripts\skins\moono-lisa\images\hidpi\refresh.png" />
+    <Content Include="Scripts\skins\moono-lisa\images\lock-open.png" />
+    <Content Include="Scripts\skins\moono-lisa\images\lock.png" />
+    <Content Include="Scripts\skins\moono-lisa\images\refresh.png" />
+    <Content Include="Scripts\skins\moono-lisa\images\spinner.gif" />
+    <Content Include="Scripts\src\index.js" />
+    <Content Include="Scripts\src\methods\defaults.js" />
+    <Content Include="Scripts\src\methods\destroy.js" />
+    <Content Include="Scripts\src\methods\disableEventListeners.js" />
+    <Content Include="Scripts\src\methods\enableEventListeners.js" />
+    <Content Include="Scripts\src\methods\placements.js" />
+    <Content Include="Scripts\src\methods\update.js" />
+    <Content Include="Scripts\src\modifiers\applyStyle.js" />
+    <Content Include="Scripts\src\modifiers\arrow.js" />
+    <Content Include="Scripts\src\modifiers\computeStyle.js" />
+    <Content Include="Scripts\src\modifiers\flip.js" />
+    <Content Include="Scripts\src\modifiers\hide.js" />
+    <Content Include="Scripts\src\modifiers\index.js" />
+    <Content Include="Scripts\src\modifiers\inner.js" />
+    <Content Include="Scripts\src\modifiers\keepTogether.js" />
+    <Content Include="Scripts\src\modifiers\offset.js" />
+    <Content Include="Scripts\src\modifiers\preventOverflow.js" />
+    <Content Include="Scripts\src\modifiers\shift.js" />
+    <Content Include="Scripts\src\utils\clockwise.js" />
+    <Content Include="Scripts\src\utils\computeAutoPlacement.js" />
+    <Content Include="Scripts\src\utils\debounce.js" />
+    <Content Include="Scripts\src\utils\find.js" />
+    <Content Include="Scripts\src\utils\findCommonOffsetParent.js" />
+    <Content Include="Scripts\src\utils\findIndex.js" />
+    <Content Include="Scripts\src\utils\getBordersSize.js" />
+    <Content Include="Scripts\src\utils\getBoundaries.js" />
+    <Content Include="Scripts\src\utils\getBoundingClientRect.js" />
+    <Content Include="Scripts\src\utils\getClientRect.js" />
+    <Content Include="Scripts\src\utils\getFixedPositionOffsetParent.js" />
+    <Content Include="Scripts\src\utils\getOffsetParent.js" />
+    <Content Include="Scripts\src\utils\getOffsetRect.js" />
+    <Content Include="Scripts\src\utils\getOffsetRectRelativeToArbitraryNode.js" />
+    <Content Include="Scripts\src\utils\getOppositePlacement.js" />
+    <Content Include="Scripts\src\utils\getOppositeVariation.js" />
+    <Content Include="Scripts\src\utils\getOuterSizes.js" />
+    <Content Include="Scripts\src\utils\getParentNode.js" />
+    <Content Include="Scripts\src\utils\getPopperOffsets.js" />
+    <Content Include="Scripts\src\utils\getReferenceNode.js" />
+    <Content Include="Scripts\src\utils\getReferenceOffsets.js" />
+    <Content Include="Scripts\src\utils\getRoot.js" />
+    <Content Include="Scripts\src\utils\getRoundedOffsets.js" />
+    <Content Include="Scripts\src\utils\getScroll.js" />
+    <Content Include="Scripts\src\utils\getScrollParent.js" />
+    <Content Include="Scripts\src\utils\getStyleComputedProperty.js" />
+    <Content Include="Scripts\src\utils\getSupportedPropertyName.js" />
+    <Content Include="Scripts\src\utils\getViewportOffsetRectRelativeToArtbitraryNode.js" />
+    <Content Include="Scripts\src\utils\getWindow.js" />
+    <Content Include="Scripts\src\utils\getWindowSizes.js" />
+    <Content Include="Scripts\src\utils\includeScroll.js" />
+    <Content Include="Scripts\src\utils\index.js" />
+    <Content Include="Scripts\src\utils\isBrowser.js" />
+    <Content Include="Scripts\src\utils\isFixed.js" />
+    <Content Include="Scripts\src\utils\isFunction.js" />
+    <Content Include="Scripts\src\utils\isIE.js" />
+    <Content Include="Scripts\src\utils\isModifierEnabled.js" />
+    <Content Include="Scripts\src\utils\isModifierRequired.js" />
+    <Content Include="Scripts\src\utils\isNumeric.js" />
+    <Content Include="Scripts\src\utils\isOffsetContainer.js" />
+    <Content Include="Scripts\src\utils\removeEventListeners.js" />
+    <Content Include="Scripts\src\utils\runModifiers.js" />
+    <Content Include="Scripts\src\utils\setAttributes.js" />
+    <Content Include="Scripts\src\utils\setStyles.js" />
+    <Content Include="Scripts\src\utils\setupEventListeners.js" />
+    <Content Include="Scripts\stickytooltip.js" />
+    <Content Include="Scripts\styles.js" />
+    <Content Include="Scripts\sweetalert.js" />
+    <Content Include="Scripts\themes\AdminLTE\bower_components\bootstrap\dist\css\bootstrap.css" />
+    <Content Include="Scripts\themes\AdminLTE\bower_components\bootstrap\dist\css\bootstrap.min.css" />
+    <Content Include="Scripts\themes\AdminLTE\bower_components\bootstrap\dist\fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="Scripts\themes\AdminLTE\bower_components\bootstrap\dist\js\bootstrap.min.js" />
+    <Content Include="Scripts\themes\AdminLTE\dist\css\.gitignore.css" />
+    <Content Include="Scripts\themes\AdminLTE\dist\css\AdminLTE.css" />
+    <Content Include="Scripts\themes\AdminLTE\dist\css\AdminLTEar.css" />
+    <Content Include="Scripts\themes\AdminLTE\dist\js\adminlte.min.js" />
+    <Content Include="Scripts\themes\compressed.js" />
+    <Content Include="Scripts\themes\docs.css" />
+    <Content Include="Scripts\themes\docs.js" />
+    <Content Include="Scripts\themes\jquery-1.9.1.min.js" />
+    <Content Include="Scripts\themes\jquery.slimscroll.js" />
+    <Content Include="Scripts\themes\jquery.slimscroll.min.js" />
+    <Content Include="Scripts\themes\jquery.toaster.js" />
+    <Content Include="Scripts\toastr.min.js" />
+    <Content Include="Scripts\umd\popper-utils.js" />
+    <Content Include="Scripts\umd\popper-utils.min.js" />
+    <Content Include="Scripts\umd\popper.js" />
+    <Content Include="Scripts\umd\popper.min.js" />
+    <None Include="Scripts\_references.js" />
+    <Content Include="SPA\hasanSPA.css" />
+    <Content Include="SPA\hasanSPA.js" />
+    <Content Include="SPA\hasanSPA.min.js" />
+    <Content Include="SPA\inline.gif" />
+    <Content Include="SPA\loading.gif" />
+    <Content Include="SPA\sm-loader.gif" />
+    <Content Include="Uploads\deduction.mp3" />
+    <Content Include="Uploads\deduction.ogg" />
+    <Content Include="Uploads\eventually.mp3" />
+    <Content Include="Uploads\eventually.ogg" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="themes\AdminLTE\package.json" />
+    <Content Include="Views\Account\Illegal.cshtml" />
+    <Content Include="Views\Account\Index.cshtml" />
+    <Content Include="Views\Account\NoBU.cshtml" />
+    <Content Include="Views\Account\PrivateKey.cshtml" />
+    <Content Include="Views\ActivateCancelProductionPlan\ActivatePlan.cshtml" />
+    <Content Include="Views\ActivateCancelProductionPlan\DeactivatePlan.cshtml" />
+    <Content Include="Views\ActivateCancelProductionPlan\Index.cshtml" />
+    <Content Include="Views\ActivateCancelProductionPlan\RequestProductionPlain.cshtml" />
+    <Content Include="Views\Activation\Index.cshtml" />
+    <Content Include="Views\AnnualProductionPlan\Index.cshtml" />
+    <Content Include="Views\AnnualProductionPlan\List.cshtml" />
+    <Content Include="Views\BomDefinition\AdditiveItems.cshtml" />
+    <Content Include="Views\BomDefinition\BomDefinitionList.cshtml" />
+    <Content Include="Views\BomDefinition\GetQASetupHFBystages.cshtml" />
+    <Content Include="Views\BomDefinition\GetQASetupHFBystagesadd.cshtml" />
+    <Content Include="Views\BomDefinition\Index.cshtml" />
+    <Content Include="Views\BomDefinition\ItemByProduct.cshtml" />
+    <Content Include="Views\BomDefinition\ItemRawMaterial.cshtml" />
+    <Content Include="Views\BomDefinition\ItemStageTestQC.cshtml" />
+    <Content Include="Views\BomDefinition\ProdstageInfo.cshtml" />
+    <Content Include="Views\BomDefinition\tabs\addBOMProdStages.cshtml" />
+    <Content Include="Views\BomDefinition\tabs\BOMAddItems.cshtml" />
+    <Content Include="Views\BomDefinition\tabs\BOMByProducts.cshtml" />
+    <Content Include="Views\BomDefinition\tabs\BOMInfo.cshtml" />
+    <Content Include="Views\BomDefinition\tabs\BOMProdStages.cshtml" />
+    <Content Include="Views\BomDefinition\tabs\BOMSpecification.cshtml" />
+    <Content Include="Views\BomDefinition\tabs\eBOMAddItems.cshtml" />
+    <Content Include="Views\BomDefinition\tabs\eBOMByProducts.cshtml" />
+    <Content Include="Views\BomDefinition\tabs\eBOMInfo.cshtml" />
+    <Content Include="Views\BomDefinition\tabs\eBOMProdStages.cshtml" />
+    <Content Include="Views\BomDefinition\tabs\eBOMSpecification.cshtml" />
+    <Content Include="Views\CalcuQtyAnnualPlan\CalcQtyAnnualPlan.cshtml" />
+    <Content Include="Views\CalcuQtyAnnualPlan\Index.cshtml" />
+    <Content Include="Views\Company\Index.cshtml" />
+    <Content Include="Views\ConItemsToPurchOrd\ConItemsToPurchOrdList.cshtml" />
+    <Content Include="Views\ConItemsToPurchOrd\Index.cshtml" />
+    <Content Include="Views\ConItemsToPurchOrd\Vendors.cshtml" />
+    <Content Include="Views\ConvertToPurchOrd\AddPurchaseOrder.cshtml" />
+    <Content Include="Views\ConvertToPurchOrd\AttachPurchaseRequest.cshtml" />
+    <Content Include="Views\ConvertToPurchOrd\ConvToPurchOrdDirectList.cshtml" />
+    <Content Include="Views\ConvertToPurchOrd\ConvToPurchOrdInDirectList.cshtml" />
+    <Content Include="Views\ConvertToPurchOrd\Index.cshtml" />
+    <Content Include="Views\ConvertToPurchOrd\PurchOrdList.cshtml" />
+    <Content Include="Views\ConvertToPurchOrd\ReqDeliveryDate.cshtml" />
+    <Content Include="Views\ConvertToPurchOrd\SuppliersItem.cshtml" />
+    <Content Include="Views\CrystalReportViewer\ReportViewer.cshtml" />
+    <Content Include="Views\DailyProduction\DailyProdList.cshtml" />
+    <Content Include="Views\DailyProduction\eDailyProd.cshtml" />
+    <Content Include="Views\DailyProduction\Index.cshtml" />
+    <Content Include="Views\DailyProduction\ItemProdOrder.cshtml" />
+    <Content Include="Views\DailyProduction\ProdOrder.cshtml" />
+    <Content Include="Views\DefVendorEvalItems\DefVendorEvalItemsList.cshtml" />
+    <Content Include="Views\DefVendorEvalItems\Index.cshtml" />
+    <Content Include="Views\Errors\EmptyReport.cshtml" />
+    <Content Include="Views\Errors\NotFound.cshtml" />
+    <Content Include="Views\Errors\NotFoundError.cshtml" />
+    <Content Include="Views\Error\NotAuthorizedForAllCompanies.cshtml" />
+    <Content Include="Views\Error\StoppedUser.cshtml" />
+    <Content Include="Views\EvalVendors\AddEvalVendors.cshtml" />
+    <Content Include="Views\EvalVendors\EditEvalVendors.cshtml" />
+    <Content Include="Views\EvalVendors\EvalVendorsList.cshtml" />
+    <Content Include="Views\EvalVendors\Index.cshtml" />
+    <Content Include="Views\EvalVendors\PR.cshtml" />
+    <Content Include="Views\EvalVendors\ViewEvalVendors.cshtml" />
+    <Content Include="Views\ExpensesDistribution\Index.cshtml" />
+    <Content Include="Views\Home\Index.cshtml" />
+    <Content Include="Views\Home\NotFound.cshtml" />
+    <Content Include="Views\Home\Style.cshtml" />
+    <Content Include="Views\InboundManagement\AddInboundsManagement.cshtml" />
+    <Content Include="Views\InboundManagement\AttachInboundsManagement.cshtml" />
+    <Content Include="Views\InboundManagement\DetailsInboundsManagement.cshtml" />
+    <Content Include="Views\InboundManagement\EditInboundsManagement.cshtml" />
+    <Content Include="Views\InboundManagement\InboundsInfoList.cshtml" />
+    <Content Include="Views\InboundManagement\Index.cshtml" />
+    <Content Include="Views\InboundManagement\ViewInboundManagement.cshtml" />
+    <Content Include="Views\InboundsInfo\AddInboundsInfo.cshtml" />
+    <Content Include="Views\InboundsInfo\DetailsInboundsInfo.cshtml" />
+    <Content Include="Views\InboundsInfo\EditInboundsInfo.cshtml" />
+    <Content Include="Views\InboundsInfo\InboundsInfoList.cshtml" />
+    <Content Include="Views\InboundsInfo\Index.cshtml" />
+    <Content Include="Views\InboundsInfo\LoadItemBatch.cshtml" />
+    <Content Include="Views\InboundsInfo\ViewInboundsInfo.cshtml" />
+    <Content Include="Views\InqItemBalance\AllStoresQty.cshtml" />
+    <Content Include="Views\InqItemBalance\AlternativeItems.cshtml" />
+    <Content Include="Views\InqItemBalance\Index.cshtml" />
+    <Content Include="Views\InqItemBalance\InfoItem.cshtml" />
+    <Content Include="Views\InqItemBalance\InqItemBal.cshtml" />
+    <Content Include="Views\InqItemBalance\InqItemBalanceItemsList.cshtml" />
+    <Content Include="Views\InqItemBalance\StoresQty.cshtml" />
+    <Content Include="Views\InqPurchaseOrder\Index.cshtml" />
+    <Content Include="Views\InqPurchaseOrder\InqPurchOrdDirect.cshtml" />
+    <Content Include="Views\InqPurchaseOrder\InqPurchOrdDirectList.cshtml" />
+    <Content Include="Views\InqPurchaseOrder\InqPurchOrdInDirect.cshtml" />
+    <Content Include="Views\InqPurchaseOrder\InqPurchOrdInDirectList.cshtml" />
+    <Content Include="Views\LinkPrchOrdItems\Index.cshtml" />
+    <Content Include="Views\LinkPrchOrdItems\LinkPrchOrdItemPurchReqList.cshtml" />
+    <Content Include="Views\LinkPrchOrdItems\PurchaseRequestItems.cshtml" />
+    <Content Include="Views\LinkPrchOrdUsers\Index.cshtml" />
+    <Content Include="Views\LinkPrchOrdUsers\LinkPrchOrdUsersItems.cshtml" />
+    <Content Include="Views\LinkPrchOrdUsers\LinkPrchOrdUsersRequest.cshtml" />
+    <Content Include="Views\LinkPurchOrdersAcc\Account.cshtml" />
+    <Content Include="Views\LinkPurchOrdersAcc\ePurchaseRequest.cshtml" />
+    <Content Include="Views\LinkPurchOrdersAcc\Index.cshtml" />
+    <Content Include="Views\LinkPurchOrdersAcc\PurchaseRequestList.cshtml" />
+    <Content Include="Views\MasterPlansAppendix\AllProductionPlan.cshtml" />
+    <Content Include="Views\MasterPlansAppendix\Index.cshtml" />
+    <Content Include="Views\MasterPlansAppendix\ProdPlanDetails.cshtml" />
+    <Content Include="Views\MasterPlansAppendix\ProductionPlanAppendix.cshtml" />
+    <Content Include="Views\MasterPlans\Index.cshtml" />
+    <Content Include="Views\MasterPlans\List.cshtml" />
+    <Content Include="Views\Menu\Index.cshtml" />
+    <Content Include="Views\OrdReceipt\AddOrdReceipt.cshtml" />
+    <Content Include="Views\OrdReceipt\ChooseOrdReceipt.cshtml" />
+    <Content Include="Views\OrdReceipt\DetailsOrdReceipt.cshtml" />
+    <Content Include="Views\OrdReceipt\EditOrdReceipt.cshtml" />
+    <Content Include="Views\OrdReceipt\Index.cshtml" />
+    <Content Include="Views\OrdReceipt\OrdReceiptList.cshtml" />
+    <Content Include="Views\OrdReceipt\ViewOrdReceipt.cshtml" />
+    <Content Include="Views\PackingDefention\GetItemPackAccessories.cshtml" />
+    <Content Include="Views\PackingDefention\Index.cshtml" />
+    <Content Include="Views\PackingDefention\InqPackDef_FormulaHead.cshtml" />
+    <Content Include="Views\PackingDefention\PackDef_FormulaHead.cshtml" />
+    <Content Include="Views\PackingDefention\PackingAccessories.cshtml" />
+    <Content Include="Views\PackingDefention\PackingDefentionList.cshtml" />
+    <Content Include="Views\PackingDefention\PackingDefItem.cshtml" />
+    <Content Include="Views\PackingInformation\Index.cshtml" />
+    <Content Include="Views\PackingInformation\List.cshtml" />
+    <Content Include="Views\Parameters\Details.cshtml" />
+    <Content Include="Views\Parameters\Index.cshtml" />
+    <Content Include="Views\Parameters\List.cshtml" />
+    <Content Include="Views\Permissions\Index.cshtml" />
+    <Content Include="Views\PortInfo\AddPortInfo.cshtml" />
+    <Content Include="Views\PortInfo\ChoosePortInfo.cshtml" />
+    <Content Include="Views\PortInfo\DetailsPortInfo.cshtml" />
+    <Content Include="Views\PortInfo\ePortInfo.cshtml" />
+    <Content Include="Views\PortInfo\Index.cshtml" />
+    <Content Include="Views\PortInfo\PortInfoList.cshtml" />
+    <Content Include="Views\PortInfo\ViewPortInfo.cshtml" />
+    <Content Include="Views\PriceOffersAnalysis\ChoosePriceOffersAnalysis.cshtml" />
+    <Content Include="Views\PriceOffersAnalysis\DataBestOffer.cshtml" />
+    <Content Include="Views\PriceOffersAnalysis\Index.cshtml" />
+    <Content Include="Views\PriceOffersAnalysis\PriceOffersAnalysisList.cshtml" />
+    <Content Include="Views\PriceOffersApproval\AddPurchaseOrderInDirect.cshtml" />
+    <Content Include="Views\PriceOffersApproval\ChoosePriceOffersApproval.cshtml" />
+    <Content Include="Views\PriceOffersApproval\Index.cshtml" />
+    <Content Include="Views\PriceOffersApproval\PriceOffersApprovalList.cshtml" />
+    <Content Include="Views\ProdCost_QA\GetByModalNoedit.cshtml" />
+    <Content Include="Views\ProdCost_QA\GetByModalNoShow.cshtml" />
+    <Content Include="Views\ProdCost_QA\Index.cshtml" />
+    <Content Include="Views\ProdCost_QA\ListProdCost_QARequests.cshtml" />
+    <Content Include="Views\ProdCost_QA\ListProdCost_QASetup.cshtml" />
+    <Content Include="Views\ProdCost_QA\LoadListEventsummary.cshtml" />
+    <Content Include="Views\ProdOrders\AlternativeItem.cshtml" />
+    <Content Include="Views\ProdOrders\FormulaItem.cshtml" />
+    <Content Include="Views\ProdOrders\Index.cshtml" />
+    <Content Include="Views\ProdOrders\ProdOrderRawMaterial.cshtml" />
+    <Content Include="Views\ProdOrders\ProdOrdersList.cshtml" />
+    <Content Include="Views\ProdOrders\Product.cshtml" />
+    <Content Include="Views\ProdOrders\QtyAllStoer.cshtml" />
+    <Content Include="Views\ProdOrders\RMItem.cshtml" />
+    <Content Include="Views\ProdOrders\Stages.cshtml" />
+    <Content Include="Views\ProdOrders\tabs\ByProducts.cshtml" />
+    <Content Include="Views\ProdOrders\tabs\eByProducts.cshtml" />
+    <Content Include="Views\ProdOrders\tabs\eOrderProdStages.cshtml" />
+    <Content Include="Views\ProdOrders\tabs\eProdOrderInfo.cshtml" />
+    <Content Include="Views\ProdOrders\tabs\eRMDetails.cshtml" />
+    <Content Include="Views\ProdOrders\tabs\OrderProdStages.cshtml" />
+    <Content Include="Views\ProdOrders\tabs\ProdOrderInfo.cshtml" />
+    <Content Include="Views\ProdOrders\tabs\RMDetails.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\CloseStage.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\Index.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\List.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\LoadOrderStages.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\StartStage.cshtml" />
+    <Content Include="Views\ProductionPlanAnalysis\ActivateProductionPlain.cshtml" />
+    <Content Include="Views\ProductionPlanAnalysis\CalcActivatePlan.cshtml" />
+    <Content Include="Views\ProductionPlanAnalysis\Index.cshtml" />
+    <Content Include="Views\ProductionStages\eProdStages.cshtml" />
+    <Content Include="Views\ProductionStages\FixAssest.cshtml" />
+    <Content Include="Views\ProductionStages\Index.cshtml" />
+    <Content Include="Views\ProductionStages\ProdStagesList.cshtml" />
+    <Content Include="Views\ProductionStages\SerialFixAssest.cshtml" />
+    <Content Include="Views\PurchaseOrder\Account.cshtml" />
+    <Content Include="Views\PurchaseOrder\AddPurchaseOrder.cshtml" />
+    <Content Include="Views\PurchaseOrder\eAccount.cshtml" />
+    <Content Include="Views\PurchaseOrder\EditPurchaseOrder.cshtml" />
+    <Content Include="Views\PurchaseOrder\ePurchaseOrderItems.cshtml" />
+    <Content Include="Views\PurchaseOrder\Index.cshtml" />
+    <Content Include="Views\PurchaseOrder\PurchaseOrderItems.cshtml" />
+    <Content Include="Views\PurchaseOrder\PurchaseOrderList.cshtml" />
+    <Content Include="Views\PurchaseRequest\AddPurchaseRequest.cshtml" />
+    <Content Include="Views\PurchaseRequest\EditPurchaseRequest.cshtml" />
+    <Content Include="Views\PurchaseRequest\ePurchaseReqItemDiv.cshtml" />
+    <Content Include="Views\PurchaseRequest\ePurchaseRequestItems.cshtml" />
+    <Content Include="Views\PurchaseRequest\Index.cshtml" />
+    <Content Include="Views\PurchaseRequest\Kasih\AddPurchaseRequestKasih.cshtml" />
+    <Content Include="Views\PurchaseRequest\Kasih\EditPurchaseRequestKasih.cshtml" />
+    <Content Include="Views\PurchaseRequest\Kasih\ePurchaseReqItemDivKasih.cshtml" />
+    <Content Include="Views\PurchaseRequest\Kasih\PurchaseReqItemDivKasih.cshtml" />
+    <Content Include="Views\PurchaseRequest\PurchaseReqItemDiv.cshtml" />
+    <Content Include="Views\PurchaseRequest\PurchaseRequestItems.cshtml" />
+    <Content Include="Views\PurchaseRequest\PurchaseRequestList.cshtml" />
+    <Content Include="Views\PurchaseRequest\ViewPurchaseRequest.cshtml" />
+    <Content Include="Views\PurchOrdExpenses\Account.cshtml" />
+    <Content Include="Views\PurchOrdExpenses\AddPurchOrdExpenses.cshtml" />
+    <Content Include="Views\PurchOrdExpenses\eAccount.cshtml" />
+    <Content Include="Views\PurchOrdExpenses\EditPurchOrdExpenses.cshtml" />
+    <Content Include="Views\PurchOrdExpenses\eExpCodes.cshtml" />
+    <Content Include="Views\PurchOrdExpenses\ePurchOrdExp.cshtml" />
+    <Content Include="Views\PurchOrdExpenses\ExpCodes.cshtml" />
+    <Content Include="Views\PurchOrdExpenses\Index.cshtml" />
+    <Content Include="Views\PurchOrdExpenses\InqPurchOrdExpenses.cshtml" />
+    <Content Include="Views\PurchOrdExpenses\PurchOrdExp.cshtml" />
+    <Content Include="Views\PurchOrdExpenses\PurchOrdExpensesList.cshtml" />
+    <Content Include="Views\QAProceduresDefinition\DescriptionList.cshtml" />
+    <Content Include="Views\QAProceduresDefinition\Edit.cshtml" />
+    <Content Include="Views\QAProceduresDefinition\Index.cshtml" />
+    <Content Include="Views\QAProceduresDefinition\InsertData.cshtml" />
+    <Content Include="Views\QAProceduresDefinition\List.cshtml" />
+    <Content Include="Views\QAProceduresDefinition\QAProcDefinitionList.cshtml" />
+    <Content Include="Views\QATestDefinition\Index.cshtml" />
+    <Content Include="Views\QATestDefinition\List.cshtml" />
+    <Content Include="Views\ReleaseOrders\AddReleaseOrders.cshtml" />
+    <Content Include="Views\ReleaseOrders\ChooseReleaseOrders.cshtml" />
+    <Content Include="Views\ReleaseOrders\DetailsReleaseOrders.cshtml" />
+    <Content Include="Views\ReleaseOrders\EditReleaseOrders.cshtml" />
+    <Content Include="Views\ReleaseOrders\Index.cshtml" />
+    <Content Include="Views\ReleaseOrders\ReleaseOrdersList.cshtml" />
+    <Content Include="Views\ReleaseOrders\ViewReleaseOrders.cshtml" />
+    <Content Include="Views\Reports\Calculation.mrt" />
+    <Content Include="Views\Reports\Index.cshtml" />
+    <Content Include="Views\Reports\MasterPlansDetailed.mrt" />
+    <Content Include="Views\Reports\MasterPlansReport.mrt" />
+    <Content Include="Views\Settings\Index.cshtml" />
+    <Content Include="Views\Shared\Menu.cshtml" />
+    <Content Include="Views\Shared\MyMenu.cshtml" />
+    <Content Include="Views\Shared\MyMenuClient.cshtml" />
+    <Content Include="Views\Shared\notifications.cshtml" />
+    <Content Include="Views\Shared\TicketFiles.cshtml" />
+    <Content Include="Views\Shared\TotalNotifications.cshtml" />
+    <Content Include="Views\Shared\_Layout.cshtml" />
+    <Content Include="Views\Shared\_LayoutClient.cshtml" />
+    <Content Include="Views\ShipmentsControl\Index.cshtml" />
+    <Content Include="Views\ShipmentsControl\ShipmentsControlList.cshtml" />
+    <Content Include="Views\ShipmentsInfo\AddShipments.cshtml" />
+    <Content Include="Views\ShipmentsInfo\ChooseShipmentsInfo.cshtml" />
+    <Content Include="Views\ShipmentsInfo\DetailsShipmentsInfo.cshtml" />
+    <Content Include="Views\ShipmentsInfo\eShipmentsInfo.cshtml" />
+    <Content Include="Views\ShipmentsInfo\Index.cshtml" />
+    <Content Include="Views\ShipmentsInfo\PurchaseOrderInfoList.cshtml" />
+    <Content Include="Views\ShipmentsInfo\ShipmentsView.cshtml" />
+    <Content Include="Views\SlaughterOrder\AddSlaughterOrder.cshtml" />
+    <Content Include="Views\SlaughterOrder\EditSlaughterOrder.cshtml" />
+    <Content Include="Views\SlaughterOrder\eLoadItemBatch.cshtml" />
+    <Content Include="Views\SlaughterOrder\eLoadItemBatchhf.cshtml" />
+    <Content Include="Views\SlaughterOrder\eLoadItemKits.cshtml" />
+    <Content Include="Views\SlaughterOrder\eSlaughterOrderItemsList.cshtml" />
+    <Content Include="Views\SlaughterOrder\Index.cshtml" />
+    <Content Include="Views\SlaughterOrder\LoadItemBatch.cshtml" />
+    <Content Include="Views\SlaughterOrder\LoadItemBatchhf.cshtml" />
+    <Content Include="Views\SlaughterOrder\LoadItemKits.cshtml" />
+    <Content Include="Views\SlaughterOrder\SlaughterOrderItemsList.cshtml" />
+    <Content Include="Views\SlaughterOrder\SlaughterOrderList.cshtml" />
+    <Content Include="Views\SlaughterOrder\ViewSlaughterOrder.cshtml" />
+    <Content Include="Views\StageAccExpLink\Account.cshtml" />
+    <Content Include="Views\StageAccExpLink\eStageAccExpLink.cshtml" />
+    <Content Include="Views\StageAccExpLink\Index.cshtml" />
+    <Content Include="Views\StageAccExpLink\StageAccExpLinkList.cshtml" />
+    <Content Include="Views\StagesQcInProcess\Index.cshtml" />
+    <Content Include="Views\StagesQcInProcess\List.cshtml" />
+    <Content Include="Views\StagesQcInProcess\LoadQcPros.cshtml" />
+    <Content Include="Views\TransferDailyProd\Index.cshtml" />
+    <Content Include="Views\TransferDailyProd\TransDailyProd.cshtml" />
+    <Content Include="Views\VendorsInfo\AddExistAcount.cshtml" />
+    <Content Include="Views\VendorsInfo\AddWithoutAcount.cshtml" />
+    <Content Include="Views\VendorsInfo\EditVendorsInfo.cshtml" />
+    <Content Include="Views\VendorsInfo\Index.cshtml" />
+    <Content Include="Views\VendorsInfo\InqVendorsInfo.cshtml" />
+    <Content Include="Views\VendorsInfo\VendorExistAcount.cshtml" />
+    <Content Include="Views\VendorsInfo\VendorsInfoList.cshtml" />
+    <Content Include="Views\VendorsOffersInfo\EnterVendorOffer.cshtml" />
+    <Content Include="Views\VendorsOffersInfo\Index.cshtml" />
+    <Content Include="Views\VendorsOffersInfo\VendorsOffersInfoList.cshtml" />
+    <Content Include="Views\VoucIssue\Index.cshtml" />
+    <Content Include="Views\VoucIssue\PaymentOrd\AddPaymentOrder.cshtml" />
+    <Content Include="Views\VoucIssue\PaymentOrd\CChoosePaymentOrdItems.cshtml" />
+    <Content Include="Views\VoucIssue\PaymentOrd\ChoosePaymentOrderRec.cshtml" />
+    <Content Include="Views\VoucIssue\PaymentOrd\ChoosePaymentOrdItems.cshtml" />
+    <Content Include="Views\VoucIssue\PaymentOrd\CopyVoucIssue.cshtml" />
+    <Content Include="Views\VoucIssue\PaymentOrd\CPaymentOrdItemsList.cshtml" />
+    <Content Include="Views\VoucIssue\PaymentOrd\DetailsPaymentOrderRec.cshtml" />
+    <Content Include="Views\VoucIssue\PaymentOrd\eChoosePaymentOrdItems.cshtml" />
+    <Content Include="Views\VoucIssue\PaymentOrd\EditPaymentOrder.cshtml" />
+    <Content Include="Views\VoucIssue\PaymentOrd\ePaymentOrdItemsList.cshtml" />
+    <Content Include="Views\VoucIssue\PaymentOrd\PaymentOrdItemsList.cshtml" />
+    <Content Include="Views\VoucIssue\PaymentOrd\ViewPaymentOrder.cshtml" />
+    <Content Include="Views\VoucIssue\PaymentOrd\VocPaymentOrdList.cshtml" />
+    <Content Include="Views\VoucIssue\WriteOff\AddWriteOff.cshtml" />
+    <Content Include="Views\VoucIssue\WriteOff\ChooseWriteOffOrdItems.cshtml" />
+    <Content Include="Views\VoucIssue\WriteOff\ChooseWriteOffRec.cshtml" />
+    <Content Include="Views\VoucIssue\WriteOff\DetailsWriteOffRec.cshtml" />
+    <Content Include="Views\VoucIssue\WriteOff\eChooseWriteOffOrdItems.cshtml" />
+    <Content Include="Views\VoucIssue\WriteOff\EditWriteOff.cshtml" />
+    <Content Include="Views\VoucIssue\WriteOff\ViewWriteOff.cshtml" />
+    <Content Include="Views\VoucIssue\WriteOff\VocWriteOffList.cshtml" />
+    <Content Include="Views\Web.config" />
+    <Content Include="Views\WeightChangeRate\AddWeightChangeRate.cshtml" />
+    <Content Include="Views\WeightChangeRate\DetailsWeightChangeRate.cshtml" />
+    <Content Include="Views\WeightChangeRate\EditWeightChangeRate.cshtml" />
+    <Content Include="Views\WeightChangeRate\Index.cshtml" />
+    <Content Include="Views\WeightChangeRate\ShipmentsList.cshtml" />
+    <Content Include="Views\WeightChangeRate\ViewWeightChangeRate.cshtml" />
+    <Content Include="Views\WF\GetWF.cshtml" />
+    <Content Include="Views\_ViewStart.cshtml" />
+    <Content Include="webfonts\fa-brands-400.eot" />
+    <Content Include="webfonts\fa-brands-400.ttf" />
+    <Content Include="webfonts\fa-brands-400.woff" />
+    <Content Include="webfonts\fa-brands-400.woff2" />
+    <Content Include="webfonts\fa-regular-400.eot" />
+    <Content Include="webfonts\fa-regular-400.ttf" />
+    <Content Include="webfonts\fa-regular-400.woff" />
+    <Content Include="webfonts\fa-regular-400.woff2" />
+    <Content Include="webfonts\fa-solid-900.eot" />
+    <Content Include="webfonts\fa-solid-900.ttf" />
+    <Content Include="webfonts\fa-solid-900.woff" />
+    <Content Include="webfonts\fa-solid-900.woff2" />
+    <Content Include="Views\ProductionOrdersInProgress\ViewQAEventData.cshtml" />
+    <Content Include="Views\StagesQcInProcess\LoadTestDetQcDf.cshtml" />
+    <Content Include="Views\StagesQcInProcess\LoadViewTestDetQCDf.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\EditLoadWorkHrs.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\GetEmp.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\LoadModalRFI.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\LoadTableEmp.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\LoadTableRFI.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\LoadViewRawMateria.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\LoadWarehouseData.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\ViewQCResult.cshtml" />
+    <Content Include="Views\QATestDefinition\LoadAddNewQC.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\LoadstageDropdown.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\LoadTableDefult.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\LoadTableAdditiveItems.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\LoadTableStage.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\ProductionReceiving.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\LoadBatch.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\EditLoadModalRFI.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\DailyProdListView.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\EditProductionReceiving.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\LoadRFIAll.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\listAllDailyProduction.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\DLaborEditModal.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\tabs\LoadViewAndRFITab.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\tabs\DailyProdListANDAllDailyProduction.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\tabs\LoadOrderStagesTab.cshtml" />
+    <Content Include="Views\ProductionOrdersInProgress\LoadProductionOrder.cshtml" />
+    <Content Include="Views\RevisionSetup\Index.cshtml" />
+    <Content Include="Views\RevisionSetup\ItemsList.cshtml" />
+    <Content Include="Views\RevisionSetup\RevisionSetuplist.cshtml" />
+    <Content Include="Views\Parameters\EditParam.cshtml" />
+    <Content Include="Views\ProdOrders\GetBatch.cshtml" />
+    <Content Include="Views\QATestDefinition\EditQCForm.cshtml" />
+    <Content Include="Views\BomDefinition\GetItemsData.cshtml" />
+    <Content Include="Views\Shared\_RevisionsModal.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="App_Data\" />
+    <Folder Include="Uploads\TestDefinition\1\1\" />
+    <Folder Include="Uploads\TestDefinition\1\2\" />
+    <Folder Include="Uploads\TestDefinition\1\3\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="packages.config" />
+    <None Include="Project_Readme.html" />
+    <Content Include="Scripts\esm\popper-utils.js.map" />
+    <Content Include="Scripts\esm\popper-utils.min.js.map" />
+    <Content Include="Scripts\esm\popper.js.map" />
+    <Content Include="Scripts\esm\popper.min.js.map" />
+    <Content Include="Scripts\plugins\scayt\CHANGELOG.md" />
+    <Content Include="Scripts\plugins\scayt\LICENSE.md" />
+    <Content Include="Scripts\plugins\scayt\README.md" />
+    <Content Include="Scripts\plugins\wsc\LICENSE.md" />
+    <Content Include="Scripts\plugins\wsc\README.md" />
+    <Content Include="Scripts\skins\moono-lisa\readme.md" />
+    <Content Include="Scripts\themes\AdminLTE\bower_components\bootstrap\dist\fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="Scripts\themes\AdminLTE\bower_components\bootstrap\dist\fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="Scripts\themes\AdminLTE\bower_components\bootstrap\dist\fonts\glyphicons-halflings-regular.woff2" />
+    <Content Include="Scripts\themes\AdminLTE\dist\fonts\0segoeui.ttf" />
+    <Content Include="Scripts\themes\AdminLTE\dist\fonts\The-Sans-Plain.otf" />
+    <Content Include="Scripts\themes\AdminLTE\dist\fonts\The-Sans-Plain.woff2" />
+    <Content Include="Scripts\themes\AdminLTE\package.json" />
+    <Content Include="Scripts\umd\popper-utils.js.map" />
+    <Content Include="Scripts\umd\popper-utils.min.js.map" />
+    <Content Include="Scripts\umd\popper.js.flow" />
+    <Content Include="Scripts\umd\popper.js.map" />
+    <Content Include="Scripts\umd\popper.min.js.map" />
+    <Content Include="Scripts\index.js.flow" />
+    <Content Include="Scripts\jquery-1.10.2.min.map" />
+    <Content Include="Scripts\jquery-3.4.1.min.map" />
+    <Content Include="Scripts\jquery-3.4.1.slim.min.map" />
+    <Content Include="Scripts\popper-utils.js.map" />
+    <Content Include="Scripts\popper-utils.min.js.map" />
+    <Content Include="Scripts\popper.js.map" />
+    <Content Include="Scripts\popper.min.js.map" />
+    <Content Include="Scripts\README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{C0C07587-41A7-46C8-8FBD-3F9C8EBE2DDC}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Antlr3.Runtime, Version=3.5.0.2, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Antlr3.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="CrystalDecisions.CrystalReports.Engine, Version=13.0.2000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL" />
+    <Reference Include="CrystalDecisions.ReportAppServer.ReportDefModel, Version=13.0.2000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="CrystalDecisions.ReportSource, Version=13.0.2000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL" />
+    <Reference Include="CrystalDecisions.Shared, Version=13.0.2000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL" />
+    <Reference Include="CrystalDecisions.Web, Version=13.0.2000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL" />
+    <Reference Include="DocumentFormat.OpenXml, Version=2.13.0.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\DocumentFormat.OpenXml.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AI.Agent.Intercept, Version=1.2.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.AI.Agent.Intercept.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AI.DependencyCollector, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.AI.DependencyCollector.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AI.PerfCounterCollector, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.AI.PerfCounterCollector.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AI.ServerTelemetryChannel, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.AI.ServerTelemetryChannel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AI.Web, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.AI.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AI.WindowsServer, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.AI.WindowsServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.ApplicationInsights, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.ApplicationInsights.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.Identity.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.AspNet.Identity.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.Identity.EntityFramework, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.AspNet.Identity.EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.Identity.Owin, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.AspNet.Identity.Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.4.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.AspNet.SignalR.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.SystemWeb, Version=2.4.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.AspNet.SignalR.SystemWeb.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.TelemetryCorrelation, Version=1.0.8.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.AspNet.TelemetryCorrelation.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=3.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Owin, Version=4.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Host.SystemWeb, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security, Version=4.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.Owin.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.Cookies, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.Owin.Security.Cookies.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.Facebook, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.Owin.Security.Facebook.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.Google, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.Owin.Security.Google.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.MicrosoftAccount, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.Owin.Security.MicrosoftAccount.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.OAuth, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.Owin.Security.OAuth.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.Twitter, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.Owin.Security.Twitter.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Microsoft.Web.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenXmlPowerTools, Version=4.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\OpenXmlPowerTools.dll</HintPath>
+    </Reference>
+    <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Stimulsoft.Base, Version=2019.3.1.0, Culture=neutral, PublicKeyToken=ebe6666cba19647a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Stimulsoft.Base.dll</HintPath>
+    </Reference>
+    <Reference Include="Stimulsoft.Report, Version=2019.3.1.0, Culture=neutral, PublicKeyToken=ebe6666cba19647a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Stimulsoft.Report.dll</HintPath>
+    </Reference>
+    <Reference Include="Stimulsoft.Report.Mvc, Version=2019.3.1.0, Culture=neutral, PublicKeyToken=ebe6666cba19647a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Stimulsoft.Report.Mvc.dll</HintPath>
+    </Reference>
+    <Reference Include="Stimulsoft.Report.Web, Version=2019.3.1.0, Culture=neutral, PublicKeyToken=ebe6666cba19647a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Stimulsoft.Report.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="Stimulsoft.Report.WebDesign, Version=2019.3.1.0, Culture=neutral, PublicKeyToken=ebe6666cba19647a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\Stimulsoft.Report.WebDesign.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Diagnostics.DiagnosticSource, Version=5.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\System.Diagnostics.DiagnosticSource.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Net.Http.WebRequest" />
+    <Reference Include="System.Runtime.InteropServices.RuntimeInformation, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Abstractions" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Helpers, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\System.Web.Helpers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Mvc, Version=3.0.0.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\System.Web.Mvc.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Optimization, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\System.Web.Optimization.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\System.Web.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Routing" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\System.Web.WebPages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\System.Web.WebPages.Deployment.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\System.Web.WebPages.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="WebGrease, Version=1.6.5135.21930, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\Alpha_WorkArea\AlphaERP\AlphaERP\AlphaERP\bin\WebGrease.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="App_GlobalResources\Resource.en.resx">
+      <Generator>GlobalResourceProxyGenerator</Generator>
+      <LastGenOutput>Resource.en.designer.cs</LastGenOutput>
+    </Content>
+    <Content Include="App_GlobalResources\Resource.resx">
+      <Generator>GlobalResourceProxyGenerator</Generator>
+      <LastGenOutput>Resource.designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </Content>
+    <EmbeddedResource Include="Reports\Ordering\Arabic_Report\RptOrdCopyInfo.rpt">
+      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
+      <LastGenOutput>RptOrdCopyInfo.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reports\Ordering\Arabic_Report\RptOrdReceipts.rpt">
+      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
+      <LastGenOutput>RptOrdReceipts.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reports\Ordering\Arabic_Report\RptPRInfo.rpt">
+      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
+      <LastGenOutput>RptPRInfo.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reports\Ordering\Arabic_Report\RptPurchOrderInfo - Copy %282%29.rpt">
+      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
+      <LastGenOutput>RptPurchOrderInfo - Copy %282%29.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reports\Ordering\Arabic_Report\RptPurchOrderInfo - Copy.rpt">
+      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
+      <LastGenOutput>RptPurchOrderInfo - Copy.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reports\Ordering\Arabic_Report\RptPurchOrderInfo.rpt">
+      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
+      <LastGenOutput>RptPurchOrderInfo.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reports\Ordering\Arabic_Report\RptPurchOrderInfoKASIH.rpt">
+      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
+      <LastGenOutput>RptPurchOrderInfoKASIH.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reports\Ordering\English_Report\RptOrdCopyInfoEng.rpt">
+      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
+      <LastGenOutput>RptOrdCopyInfoEng.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reports\Ordering\English_Report\RptOrdReceiptsEng.rpt">
+      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
+      <LastGenOutput>RptOrdReceiptsEng.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reports\Ordering\English_Report\RptPRInfoEng.rpt">
+      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
+      <LastGenOutput>RptPRInfoEng.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reports\Ordering\English_Report\RptPurchOrderInfoEng - Copy.rpt">
+      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
+      <LastGenOutput>RptPurchOrderInfoEng - Copy.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reports\Ordering\English_Report\RptPurchOrderInfoEng.rpt">
+      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
+      <LastGenOutput>RptPurchOrderInfoEng.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reports\Ordering\English_Report\RptPurchOrderInfoKASIHEnf.rpt">
+      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
+      <LastGenOutput>RptPurchOrderInfoKASIHEnf.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <Target Name="MvcBuildViews" AfterTargets="AfterBuild" Condition="'$(MvcBuildViews)'=='true'">
+    <AspNetCompiler VirtualPath="temp" PhysicalPath="$(WebProjectOutputDir)" />
+  </Target>
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>49326</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:49326/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target> -->
+</Project>

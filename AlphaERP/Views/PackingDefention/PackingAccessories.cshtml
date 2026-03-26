@@ -1,0 +1,132 @@
+﻿@model AlphaERP.Models.BOM_PakingInfo
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    DataTable Dt = new DataTable();
+    List<BOM_FinPackingInfo> PackingAccessories = new MDB().BOM_FinPackingInfo.Where(x => x.CompNo == company.comp_num && x.FormCode == Model.FormCode && x.FinItem==Model.FinItem && x.PackItem==Model.PackItem).ToList();
+
+    InvItemsMF InvItemsPack = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == Model.PackItem).FirstOrDefault();
+    InvItemsMF InvItemsFin = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == Model.FinItem).FirstOrDefault();
+     
+
+}
+<style>
+    .GroupTitle {
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        background-color: lightblue;
+    }
+</style>
+
+
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="SAVE_ItemNoPack_Accesoris">@Html.Recource(4368) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <label id="SAVE_ItemNoPack_Accesoris">@Model.PackItem</label>
+    </div>
+    <div class="col-md-8" style="margin-bottom: 5px;">
+        <label class="unselectable" for="SAVE_ItemDescPack_Accesoris">
+            @Html.Translate(InvItemsPack.ItemDesc, InvItemsPack.ItemDesc_Ara)
+        </label>
+    </div>
+</div>
+
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="SAVE_ItemNoFinPack_Accesoris">@Html.Recource(5529) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <label id="SAVE_ItemNoFinPack_Accesoris">@Model.FinItem</label>
+    </div>
+    <div class="col-md-8" style="margin-bottom: 5px;">
+        <label class="unselectable" for="SAVE_ItemDescPack_Accesoris">
+            @Html.Translate(InvItemsFin.ItemDesc, InvItemsFin.ItemDesc_Ara)
+        </label>
+    </div>
+</div>
+ 
+
+<div class="form-group">
+    <div class="col-md-12">
+        <label class="unselectable">@Html.Recource(9585) :</label>
+        <button onclick="Add_PackingAccessories()" type="button" class="btn btn-default">@Html.Recource(9585)</button>
+    </div>
+    <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+        <table class="table table-hover" id="eItemPackingAccessTable">
+            <thead>
+                <tr>
+                    <th style="width: 14%;">@Html.Recource(44)</th>
+                    <th style="width: 45%;">@Html.Recource(74)</th>
+                    <th>@Html.Recource(67)</th>
+                    <th>@Html.Recource(49)</th>
+
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="PackAccessTbody">
+                @foreach (BOM_FinPackingInfo item in PackingAccessories)
+                {
+                    <tr>
+                        <td style="width: 14%;" id="PackingAccess_ItemNo">@item.RMCode</td>
+                        <td style="width: 45%;">@Html.Translate(item.item.ItemDesc, item.item.ItemDesc_Ara)</td>
+                        <td style="width: 10%;text-align: center;">
+                            <select style="width:100%" class="ItemPackingAccess_Unit">
+                                @{
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        Dt = new DataTable();
+                                        cn.Open();
+                                        using (SqlCommand cmd = new SqlCommand())
+                                        {
+                                            cmd.Connection = cn;
+                                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                            cmd.CommandText = "InvT_LoadItemUnits";
+                                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                            cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = item.RMCode;
+                                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                            {
+                                                DA.Fill(Dt);
+                                            }
+                                        }
+                                    }
+                                }
+                                @foreach (DataRow row in Dt.Rows)
+                                {
+                                    if (@row["UnitSerial"].ToString() == item.UnitSerial.ToString())
+                                    {
+                                        <option value="@row["UnitSerial"].ToString()" selected>
+                                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                        </option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@row["UnitSerial"].ToString()">
+                                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                        </option>
+                                    }
+                                }
+                            </select>
+                        </td>
+                        <td style="width: 10%;text-align: center;">
+                            <input id="PackingAccess_Qty" value="@item.Qty" type="number" style="width:75px !important" />
+                        </td>
+                        <td>
+                            <button class="btn-de" onclick="RemoveRow(this)"><i class="fa fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<script>
+    $('.ItemPackingAccess_Unit').select2();
+</script>

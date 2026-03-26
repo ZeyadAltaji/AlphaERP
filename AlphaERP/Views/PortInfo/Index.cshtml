@@ -1,0 +1,55 @@
+﻿<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-6">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="MRP_PortInfo_OrdYear">@Resources.Resource.Year </label>
+            </div>
+            <div class="col-md-2">
+                <input onblur="Checkyear()" type="number" id="MRP_PortInfo_OrdYear" value="@DateTime.Now.Year" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" />
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-success btn-block" onclick="SerachPortInfo()">
+                    @Resources.Resource.Search
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="MRP_PortInfoDiv">
+        @Html.Partial("~/Views/PortInfo/PortInfoList.cshtml")
+    </div>
+</div>
+
+
+<script>
+    function Checkyear() {
+        if (MRP_PortInfo_OrdYear.value < 2000) {
+            MRP_PortInfo_OrdYear.value = "@DateTime.Now.Year"
+            MRP_PortInfo_OrdYear.focus();
+        }
+    }
+
+    function SerachPortInfo() {
+        MRP_PortInfoDiv.innerHTML = "";
+        $('#MRP_PortInfoDiv').load('../../../PortInfo/PortInfoList?OrdYear=' + MRP_PortInfo_OrdYear.value );
+    }
+
+    //function SelectionPortInfo(OrdYear, OrderNo, TawreedNo) {
+    //    debugger
+    //    wait();
+    //    burn({ OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo }, '../../../PortInfo/ChoosePortInfo', '', LoadChoosePortInfo, true);
+    //}
+    //function LoadChoosePortInfo(r) {
+    //    MRP_PortInfoDiv.innerHTML = "";
+    //    $('#MRP_PortInfoDiv').html(r);
+    //    $('#Model_PortInfo').modal('hide');
+    //    done();
+    //}
+   
+
+</script>

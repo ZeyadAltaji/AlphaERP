@@ -1,0 +1,286 @@
+﻿@using AlphaERP.Models
+@model List<AlphaERP.Models.Prod_GetOrderNoteCloseView>
+
+@{
+    Company company = (Company)Session["company"];
+    User me = (User)Session["me"];
+    short OrderYear = ViewBag.OrderYear;
+    List<ViewWarehouseData> ListData = new MDB().Database.SqlQuery<ViewWarehouseData>("SELECT StoreNo, StoreName, StoreNameEng FROM InvStoresMF WHERE(CompNo = {0}) ORDER BY StoreNo", company.comp_num).ToList();
+    int i = 1;
+    int StoreNo = ViewBag.StoreNo;
+    int OrderNo = ViewBag.OrderNo;
+    var Prod_Qty = ViewBag.Prod_Qty;
+    var qty_prepare = ViewBag.qty_prepare;
+    List<AlphaERP.Controllers.ProductionOrdersInProgressController.GetLoadStage> LoadStage = ViewBag.LoadStage;
+}
+
+
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProductionReceiving_Year">@Html.Recource(59) </label>
+    </div>
+    <div class="col-md-2">
+        <input required="true" type="number" id="Prod_ProductionReceiving_Year" min="1999" max="2050" style="width:100%" />
+    </div>
+    <div class="col-md-1">
+        <label class="unselectable" for="Prod_ProductionReceiving_No">@Html.Recource(1222) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <input style="width:100%;" type="text" id="Prod_ProductionReceiving_No" value="0" disabled/>
+    </div>
+    <div class="col-md-1">
+        <label class="unselectable" for="Prod_ProductionReceiving_Date">@Html.Recource(58)</label>
+    </div>
+    <div class="col-md-2">
+        <input value="@DateTime.Now.ToString("yyyy-MM-dd")" type="date" id="Prod_ProductionReceiving_Date" required="true" />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProductionReceiving_OrderYear">@Html.Recource(371) </label>
+    </div>
+    <div class="col-md-2">
+        <input type="number" id="Prod_ProductionReceiving_OrderYear" value="@OrderYear" disabled />
+    </div>
+    <div class="col-md-1">
+        <label class="unselectable" for="Prod_ProductionReceiving_Stages">@Html.Translate("المرحلة", "Stage") </label>
+    </div>
+    <div class="col-md-6">
+        <select style="width: 100%" id="Stages" name="Stages">
+            <option selected>@Html.Translate("أختار  مرحلة واحدة من القائمة", "Choose one stage from the list")</option>
+            @foreach (var item in LoadStage)
+            {
+                <option value="@item.stage_code" Name="StagesVal">@item.stage_desc</option>
+            }
+
+        </select>
+    </div>
+
+
+
+</div>
+
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="ProductionReceiving_StoreNo">@Html.Recource(1) </label>
+    </div>
+    <div class="col-md-2">
+        <input style="width: 120% !important;" required="true" type="text" id="ProductionReceiving_StoreNo" value="@Html.Recource(41)" />
+    </div>
+    <div class="col-md-4">
+        <input style="width: 288px !important;" required="true" type="text" id="ProductionReceiving_StoreDesc" value="@Html.Recource(31)" />
+    </div>
+    <div class="col-sm-1">
+        <button style="width:68px;" type="button" class="btn btn-success btn-block" onclick="SearchStoreNo()">
+            @Html.Recource(975)
+        </button>
+    </div>
+</div>
+<div class="form-group">
+
+    <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+        <table class="table table-hover" id="ProductionReceiving_Table">
+            <thead>
+                <tr>
+                    <th style="text-align: center !important;width: 10%;">@Html.Translate("التسلسل", "ItemSer")</th>
+                    <th style="text-align: center !important; width: 10%;">@Html.Translate("رمز المادة", "FinCode")</th>
+                    <th style="text-align: center !important; width: 45%;">@Html.Translate("وصف المادة", "ItemDesc")</th>
+                    <th style="text-align: center !important;">@Html.Translate("الوحدة", "TUnit")</th>
+                    <th></th>
+                    <th style="text-align: center !important;">@Html.Translate("الكمية", "Prod_Qty")</th>
+                    <th style="display:none"></th>
+
+                    <th></th>
+                    <th></th>
+
+                </tr>
+            </thead>
+            <tbody id="ProductionReceiving_TBody">
+                @foreach (var item in Model.OrderBy(o => o.item_no))
+                {
+                    string Desc = Html.Translate(item.ItemDesc_Ara, item.ItemDesc).ToString();
+                    <tr id="ProductionReceiving_@item.item_no" unitserial="@item.UnitSerial" tunit="@item.TUnit">
+                        <td style="text-align:center;" id="Itemsre">@i</td>
+
+                        <td style="text-align:center;" id="ItemNo">@item.item_no</td>
+                        <td style="text-align:center;"  id="Desc">@Desc</td>
+
+
+                        <td id="TUnit" style="text-align:center;">@item.TUnit</td>
+                        <td id="button" style="text-align:center;"><button></button></td>
+                        <td style="text-align:center;"><input type="number" value="@item.qty_prepare" id="Qty"/></td>
+                        <td id="UnitSerial" style="display:none"> @item.UnitSerial</td>
+                        <td id="button" style="text-align:center;"><button></button></td>
+                        <td></td>
+                    </tr>
+                    i++;
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    var ProductionReceiving_Table = $('#ProductionReceiving_Table').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+    var startYear = 1999;
+    var endYear = 2050;
+    var currentYear = new Date().getFullYear();
+    var yearInput = $('#Prod_ProductionReceiving_Year');
+    yearInput.attr('value', currentYear);
+    @*var Prod_Qty = string.IsNullOrEmpty((string)@ViewBag.Prod_Qty) ? "00:00" : (string)@ViewBag.Prod_Qty;*@
+    @*var qty_prepare = @Html.Raw(Json.Encode(ViewBag.qty_prepare)) ? '00:00';*@
+    var Prod_Qty = '@ViewBag.Prod_Qty';
+    var qty_prepare = '@ViewBag.qty_prepare';
+    $("#eqty_prepareRec").html(qty_prepare);
+    $("#eProdQtyRec").html(Prod_Qty);
+    var storeNoFromViewBag =@StoreNo;
+    var listData = @Html.Raw(Json.Encode(ListData));
+
+    yearInput.on('input', function () {
+        let selectedYear = parseInt(yearInput.val());
+        if (selectedYear < startYear) {
+            yearInput.val(startYear);
+        } else if (selectedYear > endYear) {
+            yearInput.val(endYear);
+        }
+    });
+    function SearchStoreNo(){
+        var CompNo =@company.comp_num;
+        $('#WarehouseBody').load("../../../ProductionOrdersInProgress/LoadWarehouseData?CompNo=" + CompNo);
+        $('#Model_Warehouse').modal('show');
+    }
+    function StoreSelect(row) {
+        var rows = document.querySelectorAll('tr');
+        rows.forEach(function (row) {
+            row.classList.remove('selected');
+        });
+
+        row.classList.add('selected');
+    }
+    function SelectingStore() {
+
+        var selectedRow = document.querySelector('#StoreSelectTable tr.selected');
+
+        if (selectedRow) {
+            var storeNo = selectedRow.getAttribute('StoreNo');
+            var storeName = selectedRow.getAttribute('StoreName');
+
+            document.getElementById('ProductionReceiving_StoreNo').value = storeNo;
+            document.getElementById('ProductionReceiving_StoreDesc').value = storeName;
+        }
+
+        $('#Model_Warehouse').modal('hide');
+    }
+    $('#ProductionReceiving_StoreNo').on('change', function () {
+        var newStoreNo = $(this).val();
+        setInputsBasedOnStoreNo(newStoreNo);
+    });
+    function setInputsBasedOnStoreNo(storeNo) {
+        var storeData = listData.find(function (item) {
+            return item.StoreNo === parseInt(storeNo);;
+        });
+
+        if (storeData) {
+            $('#ProductionReceiving_StoreNo').val(storeData.StoreNo);
+            $('#ProductionReceiving_StoreDesc').val(storeData.StoreName);
+        } else {
+            alert('The warehouse number does not exist.');
+        }
+    }
+
+    setInputsBasedOnStoreNo(storeNoFromViewBag);
+    function SaveProductionReceiving(){
+        debugger;
+        var DailyProdD = new Array();
+
+        var CompNo =@company.comp_num;
+        var ReportYear = $('#Prod_ProductionReceiving_Year').val();
+        var Prod_Date =$('#Prod_ProductionReceiving_Date').val();
+        var ReportNo = $('#Prod_ProductionReceiving_No').val();
+        var OrderNo =@OrderNo;
+        var OrderYear =@OrderYear;
+        var Prod_stage = document.getElementById("Stages").value;
+
+        var UserID ='@me.UserID';
+        if (ReportYear.trim() === '') {
+            alert('@Html.Translate("يرجى ادخال السنة", "Please enter the year")');
+            document.getElementById('Prod_ProductionReceiving_Year').focus();
+            return;
+        }
+        if (Prod_Date.trim() === '') {
+            alert('@Html.Translate("يرجى ادخال تاريخ صالح !", "Please enter a valid date!")');
+            document.getElementById('Prod_ProductionReceiving_Date').focus();
+            return;
+        }
+        if (ReportNo.trim() === '') {
+            alert('@Html.Translate("يرجى ادخال رقم السند !", "Please enter a ReportNo!")');
+            document.getElementById('Prod_ProductionReceiving_No').focus();
+            return;
+        }  
+
+        var ProductionReceivingTable = $('#ProductionReceiving_Table');
+        var trs1 = ProductionReceivingTable.find('tbody tr');
+        for (var i = 0; i < trs1.length; i++) {
+            var Prod_Qty = $(trs1[i]).find('#Qty')[0].value.trim();
+
+            if (Prod_Qty === '') {
+                alert('@Html.Translate("يرجى إدخال الكمية", "Please Enter Qty")');
+                return;
+            }
+
+            DailyProdD.push({
+                CompNo: CompNo,
+                ProdPrepYear: '@OrderYear',
+                ProdPrepNo:'@OrderNo',
+
+                FinCode: $(trs1[i]).find('#ItemNo')[0].innerHTML,
+                UnitSerial: $(trs1[i]).find('#UnitSerial')[0].innerHTML,
+                TUnit: $(trs1[i]).find('#TUnit')[0].innerHTML,
+                Prod_Qty: Prod_Qty
+            });
+
+        }
+
+        var DailyProdHf = {
+            CompNo: CompNo,
+            ReportYear:ReportYear,
+            ReportNo:ReportNo,
+            Prod_Date:Prod_Date,
+            Prod_stage:Prod_stage
+        };
+        wait();
+        if (confirm('@Resources.Resource.ConfirmBOMDef')) {
+            burn({ CompNo: CompNo,ReportYear:ReportYear,ReportNo:ReportNo,OrderYear:OrderYear,OrderNo:OrderNo,UserID:UserID, DailyProdHf: DailyProdHf, DailyProdD: DailyProdD},
+                    '../../../ProductionOrdersInProgress/SaveProdction',
+                    '',
+                    function (response){
+                        ReloadproductionOrderinprogressTable(response);
+                        var listAllDailyProductionTbody = $('#listAllDailyProductionTbody');
+                        listAllDailyProductionTbody.innerHTML ="";
+                        $('#listAllDailyProductionTbody').load('../../../ProductionOrdersInProgress/listAllDailyProduction?CompNo='+CompNo+'&OrderYear=' + OrderYear + '&OrderNo=' + OrderNo);
+
+                        $('#ModalProductionReceiving').modal('hide');
+                        $('#ModalListAllDailyProduction').modal('hide');
+
+                        done();
+                    },
+                    false
+                    );
+        }
+        else {done();}
+    }
+    function ReloadproductionOrderinprogressTable(response)
+    {
+        var message = 'done';
+        if (message) {
+            alert(message);
+        }
+
+        refreshTable()
+    }
+
+</script>

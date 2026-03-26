@@ -1,0 +1,441 @@
+﻿@model IEnumerable<AlphaERP.Models.Ord_RequestDF>
+@using System.Data.SqlClient;
+@using AlphaERP.Models
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    List<InvItemsMF> Mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+    List<int> Deptid = new List<int>();
+    List<GLN_UsersDept> UsersDept = new MDB().GLN_UsersDept.Where(x => x.CompNo == company.comp_num && x.UserID == me.UserID && x.Permission == true).ToList();
+    Deptid = UsersDept.Select(o => o.DeptID).ToList();
+    List<GLDEPMF> GLDEPMFs = new MDB().GLDEPMFs.Where(x => x.DEP_COMP == company.comp_num && Deptid.Contains(x.DEP_NUM)).ToList();
+    List<InvUnitCode> UnitC = new MDB().InvUnitCodes.Where(x => x.CompNo == company.comp_num).ToList();
+    List<BusunisUnit> BU = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("SELECT  Alpha_BusinessUnitDef.BusUnitID as Id, BusUnitDescAr as DescAr,BusUnitDescEng as DescEn  " +
+"from Alpha_BusinessUnitDef " +
+"where Alpha_BusinessUnitDef.CompNo = '{0}' ", company.comp_num)).ToList();
+
+}
+<style>
+
+    #MRP_ConItemsToPurchOrd_DIV table th, #MRP_ConItemsToPurchOrd_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+    .wrapperx {
+        padding:0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+
+    .sticky-col {
+        z-index:2;
+        position: sticky;
+        position: -webkit-sticky;
+        background-color: white;
+    }
+
+    .first-col {
+        width: 100px;
+        min-width: 100px;
+        max-width: 100px;
+        @Html.Translate("right: 0px;", "left: 0px;")
+    }
+
+    .second-col {
+        width: 150px;
+        min-width: 150px;
+        max-width: 150px;
+     @Html.Translate("right: 100px;", "left: 100px;")
+    }
+
+    .third-col {
+        width: 40px;
+        min-width: 40px;
+        max-width: 40px;
+        @Html.Translate("right: 250px;", "left: 250px;")
+    }
+    .stickytooltip {
+        max-height: 80vh !important;
+        overflow: auto !important
+    }
+</style>
+
+<link href="~/Content/stickytooltip.css" rel="stylesheet" />
+<script src="~/Scripts/stickytooltip.js?s=15"></script>
+
+@{
+    int i = 1;
+}
+<div class="modal-body row" style="max-height: 76vh !important;">
+    <div class="form-group">
+        <div class="col-md-2">
+            <label class="unselectable" for="MRP_ConItemsToPurchOrd_save_DeptNo">@Html.Recource(220) </label>
+        </div>
+        <div class="col-md-2">
+            <input required="true" style="width: 110%;" id="MRP_ConItemsToPurchOrd_save_txtDeptNo" disabled />
+        </div>
+        <div class="col-md-6">
+            <input style="width: 100%;" id="MRP_ConItemsToPurchOrd_save_txtDeptDesc" disabled />
+        </div>
+        <div class="col-md-2">
+            <button onclick="Serach_Dept()" type="button" class="btn btn-primary">@Html.Recource(975)</button>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-2">
+            <label class="unselectable" for="MRP_ConItemsToPurchOrd_save_VendorNo">@Html.Recource(517) </label>
+        </div>
+        <div class="col-md-2">
+            <input required="true" style="width: 110%;" id="MRP_ConItemsToPurchOrd_save_txtVendorNo" disabled />
+        </div>
+        <div class="col-md-6">
+            <input style="width: 100%;" id="MRP_ConItemsToPurchOrd_save_txtVendorDesc" disabled />
+        </div>
+        <div class="col-md-2">
+            <button onclick="Serach_Vendor()" type="button" class="btn btn-primary">@Html.Recource(975)</button>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-2" style="margin-bottom: 5px;">
+            <label class="unselectable">@Html.Recource(5667) </label>
+        </div>
+        <div class="col-md-2" style="margin-bottom: 5px;">
+            <input style="width:100%" onblur="PurchOrdBUChange()" type="number" id="ProdCost_ConItemsToPurchOrd_save_txtReqBU" />
+        </div>
+        <div class="col-md-6" style="margin-bottom: 5px;">
+            <select onchange="$('#ProdCost_ConItemsToPurchOrd_save_txtReqBU').val(this.value)" style="width:100%" id="ProdCost_ConItemsToPurchOrd_save_CboReqBU">
+                @Html.MyBusinessUnits()
+            </select>
+        </div>
+        <div class="col-md-2">
+        </div>
+    </div>
+    <br />
+    <hr />
+
+    <div class="form-group viewx" style="display:block;height:224px;">
+        <div class="col-md-12 wrapperx" id="MRP_ConItemsToPurchOrd_DIV">
+            <table class="table table-hover MRP_ConItemsToPurchOrd" id="ConItemsToPurchOrdTable">
+                <thead>
+                    <tr>
+                        <th class="sticky-col first-col">@Html.Recource(3197)</thclass="headcol">
+                        <th class="sticky-col first-col">@Html.Recource(206)</thclass="headcol">
+                        <th class="sticky-col first-col">@Html.Recource(9700)</thclass="headcol">
+                        <th class="sticky-col first-col">@Html.Recource(9704)</thclass="headcol">
+                        <th class="sticky-col first-col">@Html.Recource(737)</thclass="headcol">
+                        <th class="sticky-col first-col">@Resources.Resource.ItemNo</thclass="headcol">
+                        <th class="sticky-col second-col">@Resources.Resource.ItemName</th>
+                        <th>@Html.Recource(67)</th>
+                        <th>@Html.Recource(49)</th>
+                        <th>@Html.Recource(215)</th>
+                        <th>@Html.Recource(68)</th>
+                        <th>
+                            <input id="MRP_ConItemsToPurchOrd_Actionchecked" type="checkbox" onchange="SelectAll(this)" checked>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody style="text-align: center;" id="MRP_ConItemsToPurchOrdTbody">
+
+                    @foreach (Ord_RequestDF OrdDF in Model)
+                    {
+                        Ord_RequestHF HF = new MDB().Ord_RequestHF.Where(x => x.CompNo == company.comp_num && x.ReqYear == OrdDF.ReqYear && x.ReqNo == OrdDF.ReqNo).FirstOrDefault();
+                        User u = new MDB().Users.Where(x => x.UserID == HF.UserID).FirstOrDefault();
+                        BusunisUnit BUDESC = BU.Where(x => x.Id == HF.ReqBU.Value).FirstOrDefault();
+                        double? Qty = 0;
+                        string OrderPriorityDeesc = "";
+                        double? TatalValue = 0;
+                        InvItemsMF M = Mf.Where(x => x.ItemNo == OrdDF.SubItemNo).FirstOrDefault();
+                        InvUnitCode UnitCDesc = UnitC.Where(x => x.UnitCode == M.UnitC1).FirstOrDefault();
+                        switch (OrdDF.SubUnitSerial)
+                        {
+                            case 1:
+                                Qty = OrdDF.Qty;
+                                break;
+                            case 2:
+                                Qty = OrdDF.Qty/(Convert.ToDouble(M.Conv2));
+                                break;
+                            case 3:
+                                Qty = OrdDF.Qty / (Convert.ToDouble(M.Conv2) * Convert.ToDouble(M.Conv3));
+                                break;
+                            case 4:
+                                Qty = OrdDF.Qty / (Convert.ToDouble(M.Conv2) * Convert.ToDouble(M.Conv3) * Convert.ToDouble(M.Conv4));
+                                break;
+
+                        }
+                        switch (HF.OrderPriority)
+                        {
+                            case 0:
+                                OrderPriorityDeesc = Html.Translate("عادي", "Normal").ToString();
+                                break;
+                            case 1:
+                                OrderPriorityDeesc = Html.Translate("متوسط", "Medium").ToString();
+                                break;
+                            case 2:
+                                OrderPriorityDeesc = Html.Translate("عاجل", "Urgently").ToString();
+                                break;
+                        }
+                        TatalValue = Qty * OrdDF.Price;
+                        string ItemDesc = Mf.Where(x => x.ItemNo == OrdDF.SubItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                    <tr style="height: 25px;" itemNo="@OrdDF.ItemNo">
+                        <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important">@HF.ReqNo</td>
+                        <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important">@HF.ReqDate.Value.ToShortDateString()</td>
+                        <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important">@Html.Translate(BUDESC.DescAr, BUDESC.DescEn)</td>
+                        <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important">@OrderPriorityDeesc</td>
+                        <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important">@u.UserName</td>
+                        <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important" id="OrdDF_ItemNo">@OrdDF.SubItemNo</td>
+                        <td class="sticky-col second-col" data-tooltip="sticky_@i" style="text-align: center !important">@ItemDesc</td>
+                        <td style="text-align: center !important">@UnitCDesc.UnitNameEng</td>
+                        <td style="text-align: center !important" id="OrdDF_Qty">@Qty</td>
+                        <td style="text-align: center !important" id="OrdDF_Price">@OrdDF.Price</td>
+                        <td style="text-align: center !important">@TatalValue</td>
+                        <td style="text-align:center!important">
+                            <input id="MRP_ConItemsToPurchOrd_Action" type="checkbox" checked>
+                        </td>
+                        <td>
+                            <input type="hidden" id="OrdDF_ReqYear" value="@OrdDF.ReqYear" />
+                            <input type="hidden" id="OrdDF_ReqNo" value="@OrdDF.ReqNo" />
+                            <input type="hidden" id="OrdDF_ItemSrl" value="@OrdDF.ItemSr" />
+                        </td>
+                    </tr>
+                        i++;
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+    <hr />
+    <div class="form-group">
+        <div class="col-md-2"> </div>
+        <div class="col-md-2"></div>
+        <div class="col-md-2" style="left: 20px;"></div>
+        <div class="col-md-3"></div>
+        <div class="col-md-3">
+            <button class="btn btn-primary btn-block" onclick="CreatePurchOrder()">
+                @Resources.Resource.CreatePurchaseOrder
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_ConItemsToPurchOrd_GLDEPMFs">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(1867)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="Select_ConItemsToPurchOrd_GLDEPMFsTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(110)</th>
+                                    <th style="width: 55%;">@Html.Recource(109)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    foreach (var item in GLDEPMFs)
+                                    {
+                                        <tr onclick="Select_ConItemsToPurchOrd_finGLDEPMFs(this)" DEP_NUM="@item.DEP_NUM" DepDesc="@Html.Translate(item.DEP_NAME, item.DEP_ENAME).ToString()">
+                                            <td style="width: 20%;" id="LinkPurchOrder_DEPNUM">@item.DEP_NUM</td>
+                                            <td style="width: 55%;" id="LinkPurchOrder_DEPNAME">@Html.Translate(item.DEP_NAME, item.DEP_ENAME).ToString()</td>
+                                            <td></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selecting_ConItemsToPurchOrd_GLDEPMFs()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal fade" id="Model_ConItemsToPurchOrd_Vendors">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(1867)</label>
+            </div>
+            <div class="modal-body row" id="ConItemsToPurchOrd_Vendorbody">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selecting_ConItemsToPurchOrd_Vendors()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_ConItemsToPurchOrd_GLDEPMFs').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_ConItemsToPurchOrd_Vendors').draggable({
+        handle: ".modal-header",
+    });
+    var GLDEPMFs = $('#Select_ConItemsToPurchOrd_GLDEPMFsTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    var v = $('#ProdCost_ConItemsToPurchOrd_save_CboReqBU').val()
+    $('#ProdCost_ConItemsToPurchOrd_save_txtReqBU').val(v);
+    function PurchOrdBUChange() {
+        var v = $('#ProdCost_ConItemsToPurchOrd_save_txtReqBU').val();
+        $('#ProdCost_ConItemsToPurchOrd_save_CboReqBU').val(v)
+        if (document.getElementById('ProdCost_ConItemsToPurchOrd_save_CboReqBU').value == '') {
+            ProdCost_ConItemsToPurchOrd_save_txtReqBU.value = ''
+            document.getElementById('ProdCost_ConItemsToPurchOrd_save_txtReqBU').focus();
+            return;
+        }
+    }
+    function Serach_Dept() {
+        $('#Select_ConItemsToPurchOrd_GLDEPMFsTable tr').removeClass("selected");
+        $('#Model_ConItemsToPurchOrd_GLDEPMFs').modal('show')
+    }
+    function Select_ConItemsToPurchOrd_finGLDEPMFs(e) {
+        var trs = GLDEPMFs.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Selecting_ConItemsToPurchOrd_GLDEPMFs() {
+        var trs = GLDEPMFs.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار دائرة", "Select one Dept")');
+            return;
+        }
+
+        MRP_ConItemsToPurchOrd_save_txtDeptNo.value = trs[0].getAttribute('DEP_NUM');
+        MRP_ConItemsToPurchOrd_save_txtDeptDesc.value = trs[0].getAttribute('DepDesc');
+
+        MRP_ConItemsToPurchOrd_save_txtVendorNo.value = null;
+        MRP_ConItemsToPurchOrd_save_txtVendorDesc.value = null;
+
+        $('#Model_ConItemsToPurchOrd_GLDEPMFs').modal('hide')
+    }
+    function CheckValue(ID) {
+        if (document.getElementById(ID).getAttribute('required') == 'true') {
+            if (document.getElementById(ID).value == '') {
+                document.getElementById(ID).focus();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    function Serach_Vendor() {
+        statusacc = 0;
+        if (CheckValue('MRP_ConItemsToPurchOrd_save_txtDeptNo')) {
+            alert('@Html.Translate("يجب ادخال الدائرة", "You must enter the Dept")');
+            return;
+        }
+        wait();
+        burn({ DeptId: MRP_ConItemsToPurchOrd_save_txtDeptNo.value }, '../../../ConItemsToPurchOrd/Vendors', '', ReloadtVendors, true);
+    }
+    function ReloadtVendors(r) {
+        ConItemsToPurchOrd_Vendorbody.innerHTML = "";
+        $('#ConItemsToPurchOrd_Vendorbody').html(r);
+        $('#Model_ConItemsToPurchOrd_Vendors').modal('show');
+    }
+    function Select_finVendor(e) {
+        var table = $('#ConItemsToPurchOrd_VendorTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Selecting_ConItemsToPurchOrd_Vendors() {
+        var table = $('#ConItemsToPurchOrd_VendorTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار المورد", "Select one Vendor")');
+            return;
+        }
+
+        MRP_ConItemsToPurchOrd_save_txtVendorNo.value = trs[0].getAttribute('VendorNo');
+        MRP_ConItemsToPurchOrd_save_txtVendorDesc.value = trs[0].getAttribute('VendorDesc');
+        $('#Model_ConItemsToPurchOrd_Vendors').modal('hide')
+    }
+    function SelectAll(e) {
+        var table = $('.MRP_ConItemsToPurchOrd #MRP_ConItemsToPurchOrdTbody tr');
+        var trs = table;
+        for (var i = 0; i < trs.length; i++) {
+            $(trs[i]).closest('tr').find('#MRP_ConItemsToPurchOrd_Action')[0].checked = e.checked
+        }
+    }
+    function CreatePurchOrder() {
+        if (document.getElementById('MRP_ConItemsToPurchOrd_save_txtDeptNo').value == '') { document.getElementById('MRP_ConItemsToPurchOrd_save_txtDeptNo').focus();alert('@Html.Translate("يرجى اختيار دائرة","Select one Dept")'); return; }
+        if (document.getElementById('MRP_ConItemsToPurchOrd_save_txtVendorNo').value == '') { document.getElementById('MRP_ConItemsToPurchOrd_save_txtVendorNo').focus();alert('@Html.Translate("يرجى اختيار المورد", "Select one Vendor")'); return; }
+        if (document.getElementById('ProdCost_ConItemsToPurchOrd_save_txtReqBU').value == '') { document.getElementById('ProdCost_ConItemsToPurchOrd_save_txtReqBU').focus();alert('@Html.Translate("يرجى اختيار وحدة العمل", "Select one Busunis Unit")'); return; }
+
+        var OrdReqDF = new Array();
+
+        $('.MRP_ConItemsToPurchOrd #MRP_ConItemsToPurchOrdTbody tr').each(function () {
+            if ($(this).find('#MRP_ConItemsToPurchOrd_Action').is(':checked') == true) {
+                OrdReqDF.push({
+                    ReqYear: $(this).find('#OrdDF_ReqYear')[0].value,
+                    ReqNo: $(this).find('#OrdDF_ReqNo')[0].value,
+                    ItemSr: $(this).find('#OrdDF_ItemSrl')[0].value,
+                    SubItemNo: $(this).find('#OrdDF_ItemNo').html(),
+                    Qty: $(this).find('#OrdDF_Qty').html(),
+                    Price: $(this).find('#OrdDF_Price').html()
+                });
+            }
+        });
+
+        if (OrdReqDF.length == 0) {
+            MsgBox('@Resources.Resource.NoItemWasSelected', 'red');
+            return false
+        }
+
+        wait();
+        if (confirm('@Resources.Resource.ConfirmCreatePurchaseOrder')) {
+            burn({ DeptId: MRP_ConItemsToPurchOrd_save_txtDeptNo.value, VendorNo: MRP_ConItemsToPurchOrd_save_txtVendorNo.value, BU: ProdCost_ConItemsToPurchOrd_save_txtReqBU.value, OrdReqDF: OrdReqDF }, '../../../ConItemsToPurchOrd/CreatePurchOrder', '', ReloadCreatePurchOrder, false);
+        }
+        else {
+            done();
+        }
+    }
+    function ReloadCreatePurchOrder() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#ConItemsToPurchOrdDiv').empty();
+        $('#ConItemsToPurchOrdDiv').load('../../../ConItemsToPurchOrd/ConItemsToPurchOrdList');
+    }
+
+
+</script>
+
+
+
+

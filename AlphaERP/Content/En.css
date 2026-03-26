@@ -1,0 +1,30 @@
+
+
+
+.float {
+    float: left;
+
+}
+.textalign{
+    text-align:right !important
+}
+.pull-left {
+    float: left !important;
+}
+
+tr td:last-child {
+    text-align: right !important
+}
+
+th {
+    text-align: left !important;
+}
+
+.modal-footer {
+    text-align: right;
+}
+
+.form-group {
+    float: left;
+    width: 100%;
+}

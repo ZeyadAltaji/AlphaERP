@@ -1,0 +1,634 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    long VendorNo = ViewBag.VendorNo;
+    User me = (User)Session["me"];
+    string language = (string)HttpContext.Current.Session["language"];
+    Company company = (Company)Session["company"];
+
+    Vendor Vend = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.VendorNo == VendorNo).FirstOrDefault();
+
+
+    List<BusunisUnit> PaymentM = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("select MCode as Id ,[Desc] as DescAr,isnull([EngDesc],'No Desc.') as DescEn from PayMethods where (Comp = '{0}')", company.comp_num)).ToList();
+    List<PayCodes> Currency = new MDB().Database.SqlQuery<PayCodes>("select CurrType as Id ,CurrName as DescAr,isnull(CurrNameE,'No Desc.') as DescEn from CurrType").ToList();
+    List<PayCodes> Groups = new MDB().Database.SqlQuery<PayCodes>(string.Format("select GroupNo as SYS_MINORId ,GroupName as DescAr,isnull(GroupName,'No Desc.') as DescEn from Ven_Groups  where (CompNo = '{0}')", company.comp_num)).ToList();
+    List<PayCodes> Country = new MDB().Database.SqlQuery<PayCodes>("select Country as SYS_MINORId ,[Desc] as DescAr,isnull(EngDesc,'No Desc.') as DescEn from Countries").ToList();
+    List<PayCodes> Areas = new MDB().Database.SqlQuery<PayCodes>(string.Format("select Area as Id ,[Desc] as DescAr,isnull(EngDesc,'No Desc.') as DescEn from Areas WHERE (Country = {0})", Vend.Country)).ToList();
+    List<PayCodes> SAreas = new MDB().Database.SqlQuery<PayCodes>(string.Format("select SArea as Id ,[Desc] as DescAr,isnull(EngDesc,'No Desc.') as DescEn from SAreas WHERE (Country = {0}) AND (Area = {1})", Vend.Country, Vend.Area)).ToList();
+    List<PayCodes> Street = new MDB().Database.SqlQuery<PayCodes>(string.Format("select Street_No as Id ,St_Desc as DescAr,isnull(EngDesc,'No Desc.') as DescEn from StreetMF WHERE (Country = {0}) AND (Area = {1}) AND (SArea = {2})", Vend.Country, Vend.Area, Vend.SArea)).ToList();
+    Vendor Vendors = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.VendorNo == Vend.TransporterNo).FirstOrDefault();
+    string Transportername = "";
+    if(Vendors != null)
+    {
+        if (language == "en")
+        {
+            Transportername = Vendors.Eng_Name;
+        }
+        else
+        {
+            Transportername = Vendors.Name;
+        }
+    }
+
+    List<Ven_Contact> VenContact = new MDB().Ven_Contact.Where(x => x.CompNo == company.comp_num && x.VendorNo == Vend.VendorNo).ToList();
+    List<Ven_bankInfo> VenbankInfo = new MDB().Ven_bankInfo.Where(x => x.CompNo == company.comp_num && x.VendorNo == Vend.VendorNo).ToList();
+    DataTable DtAttachment = new DataTable();
+    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+    {
+        DtAttachment = new DataTable();
+        cn.Open();
+        using (SqlCommand cmd = new SqlCommand())
+        {
+            cmd.Connection = cn;
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+            cmd.CommandText = "Ord_GetVendArchiveInfo";
+            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+            cmd.Parameters.Add(new SqlParameter("@AccNo", SqlDbType.BigInt)).Value = VendorNo;
+            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+            {
+                DA.Fill(DtAttachment);
+            }
+        }
+    }
+}
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="max-height: 68vh !important;">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item active">
+                    <a class="nav-link active" data-toggle="tab" href="#VendorExistAcount_Inq_MainInfo" role="tab">
+                        @Html.Recource(450)
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#VendorExistAcount_Inq_VendorAddress" role="tab">
+                        @Html.Recource(3204)
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content" style="height:390px;padding:10px">
+                <div class="tab-pane active" id="VendorExistAcount_Inq_MainInfo" role="tabpanel">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_VendorNo">@Html.Recource(3087)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <input required="true" type="number" id="VendorExistAcount_Inq_VendorNo" value="@Vend.VendorNo" disabled />
+                            </div>
+                            <div class="col-md-1">
+                                <label class="unselectable" for="VendorExistAcount_Edit_SurName">@Html.Recource(1165)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" id="VendorExistAcount_Inq_SurTitle" value="@Vend.Title" disabled />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_VendorName">@Html.Recource(2114)</label>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" id="VendorExistAcount_Inq_VendorName" value="@Vend.Name" style="width:100%" onblur="changeExistAcountVendorName()" disabled />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_VendorEngName">@Html.Recource(2115)</label>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" id="VendorExistAcount_Inq_VendorEngName" value="@Vend.Eng_Name" style="width:100%" disabled />
+                            </div>
+                            <div class="col-md-2"></div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_SubjectToTax">
+                                    @if (Vend.Taxable == true)
+                                    {
+                                        <input name="VendorExistAcount_Inq_VendorTax" type="checkbox" id="VendorExistAcount_Inq_SubjectToTax" checked />
+                                    }
+                                    else
+                                    {
+                                        <input name="VendorExistAcount_Inq_VendorTax" type="checkbox" id="VendorExistAcount_Inq_SubjectToTax" />
+                                    }
+                                    @Html.Recource(1000)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable">@Html.Recource(5203)</label>
+                            </div>
+                            @if (Vend.IsHalt == true)
+                            {
+                                <div class="col-md-2">
+                                    <label class="unselectable" for="VendorExistAcount_Inq_Active">
+                                        <input id="VendorExistAcount_Inq_Active" type="radio" name="VendorExistAcount_Inq_VendorStatus" checked>
+                                        @Html.Recource(1153)
+                                    </label>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="unselectable" for="VendorExistAcount_Inq_Halt">
+                                        <input name="VendorExistAcount_Inq_VendorStatus" type="radio" id="VendorExistAcount_Inq_Halt" />
+                                        @Html.Recource(48)
+                                    </label>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="col-md-2">
+                                    <label class="unselectable" for="VendorExistAcount_Inq_Active">
+                                        <input id="VendorExistAcount_Inq_Active" type="radio" name="VendorExistAcount_Inq_VendorStatus">
+                                        @Html.Recource(1153)
+                                    </label>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="unselectable" for="VendorExistAcount_Inq_Halt">
+                                        <input name="VendorExistAcount_Inq_VendorStatus" type="radio" id="VendorExistAcount_Inq_Halt" checked />
+                                        @Html.Recource(48)
+                                    </label>
+                                </div>
+                            }
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-block" onclick="InqDocuments()" style="width:100px !important;">
+                                    @Html.Translate("الوثائق", "Documents")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_PaymentType">@Html.Recource(1874)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <input style="width:85%" type="number" id="VendorExistAcount_Inq_PaymentType" value="@Vend.Pmethod" hidden />
+                                <input type="text" id="VendorExistAcount_Inq_txtPaymentType" value="@PaymentM.Where(x => x.Id == Vend.Pmethod).Select(o => Html.Translate(o.DescAr,o.DescEn)).FirstOrDefault()" disabled />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_CurrCode">@Html.Recource(1671)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <input style="width:85%" type="number" id="VendorExistAcount_Inq_CurrCode" hidden value="@Vend.Curr" />
+                                <input type="text" id="VendorExistAcount_Inq_txtCurrCode" value="@Currency.Where(x => x.Id == Vend.Curr).Select(o => Html.Translate(o.DescAr,o.DescEn)).FirstOrDefault()" disabled />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_Evaluated">
+                                    @if (Vend.Evaluated == true)
+                                    {
+                                        <input name="VendorExistAcount_Inq_VendorEvaluated" type="checkbox" id="VendorExistAcount_Inq_Evaluated" checked />
+                                    }
+                                    else
+                                    {
+                                        <input name="VendorExistAcount_Inq_VendorEvaluated" type="checkbox" id="VendorExistAcount_Inq_Evaluated" />
+                                    }
+                                    @Html.Recource(5205)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_Group">@Html.Recource(1734)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <input style="width:85%" type="number" id="VendorExistAcount_Inq_Group" hidden value="@Vend.GroupNo" />
+                                <input type="text" id="VendorExistAcount_Inq_txtGroup" value="@Groups.Where(x => x.SYS_MINORId == Vend.GroupNo).Select(o => Html.Translate(o.DescAr,o.DescEn)).FirstOrDefault()" disabled />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_DueDays">@Html.Recource(7737)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" id="VendorExistAcount_Inq_DueDays" value="@Vend.DelayDays" style="width:100%" disabled />
+                            </div>
+                            <div class="col-md-1">
+                                <label class="unselectable" for="VendorExistAcount_Inq_Discount">@Html.Recource(2124)</label>
+                            </div>
+                            <div class="col-md-1">
+                                <input type="number" id="VendorExistAcount_Inq_Discount" value="@Vend.Disc" style="width:100%" disabled />
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_Notes">@Html.Recource(70) </label>
+                            </div>
+                            <div class="col-md-10" style="margin-bottom: 5px;">
+                                <textarea style="width: 103%;" id="VendorExistAcount_Inq_Notes" disabled>@Vend.Notes</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="VendorExistAcount_Inq_VendorAddress" role="tabpanel">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_Address">@Html.Recource(1042) </label>
+                            </div>
+                            <div class="col-md-10" style="margin-bottom: 5px;">
+                                <textarea style="width: 100%;" id="VendorExistAcount_Inq_Address" disabled>@Vend.Address</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_Country">@Html.Recource(1143)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input style="width:85%" type="number" id="VendorExistAcount_Inq_Country" hidden value="@Vend.Country" />
+                                <input type="text" id="VendorExistAcount_Inq_txtCountry" value="@Country.Where(x => x.SYS_MINORId == Vend.Country).Select(o => Html.Translate(o.DescAr,o.DescEn)).FirstOrDefault()" disabled />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_Area">@Html.Recource(1144)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input style="width:85%" type="number" id="VendorExistAcount_Inq_Area" hidden value="@Vend.Area" />
+                                <input type="text" id="VendorExistAcount_Inq_txtArea" value="@Areas.Where(x => x.Id == Vend.Area).Select(o => Html.Translate(o.DescAr,o.DescEn)).FirstOrDefault()" disabled />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_SubArea">@Html.Recource(1145)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input style="width:85%" type="number" id="VendorExistAcount_Inq_SubArea" hidden value="@Vend.SArea" />
+                                <input type="text" style="width: 100%;" id="VendorExistAcount_Inq_txtSArea" value="@SAreas.Where(x => x.Id == Vend.SArea).Select(o => Html.Translate(o.DescAr,o.DescEn)).FirstOrDefault()" disabled />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_Street">@Html.Recource(2133)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input style="width:85%" type="number" id="VendorExistAcount_Inq_Street" value="@Vend.Street_No" hidden />
+                                <input type="text" id="VendorExistAcount_Inq_txtStreet" value="@Street.Where(x => x.Id == Vend.Street_No).Select(o => Html.Translate(o.DescAr,o.DescEn)).FirstOrDefault()" disabled />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_Location">@Html.Translate("الموقع", "Location")</label>
+                            </div>
+                            <div class="col-md-6">
+                                <input style="width: 100%;" type="text" id="VendorExistAcount_Inq_Location" value="@Vend.Location" disabled />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_ContactPerson">@Html.Recource(1166)</label>
+                            </div>
+                            <div class="col-md-4">
+                                <input style="width: 100%;" type="text" id="VendorExistAcount_Inq_ContactPerson" value="@Vend.Resp_Person" disabled />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_Beneficiary">@Html.Recource(3821)</label>
+                            </div>
+                            <div class="col-md-4">
+                                <input style="width: 100%;" type="text" id="VendorExistAcount_Inq_Beneficiary" value="@Vend.Penf" disabled />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_Tel1">@Html.Recource(1029)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input style="width: 100%;" type="number" id="VendorExistAcount_Inq_Tel1" value="@Vend.Tel1" disabled />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_Tel2">@Html.Recource(1031)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input style="width: 100%;" type="number" id="VendorExistAcount_Inq_Tel2" value="@Vend.Tel2" disabled />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_Mobile">@Html.Recource(1123)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input style="width: 100%;" type="number" id="VendorExistAcount_Inq_Mobile" value="@Vend.Mobile_No" disabled />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_Fax">@Html.Recource(165)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input style="width: 100%;" type="text" id="VendorExistAcount_Inq_Fax" value="@Vend.Fax" disabled />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_Telex">@Html.Recource(166)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input style="width: 100%;" type="text" id="VendorExistAcount_Inq_Telex" value="@Vend.Telex" disabled />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_PostalCode">@Html.Recource(2139)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input style="width: 100%;" type="text" id="VendorExistAcount_Inq_PostalCode" value="@Vend.Postal_Code" disabled />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_POBox">@Html.Recource(2138)</label>
+                            </div>
+                            <div class="col-md-4">
+                                <input style="width: 100%;" type="text" id="VendorExistAcount_Inq_POBox" value="@Vend.POBox" disabled />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_Email">@Html.Recource(1124)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input style="width: 219%;" type="email" id="VendorExistAcount_Inq_Email" value="@Vend.EMail" disabled />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_VendorInfo">@Html.Recource(5207) </label>
+                            </div>
+                            <div class="col-md-10" style="margin-bottom: 5px;">
+                                <textarea style="width: 100%;" id="VendorExistAcount_Inq_VendorInfo" disabled>@Vend.GenCondition</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Inq_TransporterVendor">@Html.Recource(8983) </label>
+                            </div>
+                            <div class="col-md-2">
+                                <input style="width:85%" type="text" id="VendorExistAcount_Inq_TransporterVendor" value="@Vend.TransporterNo" disabled />
+                            </div>
+                            <div class="col-md-8">
+                                <input type="text" id="VendorExistAcount_Inq_txtTransporterVendor" value="@Transportername" disabled />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-block" onclick="InqContactPersons()">
+                                    @Html.Recource(5197)
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-block" onclick="InqBankInfo()">
+                                    @Html.Recource(5200)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+        </div>
+    </div>
+</div>
+
+@*--------------------------------Model  Inq ContactPersons -------------------------------------------*@
+<div class="modal fade" id="Model_VendorExistAcount_Inq_ContactPersons">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="VendorExistAcount_Inq_ContactPersonsDiv">
+                <div class="form-group">
+                    <div class="col-md-12" style="width:535px !important ;overflow-y:auto">
+                        <table class="table table-hover" id="VendorExistAcount_Inq_ContactPersonsTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 90px !important; text-align:center; ">@Html.Recource(2429)</th>
+                                    <th style="width: 295% !important; text-align: center; ">@Html.Recource(5206)</th>
+                                    <th style="text-align:center;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="VendorExistAcount_Inq_ContactPersonsTbody" style="border-top: 1px solid #ddd;">
+                                @foreach (Ven_Contact v in VenContact)
+                                {
+                                    <tr id="InqContactPersons">
+                                        <td>
+                                            <input id="VendorExistAcount_InqContactPersons_SupervisorNo" type="text" style="width: 90px !important;" value="@v.ContactNo" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="VendorExistAcount_InqContactPersons_SupervisorName" type="text" style="width: 95%  !important;" value="@v.ContactName" disabled />
+                                        </td>
+                                        <td>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_VendorExistAcount_Inq_ContactPersons').draggable({
+        handle: ".modal-header",
+    });
+    function InqContactPersons() {
+        $('#Model_VendorExistAcount_Inq_ContactPersons').modal('show')
+    }
+</script>
+@*--------------------------------END Model InqContactPersons -------------------------------------------*@
+
+@*--------------------------------Model InqBankInfo -------------------------------------------*@
+<div class="modal fade wide" id="Model_VendorExistAcount_InqBankInfo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="VendorExistAcount_InqBankInfoDiv">
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="VendorExistAcount_InqBankInfoTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:60px;text-align:center;">@Html.Recource(1222)</th>
+                                    <th style="width:225px;text-align:center;">@Html.Recource(1015)</th>
+                                    <th style="width:190px;text-align:center;">@Html.Recource(1023)</th>
+                                    <th style="width:285px;text-align:center;">IBAN</th>
+                                    <th style="text-align:center;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="VendorExistAcount_InqBankInfoTbody" style="border-top: 1px solid #ddd;">
+                                @foreach (Ven_bankInfo v in VenbankInfo)
+                                {
+                                    <tr id="InqBankInfo">
+                                        <td>
+                                            <input id="VendorExistAcount_InqBankInfo_Number" value="@v.ID" type="text" style="width: 60px !important;" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="VendorExistAcount_InqBankInfo_BankName" value="@v.BankName" type="text" style="width:225px !important;" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="VendorExistAcount_InqBankInfo_BankAccount" value="@v.AccNo" type="text" style="width:190px !important;" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="VendorExistAcount_InqBankInfo_BankIban" value="@v.Iban" type="text" style="width:285px !important;" disabled />
+                                        </td>
+                                        <td>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_VendorExistAcount_InqBankInfo').draggable({
+        handle: ".modal-header",
+    });
+    function InqBankInfo() {
+        $('#Model_VendorExistAcount_InqBankInfo').modal('show')
+    }
+</script>
+@*--------------------------------END Model InqBankInfo -------------------------------------------*@
+
+
+@*-----------------------------Model InqDocuments-------------------------------------*@
+<div class="modal fade" id="Model_VendorExistAcount_InqDocumentsArchive">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أرشفة الوثائق", "Archive Documents")</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group" style=" display: block; height: 125px;">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="InqVendorExistAcountDocumentArchiveTable">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center !important">@Html.Recource(66)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5629)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5630)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5631)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5632)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5633)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="VendorExistAcount_InqDocumentArchiveTbody" style="border-top: 1px solid #ddd;">
+                                @foreach (DataRow row in DtAttachment.Rows)
+                                {
+                                    DateTime date = Convert.ToDateTime(row["DataUpload"].ToString());
+                                    <tr>
+                                        <td>
+                                            <input type="text" style="width: 115px !important; text-align: center !important" id="VendorExistAcount_InqDocumentArchive_Description" value="@row["Description"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <a onclick="DownloadFile('@row["FileName"].ToString()','@Convert.ToBase64String((byte[])row["ArchiveData"])')"><span class="glyphicon glyphicon-download"></span></a>
+                                        </td>
+                                        <td>
+                                            <input id="VendorExistAcount_InqAttachmentFiles_FileName" type="text" style="text-align: center !important" value="@row["FileName"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="VendorExistAcount_InqDocumentArchive_UploadDate" type="text" style="width: 95px; text-align: center !important" value="@date.ToShortDateString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="VendorExistAcount_InqDocumentArchive_FileSize" type="text" style="width: 70px; text-align: center !important" value="@row["FileSize"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="VendorExistAcount_InqDocumentArchive_FileType" type="text" style="width: 55px; text-align: center !important" value="@row["ContentType"].ToString()" disabled />
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                }
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="InqCloseDocumentArchive()" class="btn btn-primary">@Resources.Resource.Close</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var DocumentsArchiveValue = 0;
+    $('#Model_VendorExistAcount_InqDocumentsArchive').draggable({
+        handle: ".modal-header",
+    });
+    function InqDocuments(val) {
+        DocumentsArchiveValue = val;
+        $('#Model_VendorExistAcount_InqDocumentsArchive').modal('show')
+    }
+
+    function DownloadFile(FileName, base64) {
+        var binaryString = window.atob(base64);
+        var binaryLen = binaryString.length;
+        var bytes = new Uint8Array(binaryLen);
+        for (var i = 0; i < binaryLen; i++) {
+            var ascii = binaryString.charCodeAt(i);
+            bytes[i] = ascii;
+        }
+        saveByteArray(FileName, bytes)
+    }
+    function saveByteArray(reportName, byte) {
+        var blob = new Blob([byte], { type: "application/pdf" });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        var fileName = reportName;
+        link.download = fileName;
+        link.click();
+    };
+    function InqCloseDocumentArchive() {
+        $('#Model_VendorExistAcount_InqDocumentsArchive').modal('hide')
+    }
+</script>
+@*--------------------------------END Model InqDocuments -----------------------------*@
+

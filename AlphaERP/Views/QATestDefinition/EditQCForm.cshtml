@@ -1,0 +1,219 @@
+﻿@using AlphaERP.Models
+@model  IEnumerable<ProdCost_FormTest>
+@{
+    Company company = (Company)Session["company"];
+
+    List<ProdCost_Parameter> Groupparameters = new MDB().ProdCost_Parameters.Where(x => x.CompNo == company.comp_num && x.ParmID == 9).ToList();
+    //List<ProdCost_Parameter> l = ViewBag.l;
+    List<Alpha_BusinessUnitDef> M_C = new MDB().Alpha_BusinessUnitDef.Where(x => x.CompNo == company.comp_num).ToList();
+    ProdCost_FormTest f = ViewBag.f;
+    string files = ViewBag.files;
+
+}
+<style>
+    #NormalcolQCe {
+        border-right: 1px solid #ccc;
+        width: 20%;
+        height: 3rem;
+        font-size: 14px;
+        bottom: 33px;
+        background: #efefef;
+        position: inherit;
+        z-index: 2;
+        top: 0;
+        color: black;
+        height: 2rem;
+        padding-left: 8px !important;
+    }
+
+
+
+    #AlertcolQCe {
+        position: absolute;
+        width: 21.6%;
+        font-size: 13.6px;
+        background: #efefef;
+        z-index: 2;
+        top: 0;
+        color: black;
+        height: 3.7rem;
+        padding-left: 8px !important;
+    }
+
+    #eMainTestTable thead #Subheader-list-QCdef th {
+        background-color: #e6e6fa;
+    }
+
+        #eMainTestTable thead #Subheader-list-QCdef th:nth-child(4),
+        #eMainTestTable #eMainTestTableBD tr td:nth-child(4) {
+            border-right: 1px solid #ccc;
+        }
+
+
+
+    .alerttxt {
+        padding-left: 8px !important;
+    }
+</style>
+<div class="form-group">
+    <div class="col-md-4">
+        <label class="unselectable" for="PordCost_FormTest_save_FormDesc">@Html.Translate("النموذج", "Form") </label>
+    </div>
+    <div class="col-md-8" style="margin-bottom: 5px;">
+        <input required="false" type="text" id="PordCost_FormTest_save_FormDesc" placeholder="@Html.Translate("النموذج", "Form")" value="@f.FormDesc" />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-4">
+        <label class="unselectable" for="PordCost_FormTest_save_Notes">@Html.Recource(70) </label>
+    </div>
+    <div class="col-md-8" style="margin-bottom: 5px;">
+        <input required="false" type="text" id="PordCost_FormTest_save_Notes" placeholder="@Html.Recource(70)" value="@f.FormDesc" />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-4">
+        <label class="unselectable" for="ProcDesc">@Html.Translate("وحدة أعمال", "Business Unit")</label>
+
+    </div>
+    <div class="col-md-8" style="margin-bottom: 5px;">
+        <select style="width: 62%" id="AlertBUSelect" name="AlertBU">
+            <option selected>@Html.Translate("أختار واحد من القائمة", "Chose one from the list")</option>
+
+            @foreach (var v in M_C)
+            {
+                if (v.BusUnitID == f.AlertBU)
+                {
+                    <option selected value="@v.BusUnitID" name="BusUnitID">
+                        @Html.Translate(v.BusUnitDescAr, v.BusUnitDescEng)
+                    </option>
+                }
+                else
+                {
+                    <option value="@v.BusUnitID" name="BusUnitID">
+                        @Html.Translate(v.BusUnitDescAr, v.BusUnitDescEng)
+                    </option>
+                }
+
+
+
+            }
+        </select>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12">
+        <label class="unselectable">@Html.Translate("الفحوصات", "Tests") : </label>
+        <button class="btn btn-primary " onclick="$('#SelectTestTable tr').removeClass('selected');$('#Test_edit_Test').modal('show')">
+            <i class="fa fa-plus"></i> @Resources.Resource.Add
+        </button>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12">
+        <table class="table table-hover" id="eMainTestTable">
+            <thead>
+                <tr>
+                    <th colspan="4" scope="colgroup"></th>
+                    <th colspan="2" scope="colgroup" id="NormalcolQCe">@Html.Translate("طبيعي", "Normal")</th>
+                    <th colspan="2" scope="colgroup" id="AlertcolQCe">@Html.Translate("تنبيه", "Alert")</th>
+                    <th colspan="2" scope="colgroup"></th>
+                </tr>
+                <tr id="Subheader-list-QCdef">
+                    <th scope="col" style="width:10%">@Html.Recource(9259)</th>
+                    <th scope="col" style="width:20%">@Html.Recource(9260)</th>
+                    <th scope="col" style="width:20%">@Html.Translate("مجموعة فحص الجودة", "Group QA Test")</th>
+                    <th scope="col" style="width:20%">@Html.Translate("نوع المدى", "Rang Type")</th>
+                    <th scope="col">@Html.Recource(1892)</th>
+                    <th scope="col" style="width: 12%;">@Html.Recource(2058)</th>
+                    <th scope="col" class="alerttxt" style="width: 10%;">@Html.Translate("من الرقم", "From No")</th>
+                    <th scope="col" style="width: 12%;">@Html.Translate("إلى الرقم", "To No")</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="eMainTestTableBD">
+                @foreach (var item in Model)
+                {
+                    ProdCost_Parameter tmp = new MDB().ProdCost_Parameters.Where(x => x.CompNo == company.comp_num && x.ParmCode == item.TestNo && x.ParmID == 5).FirstOrDefault();
+                    var getvalue = Groupparameters.Where(x => x.ParmCode == tmp.Groups).FirstOrDefault();
+
+                    <tr>
+                        <td>@tmp.ParmCode</td>
+                        <td>@Html.Translate(tmp.LocalDesc, tmp.EngDesc)</td>
+                        <td>@Html.Translate(getvalue.LocalDesc, getvalue.EngDesc)</td>
+                        <td>
+                            <select onchange="eSelectOption(this)" id="eGroupQAselect" style="width:89px !important">
+
+
+                                <option value="3" @(item.RangType == 3 ? "selected" : "")>
+                                    @Html.Translate("بين", "Between")
+                                </option>
+                                <option value="1" @(item.RangType == 1 ? "selected" : "")>
+                                    @Html.Translate("اكبر من ", "Greater Than")
+                                </option>
+                                <option value="2" @(item.RangType == 2 ? "selected" : "")>
+                                    @Html.Translate("اقل من", "Less Than")
+                                </option>
+                                <option value="4" @(item.RangType == 4 ? "selected" : "")>
+                                    @Html.Translate("نص", "Text")
+                                </option>
+
+                            </select>
+                        </td>
+                        <td>
+                            <input onblur="eformatToNo(this)" name="FromNo" type="@(item.RangType == 1 || item.RangType == 2 || item.RangType == 3 ? "number" : "text")" style="width:89px !important" value="@item.FromNo" />
+                        </td>
+                        <td>
+                            <input onblur="eformat(this)" name="ToNo" type="@(item.RangType == 1 || item.RangType == 2 || item.RangType == 3 ? "number" : "text")" style="width:89px !important" value="@item.ToNo" @(item.RangType == 1 || item.RangType == 2 || item.RangType == 4 ? "disabled" : "") />
+                        </td>
+                        <td>
+                            <input onblur="eformatAlertToNo(this)" name="AlertFromNo" type="@(item.RangType == 1 || item.RangType == 2 || item.RangType == 3 ? "number" : "text")" style="width:89px !important" value="@item.AlertFromNo" />
+
+                        </td>
+                        <td>
+                            <input onblur="eformat(this)" name="AlertToNo" type="@(item.RangType == 1 || item.RangType == 2 || item.RangType == 3 ? "number" : "text")" style="width:89px !important" value="@item.AlertToNo" @(item.RangType == 1 || item.RangType == 2 || item.RangType == 4 ? "disabled" : "") />
+
+                        </td>
+                        <td>
+                            <button class="btn-de" onclick="RemoveRow(this)"><i class="fa fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12">
+        <label class="unselectable">
+            @Html.Recource(4797) :
+        </label>
+        <button class="btn btn-primary" onclick="$('#Attachments').click()">
+            <i class="fa fa-plus"></i> @Resources.Resource.Add
+        </button>
+        <input onchange="SelectedFiles()" style="display:none" multiple type="file" name="Attachments" id="Attachments" class="form-control" />
+        <label class="unselectable" id="SelectedAttachments"></label>
+        <p class="ticket-attachments-message text-muted m-b-0">
+            @Resources.Resource.AttTypes : .pdf, .jpg, .gif, .jpeg, .png, .zip,
+            .gz, .txt, .p7s;.xlsx;.xls;.doc;.docx
+            <br />
+            @Resources.Resource.AttSize
+        </p>
+
+    </div>
+</div>
+<script>
+    $('#PordCost_FormTest_Edit_PordCost_FormTest').draggable({
+        handle: '.modal-header'
+    });
+    $('#AlertBUSelect').select2()
+    $(document).ready(function () {
+        var files = '@files';
+        if (files) {
+            document.getElementById('SelectedAttachments').innerHTML = files;
+        } else {
+            document.getElementById('SelectedAttachments').innerHTML = '';
+        }
+    });
+
+</script>

@@ -1,0 +1,202 @@
+﻿@model AlphaERP.Models.prod_prodstage_info
+@using AlphaERP.Models;
+@{
+    Company company = (Company)Session["company"];
+    List<ProdCost_MachineInfo> MachineInfo = new MDB().ProdCost_MachineInfo.Where(x => x.CompNo == company.comp_num && x.stage_code == Model.stage_code).ToList();
+    List<ProdCost_Parameter> LGroub = new MDB().ProdCost_Parameters.Where(x => x.CompNo == company.comp_num && x.ParmID == 2).ToList();
+}
+
+    <div class="modal-body row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item active">
+                <a class="nav-link active" data-toggle="tab" href="#eBDefineStage" role="tab">
+                    @Html.Recource(4322)
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#eDefineMachinesStage" role="tab">
+                    @Html.Recource(4321)
+                </a>
+            </li>
+        </ul>
+        <div class="tab-content" style="height:252px;padding:10px">
+            <div class="tab-pane active" id="eBDefineStage" role="tabpanel">
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ProdStages_Edit_StageCode">@Html.Recource(2558)</label>
+                    </div>
+                    <div class="col-md-4">
+                        <label id="ProdStages_Edit_StageCode">@Model.stage_code</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ProdStages_Edit_StageName">@Html.Recource(4318)</label>
+                    </div>
+                    <div class="col-md-4">
+                        <input required="true" style="width:220%" type="text" id="ProdStages_Edit_StageName" value="@Model.stage_desc" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ProdStages_Edit_Group">@Html.Recource(1734)</label>
+                    </div>
+                    <div class="col-md-4">
+                        <select style="width:100%" id="ProdStages_Edit_Group" required="true">
+                            @foreach (var G in LGroub)
+                            {
+                                if (Model.GroupID == G.ParmCode)
+                                {
+                                    <option value="@G.ParmCode" selected>@Html.Translate(G.LocalDesc, G.EngDesc)</option>
+                                }
+                                else
+                                {
+                                    <option value="@G.ParmCode">@Html.Translate(G.LocalDesc, G.EngDesc)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ProdStages_Edit_AnualWorkingDays">@Html.Recource(4302)</label>
+                    </div>
+                    <div class="col-md-4">
+                        <input required="true" type="number" id="ProdStages_Edit_AnualWorkingDays" value="@Model.no_yearly_daily_work" min="0" />
+                    </div>
+                    <div class="col-md-4">
+                        @if (Model.QualityControl == true)
+                        {
+                            <label class="unselectable">
+                                <input id="ProdStages_Edit_QualityStage" type="checkbox" checked />
+                                @Html.Recource(9587)
+                            </label>
+                        }
+                        else
+                        {
+                            <label class="unselectable">
+                                <input id="ProdStages_Edit_QualityStage" type="checkbox" />
+                                @Html.Recource(9587)
+                            </label>
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ProdStages_Edit_DailyWorkingHours">@Html.Recource(4303)</label>
+                    </div>
+                    <div class="col-md-2">
+                        @if(Model.Hr == null)
+                        {
+                            Model.Hr = 0;
+                        }
+                        <input required="true" type="number" id="ProdStages_Edit_DailyWorkingHours" style="width: 100% !important;" value="@Model.Hr" min="0" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="ProdStages_Edit_SetupTime">@Html.Recource(4326)</label>
+                    </div>
+                    <div class="col-md-4">
+                        @if (Model.SetupTime == null)
+                        {
+                            Model.SetupTime = 0;
+                        }
+                        <input required="true" type="number" id="ProdStages_Edit_SetupTime" style="width: 100% !important;" value="@Model.SetupTime.Value.ToString("0.0")" min="0" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ProdStages_Edit_SetupTimeCost">@Html.Recource(4327)</label>
+                    </div>
+                    <div class="col-md-2">
+                        @if (Model.SetupTimePrc == null)
+                        {
+                            Model.SetupTimePrc = 0;
+                        }
+                        <input required="true" type="number" id="ProdStages_Edit_SetupTimeCost" style="width: 100% !important;" value="@Model.SetupTimePrc.Value.ToString("0.0")" min="0" max="100" onblur="CheckValueSetupTime(2)" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="ProdStages_Edit_StopTime">@Html.Recource(2583) %</label>
+                    </div>
+                    <div class="col-md-4">
+                        @if (Model.StopTimePrc == null)
+                        {
+                            Model.StopTimePrc = 0;
+                        }
+                        <input required="true" type="number" id="ProdStages_Edit_StopTime" style="width: 100% !important;" value="@Model.StopTimePrc.Value.ToString("0.0")" min="0" max="100" onblur="CheckValueStopTime(2)" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ProdStages_Edit_Notes">@Html.Recource(70)</label>
+                    </div>
+                    <div class="col-md-8">
+                        <textarea required="true" style="width: 100%;height:75px !important;" id="ProdStages_Edit_Notes">@Model.notes</textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane" id="eDefineMachinesStage" role="tabpanel">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <button onclick="eAddMachinesStage()" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="width:535px !important ;overflow-y:auto">
+                        <table class="table table-hover" id="eDefineMachinesStageTable">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:center;">@Html.Recource(4324)</th>
+                                    <th style="text-align:center;">@Html.Recource(4320)</th>
+                                    <th style="text-align:center;">@Html.Recource(4325)</th>
+                                    <th style="text-align:center;">@Html.Recource(4323)</th>
+                                    <th style="text-align:center;"></th>
+                                    <th style="text-align:center;">@Html.Recource(309)</th>
+                                    <th style="text-align:center;"></th>
+                                    <th style="text-align:center;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="eDefineMachinesStageTbody" style="border-top: 1px solid #ddd;">
+                                @foreach (var item in MachineInfo)
+                                {
+                                <tr id="eMachinesStage_@item.machine_code">
+                                    <td>
+                                        <input id="eDefineMachinesStage_MachineNo" min="0" onblur="eCheckValueMachineNo(@item.machine_code)" type="number" style="width: 65px !important;" value="@item.machine_code" />
+                                    </td>
+                                    <td>
+                                        <input id="eDefineMachinesStage_MachineName" type="text" style="width: 120px  !important;" value="@item.machine_Desc" />
+                                    </td>
+                                    <td>
+                                        <input id="eDefineMachinesStage_DepreciationValue" onblur="eCheckValueDepreciationValue(@item.machine_code)" type="number" style="width: 68px !important;" value="@item.consumption_value" />
+                                    </td>
+                                    <td>
+                                        <input id="eDefineMachinesStage_FixAssestNo" type="number" style="width: 60px !important;" value="@item.FACode" disabled />
+                                    </td>
+                                    <td>
+                                        <button onclick="eAddFixAssestNo(@item.machine_code)" type="button" class="btn btn-primary">
+                                            @Html.Recource(4323)
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <input id="eDefineMachinesStage_Serial" type="number" style="width: 35px !important;" value="@item.FASr" disabled />
+                                    </td>
+                                    <td>
+                                        <button onclick="eAddSerial(@item.machine_code)" type="button" class="btn btn-primary">
+                                            @Html.Recource(309)
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button class="btn-de" onclick="eRemoveRow(this)" type="button"><i class="fa fa-trash-alt"></i></button>
+                                    </td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+

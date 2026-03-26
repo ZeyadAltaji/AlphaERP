@@ -1,0 +1,220 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@{
+    Company company = (Company)Session["company"];
+}
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="Prod_LinkPrchOrdItemsListDiv">
+        @Html.Partial("~/Views/LinkPrchOrdItems/LinkPrchOrdItemPurchReqList.cshtml")
+    </div>
+</div>
+
+<div class="modal fade wide" id="Model_LinkPrchOrdItemPurchReq">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="LinkPrchOrdItemDiv">
+                <div class="modal-body row">
+                    <div class="form-group">
+                        <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+                            <table class="table table-hover" id="LinkPrchOrdItemTable">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: center;">@Html.Recource(44)</th>
+                                        <th style="text-align: center;">@Html.Recource(74)</th>
+                                        <th style="text-align: center;">@Html.Recource(67)</th>
+                                        <th style="text-align:center;">@Html.Recource(9702)</th>
+                                        <th style="text-align:center;">@Html.Recource(9703)</th>
+                                        <th style="text-align: center;"></th>
+                                        <th style="text-align: center;">@Html.Recource(67)</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="LinkPrchOrdItemTBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="ExcuteSaveLinkPrchOrdItem_PurchaseRequest()" class="btn btn-primary">@Resources.Resource.Save</button>
+                    <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_LinkPrchOrdItem_InvItems">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4756)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectLinkPrchOrdItem">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(44)</th>
+                                    <th style="width: 55%;">@Html.Recource(74)</th>
+                                    <th style="width: 10%;">@Html.Recource(96)</th>
+                                    <th style="text-align: center;">@Html.Recource(312)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    string query2 = string.Format("exec SP_Search {0},'WHERE (CompNo = {0}) AND (IsHalt Between Case When 2 = 2 Then 0 else 2 end And Case When 2 = 2 Then 1 else 2 end)',7", company.comp_num);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query2, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                string ItemDesc = rdr["ItemDesc"].ToString();
+                                                string ItemDescEn = rdr["ItemDesc_Ara"].ToString();
+                                                string Desc = Html.Translate(ItemDesc, ItemDescEn).ToString();
+                                                <tr onclick="SelectLinkPrchOrdItem_InvItems(this)" ItemNo="@rdr["ItemNo"]" ItemDesc="@Html.Trim(Desc,50)">
+                                                    <td style="width: 20%;">@rdr["ItemNo"]</td>
+                                                    <td style="width: 55%;" title="@Desc">@Html.Trim(Desc, 50)</td>
+                                                    <td style="width: 10%;text-align: center;">@rdr["RefrenceNo"]</td>
+                                                    <td style="text-align: center !important;">@rdr["BarCode"]</td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingLinkPrchOrdItem_InvItems()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    var thisValue = 0;
+    var _ReqYear = 0;
+    var _ReqNo = 0;
+    $('#Model_LinkPrchOrdItemPurchReq').draggable({
+        handle: ".modal-header",
+    });
+    $('#SelectLinkPrchOrdItem').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+
+    function Edit_LinkPrchOrdItems(ReqYear, ReqNo) {
+        _ReqYear = ReqYear;
+        _ReqNo = ReqNo;
+        wait();
+        burn({ ReqYear: ReqYear, ReqNo: ReqNo }, '../../../LinkPrchOrdItems/PurchaseRequestItems', '', ReloadtPurchaseRequestItems, true);
+    }
+    function ReloadtPurchaseRequestItems(r) {
+        done();
+        LinkPrchOrdItemTBody.innerHTML = "";
+        $('#LinkPrchOrdItemTBody').html(r);
+        $('#Model_LinkPrchOrdItemPurchReq').modal('show')
+    }
+    function EditRmCode(val) {
+        thisValue = val;
+        $('#SelectLinkPrchOrdItem tr').removeClass("selected");
+        $('#Model_LinkPrchOrdItem_InvItems').modal('show')
+    }
+    function SelectLinkPrchOrdItem_InvItems(e) {
+        var trs = $('#SelectLinkPrchOrdItem tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function SelectingLinkPrchOrdItem_InvItems() {
+        var trs = $('#SelectLinkPrchOrdItem tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة", "Select one Item")');
+            return;
+        }
+
+        var tr = $("#LinkPrchOrdItemTBody #LinkPrchOrdDetItem_" + thisValue + "");
+        tr.find('#LinkPrchOrdItems_SubItemNo_' + thisValue)[0].value = trs[0].getAttribute('ItemNo');
+        $('#LinkPrchOrdItems_SubItemNo_' + thisValue).html(trs[0].getAttribute('ItemNo'));
+        tr.find('#LinkPrchOrdItems_SubItemDesc_' + thisValue)[0].value = trs[0].getAttribute('ItemDesc');
+        $('#LinkPrchOrdItems_SubItemDesc_' + thisValue).html(trs[0].getAttribute('ItemDesc'));
+
+
+        burn({ ItemNo: trs[0].getAttribute('ItemNo') }, '../../../BomDefinition/LoadUnitItem', '', LoadUnitByItem, true);
+
+        $('#Model_LinkPrchOrdItem_InvItems').modal('hide')
+    }
+    function LoadUnitByItem(r) {
+        var tr = "";
+        tr = $("#LinkPrchOrdItemTBody #LinkPrchOrdDetItem_" + thisValue + "");
+
+
+        tr.find('.LinkPrchOrdItems_Item_SubUnit').empty().trigger("change");
+
+        for (var i = 0; i < r.unit.length; i++) {
+            var newOption = new Option(r.unit[i].UnitName, r.unit[i].VSUnitCode, false, false);
+            tr.find('.LinkPrchOrdItems_Item_SubUnit').append(newOption).trigger('change');
+        }
+    }
+    function ExcuteSaveLinkPrchOrdItem_PurchaseRequest() {
+        var table = $('#LinkPrchOrdItemTBody tr');
+        var trs = table;
+        var OrdReqDF = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputItemSerial')[0].value
+            OrdReqDF.push({
+                CompNo: '@company.comp_num',
+                ReqYear: _ReqYear,
+                ReqNo: _ReqNo,
+                ItemSr: $(trs[i]).closest('tr').find('#ItemSrl_' + InputSerial)[0].value,
+                ItemNo: $(trs[i]).closest('tr').find('#LinkPrchOrdItems_ItemNo_' + InputSerial)[0].innerHTML,
+                SubItemNo: $(trs[i]).closest('tr').find('#LinkPrchOrdItems_SubItemNo_' + InputSerial)[0].innerHTML,
+                SubTUnit: $(trs[i]).closest('tr').find('.LinkPrchOrdItems_Item_SubUnit option:Selected')[0].text,
+                SubUnitSerial: $(trs[i]).closest('tr').find('.LinkPrchOrdItems_Item_SubUnit')[0].value,
+            });
+        }
+
+        wait();
+        burn({ OrdReqDF: OrdReqDF }, '../../../LinkPrchOrdItems/EditItemsPurchaseRequest', '', ReloadEditItemsPurchaseRequest, true);
+    }
+    function ReloadEditItemsPurchaseRequest() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#Model_LinkPrchOrdItemPurchReq').modal('hide');
+    }
+</script>

@@ -1,0 +1,48 @@
+@model IEnumerable<Prod_RevisionSetup>
+@using AlphaERP.Models
+
+<table class="table table-hover" id="RevisionSetupTable">
+    <thead>
+        <tr>
+            <th style="width: 35%; text-align: center !important;">@Html.Translate("رقم المراجعة", "Revision Number")</th>
+            <th style="width: 90px !important; text-align: center !important;">@Html.Translate("الانتاج", "Production Flag")</th>
+            <th style="width: 90px !important; text-align: center !important;">@Html.Translate("المشتريات", "Purchasing Flag")</th>
+            <th style="text-align:end !important"></th>
+        </tr>
+    </thead>
+    <tbody id="RevisionSetupPropertyTBody">
+        @foreach (Prod_RevisionSetup item in Model)
+        {
+            <tr>
+                <td style="width: 20%;">
+                    <input id="RevisionNo" type="text" class="form-control" value="@item.RevisionNo" />
+                </td>
+                <td style="width: 10%;text-align:center">
+                    <input type="checkbox" id="flagProd" class="check-prod" checked="@item.ProductionFlag">
+                </td>
+                <td style="width: 10%;text-align:center">
+                    <input type="checkbox" id="flagPPurchase" class="check-purchase" checked="@item.PurchasingFlag">
+                </td>
+                <td style="text-align:end">
+                    <button class="btn-de" onclick="RemoveRow(this)" type="button"><i class="fa fa-trash-alt"></i></button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    $(document).ready(function () {
+        $('.check-prod').on('change', function () {
+            if ($(this).is(':checked')) {
+                $('.check-prod').not(this).prop('checked', false);
+            }
+        });
+
+        $('.check-purchase').on('change', function () {
+            if ($(this).is(':checked')) {
+                $('.check-purchase').not(this).prop('checked', false);
+            }
+        });
+    });
+</script>

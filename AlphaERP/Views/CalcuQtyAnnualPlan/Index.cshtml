@@ -1,0 +1,42 @@
+﻿<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="MRP_CalcuQtyAnnualPlan_Date">@Html.Recource(58)</label>
+                <input value="@DateTime.Now.ToString("yyyy-MM-dd")" type="date" id="MRP_CalcuQtyAnnualPlan_Date" />
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable"></label>
+                <button class="btn btn-success btn-block" onclick="CalculationQtyAnnualPlan()">
+                    @Html.Recource(8817)
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="CalculationQtyAnnualPlanDiv">
+
+    </div>
+</div>
+
+<script>
+    function CalculationQtyAnnualPlan() {
+        wait();
+        burn({ Date: MRP_CalcuQtyAnnualPlan_Date.value }, '../../../CalcuQtyAnnualPlan/CalcQtyAnnualPlan', '', LoadCalcuAnnualPlan, true);
+    }
+    function LoadCalcuAnnualPlan(r) {
+        CalculationQtyAnnualPlanDiv.innerHTML = "";
+        $('#CalculationQtyAnnualPlanDiv').html(r);
+        done();
+    }
+    function LoadCreatePurchaseOrdersAnnualPlan() {
+        CalculationQtyAnnualPlanDiv.innerHTML = "";
+        MsgBox('@Resources.Resource.PurchaseOrderNoIssued', 'green');
+        done();
+    }
+</script>

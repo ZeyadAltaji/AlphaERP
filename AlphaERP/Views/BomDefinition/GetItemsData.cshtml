@@ -1,0 +1,57 @@
+﻿@using System.Data.SqlClient;
+@using AlphaERP.Models
+
+@{ 
+    Company company = (Company)Session["company"];
+
+}
+<div class="form-group">
+    <div class="col-md-12">
+        <table class="table table-hover" id="SelectfinItemsTable">
+            <thead>
+                <tr>
+                    <th style="width: 20%;">@Html.Recource(44)</th>
+                    <th style="width: 55%;">@Html.Recource(74)</th>
+                    <th style="width: 10%;">@Html.Recource(96)</th>
+                    <th style="text-align: center;">@Html.Recource(312)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int Comp_num1 = company.comp_num;
+                    string query1 = string.Format("exec SP_Search {0},'WHERE (CompNo = {0}) AND (IsHalt Between Case When 2 = 2 Then 0 else 2 end And Case When 2 = 2 Then 1 else 2 end)',7", Comp_num1);
+                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                    {
+                        SqlCommand cmd = new SqlCommand(query1, cn);
+                        cn.Open();
+                        SqlDataReader rdr = cmd.ExecuteReader();
+                        if (rdr.HasRows)
+                        {
+                            while (rdr.Read())
+                            {
+                                string ItemDesc = rdr["ItemDesc"].ToString();
+                                string ItemDescEn = rdr["ItemDesc_Ara"].ToString();
+                                string Desc = Html.Translate(ItemDesc, ItemDescEn).ToString();
+                                <tr onclick="Select_finItems(this)" ondblclick="doubleClickSelect_finItems(this)" ItemNo="@rdr["ItemNo"]" ItemDesc="@Html.Trim(Desc,50)">
+                                    <td style="width: 20%;">@rdr["ItemNo"]</td>
+                                    <td style="width: 55%;" title="@Desc">@Html.Trim(Desc, 50)</td>
+                                    <td style="width: 10%;text-align: center;">@rdr["RefrenceNo"]</td>
+                                    <td style="text-align: center !important;">@rdr["BarCode"]</td>
+                                </tr>
+                            }
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    var table = $('#SelectfinItemsTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+</script>

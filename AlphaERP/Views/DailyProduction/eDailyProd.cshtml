@@ -1,0 +1,218 @@
+﻿@model AlphaERP.Models.ProdCost_DailyProductionH
+@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+    User me = (User)Session["me"];
+    List<ProdCost_DailyProductionD> DailyProdD = new MDB().ProdCost_DailyProductionD.Where(x => x.CompNo == Model.CompNo
+    && x.ReportYear == Model.ReportYear && x.ReportNo == Model.ReportNo).ToList();
+    ProdCost_DailyProductionD DailyProd = DailyProdD.FirstOrDefault();
+    List<ProdCost_ProductionShift> Shift = new MDB().ProdCost_ProductionShift.Where(x => x.CompNo == company.comp_num).ToList();
+    prod_prodstage_info satge = new MDB().prod_prodstage_info.Where(x => x.comp_no == company.comp_num && x.stage_code == Model.Prod_stage).FirstOrDefault();
+    prod_prepare_info prepare_info = new MDB().prod_prepare_info.Where(x => x.comp_no == company.comp_num && x.prepare_year == DailyProd.ProdPrepYear
+    && x.prepare_code == DailyProd.ProdPrepNo).FirstOrDefault();
+    InvStoresMF store = new MDB().InvStoresMFs.Where(x => x.CompNo == company.comp_num && x.StoreNo == prepare_info.StoreNo).FirstOrDefault();
+    string storeDesc = Html.Translate(store.StoreName, store.StoreNameEng).ToString();
+    var total = DailyProdD.Sum(x => x.Prod_Qty);
+    var qty_prepare = prepare_info.qty_prepare.Value;
+}
+
+
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_DailyProd_Edit_Year">@Html.Recource(59) </label>
+    </div>
+    <div class="col-md-2">
+        <input required="true" type="number" id="Prod_DailyProd_Edit_Year" value="@Model.ReportYear" disabled />
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_DailyProd_Edit_DailyProdNo">@Html.Recource(1222) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <input style="width:100%;" type="text" id="Prod_DailyProd_Edit_DailyProdNo" value="@Model.ReportNo" disabled />
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_DailyProd_Edit_Date">@Html.Recource(58)</label>
+    </div>
+    <div class="col-md-2">
+        <input value="@Model.Prod_Date.Value.ToString("yyyy-MM-dd")" type="date" id="Prod_DailyProd_Edit_Date" required="true" />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_DailyProd_Edit_WorkOrderYear">@Html.Recource(371) </label>
+    </div>
+    <div class="col-md-2">
+        <input  type="number" id="Prod_DailyProd_Edit_WorkOrderYear" value="@DailyProd.ProdPrepYear" disabled />
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_DailyProd_Edit_ProdOrderNo">@Html.Recource(227) </label>
+    </div>
+    <div class="col-md-2">
+        <input style="width:100%;" type="text" id="Prod_DailyProd_Edit_ProdOrderNo" value="@DailyProd.ProdPrepNo" disabled />
+    </div>
+    <div class="col-md-2">
+        <button type="button" class="btn btn-success btn-block" onclick="SearchDailyProd_ProdOrderNo(2)">
+            @Html.Recource(975)
+        </button>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_DailyProd_Edit_ShiftNo">@Html.Recource(4330) </label>
+    </div>
+    <div class="col-md-2">
+        <select style="width: 120% !important;" id="Prod_DailyProd_Edit_ShiftNo" required="true">
+            @foreach (var item in Shift)
+            {
+                if (Model.ShiftNo == item.ShiftNo)
+                {
+                    <option value="@item.ShiftNo" selected>@Html.Translate(item.ShiftDesc, item.EngDesc) </option>
+                }
+                else
+                {
+                    <option value="@item.ShiftNo">@Html.Translate(item.ShiftDesc, item.EngDesc) </option>
+                }
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_DailyProd_Edit_Stage">@Html.Recource(4482) </label>
+    </div>
+    <div class="col-md-2">
+        <input style="width:100%;" type="text" id="Prod_DailyProd_Edit_StageCode" value="@Model.Prod_stage" disabled />
+    </div>
+    <div class="col-md-2">
+        <input style="width:245%;" type="text" id="Prod_DailyProd_Edit_StageDesc" value="@satge.stage_desc" disabled />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_DailyProd_Edit_StoreNo">@Html.Recource(1) </label>
+    </div>
+    <div class="col-md-2">
+        <input style="width: 120% !important;" required="true" type="text" id="Prod_DailyProd_Edit_StoreNo" value="@prepare_info.StoreNo" disabled />
+    </div>
+    <div class="col-md-8">
+        <input style="width: 288px !important;" required="true" type="text" id="Prod_DailyProd_Edit_StoreDesc" value="@storeDesc" disabled />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12">
+        <button onclick="AddDailyProd_InvItemsMF(2)" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+    </div>
+    <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+        <table class="table table-hover" id="eDailyProductionTable">
+            <thead>
+                <tr>
+                    <th style="text-align: center !important;width: 14%;">@Html.Recource(44)</th>
+                    <th style="text-align: center !important;width: 45%;">@Html.Recource(74)</th>
+                    <th style="text-align: center !important;">@Html.Recource(49)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="eDailyProductionTBody">
+                @foreach (var item in DailyProdD.OrderBy(o => o.ItemSer))
+                {
+                    string ItemDesc = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == item.FinCode).FirstOrDefault().ItemDesc;
+                    string ItemDescEn = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == item.FinCode).FirstOrDefault().ItemDesc_Ara;
+                    string Desc = Html.Translate(ItemDesc, ItemDescEn).ToString();
+                    if (item.PostFlag == false || item.PostFlag == null)
+                    {
+                         <tr id="ItemDailyProd_@item.ItemSer" unitserial="@item.UnitSerial" tunit="@item.TUnit">
+                    <td style="text-align:center;" id="ItemDailyProd_ItemNo">@item.FinCode</td>
+                    <td style="text-align:center;">@Desc</td>
+                    <td style="text-align:center;">
+                        <input style="width: 75px; text-align:center;" id="ItemDailyProd_Qty" value="@item.Prod_Qty.Value.ToString("0.000")" type="number" onblur="GetCheckValueSumTotal(this)" />
+                    </td>
+                    <td>
+                        <button class="btn-de" id="removeButton" onclick="RemoveRowDailyProdItem(this)" type="button"><i class="fa fa-trash-alt"></i></button>
+                    </td>
+                    <td id="PostFlag" hidden>@item.PostFlag</td>
+                    <td id="ProdRecYear" hidden>@item.ProdRecYear</td>
+                    <td id="ProdRecNo" hidden>@item.ProdRecNo</td>
+                    <td id="TransferFlag" hidden>@item.TransferFlag</td>
+                    <td id="ConsVouYear" hidden>@item.ConsVouYear</td>
+                    <td id="ConsVouNo" hidden>@item.ConsVouNo</td>
+                    <td id="TransNoIn" hidden>@item.TransNoIn</td>
+                    <td id="TransNoOut" hidden>@item.TransNoOut</td>
+                    <td id="TransDateIn" hidden>@item.TransDateIn</td>
+                    <td id="TransDateOut" hidden>@item.TransDateOut</td>
+                    <td id="TransUserIn" hidden>@item.TransUserIn</td>
+                    <td id="TransUserOut" hidden>@item.TransUserOut</td>
+                    <td id="Batch" hidden>@item.Batch</td>
+                    <td id="ManDate" hidden>@item.ManDate</td>
+                    <td id="ExpDate" hidden>@item.ExpDate</td>
+                    <td id="ConsQty" hidden>@item.ConsQty</td>
+                </tr>
+                    }
+                    else
+                    {
+                        <tr id="ItemDailyProd_@item.ItemSer" unitserial="@item.UnitSerial" tunit="@item.TUnit" style="color:red;">
+                            <td style="text-align:center;" id="ItemDailyProd_ItemNo">@item.FinCode</td>
+                            <td style="text-align:center;">@Desc</td>
+                            <td id="ItemDailyProd_Qty" style="text-align:center;">@item.Prod_Qty.Value.ToString("0.000")</td>
+                            <td></td>
+                            <td id="PostFlag" hidden>@item.PostFlag</td>
+                            <td id="ProdRecYear" hidden>@item.ProdRecYear</td>
+                            <td id="ProdRecNo" hidden>@item.ProdRecNo</td>
+                            <td id="TransferFlag" hidden>@item.TransferFlag</td>
+                            <td id="ConsVouYear" hidden>@item.ConsVouYear</td>
+                            <td id="ConsVouNo" hidden>@item.ConsVouNo</td>
+                            <td id="TransNoIn" hidden>@item.TransNoIn</td>
+                            <td id="TransNoOut" hidden>@item.TransNoOut</td>
+                            <td id="TransDateIn" hidden>
+                                @if (@item.TransDateIn != null)
+                                {
+                                    @item.TransDateIn.Value.ToString("yyyy-MM-dd")
+                                }
+                                else
+                                {
+                                    @item.TransDateIn
+                                }
+                            </td>
+                            <td id="TransDateOut" hidden>
+                                @if (@item.TransDateOut != null)
+                                {
+                                    @item.TransDateOut.Value.ToString("yyyy-MM-dd")
+                                }
+                                else
+                                {
+                                    @item.TransDateOut
+                                }
+                            </td>
+                            <td id="TransUserIn" hidden>@item.TransUserIn</td>
+                            <td id="TransUserOut" hidden>@item.TransUserOut</td>
+                            <td id="Batch" hidden>@item.Batch</td>
+                            <td id="ManDate" hidden>
+                                @if (@item.ManDate != null)
+                                {
+                                    @item.ManDate.Value.ToString("yyyy-MM-dd")
+                                }
+                                else
+                                {
+                                    @item.ManDate
+                                }
+                            </td>
+                            <td id="ExpDate" hidden>
+                                @if (@item.ExpDate != null)
+                                {
+                                    @item.ExpDate.Value.ToString("yyyy-MM-dd")
+                                }
+                                else
+                                {
+                                    @item.ExpDate
+                                }
+                            </td>
+                            <td id="ConsQty" hidden>@item.ConsQty</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    eOrderQty.innerHTML = '@qty_prepare';
+    eProdQty.innerHTML = '@total.Value.ToString("0.000")';
+</script>

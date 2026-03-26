@@ -1,0 +1,239 @@
+﻿@model IEnumerable<AlphaERP.Models.Company>
+@{
+    Layout = null;
+}
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>@Resources.Resource.title</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="icon" href="~/Images/logo.png" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="~/Content/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="~/Content/font-awesome.min.css">
+    @if (Session["language"].ToString() == "en")
+    {
+        <link rel="stylesheet" type="text/css" href="~/Content/login.css">
+    }
+    else
+    {
+        <link rel="stylesheet" type="text/css" href="~/Content/loginAr.css">
+    }
+    <style>
+
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+            background-color: lightgrey;
+        }
+        ::-webkit-scrollbar-thumb {
+            border-radius: 2px;
+            -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+            background-color: #00a79d
+        }
+        select {
+            outline: none;
+        }
+
+        .carousel-item {
+            height: 250px;
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        input:: -webkit-outer-spin-button, input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        #Logindiv {
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            position: relative;
+        }
+
+        .companiesList {
+            height: 150px
+        }
+    </style>
+
+
+
+    @if (Session["language"].ToString() != "en")
+    {
+        <style>
+            body {
+                direction: rtl
+            }
+
+            .input100 {
+                padding: 7px;
+                overflow-y: auto;
+            }
+
+            .symbol-input100 {
+                padding-right: 35px;
+            }
+        </style>
+    }
+
+
+    <script>
+        function makeid(length) {
+            var result = '';
+            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            var charactersLength = characters.length;
+            for (var i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
+        }
+    </script>
+    <script src="~/Scripts/jquery-3.3.1.min.js"></script>
+</head>
+<body>
+    <div class="limiter">
+        <div class="container-login100">
+            <div class="wrap-login100">
+                <div class="login100-pic js-tilt" data-tilt>
+                    <p style="margin-bottom: 10px">
+                        <img style="width: 100px;height:100px" id="CompLogo" src="">
+                    </p>
+                    Alpha ERP
+                    <small>SPA 2.2.00</small>
+                    <p>
+                        Thank you for using our ERP system
+                    </p>
+                    <p>
+                        Full ERP web system
+                    </p>
+                </div>
+
+                <form class="login100-form validate-form" action="/Company" enctype="multipart/form-data" method="post">
+
+                    <input name="__RequestVerificationToken" type="hidden" value="HUzmo3gVNS3i-a8kz8vg2ed95gdv_KkNSJjxTXhbg4m6hjbudEltw5ThgFBjjVEHR2RBVumqXjRaYQKysXEQby6yf8DMZRxgI2FGJvYHCz81" />
+                    <div>
+                        <span class="login100-form-title">
+                            @Resources.Resource.Companies
+                        </span>
+                        <label style="width: 100% ; text-align: center">
+                            @Html.Translate("يرجى اختيار شركة من قائمة الشركات", "Select one of the following companies")
+                        </label>
+                        <div class="wrap-input100 validate-input" data-validate="Valid email is required: ex@abc.xyz">
+                            <select autofocus class="input100 companiesList" size="4" name="comp_num" id="comp_num" onchange="CompChange()" style="padding: 7px;overflow-y: auto;">
+                                @{
+                                    int i = 1;
+                                    string src = "data:image/png;base64,";
+                                }
+                                @foreach (var company in Model)
+                                {
+                                    if (i == 1)
+                                    {
+                                        if(company.comp_logo != null)
+                                        {
+                                            src += Convert.ToBase64String(company.comp_logo);
+                                        }
+                                        else
+                                        {
+                                            src = "";
+                                        }
+                                    }
+                                    else
+                                    {
+                                        src = "";
+                                    }
+                                    <option src="@src" value="@company.comp_num">@Html.Translate(company.comp_name, company.comp_ename)</option>
+                                    i++;
+                                }
+                            </select>
+                        </div>
+                        <input name="pro" style="display:none" value="1" />
+                        <div class="container-login100-form-btn">
+                            <input type="submit" class="login100-form-btn" value="@Resources.Resource.Continue" />
+                            <p style="width:100%;text-align:center;color:red">
+                                @Session["CompError"]
+                            </p>
+                        </div>
+
+                        <div class="text-center p-t-12">
+                            <a class="txt2" onclick="ChangeLangauge('ar-JO')">@Resources.Resource.ChangeLan </a>
+                        </div>
+
+                        <div class="text-center p-t-12">
+                                <a class="txt2" target="_blank" href="http://gcesoft.com.jo" style="background-color: #666666;
+    -webkit-background-clip: text;
+    -moz-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: rgba(255, 255, 255, 0.23) -1px 2px 0px;
+    pointer-events: none;user-select:none">@Resources.Resource.Copyright</a>
+
+                        
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+
+<script>
+    if (comp_num.length > 0) { comp_num.selectedIndex = 0; CompChange() }
+    function ChangeLangauge(l) {
+        $.ajax({
+            type: "POST",
+            url: '../../../Account/ChangeLanguage',
+            data: { lanuage: l },
+            success: function (response) {
+                location.reload();
+            },
+        });
+    }
+    function CompChange() {
+        var comID = comp_num.options[comp_num.selectedIndex].value;
+        var src = comp_num.options[comp_num.selectedIndex].getAttribute('src');
+        if (src == "") {
+            $.ajax({
+                type: "POST",
+                url: '../../../Company/getSRC',
+                data: { comp_num: comID },
+                success: function (r) {
+                    src = r.SRC;
+                    comp_num.options[comp_num.selectedIndex].setAttribute('src', r.SRC);
+                    document.getElementById('CompLogo').setAttribute('src', r.SRC)
+                },
+            });
+        }
+        document.getElementById('CompLogo').setAttribute('src', src)
+    }
+
+
+</script>
+
+
+
+

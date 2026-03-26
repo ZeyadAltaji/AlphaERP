@@ -1,0 +1,21 @@
+﻿@using AlphaERP.Models
+@{
+    Layout = null;
+    ReportInformation report = (ReportInformation)ViewBag.report;
+    string reportName = report.ReportName;
+    string reportId = report.Id;
+    }
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head >
+    <title>@reportName</title>
+</head>
+<body>
+        <iframe src="~/Reports/CrystalViewer/ReportViewer.aspx?id=@reportId" style="width:100%; height:1000px; border:none;"></iframe>
+</body>
+</html>
+
+
+

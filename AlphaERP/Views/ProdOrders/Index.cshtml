@@ -1,0 +1,1253 @@
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+
+    var Alow = new MDB().ProdCost_CompPara
+        .Where(x => x.CompNo == company.comp_num)
+        .Select(x => x.UsePackItem)
+        .FirstOrDefault();
+
+    List<prod_prodstage_info> stage_info = new MDB().prod_prodstage_info
+        .Where(x => x.comp_no == company.comp_num).ToList();
+}
+
+<div class="box box-primary">
+    <div class="box-body box-profile">
+        <div>
+            <div class="col-md-7" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="SerachProdOrder_Year">@Resources.Resource.Year </label>
+                <input onblur="Checkyear()" type="text" id="Prod_ProdOrder_Year" value="@DateTime.Now.Year"
+                       oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+                       maxlength="4" />
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-success btn-block" onclick="SerachProdOrder()">
+                    @Html.Recource(975)
+                </button>
+                <button class="btn btn-primary btn-block" onclick="AddProd_ProdOrderDefinition()">
+                    <i class="fa fa-plus"></i> @Html.Recource(32)
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="Prod_ProdOrderListDiv">
+        @Html.Partial("~/Views/ProdOrders/ProdOrdersList.cshtml")
+    </div>
+</div>
+
+<!-- مودال الإضافة -->
+<div class="modal fade wide" id="Prod_ProdOrder_Model" style="left: 60px !important;">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(475) >> @Html.Recource(2551)</label>
+            </div>
+            <div class="modal-body row" style="height: 430px !important;max-height: 61vh !important;">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item active">
+                        <a class="nav-link active" data-toggle="tab" href="#ProdOrderInfo" role="tab">
+                            @Html.Recource(4400)
+                        </a>
+                        <input type="hidden" id="alowInput_Add" value="@Alow" data-Allow="@Alow" />
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#ProdOrderRMDetails" role="tab">
+                            @Html.Recource(4401)
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#ProdOrderProdcutionStages" role="tab">
+                            @Html.Recource(2551)
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#ProdOrderByProducts" role="tab">
+                            @Html.Recource(2550)
+                        </a>
+                    </li>
+                </ul>
+                <div class="tab-content" style="height:300px;padding:10px">
+                    <div class="tab-pane active" id="ProdOrderInfo" role="tabpanel">
+                        @Html.Partial("~/Views/ProdOrders/tabs/ProdOrderInfo.cshtml")
+                    </div>
+                    <div class="tab-pane" id="ProdOrderRMDetails" role="tabpanel">
+                        @Html.Partial("~/Views/ProdOrders/tabs/RMDetails.cshtml")
+                    </div>
+                    <div class="tab-pane" id="ProdOrderProdcutionStages" role="tabpanel">
+                        @Html.Partial("~/Views/ProdOrders/tabs/OrderProdStages.cshtml")
+                    </div>
+                    <div class="tab-pane" id="ProdOrderByProducts" role="tabpanel">
+                        @Html.Partial("~/Views/ProdOrders/tabs/ByProducts.cshtml")
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteSaveProd_ProdOrders()" class="btn btn-primary">@Html.Recource(475)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade wide" id="Prod_eProdOrder_Model" style="left: 60px !important;">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(475) >> @Html.Recource(2551)</label>
+            </div>
+            <div class="modal-body row" style="height: 430px !important;max-height: 61vh !important;">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item active">
+                        <a class="nav-link active" data-toggle="tab" href="#eProdOrderInfo" role="tab">
+                            @Html.Recource(4400)
+                        </a>
+                        <input type="hidden" id="alowInput_Edit" value="@Alow" data-Allow="@Alow" />
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#eProdOrderRMDetails" role="tab">
+                            @Html.Recource(4401)
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#eProdOrderProdcutionStages" role="tab">
+                            @Html.Recource(2551)
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#eProdOrderByProducts" role="tab">
+                            @Html.Recource(2550)
+                        </a>
+                    </li>
+                </ul>
+                <div class="tab-content" style="height:300px;padding:10px">
+                    <div class="tab-pane active" id="eProdOrderInfo" role="tabpanel">
+                    </div>
+                    <div class="tab-pane" id="eProdOrderRMDetails" role="tabpanel">
+                        @Html.Partial("~/Views/ProdOrders/tabs/eRMDetails.cshtml")
+                    </div>
+                    <div class="tab-pane" id="eProdOrderProdcutionStages" role="tabpanel">
+                        @Html.Partial("~/Views/ProdOrders/tabs/eOrderProdStages.cshtml")
+                    </div>
+                    <div class="tab-pane" id="eProdOrderByProducts" role="tabpanel">
+                        @Html.Partial("~/Views/ProdOrders/tabs/eByProducts.cshtml")
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="EditProd_ProdOrders" onclick="ExcuteEditProd_ProdOrders()" class="btn btn-primary">@Html.Recource(475)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_ProdOrderFormulaItem">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4286)</label>
+            </div>
+            <div class="modal-body row" id="ProdOrderFormulaItemDiv">
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingProdOrd_FormulaItems()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_ProdOrder_Store">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4286)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectProdOrd_StoreTable">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:center;">@Html.Recource(41)</th>
+                                    <th style="text-align:center;">@Html.Recource(31)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    string query = string.Format("exec SP_Search {0},'WHERE (InvStoresMF.CompNo = {0})',1", company.comp_num);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                string StoreName = Html.Translate(rdr["StoreName"].ToString(), rdr["StoreNameEng"].ToString()).ToString();
+                                                <tr onclick="SelectStore(this)" ondblclick="dbclickSelectStore(this)" StoreNo="@rdr["StoreNo"]" StoreName="@StoreName">
+                                                    <td style="text-align:center;">@rdr["StoreNo"]</td>
+                                                    <td style="text-align:center;" title="@StoreName">@StoreName</td>
+                                                    <td></td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingProdOrd_Store()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_ProdOrder_stageInfo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(5527)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectProdOrder_stageInfoTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(2558)</th>
+                                    <th style="width: 55%;">@Html.Recource(2559)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    foreach (var item in stage_info)
+                                    {
+                                        <tr onclick="SelectOrder_stageInfo(this)" stage_code="@item.stage_code" stage_desc="@item.stage_desc">
+                                            <td style="width: 20%;" id="Order_Stagecode">@item.stage_code</td>
+                                            <td style="width: 55%;" id="Order_StageDesc">@item.stage_desc</td>
+                                            <td></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingProdOrder_stageInfo()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_ProdOrder_InvItems">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4756)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectProdOrderInvItems">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(44)</th>
+                                    <th style="width: 55%;">@Html.Recource(74)</th>
+                                    <th style="width: 10%;">@Html.Recource(96)</th>
+                                    <th style="text-align: center;">@Html.Recource(312)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    string query2 = string.Format("exec SP_Search {0},'WHERE (CompNo = {0}) AND (IsHalt Between Case When 2 = 2 Then 0 else 2 end And Case When 2 = 2 Then 1 else 2 end)',7", company.comp_num);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query2, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                string ItemDesc = rdr["ItemDesc"].ToString();
+                                                string ItemDescEn = rdr["ItemDesc_Ara"].ToString();
+                                                string Desc = Html.Translate(ItemDesc, ItemDescEn).ToString();
+                                                <tr onclick="SelectProdOrder_InvItems(this)" ItemNo="@rdr["ItemNo"]" ItemDesc="@Html.Trim(Desc,50)">
+                                                    <td style="width: 20%;">@rdr["ItemNo"]</td>
+                                                    <td style="width: 55%;" title="@Desc">@Html.Trim(Desc, 50)</td>
+                                                    <td style="width: 10%;text-align: center;">@rdr["RefrenceNo"]</td>
+                                                    <td style="text-align: center !important;">@rdr["BarCode"]</td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingProdOrder_InvItems()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_ProdOrder_AlternativeItems">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4756)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectProdOrderAlternativeItems">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center;">@Html.Recource(44)</th>
+                                    <th style="text-align: center;">@Html.Recource(74)</th>
+                                    <th style="text-align: center;">@Html.Recource(67)</th>
+                                    <th style="text-align: center;">@Html.Recource(3773)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="SelectProdOrderAlternativeItemsTbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingProdOrder_AlternativeItems()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_ProdOrder_AllStore">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(94)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="width: 125px !important;">
+                            <label class="unselectable" for="ProdOrder_FirstUnit">
+                                <input id="ProdOrder_FirstUnit" type="radio" name="ProdOrder_StoreRadio" onchange="GetDataStoreItem()" />
+                                @Html.Recource(329)
+                            </label>
+                        </div>
+                        <div class="col-md-2" style="left: 20px;">
+                            <label class="unselectable" for="ProdOrder_SecondUnit">
+                                <input name="ProdOrder_StoreRadio" type="radio" id="ProdOrder_SecondUnit" onchange="GetDataStoreItem()" />
+                                @Html.Recource(331)
+                            </label>
+                        </div>
+                        <div class="col-md-2" style="width: 140px !important;">
+                            <label class="unselectable" for="ProdOrder_ThirdUnit">
+                                <input name="ProdOrder_StoreRadio" type="radio" id="ProdOrder_ThirdUnit" onchange="GetDataStoreItem()" />
+                                @Html.Recource(330)
+                            </label>
+                        </div>
+                        <div class="col-md-2" style="left: 20px;">
+                            <label class="unselectable" for="ProdOrder_FourthUnit">
+                                <input name="ProdOrder_StoreRadio" type="radio" id="ProdOrder_FourthUnit" onchange="GetDataStoreItem()" checked />
+                                @Html.Recource(332)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" id="ProdOrder_AllStorebody">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    var CountAdd = 0;
+    var CountEdit = 0;
+    var thisstatus = 0;
+    var thisValue = 0;
+    var thisitem = 0;
+
+    var StoreTableTable = $('#SelectProdOrd_StoreTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+    var AlternativeItemsTable = $('#SelectProdOrderAlternativeItems').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+    $('#SelectProdOrder_stageInfoTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+    $('#SelectProdOrderInvItems').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+
+    $('#Model_ProdOrder_AlternativeItems').draggable({ handle: ".modal-header" });
+    $('#Model_ProdOrder_InvItems').draggable({ handle: ".modal-header" });
+    $('#Model_ProdOrder_AllStore').draggable({ handle: ".modal-header" });
+    $('#Model_ProdOrder_stageInfo').draggable({ handle: ".modal-header" });
+    $('#Prod_ProdOrder_Model').draggable({ handle: ".modal-header" });
+    $('#Prod_eProdOrder_Model').draggable({ handle: ".modal-header" });
+    $('#Model_ProdOrder_Store').draggable({ handle: ".modal-header" });
+    $('#Model_ProdOrderFormulaItem').draggable({ handle: ".modal-header" });
+
+    function AddProd_ProdOrderDefinition() {
+        CountAdd = 0;
+        $('#RMDetailsTbody').empty();
+        $('#OrderProdStagesTbody').empty();
+        $('#OrderProdByProductsTbody').empty();
+        Prod_ProdOrder_Add_OrderYear.value = '@DateTime.Now.Year';
+        Prod_ProdOrder_Add_OrderNo.value = "";
+        Prod_ProdOrder_Add_OrderDate.value = '@DateTime.Now.ToString("yyyy-MM-dd")';
+        Prod_ProdOrder_Add_formulacode.value = "";
+        Prod_ProdOrder_Add_formulaDesc.value = "";
+        Prod_ProdOrder_Add_ItemNo.value = "";
+        Prod_ProdOrder_Add_ItemDesc.value = "";
+        Prod_ProdOrder_Add_Qty.value = "";
+        Prod_ProdOrder_Add_WasteQty.value = "0";
+        Prod_ProdOrder_Add_SQ.value = "0.000";
+        Prod_ProdOrder_Add_StoreNo.value = "";
+        Prod_ProdOrder_Add_StoreDesc.value = "";
+        Prod_ProdOrder_Add_SalesOrderYear.value = '@DateTime.Now.Year';
+        Prod_ProdOrder_Add_SalesOrderNo.value = "";
+        Prod_ProdOrder_Add_RefNo1.value = "";
+        Prod_ProdOrder_Add_RefNo2.value = "";
+        Prod_ProdOrder_Add_Notes.value = "";
+        Prod_ProdOrder_Add_Year.value = '@DateTime.Now.Year';
+        Prod_ProdOrder_Add_Month.value = '@DateTime.Now.Month';
+        RMTotalQty.innerHTML = "0.000";
+
+        $('.nav-tabs a[href="#ProdOrderInfo"]').tab('show');
+        $('#Prod_ProdOrder_Model').modal('show');
+    }
+
+    function SearchProdOrder_FormulaCode(status) {
+        thisstatus = status;
+        ProdOrderFormulaItemDiv.innerHTML = "";
+        $('#ProdOrderFormulaItemDiv').load('../../../ProdOrders/FormulaItem');
+        $('#Model_ProdOrderFormulaItem').modal('show');
+    }
+
+    function Select_FormulaItems(e) {
+        var table = $('#SelectProdOrdFormulaItemsTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+
+    function dbclickSelect_FormulaItems(e) {
+        var table = $('#SelectProdOrdFormulaItemsTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار معادلة واحدة على الاقل", "Select one Formula at least")');
+            return;
+        }
+        if (thisstatus == 1) {
+            Prod_ProdOrder_Add_formulacode.value = trs[0].getAttribute('formula_code');
+            Prod_ProdOrder_Add_formulaDesc.value = trs[0].getAttribute('formula_desc');
+            Prod_ProdOrder_Add_ItemNo.value = trs[0].getAttribute('item_no');
+            Prod_ProdOrder_Add_ItemDesc.value = trs[0].getAttribute('ItemDesc');
+        }
+        if (thisstatus == 2) {
+            Prod_ProdOrder_Edit_formulacode.value = trs[0].getAttribute('formula_code');
+            Prod_ProdOrder_Edit_formulaDesc.value = trs[0].getAttribute('formula_desc');
+            Prod_ProdOrder_Edit_ItemNo.value = trs[0].getAttribute('item_no');
+            Prod_ProdOrder_Edit_ItemDesc.value = trs[0].getAttribute('ItemDesc');
+            Prod_ProdOrder_Edit_Qty.focus();
+        }
+        $('#Model_ProdOrderFormulaItem').modal('hide');
+    }
+
+    function SelectingProdOrd_FormulaItems() {
+        var table = $('#SelectProdOrdFormulaItemsTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار معادلة واحدة على الاقل", "Select one Formula at least")');
+            return;
+        }
+        if (thisstatus == 1) {
+            Prod_ProdOrder_Add_formulacode.value = trs[0].getAttribute('formula_code');
+            Prod_ProdOrder_Add_formulaDesc.value = trs[0].getAttribute('formula_desc');
+            Prod_ProdOrder_Add_ItemNo.value = trs[0].getAttribute('item_no');
+            Prod_ProdOrder_Add_ItemDesc.value = trs[0].getAttribute('ItemDesc');
+        }
+        if (thisstatus == 2) {
+            Prod_ProdOrder_Edit_formulacode.value = trs[0].getAttribute('formula_code');
+            Prod_ProdOrder_Edit_formulaDesc.value = trs[0].getAttribute('formula_desc');
+            Prod_ProdOrder_Edit_ItemNo.value = trs[0].getAttribute('item_no');
+            Prod_ProdOrder_Edit_ItemDesc.value = trs[0].getAttribute('ItemDesc');
+            Prod_ProdOrder_Edit_Qty.focus();
+        }
+        $('#Model_ProdOrderFormulaItem').modal('hide');
+    }
+
+    function SearchProdOrder_StoreNo() {
+        $('#SelectProdOrd_StoreTable tr').removeClass("selected");
+        $('#Model_ProdOrder_Store').modal('show');
+    }
+
+    function SelectStore(e) {
+        var table = $('#SelectProdOrd_StoreTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+
+    function SelectingProdOrd_Store() {
+        var table = $('#SelectProdOrd_StoreTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مستودع واحدة على الاقل", "Select one Store at least")');
+            return;
+        }
+        Prod_ProdOrder_Add_StoreNo.value = trs[0].getAttribute('StoreNo');
+        Prod_ProdOrder_Add_StoreDesc.value = trs[0].getAttribute('StoreName');
+        $('#Model_ProdOrder_Store').modal('hide');
+    }
+
+    function dbclickSelectStore(e) {
+        var table = $('#SelectProdOrd_StoreTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مستودع واحدة على الاقل", "Select one Store at least")');
+            return;
+        }
+        Prod_ProdOrder_Add_StoreNo.value = trs[0].getAttribute('StoreNo');
+        Prod_ProdOrder_Add_StoreDesc.value = trs[0].getAttribute('StoreName');
+        $('#Model_ProdOrder_Store').modal('hide');
+    }
+
+    function GetDataRMDeatails(Qty, status) {
+        thisstatus = status;
+        if (status == 1) {
+            if (CheckValueGrid(1, Prod_ProdOrder_Add_formulacode.value)) {
+                alert('@Html.Translate("يجب ادخال المعادلة", "formula Code No must be entered")');
+                return false;
+            }
+            var Formula_code = Prod_ProdOrder_Add_formulacode.value;
+            var Item_no = Prod_ProdOrder_Add_ItemNo.value;
+            RMDetailsTbody.innerHTML = "";
+            OrderProdStagesTbody.innerHTML = "";
+            OrderProdByProductsTbody.innerHTML = "";
+            $('#RMDetailsTbody').load('../../../ProdOrders/RMItem?formulaCode=' + Formula_code + '&Itemno=' + Item_no + '&ReqQty=' + Qty);
+            $('#OrderProdStagesTbody').load('../../../ProdOrders/Stages?formulaCode=' + Formula_code + '&Itemno=' + Item_no + '&ReqQty=' + Qty);
+            $('#OrderProdByProductsTbody').load('../../../ProdOrders/Product?formulaCode=' + Formula_code + '&Itemno=' + Item_no + '&ReqQty=' + Qty);
+        }
+        else {
+            if (CheckValueGrid(1, Prod_ProdOrder_Edit_formulacode.value)) {
+                alert('@Html.Translate("يجب ادخال المعادلة", "formula Code No must be entered")');
+                return false;
+            }
+            var Formula_code = Prod_ProdOrder_Edit_formulacode.value;
+            var Item_no = Prod_ProdOrder_Edit_ItemNo.value;
+            var Qty = Prod_ProdOrder_Edit_Qty.value;
+            eRMDetailsTbody.innerHTML = "";
+            eOrderProdStagesTbody.innerHTML = "";
+            eOrderProdByProductsTbody.innerHTML = "";
+            $('#eOrderProdByProductsTbody').load('../../../ProdOrders/eProduct?CompNo=' + '@company.comp_num' + '&prepareyear=' + Prod_ProdOrder_Edit_OrderYear.value + '&preparecode=' + Prod_ProdOrder_Edit_OrderNo.value + '&formulaCode=' + Formula_code + '&Itemno=' + Item_no + '&ReqQty=' + Qty + '&sataus=' + 0);
+            $('#eOrderProdStagesTbody').load('../../../ProdOrders/eStages?CompNo=' + '@company.comp_num' + '&prepareyear=' + Prod_ProdOrder_Edit_OrderYear.value + '&preparecode=' + Prod_ProdOrder_Edit_OrderNo.value + '&formulaCode=' + Formula_code + '&Itemno=' + Item_no + '&ReqQty=' + Qty + '&sataus=' + 0);
+            $('#eRMDetailsTbody').load('../../../ProdOrders/eRMItem?CompNo=' + '@company.comp_num' + '&prepareyear=' + Prod_ProdOrder_Edit_OrderYear.value + '&preparecode=' + Prod_ProdOrder_Edit_OrderNo.value + '&formulaCode=' + Formula_code + '&Itemno=' + Item_no + '&ReqQty=' + Qty + '&sataus=' + 0);
+        }
+    }
+
+    function CheckValueGrid(NotEqualZero, Amt) {
+        if (NotEqualZero == 1) {
+            return (Amt == '' || Amt == null || Amt == 0);
+        } else {
+            return (Amt == '' || Amt == null);
+        }
+    }
+
+    function EditStageCode(val, stsus) {
+        thisValue = val;
+        thisstatus = stsus;
+        $('#SelectProdOrder_stageInfoTable tr').removeClass("selected");
+        $('#Model_ProdOrder_stageInfo').modal('show');
+    }
+
+    function SelectOrder_stageInfo(e) {
+        var trs = $('#SelectProdOrder_stageInfoTable tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+
+    function SelectingProdOrder_stageInfo() {
+        var trs = $('#SelectProdOrder_stageInfoTable tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مرحلة", "Select one stage")');
+            return;
+        }
+        var tr = "";
+        if (thisstatus == 1) {
+            tr = $("#OrderProdStagesTbody #ItemStage_" + thisValue + "");
+        }
+        if (thisstatus == 2) {
+            tr = $("#eOrderProdStagesTbody #ItemStage_" + thisValue + "");
+        }
+        tr.find('#Stages_StageCode')[0].innerHTML = trs[0].getAttribute('stage_code');
+        tr.find('#Stages_StageDesc')[0].innerHTML = trs[0].getAttribute('stage_desc');
+        $('#Model_ProdOrder_stageInfo').modal('hide');
+    }
+
+    function Add_OrderProdStages(stsus) {
+        thisstatus = stsus;
+
+        var currentCount;
+        if (stsus == 1) {
+            var tr = $("#OrderProdStagesTbody tr");
+            if (CountAdd == 0) { CountAdd = tr.length; }
+            CountAdd++;
+            currentCount = CountAdd;
+        }
+        if (stsus == 2) {
+            var tr = $("#eOrderProdStagesTbody tr");
+            if (CountEdit == 0) { CountEdit = tr.length; }
+            CountEdit++;
+            currentCount = CountEdit;
+        }
+
+        var newarray = [];
+        newarray.push('<td style="width: 50px;text-align:center;" id="Stages_StageCode"></td>');
+        newarray.push('<td style="width: 215px;text-align:center;" id="Stages_StageDesc"></td>');
+        newarray.push('<td style="width: 50px;"><button onclick="EditStageCode(' + currentCount + ',' + stsus + ')" type="button" class="btn btn-primary">@Html.Recource(5527)</button></td>');
+        newarray.push('<td style="width: 130px;text-align: center;"><input id="Stages_StartDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" type="date" /></td>');
+        newarray.push('<td style="width: 130px;text-align: center;"><input id="Stages_EndDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" type="date" /></td>');
+        newarray.push('<td><input style="width: 75px;text-align:center;" id="Stages_CalcTime" value="0" type="number"></td>');
+        newarray.push('<td><button class="btn-de" onclick="RemoveRowOrderProdStages(this)" type="button"><i class="fa fa-trash-alt"></i></button></td>');
+
+        if (stsus == 1) {
+            $("#OrderProdStagesTbody").append(GenRowMas(newarray, 'ItemStage_' + currentCount));
+        }
+        if (stsus == 2) {
+            $("#eOrderProdStagesTbody").append(GenRowMas(newarray, 'ItemStage_' + currentCount));
+        }
+    }
+
+    function GenRowMas(tds, Id) {
+        var row = '<tr Id=' + Id + '>';
+        row += tds;
+        row += '</tr>';
+        return row;
+    }
+
+    function RemoveRowOrderProdStages(e) {
+        if (confirm('@Resources.Resource.DeleteConfirm')) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+            return true;
+        }
+        return false;
+    }
+
+    function ReplacementTotal(status) {
+        if (status == 1) {
+            var Formula_code = Prod_ProdOrder_Add_formulacode.value;
+            var Item_No = Prod_ProdOrder_Add_ItemNo.value;
+            var Qty = Prod_ProdOrder_Add_Qty.value;
+            RMDetailsTbody.innerHTML = "";
+            $('#RMDetailsTbody').load('../../../ProdOrders/ReplaceRMItem?formulaCode=' + Formula_code + '&Itemno=' + Item_No + '&ReqQty=' + Qty + '&stau=' + 1);
+        }
+        if (status == 2) {
+            var Formula_code = Prod_ProdOrder_Edit_formulacode.value;
+            var Item_No = Prod_ProdOrder_Edit_ItemNo.value;
+            var Qty = Prod_ProdOrder_Edit_Qty.value;
+            eRMDetailsTbody.innerHTML = "";
+            $('#eRMDetailsTbody').load('../../../ProdOrders/ReplaceRMItem?formulaCode=' + Formula_code + '&Itemno=' + Item_No + '&ReqQty=' + Qty + '&stau=' + 2);
+        }
+    }
+
+    function ReplacementPartial(status) {
+        if (status == 1) {
+            var Formula_code = Prod_ProdOrder_Add_formulacode.value;
+            var Item_No = Prod_ProdOrder_Add_ItemNo.value;
+            var Qty = Prod_ProdOrder_Add_Qty.value;
+            RMDetailsTbody.innerHTML = "";
+            $('#RMDetailsTbody').load('../../../ProdOrders/ReplacementPartial?formulaCode=' + Formula_code + '&Itemno=' + Item_No + '&ReqQty=' + Qty);
+        }
+        if (status == 2) {
+            var OrderYear = Prod_ProdOrder_Edit_OrderYear.value;
+            var OrderNo = Prod_ProdOrder_Edit_OrderNo.value;
+            var Formula_code = Prod_ProdOrder_Edit_formulacode.value;
+            var Item_No = Prod_ProdOrder_Edit_ItemNo.value;
+            var Qty = Prod_ProdOrder_Edit_Qty.value;
+            eRMDetailsTbody.innerHTML = "";
+            $('#eRMDetailsTbody').load('../../../ProdOrders/eReplacementPartial?formulaCode=' + Formula_code + '&Itemno=' + Item_No + '&ReqQty=' + Qty + '&prepareyear=' + OrderYear + '&preparecode=' + OrderNo);
+        }
+    }
+
+    function EditRmCode(val, staus) {
+        thisValue = val;
+        thisstatus = staus;
+        $('#SelectProdOrderInvItems tr').removeClass("selected");
+        $('#Model_ProdOrder_InvItems').modal('show');
+    }
+
+    function SelectProdOrder_InvItems(e) {
+        var trs = $('#SelectProdOrderInvItems tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+
+    function SelectingProdOrder_InvItems() {
+        var trs = $('#SelectProdOrderInvItems tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة", "Select one Item")');
+            return;
+        }
+        var tr;
+        if (thisstatus == 1) {
+            tr = $("#RMDetailsTbody #RMDetItem_" + thisValue + "");
+            tr.find('#RM_ItemNo')[0].value = trs[0].getAttribute('ItemNo');
+            tr.find('#RM_ItemDesc')[0].value = trs[0].getAttribute('ItemDesc');
+        }
+        if (thisstatus == 2) {
+            tr = $("#eRMDetailsTbody #RMDetItem_" + thisValue + "");
+            tr.find('#RM_ItemNo')[0].value = trs[0].getAttribute('ItemNo');
+            tr.find('#RM_ItemDesc')[0].value = trs[0].getAttribute('ItemDesc');
+        }
+        $.ajax({
+            url: '@Url.Action("GetBatch", "ProdOrders")',
+            type: 'GET',
+            data: { ItemNo: trs[0].getAttribute('ItemNo') },
+            success: function (response) {
+                var batchSelect = tr.find('.BatchNo');
+                batchSelect.empty();
+                tr.find('.BatchNo').append(response);
+                batchSelect.trigger("change");
+            },
+            error: function (xhr, status, error) {
+                console.error("Error fetching batch numbers: " + error);
+            }
+        });
+        burn({ ItemNo: trs[0].getAttribute('ItemNo') }, '../../../BomDefinition/LoadUnitItem', '', LoadUnitByItem, true);
+        $('#Model_ProdOrder_InvItems').modal('hide');
+    }
+
+    function LoadUnitByItem(r) {
+        var tr = "";
+        if (thisstatus == 1) {
+            tr = $("#RMDetailsTbody #RMDetItem_" + thisValue + "");
+        }
+        if (thisstatus == 2) {
+            tr = $("#eRMDetailsTbody #RMDetItem_" + thisValue + "");
+        }
+        tr.find('.RM_Unit').empty().trigger("change");
+        for (var i = 0; i < r.unit.length; i++) {
+            var newOption = new Option(r.unit[i].UnitName, r.unit[i].VSUnitCode, false, false);
+            tr.find('.RM_Unit').append(newOption).trigger('change');
+        }
+        tr.find('#RM_TotalQty')[0].value = r.Qty;
+        tr.find('#RM_Shortage')[0].value = r.Qty - tr.find('#RM_RmQty')[0].value;
+    }
+
+    function AlternativeItems(val, staus) {
+        thisstatus = staus;
+        var tr = "";
+        if (thisstatus == 1) {
+            tr = $("#RMDetailsTbody #RMDetItem_" + val + "");
+        }
+        if (thisstatus == 2) {
+            tr = $("#eRMDetailsTbody #RMDetItem_" + val + "");
+        }
+        var item_No = tr.find('#RM_ItemNo')[0].value;
+        thisValue = val;
+        SelectProdOrderAlternativeItemsTbody.innerHTML = "";
+        $('#SelectProdOrderAlternativeItemsTbody').load('../../../ProdOrders/AlternativeItem?ItemNo=' + item_No);
+        $('#Model_ProdOrder_AlternativeItems').modal('show');
+    }
+
+    function RemoveRowOrderProdItem(e) {
+        var p = e.parentNode.parentNode;
+        p.parentNode.parentNode.deleteRow(p.rowIndex);
+    }
+
+    function SelectingProdOrder_AlternativeItems() {
+        var tr = "";
+        var trs = $("#SelectProdOrderAlternativeItemsTbody tr[class=selected]");
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة واحدة على الاقل", "Select one item at least")');
+            return;
+        }
+        if (thisstatus == 1) {
+            tr = $("#RMDetailsTbody #RMDetItem_" + thisValue + "");
+            if (tr.length != 0) {
+                var trlength = $("#RMDetailsTbody tr");
+                CountAdd = trlength.length;
+                CountAdd++;
+            }
+        }
+        if (thisstatus == 2) {
+            tr = $("#eRMDetailsTbody #RMDetItem_" + thisValue + "");
+            if (tr.length != 0) {
+                var trlength = $("#eRMDetailsTbody tr");
+                CountEdit = trlength.length;
+                CountEdit++;
+            }
+        }
+        var currentCount = (thisstatus == 1) ? CountAdd : CountEdit;
+        var id = tr.find('#removeButton')[0];
+        RemoveRowOrderProdItem(id);
+        var item = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            var itemno = trs.find('#Alternative_ItemNo')[i].innerHTML;
+            var ItemDesc = trs.find('#Alternative_ItemDesc')[i].innerHTML;
+            var qty = trs.find('#Alternative_Qty')[i].innerHTML;
+            item.push({
+                RmCode: itemno,
+                ItemDesc: ItemDesc,
+                UnitSerial: 4,
+                RmQty: 0,
+                TotalQty: qty,
+                Shortage: 0,
+                count: currentCount,
+                staus: thisstatus
+            });
+        }
+        burn({ RM_Items: item }, '../../../ProdOrders/AlternativeRMItem', '', LoadRMItem, true);
+    }
+
+    function LoadRMItem(r) {
+        if (thisstatus == 1) {
+            $('#RMDetailsTbody').append(r);
+        }
+        if (thisstatus == 2) {
+            $('#eRMDetailsTbody').append(r);
+        }
+        $('#Model_ProdOrder_AlternativeItems').modal('hide');
+    }
+
+    function CheckValue(ID) {
+        if (document.getElementById(ID).getAttribute('required') == 'true') {
+            if (document.getElementById(ID).value == '') {
+                document.getElementById(ID).focus();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    function ExcuteSaveProd_ProdOrders() {
+        if (CheckValue('Prod_ProdOrder_Add_formulacode')) {
+            alert('@Html.Translate("يجب ادخال رمز المعادلة", "Equation code must be entered")');
+            return;
+        }
+        if (CheckValue('Prod_ProdOrder_Add_ItemNo')) {
+            alert('@Html.Translate("يجب ادخال رمز المادة", "The item No must be entered.")');
+            return;
+        }
+        if (CheckValue('Prod_ProdOrder_Add_Qty')) {
+            alert('@Html.Translate("يجب ادخال الكمية", "Quantity must be entered")');
+            return;
+        }
+        if (CheckValue('Prod_ProdOrder_Add_Year')) {
+            alert('@Html.Translate("يجب ادخال  السنة", " year must be entered")');
+            return;
+        }
+        if (CheckValue('Prod_ProdOrder_Add_Month')) {
+            alert('@Html.Translate("يجب ادخال  الشهر", "You must enter the  month.")');
+            return;
+        }
+        if (CheckValue('Prod_ProdOrder_Add_StoreNo')) {
+            alert('@Html.Translate("يجب ادخال المستودع", "Store must be entered")');
+            return;
+        }
+
+        var Total = 0;
+        var alowInput = document.getElementById("alowInput_Add");
+        var alowValue = alowInput.getAttribute("data-Allow");
+
+        const date = new Date(Prod_ProdOrder_Add_OrderDate.value);
+        var year = date.getFullYear();
+        if (year != Prod_ProdOrder_Add_OrderYear.value) {
+            alert('@Html.Translate("سنة الامر يجب أن تساوي سنة تاريخ الأمر", "Order Year Should Equal Order Date Year")');
+            return false;
+        }
+
+        var ProdInfoHF = {
+            comp_no: '@company.comp_num',
+            prepare_year: Prod_ProdOrder_Add_OrderYear.value,
+            prepare_date: Prod_ProdOrder_Add_OrderDate.value,
+            item_no: Prod_ProdOrder_Add_ItemNo.value,
+            formula_code: Prod_ProdOrder_Add_formulacode.value,
+            qty_prepare: Prod_ProdOrder_Add_Qty.value,
+            PlanYear: Prod_ProdOrder_Add_Year.value,
+            PlanMonth: Prod_ProdOrder_Add_Month.value,
+            waste: Prod_ProdOrder_Add_WasteQty.value,
+            Note: Prod_ProdOrder_Add_Notes.value,
+            BusUnitID: Prod_ProdOrder_Add_BusUnitID.value,
+            StoreNo: Prod_ProdOrder_Add_StoreNo.value,
+            Actual_SG: Prod_ProdOrder_Add_SQ.value,
+            SalesOrderY: Prod_ProdOrder_Add_SalesOrderYear.value,
+            RefNo1: Prod_ProdOrder_Add_RefNo1.value,
+            RefNo2: Prod_ProdOrder_Add_RefNo2.value
+        };
+
+        var ProdInfoDF = new Array();
+        var trs = $('#RMDetailsTbody tr');
+        if (trs.length == 0) {
+            alert('@Html.Translate("مجموع كميات المواد الخام يجب أن لا يتجاوز كمية أمر التجهيز", "Total RM Qty should not exceed production Order Qty")');
+            return false;
+        }
+        for (var i = 0; i < trs.length; i++) {
+            if (CheckValueGrid(0, $(trs[i]).closest('tr').find('#RM_RmQty')[0].value)) {
+                alert('@Html.Translate("يجب ادخال الكمية في ملف المواد الاولية ", "You Must Enter Qty in the raw materials file ")');
+                return;
+            }
+            Total = Number(Total) + Number($(trs[i]).closest('tr').find('#RM_RmQty')[0].value);
+            Total = Number(Total).toFixed(3);
+            ProdInfoDF.push({
+                comp_no: '@company.comp_num',
+                prepare_year: Prod_ProdOrder_Add_OrderYear.value,
+                item_no: Prod_ProdOrder_Add_ItemNo.value,
+                RevisionNo: $(trs[i]).closest('tr').find('#RefrenceNo')[0].value,
+                rawmaterial_no: $(trs[i]).closest('tr').find('#RM_ItemNo')[0].value,
+                UnitSerial: $(trs[i]).closest('tr').find('.RM_Unit')[0].value,
+                Iqty: $(trs[i]).closest('tr').find('#RM_RmQty')[0].value,
+                RQty: $(trs[i]).closest('tr').find('#RM_RmQty')[0].value,
+                NoteDet: $(trs[i]).closest('tr').find('#RM_NoteDet')[0].value,
+            });
+        }
+
+        if (Total != Number(Prod_ProdOrder_Add_Qty.value).toFixed(3) && alowValue === "True") {
+            alert('@Html.Translate("مجموع كميات المواد الخام يجب أن لا يتجاوز كمية أمر التجهيز", "Total RM Qty should not exceed production Order Qty")');
+            return false;
+        }
+
+        trs = $('#OrderProdStagesTbody tr');
+        var ProdStages = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i]).closest('tr').find('#Stages_StartDate')[0].value > $(trs[i]).closest('tr').find('#Stages_EndDate')[0].value) {
+                alert('@Html.Translate("لا يجوز ان يكون تاريخ بدا المرحلة اكبر من تاريخ الانتهاء", "The starting date of the stage may not be greater than the end date")');
+                return false;
+            }
+            ProdStages.push({
+                comp_no: '@company.comp_num',
+                prepare_year: Prod_ProdOrder_Add_OrderYear.value,
+                item_no: Prod_ProdOrder_Add_formulacode.value,
+                stage_code: $(trs[i]).closest('tr').find('#Stages_StageCode')[0].innerHTML,
+                begin_date: $(trs[i]).closest('tr').find('#Stages_StartDate')[0].value,
+                Closed_Date: $(trs[i]).closest('tr').find('#Stages_EndDate')[0].value,
+                CalcTime: $(trs[i]).closest('tr').find('#Stages_CalcTime')[0].value
+            });
+        }
+
+        trs = $('#OrderProdByProductsTbody tr');
+        var ProdProducts = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            ProdProducts.push({
+                CompNo: '@company.comp_num',
+                OrderYear: Prod_ProdOrder_Add_OrderYear.value,
+                formula_code: Prod_ProdOrder_Add_formulacode.value,
+                item_no: $(trs[i]).closest('tr').find('#Product_ItemNo')[0].innerHTML,
+                Qty: $(trs[i]).closest('tr').find('#Product_Qty')[0].innerHTML,
+                CostPrc: $(trs[i]).closest('tr').find('#Product_CostPrc')[0].innerHTML
+            });
+        }
+
+        wait();
+        if (confirm('@Resources.Resource.ConfirmProdOrder')) {
+            burn({ ProdInfoHF: ProdInfoHF, ProdInfoDF: ProdInfoDF, manufacure: ProdStages, OrderExtended: ProdProducts }, '../../../ProdOrders/Save_ProdOrders', '', ReloadProdOrder, true);
+        } else {
+            done();
+        }
+    }
+
+    function ReloadProdOrder() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#Prod_ProdOrder_Model').modal('hide');
+        $('#Prod_ProdOrderListDiv').load('../../../ProdOrders/ProdOrdersList?Year=' + Prod_ProdOrder_Year.value);
+    }
+
+    function ExcuteEditProd_ProdOrders() {
+        if (CheckValue('Prod_ProdOrder_Edit_formulacode')) {
+            alert('@Html.Translate("يجب ادخال رمز المعادلة", "Equation code must be entered")');
+            return;
+        }
+        if (CheckValue('Prod_ProdOrder_Edit_ItemNo')) {
+            alert('@Html.Translate("يجب ادخال رمز المادة", "The item No must be entered.")');
+            return;
+        }
+        if (CheckValue('Prod_ProdOrder_Edit_Qty')) {
+            alert('@Html.Translate("يجب ادخال الكمية", "Quantity must be entered")');
+            return;
+        }
+        if (CheckValue('Prod_ProdOrder_Edit_Year')) {
+            alert('@Html.Translate("يجب ادخال  السنة", " year must be entered")');
+            return;
+        }
+        if (CheckValue('Prod_ProdOrder_Edit_Month')) {
+            alert('@Html.Translate("يجب ادخال  الشهر", "You must enter the  month.")');
+            return;
+        }
+
+        var Total = 0;
+        var alowInput = document.getElementById("alowInput_Edit");
+        var alowValue = alowInput.getAttribute("data-Allow");
+
+        const date = new Date(Prod_ProdOrder_Edit_OrderDate.value);
+        var year = date.getFullYear();
+        if (year != Prod_ProdOrder_Edit_OrderYear.value) {
+            alert('@Html.Translate("سنة الامر يجب أن تساوي سنة تاريخ الأمر", "Order Year Should Equal Order Date Year")');
+            return false;
+        }
+
+        var ProdInfoHF = {
+            comp_no: '@company.comp_num',
+            prepare_year: Prod_ProdOrder_Edit_OrderYear.value,
+            prepare_code: Prod_ProdOrder_Edit_OrderNo.value,
+            prepare_date: Prod_ProdOrder_Edit_OrderDate.value,
+            item_no: Prod_ProdOrder_Edit_ItemNo.value,
+            formula_code: Prod_ProdOrder_Edit_formulacode.value,
+            qty_prepare: Prod_ProdOrder_Edit_Qty.value,
+            PlanYear: Prod_ProdOrder_Edit_Year.value,
+            PlanMonth: Prod_ProdOrder_Edit_Month.value,
+            waste: Prod_ProdOrder_Edit_WasteQty.value,
+            Note: Prod_ProdOrder_Edit_Notes.value,
+            BusUnitID: Prod_ProdOrder_Edit_BusUnitID.value,
+            StoreNo: Prod_ProdOrder_Edit_StoreNo.value,
+            Actual_SG: Prod_ProdOrder_Edit_SQ.value,
+            SalesOrderY: Prod_ProdOrder_Edit_SalesOrderYear.value,
+            RefNo1: Prod_ProdOrder_Edit_RefNo1.value,
+            RefNo2: Prod_ProdOrder_Edit_RefNo2.value
+        };
+
+        var ProdInfoDF = new Array();
+        var trs = $('#eRMDetailsTbody tr');
+        if (trs.length == 0) {
+            alert('@Html.Translate("مجموع كميات المواد الخام يجب أن لا يتجاوز كمية أمر التجهيز", "Total RM Qty should not exceed production Order Qty")');
+            return false;
+        }
+        for (var i = 0; i < trs.length; i++) {
+            if (CheckValueGrid(0, $(trs[i]).closest('tr').find('#RM_RmQty')[0].value)) {
+                alert('@Html.Translate("يجب ادخال الكمية في ملف المواد الاولية ", "You Must Enter Qty in the raw materials file ")');
+                return;
+            }
+            Total = Number(Total) + Number($(trs[i]).closest('tr').find('#RM_RmQty')[0].value);
+            Total = Number(Total).toFixed(3);
+            ProdInfoDF.push({
+                comp_no: '@company.comp_num',
+                prepare_year: Prod_ProdOrder_Edit_OrderYear.value,
+                prepare_code: Prod_ProdOrder_Edit_OrderNo.value,
+                item_no: Prod_ProdOrder_Edit_ItemNo.value,
+                RevisionNo: $(trs[i]).closest('tr').find('#RefrenceNo')[0].value,
+                rawmaterial_no: $(trs[i]).closest('tr').find('#RM_ItemNo')[0].value,
+                UnitSerial: $(trs[i]).closest('tr').find('.RM_Unit')[0].value,
+                Iqty: $(trs[i]).closest('tr').find('#RM_RmQty')[0].value,
+                RQty: $(trs[i]).closest('tr').find('#RM_RmQty')[0].value,
+                NoteDet: $(trs[i]).closest('tr').find('#RM_NoteDet')[0].value,
+            });
+        }
+
+        if (Total != Number(Prod_ProdOrder_Edit_Qty.value).toFixed(3) && alowValue === "True") {
+            alert('@Html.Translate("مجموع كميات المواد الخام يجب أن لا يتجاوز كمية أمر التجهيز", "Total RM Qty should not exceed production Order Qty")');
+            return false;
+        }
+
+        trs = $('#eOrderProdStagesTbody tr');
+        var ProdStages = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i]).closest('tr').find('#Stages_StartDate')[0].value > $(trs[i]).closest('tr').find('#Stages_EndDate')[0].value) {
+                alert('@Html.Translate("لا يجوز ان يكون تاريخ بدا المرحلة اكبر من تاريخ الانتهاء", "The starting date of the stage may not be greater than the end date")');
+                return false;
+            }
+            ProdStages.push({
+                comp_no: '@company.comp_num',
+                prepare_year: Prod_ProdOrder_Edit_OrderYear.value,
+                prepare_code: Prod_ProdOrder_Edit_OrderNo.value,
+                item_no: Prod_ProdOrder_Edit_formulacode.value,
+                stage_code: $(trs[i]).closest('tr').find('#Stages_StageCode')[0].innerHTML,
+                begin_date: $(trs[i]).closest('tr').find('#Stages_StartDate')[0].value,
+                Closed_Date: $(trs[i]).closest('tr').find('#Stages_EndDate')[0].value,
+                CalcTime: $(trs[i]).closest('tr').find('#Stages_CalcTime')[0].value
+            });
+        }
+
+        trs = $('#eOrderProdByProductsTbody tr');
+        var ProdProducts = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            ProdProducts.push({
+                CompNo: '@company.comp_num',
+                OrderYear: Prod_ProdOrder_Edit_OrderYear.value,
+                OrderNo: Prod_ProdOrder_Edit_OrderNo.value,
+                formula_code: Prod_ProdOrder_Edit_formulacode.value,
+                item_no: $(trs[i]).closest('tr').find('#Product_ItemNo')[0].innerHTML,
+                Qty: $(trs[i]).closest('tr').find('#Product_Qty')[0].innerHTML,
+                CostPrc: $(trs[i]).closest('tr').find('#Product_CostPrc')[0].innerHTML
+            });
+        }
+
+        wait();
+        if (confirm('@Resources.Resource.ConfirmeProdOrder')) {
+            burn({ ProdInfoHF: ProdInfoHF, ProdInfoDF: ProdInfoDF, manufacure: ProdStages, OrderExtended: ProdProducts }, '../../../ProdOrders/Edit_ProdOrders', '', eReloadProdOrder, true);
+        } else {
+            done();
+        }
+    }
+
+    function eReloadProdOrder() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#Prod_eProdOrder_Model').modal('hide');
+        $('#Prod_ProdOrderListDiv').load('../../../ProdOrders/ProdOrdersList?Year=' + Prod_ProdOrder_Year.value);
+    }
+
+    function Del_ProdOrders(CompNo, prepare_year, prepare_code) {
+        if (confirm('@Resources.Resource.ConfirmDeleteDialog')) {
+            burn({ comp_no: CompNo, prepareyear: prepare_year, preparecode: prepare_code }, '../../../ProdOrders/Delete_ProdOrders', '', DelReloadProdOrder, true);
+        }
+    }
+
+    function DelReloadProdOrder() {
+        MsgBox('@Html.Recource(2598)', 'red');
+        $('#Prod_ProdOrderListDiv').load('../../../ProdOrders/ProdOrdersList?Year=' + Prod_ProdOrder_Year.value);
+    }
+
+    function ItemQtyInAllStores(item) {
+        thisitem = item;
+        burn({ Itemno: item, unit: 4 }, '../../../ProdOrders/QtyAllStoer', '', ReloadtStoer, true);
+        $('#Model_ProdOrder_AllStore').modal('show');
+    }
+
+    function GetDataStoreItem() {
+        var unit = 0;
+        if (ProdOrder_FirstUnit.checked == true) { unit = 1; }
+        if (ProdOrder_SecondUnit.checked == true) { unit = 2; }
+        if (ProdOrder_ThirdUnit.checked == true) { unit = 3; }
+        if (ProdOrder_FourthUnit.checked == true) { unit = 4; }
+        burn({ Itemno: thisitem, unit: unit }, '../../../ProdOrders/QtyAllStoer', '', ReloadtStoer, true);
+    }
+
+    function ReloadtStoer(r) {
+        ProdOrder_AllStorebody.innerHTML = "";
+        $('#ProdOrder_AllStorebody').html(r);
+    }
+
+    function Checkyear() {
+        if (Prod_ProdOrder_Year.value < 2000) {
+            Prod_ProdOrder_Year.value = "@DateTime.Now.Year";
+            Prod_ProdOrder_Year.focus();
+        }
+    }
+
+    function SerachProdOrder() {
+        wait();
+        $('#Prod_ProdOrderListDiv').load('../../../ProdOrders/ProdOrdersList?Year=' + Prod_ProdOrder_Year.value, function () {
+            done();
+        });
+    }
+</script>
+
+<div class="modal fade" id="Model_Revisions" style="left: 47.7rem;top: 25rem;">
+    <div class="modal-dialog">
+        <div class="modal-content" id="RevisionsModalContent">
+        </div>
+    </div>
+</div>
+
+<script>
+    function ShowRevisions(btn, itemNo) {
+        var url = '/ProdOrders/GetItemRevisions';
+        window.currentRevisionInput = $(btn).closest('div').find('input[type="text"]');
+        
+        $('#RevisionsModalContent').load(url + '?itemNo=' + encodeURIComponent(itemNo), function() {
+            $('#Model_Revisions').modal('show');
+        });
+    }
+
+    function SelectRevision(revNo) {
+        if (window.currentRevisionInput) {
+            window.currentRevisionInput.val(revNo);
+            window.currentRevisionInput.trigger('change');
+        }
+        $('#Model_Revisions').modal('hide');
+    }
+</script>

@@ -1,0 +1,100 @@
+﻿@model AlphaERP.Models.InfoItems
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    int StoreNo = ViewBag.StoreNo;
+    string ItemNo = ViewBag.ItemNo;
+}
+
+<style>
+    hr{
+        margin-top: 0px !important;
+    }
+</style>
+<div class="form-group">
+    <div class="col-md-12">
+        <div class="col-md-1">
+            <label class="unselectable" for="Invt_InqItemBalance_RefNo">@Html.Recource(96) </label>
+        </div>
+        <div class="col-md-3" style="margin-bottom: 5px;">
+            <input required="true" style="width: 125px !important;" type="text" id="Invt_InqItemBalance_RefNo" value="@Model.RefrenceNo" readonly />
+        </div>
+        <div class="col-md-1">
+            <label class="unselectable" for="Invt_InqItemBalance_SellPrice">@Html.Recource(97) </label>
+        </div>
+        <div class="col-md-3" style="margin-bottom: 5px;">
+            <input required="true" style="width: 125px !important;" type="text" id="Invt_InqItemBalance_SellPrice" value="@Model.SellPrice_1" readonly  />
+        </div>
+        <div class="col-md-4" style="margin-bottom: 5px;">
+            <label class="unselectable" for="Invt_InqItemBalance_PrintZeroQty">
+                <input name="Invt_InqItemBal_PrintZeroQty" type="checkbox" id="Invt_InqItemBalance_PrintZeroQty" onchange="GetStoreQty()" checked />
+                @Html.Recource(547)
+            </label>
+        </div>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12">
+        <div class="col-md-1">
+            <label class="unselectable" for="Invt_InqItemBalance_Catg">@Html.Recource(3) </label>
+        </div>
+        <div class="col-md-3" style="margin-bottom: 5px;">
+            <input required="true" style="width: 125px !important;" type="text" id="Invt_InqItemBalance_Catg" value="@Model.CatName" readonly />
+        </div>
+        <div class="col-md-1">
+            <label class="unselectable" for="Invt_InqItemBalance_SubCatg">@Html.Recource(28) </label>
+        </div>
+        <div class="col-md-3" style="margin-bottom: 5px;">
+            <input required="true" style="width: 125px !important;" type="text" id="Invt_InqItemBalance_SubCatg" value="@Model.SubCatName" readonly />
+        </div>
+        <div class="col-md-1">
+            <label class="unselectable" for="Invt_InqItemBalance_BinLoc">@Html.Translate("الموقع", "Location")</label>
+        </div>
+        <div class="col-md-3" style="margin-bottom: 5px;">
+            <input required="true" style="width: 125px !important;" type="text" id="Invt_InqItemBalance_BinLoc" value="@Model.BinLoc" readonly />
+        </div>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12">
+        <div class="col-md-1">
+            <label class="unselectable" for="Invt_InqItemBalance_Cost">@Html.Recource(3318) </label>
+        </div>
+        <div class="col-md-3" style="margin-bottom: 5px;">
+            <input required="true" style="width: 125px !important;" type="text" id="Invt_InqItemBalance_Cost" value="@Model.ItemUnitCost" readonly />
+        </div>
+    </div>
+</div>
+<hr />
+<div class="form-group">
+    <div class="col-md-12">
+        <div class="col-md-2">
+            <label class="unselectable" for="Invt_InqItemBalance_FirstUnit">
+                <input id="Invt_InqItemBalance_FirstUnit" type="radio" name="Invt_InqItemBalance_Unit" onchange="GetStoreQty()">
+                @Html.Recource(329)
+            </label>
+        </div>
+        <div class="col-md-2">
+            <label class="unselectable" for="Invt_InqItemBalance_SecondUnit">
+                <input name="Invt_InqItemBalance_Unit" type="radio" id="Invt_InqItemBalance_SecondUnit" onchange="GetStoreQty()" />
+                @Html.Recource(331)
+            </label>
+        </div>
+        <div class="col-md-2">
+            <label class="unselectable" for="Invt_InqItemBalance_ThirdUnit">
+                <input name="Invt_InqItemBalance_Unit" type="radio" id="Invt_InqItemBalance_ThirdUnit" onchange="GetStoreQty()" />
+                @Html.Recource(330)
+            </label>
+        </div>
+        <div class="col-md-2">
+            <label class="unselectable" for="Invt_InqItemBalance_FourthUnit">
+                <input name="Invt_InqItemBalance_Unit" type="radio" id="Invt_InqItemBalance_FourthUnit" checked onchange="GetStoreQty()" />
+                @Html.Recource(332)
+            </label>
+        </div>
+    </div>
+</div>
+<hr />

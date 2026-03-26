@@ -1,0 +1,575 @@
+﻿@model IEnumerable<AlphaERP.Models.MRP_Web_OrdCopyInfo>
+@using System.Data.SqlClient;
+@using AlphaERP.Models
+
+@{
+    Company company = (Company)Session["company"];
+    List<Vendor> Vender = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.IsHalt == false).ToList();
+    List<InvItemsMF> Mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+    List<InvUnitCode> UnitC = new MDB().InvUnitCodes.Where(x => x.CompNo == company.comp_num).ToList();
+    int Srial = 1;
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+
+    List<PayCodes> Currency = new MDB().Database.SqlQuery<PayCodes>("select CurrType as Id ,CurrName as DescAr,isnull(CurrNameE,'No Desc.') as DescEn from CurrType").ToList();
+    List<BusunisUnit> PaymentM = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("select MCode as Id ,[Desc] as DescAr,isnull([EngDesc],'No Desc.') as DescEn from PayMethods where (Comp = '{0}')", company.comp_num)).ToList();
+    List<PayCodes> DlivPlace = new MDB().Database.SqlQuery<PayCodes>(string.Format("select PlaceCode as Id ,Place as DescAr from OrdDlivPlace where (CompNo = '{0}')", company.comp_num)).ToList();
+
+}
+
+<style>
+
+    #MRP_EnterVendorOffer_Div table th, #MRP_EnterVendorOffer_Div table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+    .wrapperx {
+        padding:0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+
+    .sticky-col {
+        z-index:2;
+        position: sticky;
+        position: -webkit-sticky;
+        background-color: white;
+    }
+
+    .first-col {
+        width: 100px;
+        min-width: 100px;
+        max-width: 100px;
+        @Html.Translate("right: 0px;", "left: 0px;")
+    }
+
+    .second-col {
+        width: 150px;
+        min-width: 150px;
+        max-width: 150px;
+     @Html.Translate("right: 100px;", "left: 100px;")
+    }
+
+    .third-col {
+        width: 40px;
+        min-width: 40px;
+        max-width: 40px;
+        @Html.Translate("right: 250px;", "left: 250px;")
+    }
+    .stickytooltip {
+        max-height: 80vh !important;
+        overflow: auto !important
+    }
+
+    .modal-body {
+        max-height: 72vh !important;
+    }
+</style>
+
+<div class="modal-body row" style="height: calc(105vh - 210px) !important; ">
+    <div class="form-group" style="display:block;height:224px;">
+        <div class="col-md-12 wrapperx" id="MRP_EnterVendorOffer_Div">
+            <table class="table table-hover MRP_EnterVendorOffer" id="EnterVendorOfferTable">
+                <thead>
+                    <tr>
+                        <th class="sticky-col first-col">@Resources.Resource.Supplier</thclass="headcol">
+                        <th class="sticky-col first-col">@Resources.Resource.ItemNo</thclass="headcol">
+                        <th class="sticky-col first-col">@Resources.Resource.ItemName</thclass="headcol">
+                        <th>@Html.Recource(49)</th>
+                        @if (compMF.UseQty2 == true)
+                        {
+                            <th>@Html.Recource(72)</th>
+                        }
+                        else
+                        {
+                            <th hidden>@Html.Recource(72)</th>
+                        }
+                        <th>@Html.Recource(3200)</th>
+                        <th>@Html.Recource(215)</th>
+                        <th>@Html.Recource(1671)</th>
+                        <th>@Html.Recource(1874)</th>
+                        <th>@Html.Recource(3207)</th>
+                        <th>@Html.Recource(444)</th>
+                        <th>@Html.Translate("ميناء الشحن", "Shipping Port")</th>
+                        <th>@Html.Recource(2645)</th>
+                    </tr>
+                </thead>
+                <tbody style="text-align: center;" id="EnterVendorOfferTBody">
+                    @foreach (MRP_Web_OrdCopyInfo item in Model)
+                    {
+                        string date = item.DeliveryDate.Value.ToString("yyyy-MM-dd");
+                        string VenderName = Vender.Where(x => x.VendorNo == item.VendorNo).Select(o => o.Name).FirstOrDefault();
+                        string VenderNameEn = Vender.Where(x => x.VendorNo == item.VendorNo).Select(o => o.Eng_Name).FirstOrDefault();
+                        InvItemsMF ItemMf = Mf.Where(x => x.ItemNo == item.ItemNo).FirstOrDefault();
+                        string ItemDesc = Html.Translate(ItemMf.ItemDesc, ItemMf.ItemDesc_Ara).ToString();
+                        Vendor v = Vender.Where(x => x.VendorNo == item.VendorNo).FirstOrDefault();
+                        if (item.bVendorsOffers == true)
+                        {
+                    <tr id="EnterVendorOffer_@item.VendorNo">
+                        <td style="width: 10%; word-wrap: break-word; white-space: normal;" vendor="@item.VendorNo">@Html.Translate(VenderName, VenderNameEn)</td>
+                        <td style="width: 20%; word-wrap: break-word; white-space: normal;" id="EnterVendorOffer_ItemNo_@Srial">@item.ItemNo</td>
+                        <td style="text-align: center !important; word-wrap: break-word; white-space: normal;">@ItemDesc</td>
+                        <td style="text-align: center;">
+                            <input id="EnterVendorOffer_Qty_@Srial" value="@item.Qty.Value.ToString("0.000")" type="number" style="width:75px !important" min="0" onblur="CheckValueQty(@Srial)" />
+                        </td>
+                        @if (compMF.UseQty2 == true)
+                        {
+                            <td style="text-align: center;">
+                                <input id="EnterVendorOffer_Qty2_@Srial" value="@item.Qty2.Value.ToString("0.000")" type="number" style="width:75px !important" min="0" onblur="CheckValueQty2(@Srial)" />
+                            </td>
+                        }
+                        else
+                        {
+                            <td style="text-align: center;" hidden>
+                                <input id="EnterVendorOffer_Qty2_@Srial" value="@item.Qty2.Value.ToString("0.000")" type="number" style="width:75px !important" min="0" onblur="CheckValueQty2(@Srial)" />
+                            </td>
+                        }
+                        @if (@item.Bonus != null)
+                        {
+                            <td style="text-align: center;">
+                                <input id="EnterVendorOffer_Bonus_@Srial" value="@item.Bonus.Value.ToString("0.000")" type="number" style="width:75px !important" min="0" onblur="CheckValueBouns(@Srial)" />
+                            </td>
+                        }
+                        else
+                        {
+                            <td style="text-align: center;">
+                                <input id="EnterVendorOffer_Bonus_@Srial" value="0" type="number" style="width:75px !important" min="0" onblur="CheckValueBouns(@Srial)" />
+                            </td>
+                        }
+                        <td style="text-align: center;">
+                            <input id="EnterVendorOffer_Price_@Srial" value="@item.SellPrice" type="number" min="0"  style="width:75px !important" onblur="CheckValuePrice(@Srial)" />
+                        </td>
+                        @if (@item.Curr != 0)
+                        {
+                            <td style="text-align: center;">
+                                <select style="width:100%" class="EnterVendorOffer_CboCurrCode">
+                                    @foreach (var Curr in Currency)
+                                    {
+                                        if (@item.Curr == Curr.Id)
+                                        {
+                                            <option value="@Curr.Id" selected>@Html.Translate(Curr.DescAr, Curr.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@Curr.Id">@Html.Translate(Curr.DescAr, Curr.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </td>
+                        }
+                        else
+                        {
+                            <td style="text-align: center;">
+                                <select style="width:100%" class="EnterVendorOffer_CboCurrCode">
+                                    @foreach (var Curr in Currency)
+                                    {
+                                        if (v.Curr == Curr.Id)
+                                        {
+                                            <option value="@Curr.Id" selected>@Html.Translate(Curr.DescAr, Curr.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@Curr.Id">@Html.Translate(Curr.DescAr, Curr.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </td>
+                        }
+                        @if (@item.Pmethod != 0)
+                        {
+                            <td style="text-align: center;">
+                                <select style="width:100%" class="EnterVendorOffer_CboPaymentType">
+                                    @foreach (var Paym in PaymentM)
+                                    {
+                                        if (@item.Pmethod == Paym.Id)
+                                        {
+                                            <option value="@Paym.Id" selected>@Html.Translate(Paym.DescAr, Paym.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@Paym.Id">@Html.Translate(Paym.DescAr, Paym.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </td>
+                        }
+                        else
+                        {
+                            <td style="text-align: center;">
+                                <select style="width:100%" class="EnterVendorOffer_CboPaymentType">
+                                    @foreach (var Paym in PaymentM)
+                                    {
+                                        if (v.Pmethod == Paym.Id)
+                                        {
+                                            <option value="@Paym.Id" selected>@Html.Translate(Paym.DescAr, Paym.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@Paym.Id">@Html.Translate(Paym.DescAr, Paym.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </td>
+                        }
+                        @if (@item.DeliveryPlace != 0)
+                        {
+                            <td style="text-align: center;">
+                                <select style="width:100%" class="EnterVendorOffer_CboDeliveryPlace">
+                                    @foreach (var s in DlivPlace)
+                                    {
+                                        if (@item.DeliveryPlace == s.Id)
+                                        {
+                                            <option value="@s.Id" selected>@s.DescAr</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@s.Id">@s.DescAr</option>
+                                        }
+                                    }
+                                </select>
+                            </td>
+                        }
+                        else
+                        {
+                            <td style="text-align: center;">
+                                <select style="width:100%" class="EnterVendorOffer_CboDeliveryPlace">
+                                    @foreach (var s in DlivPlace)
+                                    {
+                                        <option value="@s.Id">@s.DescAr</option>
+                                    }
+                                </select>
+                            </td>
+                        }
+                        @if (@item.CountryOfOrigin != null)
+                        {
+                            <td style="text-align: center;">
+                                <input id="EnterVendorOffer_CountryOfOrigin_@Srial" value="@item.CountryOfOrigin" type="text" />
+                            </td>
+                        }
+                        else
+                        {
+                            <td style="text-align: center;">
+                                <input id="EnterVendorOffer_CountryOfOrigin_@Srial" value="" type="text" />
+                            </td>
+                        }
+                        @if (@item.ShippingPort != null)
+                        {
+                            <td style="text-align: center;">
+                                <input id="EnterVendorOffer_ShippingPort_@Srial" value="@item.ShippingPort" type="text" />
+                            </td>
+                        }
+                        else
+                        {
+                            <td style="text-align: center;">
+                                <input id="EnterVendorOffer_ShippingPort_@Srial" value="" type="text" />
+                            </td>
+                        }
+                        <td style="text-align: center;">
+                            <input type="date" id="EnterVendorOffer_DeliveryDate_@Srial" style="width: 100%;" value="@date" />
+                            <input type="hidden" id="EnterVendorOffer_VendorNo" value="@item.VendorNo" />
+                            <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                            <input type="hidden" id="EnterVendorOffer_ReqforQuotyear" value="@item.ReqforQuotyear" />
+                            <input type="hidden" id="EnterVendorOffer_ReqforQuotNo" value="@item.ReqforQuotNo" />
+                        </td>
+                    </tr>
+                        }
+                        else
+                        {
+                <tr id="EnterVendorOffer_@item.VendorNo">
+                    <td style="width: 10%; word-wrap: break-word; white-space: normal;" vendor="@item.VendorNo">@Html.Translate(VenderName, VenderNameEn)</td>
+                    <td style="width: 20%; word-wrap: break-word; white-space: normal;" id="EnterVendorOffer_ItemNo_@Srial">@item.ItemNo</td>
+                    <td style="text-align: center !important; word-wrap: break-word; white-space: normal;">@ItemDesc</td>
+                    <td style="text-align: center;">
+                        <input id="EnterVendorOffer_Qty_@Srial" value="@item.Qty.Value.ToString("0.000")" min="0" type="number" style="width:75px !important" onblur="CheckValueQty(@Srial)" />
+                    </td>
+                    @if (compMF.UseQty2 == true)
+                    {
+                        <td style="text-align: center;">
+                            <input id="EnterVendorOffer_Qty2_@Srial" value="@item.Qty2.Value.ToString("0.000")" min="0" type="number" style="width:75px !important" onblur="CheckValueQty(@Srial)" />
+                        </td>
+                    }
+                    else
+                    {
+                        <td style="text-align: center;" hidden>
+                            <input id="EnterVendorOffer_Qty2_@Srial" value="@item.Qty2.Value.ToString("0.000")" min="0" type="number" style="width:75px !important" onblur="CheckValueQty2(@Srial)" />
+                        </td>
+                    }
+                    <td style="text-align: center;">
+                        <input id="EnterVendorOffer_Bonus_@Srial" value="0" min="0" type="number" style="width:75px !important" onblur="CheckValueBouns(@Srial)" />
+                    </td>
+                    <td style="text-align: center;">
+                        <input id="EnterVendorOffer_Price_@Srial" value="@item.SellPrice" type="number" min="0" style="width:75px !important" onblur="CheckValuePrice(@Srial)" />
+                    </td>
+                    @if (@item.Curr != 0)
+                    {
+                        <td style="text-align: center;">
+                            <select style="width:100%" class="EnterVendorOffer_CboCurrCode">
+                                @foreach (var Curr in Currency)
+                                {
+                                    if (@item.Curr == Curr.Id)
+                                    {
+                                        <option value="@Curr.Id" selected>@Html.Translate(Curr.DescAr, Curr.DescEn)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@Curr.Id">@Html.Translate(Curr.DescAr, Curr.DescEn)</option>
+                                    }
+                                }
+                            </select>
+                        </td>
+                    }
+                    else
+                    {
+                        <td style="text-align: center;">
+                            <select style="width:100%" class="EnterVendorOffer_CboCurrCode">
+                                @foreach (var Curr in Currency)
+                                {
+                                    if (v.Curr == Curr.Id)
+                                    {
+                                        <option value="@Curr.Id" selected>@Html.Translate(Curr.DescAr, Curr.DescEn)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@Curr.Id">@Html.Translate(Curr.DescAr, Curr.DescEn)</option>
+                                    }
+                                }
+                            </select>
+                        </td>
+                    }
+                    @if (@item.Pmethod != 0)
+                    {
+                        <td style="text-align: center;">
+                            <select style="width:100%" class="EnterVendorOffer_CboPaymentType">
+                                @foreach (var Paym in PaymentM)
+                                {
+                                    if (@item.Pmethod == Paym.Id)
+                                    {
+                                        <option value="@Paym.Id" selected>@Html.Translate(Paym.DescAr, Paym.DescEn)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@Paym.Id">@Html.Translate(Paym.DescAr, Paym.DescEn)</option>
+                                    }
+                                }
+                            </select>
+                        </td>
+                    }
+                    else
+                    {
+                        <td style="text-align: center;">
+                            <select style="width:100%" class="EnterVendorOffer_CboPaymentType">
+                                @foreach (var Paym in PaymentM)
+                                {
+                                    if (v.Pmethod == Paym.Id)
+                                    {
+                                        <option value="@Paym.Id" selected>@Html.Translate(Paym.DescAr, Paym.DescEn)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@Paym.Id">@Html.Translate(Paym.DescAr, Paym.DescEn)</option>
+                                    }
+                                }
+                            </select>
+                        </td>
+                    }
+                    @if (@item.DeliveryPlace != 0)
+                    {
+                        <td style="text-align: center;">
+                            <select style="width:100%" class="EnterVendorOffer_CboDeliveryPlace">
+                                @foreach (var s in DlivPlace)
+                                {
+                                    if (@item.DeliveryPlace == s.Id)
+                                    {
+                                        <option value="@s.Id" selected>@s.DescAr</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@s.Id">@s.DescAr</option>
+                                    }
+                                }
+                            </select>
+                        </td>
+                    }
+                    else
+                    {
+                        <td style="text-align: center;">
+                            <select style="width:100%" class="EnterVendorOffer_CboDeliveryPlace">
+                                @foreach (var s in DlivPlace)
+                                {
+                                    <option value="@s.Id">@s.DescAr</option>
+                                }
+                            </select>
+                        </td>
+                    }
+                    @if (@item.CountryOfOrigin != null)
+                    {
+                        <td style="text-align: center;">
+                            <input id="EnterVendorOffer_CountryOfOrigin_@Srial" value="@item.CountryOfOrigin" type="text" />
+                        </td>
+                    }
+                    else
+                    {
+                        <td style="text-align: center;">
+                            <input id="EnterVendorOffer_CountryOfOrigin_@Srial" value="" type="text" />
+                        </td>
+                    }
+                    @if (@item.ShippingPort != null)
+                    {
+                        <td style="text-align: center;">
+                            <input id="EnterVendorOffer_ShippingPort_@Srial" value="@item.ShippingPort" type="text" />
+                        </td>
+                    }
+                    else
+                    {
+                        <td style="text-align: center;">
+                            <input id="EnterVendorOffer_ShippingPort_@Srial" value="" type="text" />
+                        </td>
+                    }
+                    <td style="text-align: center;">
+                        <input type="date" id="EnterVendorOffer_DeliveryDate_@Srial" style="width: 100%;" value="@date" />
+                        <input type="hidden" id="EnterVendorOffer_VendorNo" value="@item.VendorNo" />
+                        <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                        <input type="hidden" id="EnterVendorOffer_ReqforQuotyear" value="@item.ReqforQuotyear" />
+                        <input type="hidden" id="EnterVendorOffer_ReqforQuotNo" value="@item.ReqforQuotNo" />
+                    </td>
+                </tr>
+                        }
+
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <hr />
+    <div class="form-group">
+        <div class="col-md-3">
+            <button class="btn btn-primary btn-block" onclick="SaveRequestforQuotation()">
+                @Resources.Resource.Save
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('.EnterVendorOffer_CboCurrCode').select2();
+    $('.EnterVendorOffer_CboPaymentType').select2();
+    $('.EnterVendorOffer_CboDeliveryPlace').select2();
+
+    function CheckValueQty(Serial) {
+        if ($('#EnterVendorOffer_Qty_' + Serial)[0].value < 0) {
+            $('#EnterVendorOffer_Qty_' + Serial)[0].value = 0;
+            $('#EnterVendorOffer_Qty_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن تكون الكمية أكبر من صفر", "The Qty Must be Greater Than Zero")');
+        }
+        if ($('#EnterVendorOffer_Qty_' + Serial)[0].value == "") {
+            $('#EnterVendorOffer_Qty_' + Serial)[0].value = 0;
+        }
+    }
+    function CheckValueQty2(Serial) {
+        if ($('#EnterVendorOffer_Qty2_' + Serial)[0].value < 0) {
+            $('#EnterVendorOffer_Qty2_' + Serial)[0].value = 0;
+            $('#EnterVendorOffer_Qty2_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن تكون الكمية 2 أكبر من صفر", "The Qty 2 Must be Greater Than Zero")');
+        }
+        if ($('#EnterVendorOffer_Qty2_' + Serial)[0].value == "") {
+            $('#EnterVendorOffer_Qty2_' + Serial)[0].value = 0;
+        }
+    }
+
+    
+    function CheckValueBouns(Serial) {
+        if ($('#EnterVendorOffer_Bonus_' + Serial)[0].value < 0) {
+            $('#EnterVendorOffer_Bonus_' + Serial)[0].value = 0;
+            $('#EnterVendorOffer_Bonus_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن تكون الكمية الاضافية أكبر من صفر", "The Bonus Must be Greater Than Zero")');
+        }
+        if ($('#EnterVendorOffer_Bonus_' + Serial)[0].value == "") {
+            $('#EnterVendorOffer_Bonus_' + Serial)[0].value = 0;
+        }
+    }
+    function CheckValuePrice(Serial) {
+        if ($('#EnterVendorOffer_Price_' + Serial)[0].value < 0) {
+            $('#EnterVendorOffer_Price_' + Serial)[0].value = 0;
+            $('#EnterVendorOffer_Price_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن يكون السعر أكبر من صفر", "The Price Must be Greater Than Zero")');
+        }
+        if ($('#EnterVendorOffer_Price_' + Serial)[0].value == "") {
+            $('#EnterVendorOffer_Price_' + Serial)[0].value = 0;
+        }
+    }
+    function SaveRequestforQuotation() {
+        var OrdCopyInfo = new Array();
+        var table = $('#EnterVendorOfferTBody tr');
+        var ordcopyNo = 0;
+        var ordcopyNo1 = 0;
+        var bVendore = false;
+        var VendoreOld = 0
+        var trs = table;
+
+        for (var i = 0; i < trs.length; i++) {
+            if (bVendore == true) {
+                if (ordcopyNo > 0) {
+                    if (ordcopyNo != ordcopyNo1) {
+                        alert('@Html.Translate("يجب إدخال عرض المورد لجميع المواد", "Supplier offer must be entered for all item")');
+                        return false;
+                    }
+                }
+            }
+            bVendore = false;
+
+            VendoreOld = $(trs[i]).closest('tr').find('#EnterVendorOffer_VendorNo')[0].value;
+            if (VendorNo == VendoreOld) {
+                continue;
+            }
+            ordcopyNo = 0;
+            var VendorNo = $(trs[i]).closest('tr').find('#EnterVendorOffer_VendorNo')[0].value
+            var tableVendore = $('#EnterVendorOfferTBody #EnterVendorOffer_' + VendorNo);
+            var trsVendore = tableVendore;
+            ordcopyNo1 = trsVendore.length;
+
+            for (var z = 0; z < trsVendore.length; z++) {
+                var InputSerial = $(trsVendore[z]).closest('tr').find('#InputSerial')[0].value
+                if ($(trsVendore[z]).closest('tr').find('#EnterVendorOffer_Qty_' + InputSerial)[0].value > 0 && $(trsVendore[z]).closest('tr').find('#EnterVendorOffer_Price_' + InputSerial)[0].value > 0) {
+                    OrdCopyInfo.push({
+                        ReqforQuotNo: $(trsVendore[z]).closest('tr').find('#EnterVendorOffer_ReqforQuotNo')[0].value,
+                        VendorNo: VendorNo,
+                        ItemNo: $(trsVendore[z]).closest('tr').find('#EnterVendorOffer_ItemNo_' + InputSerial)[0].innerHTML,
+                        Qty: $(trsVendore[z]).closest('tr').find('#EnterVendorOffer_Qty_' + InputSerial)[0].value,
+                        Qty2: $(trsVendore[z]).closest('tr').find('#EnterVendorOffer_Qty2_' + InputSerial)[0].value,
+                        Bonus: $(trsVendore[z]).closest('tr').find('#EnterVendorOffer_Bonus_' + InputSerial)[0].value,
+                        SellPrice: $(trsVendore[z]).closest('tr').find('#EnterVendorOffer_Price_' + InputSerial)[0].value,
+                        DeliveryDate: $(trsVendore[z]).closest('tr').find('#EnterVendorOffer_DeliveryDate_' + InputSerial)[0].value,
+                        bVendorsOffers: true,
+                        Curr: $(trs[i]).closest('tr').find('.EnterVendorOffer_CboCurrCode')[0].value,
+                        Pmethod: $(trs[i]).closest('tr').find('.EnterVendorOffer_CboPaymentType')[0].value,
+                        DeliveryPlace: $(trs[i]).closest('tr').find('.EnterVendorOffer_CboDeliveryPlace')[0].value,
+                        CountryOfOrigin: $(trsVendore[z]).closest('tr').find('#EnterVendorOffer_CountryOfOrigin_' + InputSerial)[0].value,
+                        ShippingPort: $(trsVendore[z]).closest('tr').find('#EnterVendorOffer_ShippingPort_' + InputSerial)[0].value
+                    });
+                    ordcopyNo = ordcopyNo + 1;
+                }
+                bVendore = true
+            }
+        }
+
+        @*if (OrdCopyInfo.length == 0) {
+            alert('@Html.Translate("يجب إدخال الكمية و السعر  لماده واحده على الاقل", "You must enter the quantity and price for at least one item")');
+            return false;
+        }*@
+
+        wait();
+        burn({ OrdCopyInfo: OrdCopyInfo }, '../../../VendorsOffersInfo/Save_VendorsOffersInfo', '', ReloadVendorsOffersInfo, false);
+
+    }
+
+    function ReloadVendorsOffersInfo() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        VendorsOffersInfoDiv.innerHTML = "";
+        MRP_VendorsOffersInfoDiv.innerHTML = "";
+    }
+</script>

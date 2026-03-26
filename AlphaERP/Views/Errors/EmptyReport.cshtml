@@ -1,0 +1,32 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@Resources.Resource.EmptyReport</title>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/Content/Main.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <script src="~/scripts/Main.js"></script>
+    @if (ViewBag.lan == "ar-JO")
+    {
+        <link href="~/Content/bootstrap-rtl.css" rel="stylesheet" />
+    }
+</head>
+<body class="blue-container">
+    <div class="container">
+        <br /><br /><br />
+        <div class="panel panel-danger">
+            <div class="panel-body">
+                <h1 class="text-center ">@Resources.Resource.EmptyReport</h1>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

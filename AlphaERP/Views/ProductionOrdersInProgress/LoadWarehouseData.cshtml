@@ -1,0 +1,36 @@
+﻿@model List<AlphaERP.Models.ViewWarehouseData>
+
+<div class="form-group">
+    <div class="col-md-12">
+        <table class="table table-hover" id="StoreSelectTable">
+            <thead>
+                <tr>
+                    <th style="text-align:center;">@Html.Recource(41)</th>
+                    <th style="text-align:center;">@Html.Recource(31)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+
+                @foreach (var item in Model)
+                {
+                    string StoreName = Html.Translate(item.StoreName.ToString(), item.StoreNameEng.ToString()).ToString();
+
+                    <tr onclick="StoreSelect(this)" StoreNo="@item.StoreNo" StoreName="@StoreName">
+                        <td style="text-align:center;">@item.StoreNo</td>
+                        <td style="text-align:center;" title="@StoreName">@StoreName</td>
+                        <td></td>
+                    </tr>
+
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    var StoreSelectTable = $('#StoreSelectTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+</script>

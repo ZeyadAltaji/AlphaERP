@@ -1,0 +1,111 @@
+﻿@using AlphaERP.Models;
+@{
+    Company company = (Company)Session["company"];
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+}
+
+<div class="col-md-12">
+    <button onclick="AddRowItem()" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+</div>
+<div class="col-md-12" style="height:calc(100vh - 480px) !important;overflow-y:auto">
+    <table class="table table-hover" id="PurchaseReqItemKasihTable">
+        <thead>
+            <tr>
+                <th style="width: 35%; text-align: center !important;">@Html.Recource(9720)</th>
+                <th style="text-align: center !important;">@Html.Recource(49)</th>
+                <th style="text-align: center !important;">@Html.Translate("السعر المبدئي", "Budgetary Price")</th>
+                <th style="text-align: center !important;">@Html.Recource(68)</th>
+                <th style="text-align: center !important;">@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tfoot>
+            <tr>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;">Total</th>
+                <th style="text-align: center !important;" id="TotalAll">0</th>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+            </tr>
+        </tfoot>
+        <tbody id="PurchaseReqItemKasihTBody"></tbody>
+    </table>
+</div>
+
+<script>
+    var Count = 0;
+    function AddRowItem() {
+        ststaus = 1;
+        Count++;
+        var newarray = [];
+        newarray.push('<input id="PurchaseRequest_ItemNo" value ="SG10001"  type="text" hidden /> <input id="PurchaseReques_Notes_' + Count + '" type="text" style="width: 100%  !important;" />')
+        newarray.push('<input id="PurchaseRequest_Qty_' + Count + '" value="0" onblur="GetValuebestqty(this,' + Count + ' )" type="number" style="width: 75px  !important;" />')
+        newarray.push('<input id="PurchaseRequest_Price_' + Count + '" value="0" onblur="GetValuePrice(this,' + Count + ' )" type="number" style="width: 75px  !important;" />')
+        newarray.push('<input id="PurchaseReques_Total_' + Count + '" value="0" type="text" style="width: 85px  !important;background-color: cornsilk;" disabled  />')
+        newarray.push('<input id="PurchaseReques_RequestedDeliveryDate_' + Count + '" value="@DateTime.Now.ToString("yyyy-MM-dd")"  type="date" style="width: 115px  !important;" />')
+        newarray.push('<button class="btn-de" onclick="RemoveRowItem(this,' + Count + ')" type="button"><i class= "fa fa-trash-alt"></i ></button><input type="hidden" id="InputSerial" value="' + Count + '" />')
+        $("#PurchaseReqItemKasihTBody").append(
+            GenRowMas(newarray, 'PurchaseRequest_' + Count)
+        );
+    }
+    function GenRowMas(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td style="text-align: center;">' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function RemoveRowItem(e, Count) {
+        if (confirm('@Resources.Resource.DeleteConfirm')) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+            sumTotalAll();
+            return true;
+        }
+        return false;
+    }
+    function GetValuebestqty(e, IdSerial) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون الكمية اقل من 0", "The value of the Qty may not be less than 0")');
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+        SumTotal(IdSerial)
+    }
+    function GetValuePrice(e, IdSerial) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون السعر اقل من 0", "The value of the Price may not be less than 0")');
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+        SumTotal(IdSerial)
+    }
+    function SumTotal(IdSerial) {
+        var Total = 0
+        var Qty = 'PurchaseRequest_Qty_' + IdSerial
+        var Price = 'PurchaseRequest_Price_' + IdSerial
+        var PurchTotal = 'PurchaseReques_Total_' + IdSerial
+
+        Total = Number(document.getElementById(Qty).value) * Number(document.getElementById(Price).value);
+        document.getElementById(PurchTotal).value = Number(Total).toFixed(3);
+        sumTotalAll()
+    }
+    function sumTotalAll() {
+        var table = $('#PurchaseReqItemKasihTBody tr');
+        var trs = table;
+        var Totals = 0
+
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value
+            Totals += Number($(trs[i]).closest('tr').find('#PurchaseReques_Total_' + InputSerial)[0].value);
+        }
+
+        $('#TotalAll').html(Number(Totals).toFixed(3));
+    }
+</script>

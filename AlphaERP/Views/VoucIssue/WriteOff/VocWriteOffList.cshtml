@@ -1,0 +1,99 @@
+﻿@using System.Data.SqlClient;
+@using AlphaERP.Models
+@{
+    int OrdYear = 0;
+    if (ViewBag.OrdYear == null)
+    {
+        OrdYear = DateTime.Now.Year;
+    }
+    else
+    {
+        OrdYear = ViewBag.OrdYear;
+    }
+    Company company = (Company)Session["company"];
+    List<OrdReceiptInfo> lOrdReceiptInfo = new MDB().Database.SqlQuery<OrdReceiptInfo>(string.Format("SELECT OrderYear,OrderNo ,TawreedNo,ShipSer ,convert(date,ArrivalDate) as ArrivalDate  " +
+    "FROM Ord_PortInfoHF " +
+    "where (CompNo = '{0}') AND (OrderYear = '{1}') AND (IsApproval = 1) GROUP BY OrderYear, OrderNo, TawreedNo,ShipSer,convert(date,ArrivalDate) ", company.comp_num, OrdYear)).ToList();
+}
+
+<table class="table" id="OrdWriteOffTable">
+    <thead>
+        <tr>
+            <th>@Html.Recource(3197)</th>
+            <th>@Html.Recource(3797)</th>
+            <th>@Html.Recource(696)</th>
+            <th>@Html.Recource(206)</th>
+            <th>@Html.Recource(96)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="OrdVoucIssueTbody">
+        @foreach (OrdReceiptInfo P in lOrdReceiptInfo)
+        {
+            string RefNo = new MDB().OrderHFs.Where(x => x.CompNo == company.comp_num && x.OrdYear == P.OrderYear && x.OrderNo == P.OrderNo && x.TawreedNo == P.TawreedNo).Select(o => o.RefNo).FirstOrDefault();
+            <tr OrdYear="@P.OrderYear" OrderNo="@P.OrderNo" TawreedNo="@P.TawreedNo" ShipSer="@P.ShipSer" >
+                <td>@P.OrderNo</td>
+                <td>@P.TawreedNo</td>
+                <td>@P.ShipSer</td>
+                <td>@P.ArrivalDate.ToString("yyyy-MM-dd")</td>
+                <td>@RefNo</td>
+                <td>
+                    <button style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default ex" title="@Html.Recource(769)">
+                        <i style="font-weight:100" class="fa fa-folder"></i>
+                    </button>
+                    <button onclick="CreateWriteOff('@P.OrderYear','@P.OrderNo','@P.TawreedNo','@P.ShipSer')" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default" title="@Html.Translate("اضافة سند اتلاف", "Add WriteOff")">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                    <button id="AddWriteOff" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                        @Html.Translate("اضافة سند اتلاف", "Add WriteOff")
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    var OrdWriteOffTable;
+    OrdWriteOffTable = $('#OrdWriteOffTable').dataTable({
+        "scrollY": 'calc( 100vh - 270px)',
+        "paging": true,
+        "pageLength": 25,
+        "order": [[0, "desc"], [1, "desc"], [2, "asc"]],
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+
+    $('#OrdWriteOffTable tbody td button.ex').click(function () {
+        var nTr = this.parentNode.parentNode;
+        if ($(this).attr("opened") == 'details_close') {
+            OrdWriteOffTable.fnClose(nTr);
+            $(this).attr("opened", "details_open");
+        }
+        else {
+            wait();
+            $(this).attr("opened", "details_close");
+            var OrdYear = $(this.parentNode.parentNode).attr("OrdYear");
+            var OrderNo = $(this.parentNode.parentNode).attr("OrderNo");
+            var TawreedNo = $(this.parentNode.parentNode).attr("TawreedNo");
+            var ShipSer = $(this.parentNode.parentNode).attr("ShipSer");
+
+            $.get("../../../../VoucIssue/DetailsWriteOffRec?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo + '&ShipSer=' + ShipSer, function (data) {
+                OrdWriteOffTable.fnOpen(nTr, data, 'details');
+                done();
+            });
+        }
+    });
+
+    function CreateWriteOff(OrdYear, OrdNo, TawreedNo, ShipSer) {
+        $('#AddWriteOff').attr("href", '/VoucIssue/AddWriteOff?OrdYear=' + OrdYear + '&OrderNo=' + OrdNo + '&TawreedNo=' + TawreedNo + '&ShipSer=' + ShipSer + '')
+        $('#AddWriteOff').click();
+    }
+</script>
+
+
+
+
+
+

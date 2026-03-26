@@ -1,0 +1,57 @@
+﻿<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-4" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2">
+
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary btn-block" onclick="SerachVendorExistAcount()" style="display:none;">
+                    @Html.Translate("اضافة مورد له حساب", "Add Exist Acount")
+                </button>
+                <button id="AddExistAcount" class="btn btn-primary btn-block" href="/VendorsInfo/AddExistAcount" >
+                    @Html.Translate("اضافة مورد له حساب", "Add Exist Acount")
+                </button>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary btn-block" href="/VendorsInfo/AddWithoutAcount" target="_blank">
+                    @Html.Translate("اضافة مورد ليس له حساب", "Add Without Acount")
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="Ord_VendorsInfoListDiv">
+        @Html.Partial("~/Views/VendorsInfo/VendorsInfoList.cshtml")
+    </div>
+</div>
+
+
+<script>
+    $('#Model_VendorExistAcountInfo').draggable({
+        handle: ".modal-header",
+    });
+    function SerachVendorExistAcount() {
+        VendorExistAcountInfoDiv.innerHTML = "";
+        $('#VendorExistAcountInfoDiv').load('../../../VendorsInfo/VendorExistAcount');
+        $('#Model_VendorExistAcountInfo').modal('show');
+    }
+    function AddEnterVendorExist(AccountNo, AccountName, AccounteName) {
+        $('#Model_VendorExistAcountInfo').modal('hide');
+        $('#AddExistAcount').attr("href", '/VendorsInfo/AddExistAcount?AccountNo=' + AccountNo + '&AccountName=' + AccountName + '&AccounteName=' + AccounteName + '')
+        $('#AddExistAcount').click();
+    }
+    function Delete_VendorsInfo(VendorNo) {
+        if (confirm('@Resources.Resource.ConfirmDeleteDialog')) {
+            burn({ VendorNo: VendorNo }, '../../../VendorsInfo/Del_VendorsInfo', '', ReloadDelVendorsInfo, true);
+        }
+    }
+    function ReloadDelVendorsInfo() {
+        MsgBox('@Html.Recource(2598)', 'red');
+        $('#Ord_VendorsInfoListDiv').load('../../../VendorsInfo/VendorsInfoList');
+    }
+</script>

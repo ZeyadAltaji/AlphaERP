@@ -1,0 +1,94 @@
+﻿@using System.Data.SqlClient;
+@using AlphaERP.Models
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+
+    List<OrdCopyInfo> OrdCopy = new MDB().Database.SqlQuery<OrdCopyInfo>(string.Format("SELECT ReqforQuotyear,ReqforQuotNo,ReqYear,ReqNo,Convert(date,SellDate) as SellDate   " +
+"from MRP_Web_OrdCopyInfo INNER JOIN Ord_RequestDF ON MRP_Web_OrdCopyInfo.ReqforQuotyear = Ord_RequestDF.RequestforQuotationYear " +
+"AND MRP_Web_OrdCopyInfo.ReqforQuotNo = Ord_RequestDF.RequestforQuotationNo AND MRP_Web_OrdCopyInfo.CompNo = Ord_RequestDF.CompNo " +
+"where (MRP_Web_OrdCopyInfo.CompNo = '{0}') and bVendorsOffers = 0 AND Ord_RequestDF.bRequestforQuotation = 1  " +
+"Group by MRP_Web_OrdCopyInfo.ReqforQuotyear, MRP_Web_OrdCopyInfo.ReqforQuotNo,MRP_Web_OrdCopyInfo.SellDate, Ord_RequestDF.ReqYear, Ord_RequestDF.ReqNo ", company.comp_num)).ToList();
+
+}
+
+<table class="table" id="VendorsOffersInfoTable">
+    <thead>
+        <tr>
+            <th>@Html.Recource(5745)</th>
+            <th>@Html.Recource(5746)</th>
+            <th>@Html.Recource(9471)</th>
+            <th>@Html.Recource(3196)</th>
+            <th>@Html.Recource(3197)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="ProductionPlanActivateTbody">
+        @foreach (OrdCopyInfo P in OrdCopy)
+        {
+            <tr onclick="SelectVendorsOffersInfo(this)" ondblclick="GetVendorsOffersInfo()" ReqforQuotNo="@P.ReqforQuotNo" ReqforQuotyear="@P.ReqforQuotyear">
+                <td>@P.ReqforQuotyear</td>
+                <td>@P.ReqforQuotNo</td>
+                <td>@P.SellDate.Value.ToString("yyyy-MM-dd")</td>
+                <td>@P.ReqYear</td>
+                <td>@P.ReqNo</td>
+                <td></td>
+            </tr>
+        }
+    </tbody>
+</table>
+<div class="modal-footer">
+    <button type="button" onclick="SelectionVendorsOffersInfoDiv()" class="btn btn-primary">@Resources.Resource.Choose</button>
+    <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+</div>
+
+<script>
+    $('#VendorsOffersInfoTable').DataTable({
+        "scrollY": TableHeight2(400),
+        "paging": true,
+        "pageLength": 25,
+    });
+    function GetVendorsOffersInfo() {
+        var table = $('#VendorsOffersInfoTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+
+        var ReqforQuotyear = trs[0].getAttribute('ReqforQuotyear');
+        var ReqforQuotNo = trs[0].getAttribute('ReqforQuotNo');
+
+        AddEnterVendorOffer(ReqforQuotyear, ReqforQuotNo);
+    }
+    function SelectVendorsOffersInfo(e) {
+        var table = $('#VendorsOffersInfoTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function SelectionVendorsOffersInfoDiv() {
+        var table = $('#VendorsOffersInfoTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+
+        if (trs.length == 0) {
+            MsgBox('@Resources.Resource.NoPlanWasChosen', 'red');
+            done();
+            return false
+        }
+
+        var ReqforQuotyear = trs[0].getAttribute('ReqforQuotyear');
+        var ReqforQuotNo = trs[0].getAttribute('ReqforQuotNo');
+
+        AddEnterVendorOffer(ReqforQuotyear,ReqforQuotNo);
+    }
+</script>
+
+
+
+
+
+

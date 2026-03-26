@@ -1,0 +1,25 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+          
+            
+        </div>
+    </div>
+
+    <div class="box-body box-profile" id="MRP_GeneralPlanInfoHListTableDiv">
+     </div>
+</div>
+<script>
+     $('#MRP_GeneralPlanInfoHListTableDiv').load('../../ProdCost_QA/ListProdCost_QARequests')
+</script> 

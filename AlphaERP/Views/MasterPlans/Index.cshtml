@@ -1,0 +1,382 @@
+﻿@model List<AlphaERP.Models.MRP_GeneralPlanInfoH>
+@using System.Data.SqlClient;
+@using System.Configuration;
+@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+    var YourcontrollerName = ViewContext.RouteData.Values["controller"].ToString();
+}
+
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2">
+                <input type="number" id="MasterPlanYear" value="@DateTime.Now.Year" style="width:100%" />
+            </div>
+            <div class="col-md-2">
+                <button @Html.AddButton() class="btn btn-primary btn-block" onclick="CreateNewMRP_GeneralPlanInfoH()">
+                    <i class="fa fa-plus"></i> @Html.Recource(32)
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="MRP_GeneralPlanInfoHListTableDiv">
+        @Html.Partial("~/Views/MasterPlans/List.cshtml")
+    </div>
+</div>
+
+
+<div class="modal fade wide" id="MRP_GeneralPlanInfoH_save_MRP_GeneralPlanInfoH">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(475) >> @Html.Recource(6816)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_GeneralPlanInfoH_save_PlanYear">@Html.Recource(5293) </label>
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <input value="@DateTime.Now.Year" required="false" type="number" id="MRP_GeneralPlanInfoH_save_PlanYear" placeholder="@Html.Recource(5293)" />
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_GeneralPlanInfoH_save_PlanNo">@Html.Recource(6678) </label>
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <input required="false" type="number" disabled id="MRP_GeneralPlanInfoH_save_PlanNo" placeholder="@Html.Recource(6678)" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_GeneralPlanInfoH_save_StartDate">@Resources.Resource.StartDate </label>
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <input onchange="MasterPlansCalcDays();$('#MRP_GeneralPlanInfoH_save_EndDate').attr('min',this.value)" value="@DateTime.Now.ToString("yyyy-MM-dd")" required="false" type="date" id="MRP_GeneralPlanInfoH_save_StartDate" placeholder="StartDate" />
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_GeneralPlanInfoH_save_EndDate">@Resources.Resource.EndDate </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input onchange="MasterPlansCalcDays()" value="@DateTime.Now.ToString("yyyy-MM-dd")" required="false" type="date" id="MRP_GeneralPlanInfoH_save_EndDate" placeholder="EndDate" />
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" id="MasterPlanDays"></label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_GeneralPlanInfoH_edit_PlanNotes">@Html.Recource(973) </label>
+                    </div>
+                    <div class="col-md-8" style="margin-bottom: 5px;">
+                        <input style="width:100%" required="false" type="text" id="MRP_GeneralPlanInfoH_edit_PlanNotes" placeholder="@Html.Recource(973)" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable">
+                            <input disabled id="MRP_GeneralPlanInfoH_save_PlanActive" type="checkbox" />
+                            @Html.Recource(3394)
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <label class="unselectable">@Html.Recource(4756) :</label>
+                        <button onclick="MasterAddItem()" type="button" class="btn btn-default">@Html.Recource(32)</button>
+                    </div>
+                    <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+                        <table class="table table-hover" id="MasterPlanItems">
+                            <thead>
+                                <tr>
+                                    <th>@Html.Recource(44)</th>
+                                    <th>@Html.Recource(74)</th>
+                                    <th>@Html.Recource(4286)</th>
+                                    <th>@Html.Recource(283)</th>
+                                    <th>@Html.Recource(67)</th>
+                                    <th>@Html.Recource(5693)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="MasterSelectItemTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteMRP_GeneralPlanInfoH_save_MRP_GeneralPlanInfoH()" class="btn btn-primary">@Html.Recource(475)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade wide" id="InvItemsMF_edit_InvItemsMF">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4756)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="MasterSelectItemTable">
+                            <thead>
+                                <tr>
+                                    <th>@Html.Recource(44)</th>
+                                    <th>@Html.Recource(74)</th>
+                                    <th>@Html.Recource(4286)</th>
+                                    <th>@Html.Recource(283)</th>
+                                    <th>@Html.Recource(67)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    int Comp_num = company.comp_num;
+                                    string query = string.Format("exec SP_Search {0},'WHERE (prod_formula_header_info.comp_no = {0}) AND (prod_formula_header_info.SusFlag = 0)',392", Comp_num);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                <tr onclick="$(this).toggleClass('selected');">
+                                                    <td>@rdr["ItemNofin"]</td>
+                                                    <td title="@rdr["ItemDescfin"].ToString()">@Html.Trim(rdr["ItemDescfin"].ToString(), 30)</td>
+                                                    <td>@rdr["formula_code"]</td>
+                                                    <td>@rdr["formula_desc"]</td>
+                                                    <td>@rdr["UnitCode"]</td>
+                                                    <td></td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteInvItemsMF_edit_InvItemsMF()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    var CurPlanNo = 0;
+    function MasterPlansCalcDays() {
+        document.getElementById('MasterPlanDays').innerHTML = DaysDeff('MRP_GeneralPlanInfoH_save_StartDate', 'MRP_GeneralPlanInfoH_save_EndDate');
+    }
+
+    function ExcuteInvItemsMF_edit_InvItemsMF() {
+        var data = itemsTable.rows('.selected').data();
+        if (data.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة واحدة على الاقل", "Select one item at least")');
+            return;
+        }
+        var table_ = $("#MasterSelectItemTableBody");
+
+        for (var i = 0; i < data.length; i++) {
+            var Added = false;
+            table_.find("tr").each(function () {
+                var ItemNo_ = $(this).find("td:first-child").text();
+                var ItemName_ = $(this).find("td:nth-child(2)").text();
+                var PlanNo_ = $(this).find("td:nth-child(3)").text();
+                if (ItemNo_ == data[i][0] && ItemName_ == data[i][1] && PlanNo_ == data[i][2]) {
+                    Added = true;
+                }
+            });
+            if (!Added) {
+                var newarray = [];
+                newarray.push(data[i][0])
+                newarray.push(data[i][1])
+                newarray.push(data[i][2])
+                newarray.push(data[i][3])
+                newarray.push(data[i][4])
+                newarray.push('<input type="number" style="width:75px !important" />')
+                newarray.push('<button class="btn-de" onclick="RemoveRow(this)"><i class= "fa fa-trash-alt"></i ></button>')
+                $("#MasterSelectItemTableBody").append(
+                    GenRow(newarray)
+                );
+            }
+
+        }
+
+        $('#InvItemsMF_edit_InvItemsMF').modal('hide')
+
+    }
+    var itemsTable = $('#MasterSelectItemTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+
+
+    function MasterAddItem() {
+        $('#MasterSelectItemTable tr').removeClass("selected");
+        $('#InvItemsMF_edit_InvItemsMF').modal('show')
+    }
+    $('#InvItemsMF_edit_InvItemsMF').on('shown.bs.modal', function () {
+        //itemsTable.columns.adjust().draw(false);
+    });
+    $('#InvItemsMF_edit_InvItemsMF').draggable({
+        handle: '.modal-header'
+    });
+    $('#MRP_GeneralPlanInfoH_save_MRP_GeneralPlanInfoH').draggable({
+        handle: '.modal-header'
+    });
+    $('#MRP_GeneralPlanInfoH_save_MRP_GeneralPlanInfoH').on('shown.bs.modal', function () {
+        $('#MRP_GeneralPlanInfoH_save_PlanYear').focus();
+        $('#MRP_GeneralPlanInfoH_save_PlanYear').select();
+    })
+    function CreateNewMRP_GeneralPlanInfoH() {
+        document.getElementById('MRP_GeneralPlanInfoH_save_PlanActive').checked = false;
+        document.getElementById('MRP_GeneralPlanInfoH_save_PlanYear').value = '@DateTime.Now.Year';
+        document.getElementById('MRP_GeneralPlanInfoH_save_PlanNo').value = '';
+        document.getElementById('MRP_GeneralPlanInfoH_save_StartDate').value = '@DateTime.Now.ToString("yyyy-MM-dd")';
+        document.getElementById('MRP_GeneralPlanInfoH_save_EndDate').value = '@DateTime.Now.ToString("yyyy-MM-dd")';
+        document.getElementById('MRP_GeneralPlanInfoH_edit_PlanNotes').value = '';
+        $('#MasterSelectItemTableBody').empty();
+
+        $('#MRP_GeneralPlanInfoH_save_MRP_GeneralPlanInfoH').modal('show')
+    }
+    function ExcuteMRP_GeneralPlanInfoH_save_MRP_GeneralPlanInfoH() {
+        if (document.getElementById('MRP_GeneralPlanInfoH_save_PlanYear').value == '') { document.getElementById('MRP_GeneralPlanInfoH_save_PlanYear').focus(); return; }
+        if (document.getElementById('MRP_GeneralPlanInfoH_save_StartDate').value == '') { document.getElementById('MRP_GeneralPlanInfoH_save_StartDate').focus(); return; }
+        if (document.getElementById('MRP_GeneralPlanInfoH_save_EndDate').value == '') { document.getElementById('MRP_GeneralPlanInfoH_save_EndDate').focus(); return; }
+        if (compareDates('MRP_GeneralPlanInfoH_save_StartDate', 'MRP_GeneralPlanInfoH_save_EndDate')) {
+            alert('@Html.Translate("يجب أن يكون تاريخ الانتهاء مساوياً أو أكبر من تاريخ البدء", "End date must be equal or greater than start date")');
+            return;
+        }
+        var trs = document.getElementById('MasterSelectItemTableBody').getElementsByTagName("tr");
+        if (trs.length == 0) {
+            alert('@Html.Translate("اضف مادة واحدة على الاقل","Add one item at least")');
+            return;
+        }
+        for (var i = 0; i < trs.length; i++) {
+            var inpt = trs[i].cells[5].children[0]
+            if (Number(inpt.value) <= 0) { inpt.focus(); return; }
+        }
+        var DF = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            var inpt = trs[i].cells[5].children[0]
+            DF.push
+                ({
+                    CompNo    :"@company.comp_num",
+                    PlanYear: document.getElementById('MRP_GeneralPlanInfoH_save_PlanYear').value,
+                    PlanNo:0,
+                    FormulaCode: trs[i].cells[2].innerHTML,
+                    ItemNo: trs[i].cells[0].innerHTML,
+                    PQty: Number(inpt.value)
+                });
+        }
+
+        var HF = {
+            PlanActive: document.getElementById('MRP_GeneralPlanInfoH_save_PlanActive').checked,
+            CompNo :"@company.comp_num",
+            PlanYear: document.getElementById('MRP_GeneralPlanInfoH_save_PlanYear').value,
+            PlanNo: document.getElementById('MRP_GeneralPlanInfoH_save_PlanNo').value,
+            StartDate: document.getElementById('MRP_GeneralPlanInfoH_save_StartDate').value,
+            EndDate: document.getElementById('MRP_GeneralPlanInfoH_save_EndDate').value,
+            PlanNotes: document.getElementById('MRP_GeneralPlanInfoH_edit_PlanNotes').value,
+        };
+        CurPlanNo = document.getElementById('MRP_GeneralPlanInfoH_save_PlanNo').value;
+
+        burn({ HF: HF, DF: DF }, '../../../MasterPlans/Action', '', LoadMRP_GeneralPlanInfoH, true)
+    }
+    function LoadMRP_GeneralPlanInfoH() {
+        if (CurPlanNo == 0 && $('#MRP_GeneralPlanInfoH_save_PlanYear').val() == input.value) {
+            $('#MRP_GeneralPlanInfoHListTableDiv').load('/MasterPlans/List?PlanYear=' + input.value)
+        }
+        else {
+            var table_ = $("#MasterPlanTBBD");
+            table_.find("tr").each(function () {
+                var PlanNo_ = $(this).find("td:nth-child(2)").text();
+                if (PlanNo_ == CurPlanNo) {
+                    $(this).find("td:nth-child(3)").text(document.getElementById('MRP_GeneralPlanInfoH_save_StartDate').value.split('-').join('/'));
+                    $(this).find("td:nth-child(4)").text(document.getElementById('MRP_GeneralPlanInfoH_save_EndDate').value.split('-').join('/'));
+                    $(this).find("td:nth-child(7)").text(document.getElementById('MRP_GeneralPlanInfoH_edit_PlanNotes').value);
+                    $(this).find("td:nth-child(9)").text(DaysDeffNumber('MRP_GeneralPlanInfoH_save_StartDate','MRP_GeneralPlanInfoH_save_EndDate'));
+                }
+            });
+        }
+        $('#MRP_GeneralPlanInfoH_save_MRP_GeneralPlanInfoH').modal('hide')
+    }
+    function EditMRP_GeneralPlanInfoH(CompNo_, PlanYear_, PlanNo_) {
+        burn({ CompNo: CompNo_, PlanYear: PlanYear_, PlanNo: PlanNo_ }, '../../../MasterPlans/GetThisPlan', '', EditingMRP_GeneralPlanInfoH, true)
+    }
+
+    function EditingMRP_GeneralPlanInfoH(r) {
+        $('#MasterSelectItemTableBody').empty();
+
+
+
+        document.getElementById('MRP_GeneralPlanInfoH_save_PlanYear').value = r.HF.PlanYear;
+        document.getElementById('MRP_GeneralPlanInfoH_save_PlanNo').value = r.HF.PlanNo;
+        document.getElementById('MRP_GeneralPlanInfoH_save_StartDate').value = formatJSONDate(r.HF.StartDate);
+        document.getElementById('MRP_GeneralPlanInfoH_save_EndDate').value = formatJSONDate(r.HF.EndDate);
+        document.getElementById('MRP_GeneralPlanInfoH_edit_PlanNotes').value = r.HF.PlanNotes;
+        document.getElementById('MRP_GeneralPlanInfoH_save_PlanActive').checked = r.HF.PlanActive;
+        MasterPlansCalcDays();
+        $.each(r.DF, function (i, item) {
+            var newarray = [];
+            newarray.push(item.ItemNo)
+            newarray.push(ar(item.Item.ItemDesc_Ara, item.Item.ItemDesc))
+            newarray.push(item.FormulaCode)
+            newarray.push(item.Formula.formula_desc)
+            newarray.push(item.UnitCode)
+            newarray.push('<input type="number" style="width:75px !important" value="' + item.PQty+'" />')
+            newarray.push('<button class="btn-de" onclick="RemoveRow(this)"><i class= "fa fa-trash-alt"></i ></button>')
+            $("#MasterSelectItemTableBody").append(
+                GenRow(newarray)
+            );
+        });
+
+
+        $('#MRP_GeneralPlanInfoH_save_MRP_GeneralPlanInfoH').modal('show')
+    }
+
+    var input = document.getElementById("MasterPlanYear");
+
+    input.addEventListener("keyup", function (event) {
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            if (input.value < 2000 || input.value > 2099) {
+                input.select();
+            } else {
+                wait();
+                $('#MRP_GeneralPlanInfoHListTableDiv').load('/MasterPlans/List?PlanYear=' + input.value, function () {
+                    done();
+                })
+            }
+        }
+    });
+</script>
+
+
+

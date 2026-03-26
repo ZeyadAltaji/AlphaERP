@@ -1,0 +1,57 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+
+@{
+    string ItemNo = ViewBag.ItemNo;
+    Company company = (Company)Session["company"];
+    DataTable Dt = new DataTable();
+    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+    {
+        Dt = new DataTable();
+        cn.Open();
+        using (SqlCommand cmd = new SqlCommand())
+        {
+            cmd.Connection = cn;
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+            cmd.CommandText = "Ord_GetVedorsForItem";
+            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+            cmd.Parameters.Add(new SqlParameter("@ItemNo", SqlDbType.VarChar)).Value = ItemNo;
+            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+            {
+                DA.Fill(Dt);
+            }
+        }
+    }
+}
+
+
+<table class="table table-hover" id="SuppliersItemTable">
+    <thead>
+        <tr>
+            <th style="width: 10%;">@Html.Recource(318)</th>
+            <th style="width: 20%;">@Html.Recource(321)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody style="text-align: center;" id="SuppliersItemTBody">
+        @foreach (DataRow row in Dt.Rows)
+        {
+            <tr>
+                <td>@row["VendorNo"].ToString()</td>
+                <td>@row["VendorName"].ToString()</td>
+                <td></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+    $('#SuppliersItemTable').DataTable({
+        "scrollY": TableHeight2(400),
+        "paging": true,
+        "pageLength": 25,
+    });
+</script>

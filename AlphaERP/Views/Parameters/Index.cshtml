@@ -1,0 +1,325 @@
+﻿@model IEnumerable<AlphaERP.Models.ProdCost_ParametersHF>
+@using AlphaERP.Models
+@{
+    List<ProdCost_Parameter> lParam = ViewBag.lParam;
+}
+
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-12" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="ProdCost_ParametersHFListTableDiv">
+        @*@Html.Partial("~/Views/Parameters/List.cshtml")*@
+    </div>
+</div>
+
+<div class="modal fade wide" id="ProdCost_Parameters_save_ProdCost_Parameters">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(475) >> @Html.Recource(7031)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ProdCost_Parameters_save_LocalDesc">@Html.Recource(66) </label>
+                    </div>
+                    <div class="col-md-8" style="margin-bottom: 5px;">
+                        <input required="false" type="text" id="ProdCost_Parameters_save_LocalDesc" placeholder="@Html.Recource(66)" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ProdCost_Parameters_save_EngDesc">@Html.Recource(118) </label>
+                    </div>
+                    <div class="col-md-8" style="margin-bottom: 5px;">
+                        <input required="false" type="text" id="ProdCost_Parameters_save_EngDesc" placeholder="@Html.Recource(118)" />
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteNewParameter()" class="btn btn-primary">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade wide" id="ProdCost_Parameters_save_ProdCost_ParametersQATests">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(475) >> @Html.Recource(7031)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ProdCost_Parameters_save_LocalDescQATests">@Html.Recource(66) </label>
+                    </div>
+                    <div class="col-md-8" style="margin-bottom: 5px;">
+                        <input required="false" type="text" id="ProdCost_Parameters_save_LocalDescQATests" placeholder="@Html.Recource(66)" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ProdCost_Parameters_save_EngDescQATests">@Html.Recource(118) </label>
+                    </div>
+                    <div class="col-md-8" style="margin-bottom: 5px;">
+                        <input required="false" type="text" id="ProdCost_Parameters_save_EngDescQATests" placeholder="@Html.Recource(118)" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ProdCost_ParametersQATests">@Html.Translate("مجموعات فحوصات الانتاج", "QA Tests Groups") </label>
+                    </div>
+                    <div class="col-md-8" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="QATestsGroupsSelect">
+                            @foreach (var v in lParam.Where(x => x.ParmID == 9))
+                            {
+                                <option value="@v.ParmCode">@Html.Translate(v.LocalDesc, v.EngDesc)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteNewParameter()" class="btn btn-primary">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade wide" id="ProdCost_Parameters_save_ProdCost_ParametersEdit">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(475) >> @Html.Recource(7031)</label>
+            </div>
+            <div class="modal-body row" id="EditParametersmodal">
+
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteEditParameter()" class="btn btn-primary">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        wait()
+        $('#ProdCost_ParametersHFListTableDiv').html('');
+        $('#ProdCost_ParametersHFListTableDiv').load('../../../Parameters/List', function () {
+            done();
+        });
+    });
+
+
+    $('#ProdCost_Parameters_save_ProdCost_Parameters').draggable({
+        handle: '.modal-header'
+    });
+
+    $('#ProdCost_Parameters_save_ProdCost_ParametersQATests').draggable({
+        handle: '.modal-header'
+    });
+    $('#ProdCost_Parameters_save_ProdCost_ParametersEdit').draggable({
+        handle: '.modal-header'
+    });
+    $('#ProdCost_Parameters_save_ProdCost_Parameters').on('shown.bs.modal', function () {
+        $('#ProdCost_Parameters_save_LocalDesc').focus();
+        $('#ProdCost_Parameters_save_LocalDesc').select();
+    });
+    $('#QATestsGroupsSelect').select2();
+    var ParmID_ = 0;
+    var ParmCode_ = 0;
+
+
+    function AddNewParameter(ParmID) {
+        debugger
+        if (ParmID == "5") {
+            e_ = null;
+            ParmID_ = ParmID;
+            ParmCode_ = 0;
+            document.getElementById('ProdCost_Parameters_save_LocalDescQATests').value = '';
+            document.getElementById('ProdCost_Parameters_save_EngDescQATests').value = '';
+            $('#ProdCost_Parameters_save_ProdCost_ParametersQATests').modal('show')
+        }else{
+            e_ = null;
+            ParmID_ = ParmID;
+            ParmCode_ = 0;
+            document.getElementById('ProdCost_Parameters_save_LocalDesc').value = '';
+            document.getElementById('ProdCost_Parameters_save_EngDesc').value = '';
+            $('#ProdCost_Parameters_save_ProdCost_Parameters').modal('show')
+        }
+
+
+    }
+
+    function ExcuteNewParameter() {
+        debugger
+        if (ParmID_ == "5") {
+            if (document.getElementById('ProdCost_Parameters_save_LocalDescQATests').value.trim() == '') { document.getElementById('ProdCost_Parameters_save_LocalDescQATests').focus(); return; }
+            if (document.getElementById('ProdCost_Parameters_save_EngDescQATests').value.trim() == '') { document.getElementById('ProdCost_Parameters_save_EngDescQATests').focus(); return; }
+
+            var detail = {
+                ParmID: ParmID_,
+                ParmCode: ParmCode_,
+                LocalDesc: document.getElementById('ProdCost_Parameters_save_LocalDescQATests').value.trim(),
+                EngDesc: document.getElementById('ProdCost_Parameters_save_EngDescQATests').value.trim(),
+                Groups: $('#QATestsGroupsSelect').val()
+
+            };
+
+            burn({ detail: detail }, '../../../Parameters/AddNewDetail', '', ExcutedNewParameter, false)
+        } else {
+            if (document.getElementById('ProdCost_Parameters_save_LocalDesc').value.trim() == '') { document.getElementById('ProdCost_Parameters_save_LocalDesc').focus(); return; }
+            if (document.getElementById('ProdCost_Parameters_save_EngDesc').value.trim() == '') { document.getElementById('ProdCost_Parameters_save_EngDesc').focus(); return; }
+
+            var detail = {
+                ParmID: ParmID_,
+                ParmCode: ParmCode_,
+                LocalDesc: document.getElementById('ProdCost_Parameters_save_LocalDesc').value.trim(),
+                EngDesc: document.getElementById('ProdCost_Parameters_save_EngDesc').value.trim()
+            };
+
+            burn({ detail: detail }, '../../../Parameters/AddNewDetail', '', ExcutedNewParameter, false)
+        }
+
+    }
+    function ExcuteEditParameter() {
+        if (ParmID_ == "5") {
+            if (document.getElementById('eProdCost_Parameters_LocalDescQATests').value.trim() == '') { document.getElementById('eProdCost_Parameters_LocalDescQATests').focus(); return; }
+            if (document.getElementById('eProdCost_Parameters_EngDescQATests').value.trim() == '') { document.getElementById('eProdCost_Parameters_EngDescQATests').focus(); return; }
+
+            var detail = {
+                ParmID: ParmID_,
+                ParmCode: ParmCode_,
+                LocalDesc: document.getElementById('eProdCost_Parameters_LocalDescQATests').value.trim(),
+                EngDesc: document.getElementById('eProdCost_Parameters_EngDescQATests').value.trim(),
+                Groups: $('#eQATestsGroupsSelect').val()
+
+            };
+
+            burn({ detail: detail }, '../../../Parameters/AddNewDetail', '', ExcutedNewParameter, false)
+        } else {
+            if (document.getElementById('eProdCost_Parameters_LocalDescQATests').value.trim() == '') { document.getElementById('eProdCost_Parameters_LocalDescQATests').focus(); return; }
+            if (document.getElementById('eProdCost_Parameters_EngDescQATests').value.trim() == '') { document.getElementById('eProdCost_Parameters_EngDescQATests').focus(); return; }
+
+            var detail = {
+                ParmID: ParmID_,
+                ParmCode: ParmCode_,
+                LocalDesc: document.getElementById('ProdCost_Parameters_save_LocalDesc').value.trim(),
+                EngDesc: document.getElementById('ProdCost_Parameters_save_EngDesc').value.trim()
+            };
+
+            burn({ detail: detail }, '../../../Parameters/AddNewDetail', '', ExcutedNewParameter, false)
+        }
+    }
+
+    function ExcutedNewParameter(r) {
+        $('#ProdCost_Parameters_save_ProdCost_Parameters').modal('hide');
+        $('#ProdCost_ParametersHFListTableDiv').html('');
+        wait();
+        $('#ProdCost_ParametersHFListTableDiv').load('../../../Parameters/List', function () {
+            done();
+        });
+        //if (e_ != null) {
+        //    e_.parentNode.parentNode.children[1].innerHTML = document.getElementById('ProdCost_Parameters_save_LocalDesc').value;
+        //    e_.parentNode.parentNode.children[2].innerHTML = document.getElementById('ProdCost_Parameters_save_EngDesc').value;
+        //} else {
+        //    var tbid = '#ProdCost_ParametersHFDataTable_' + ParmID_;
+        //    $(tbid + " > tbody").append(
+        //        '<tr ParmID="' + r.detail.ParmCode + '">'
+        //        + '<td>' + r.detail.ParmCode + '</td>'
+        //        + '<td>' + r.detail.LocalDesc + '</td>'
+        //        + '<td>' + r.detail.EngDesc + '</td>'
+        //        + '<td>'
+        //        + '<button class="btn-ed" onclick="EditProdCost_ParametersHF(' + r.detail.ParmID + ',' + r.detail.ParmCode + ',this)">'
+        //        + '<i class="fa fa-pencil-alt"></i>'
+        //        + '</button>'
+        //        + '<button class="btn-de" onclick="DeleteProdCost_ParametersHF(' + r.detail.ParmID + ',' + r.detail.ParmCode + ', this)">'
+        //        + '<i class="fa fa-trash-alt" aria-hidden="true"></i>'
+        //        + '</button>'
+        //        + '</td>'
+        //        + '</tr>'
+        //    );
+        //}
+
+
+    }
+    var e_;
+    function EditProdCost_ParametersHF(ParmID, ParmCode, e) {
+        debugger
+        ParmID_ = ParmID; ParmCode_ = ParmCode; e_ = e;
+        var detail = {
+            ParmID: ParmID_,
+            ParmCode: ParmCode_
+        };
+        $('#EditParametersmodal').html('')
+        $('#EditParametersmodal').load('../../../Parameters/EditParam', { detail: detail }, function () {
+            $('#ProdCost_Parameters_save_ProdCost_ParametersEdit').modal('show');
+        });
+        //burn({ detail: detail }, '../../../Parameters/GetDetail', '', ExcutedEXTParameter_, true)
+    }
+
+    function ExcutedEXTParameter_(r) {
+        debugger;
+        if (r.detail.ParmID == "5") {
+            ParmID_ = r.detail.ParmID;
+            ParmCode_ = r.detail.ParmCode;
+            document.getElementById('ProdCost_Parameters_save_LocalDescQATests').value = r.detail.LocalDesc;
+            document.getElementById('ProdCost_Parameters_save_EngDescQATests').value = r.detail.EngDesc;
+            var selectElement = document.getElementById('QATestsGroupsSelect');
+            var options = selectElement.options;
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].value == r.detail.Groups) {
+                    options[i].selected = true;
+                    break;
+                }
+            }
+
+            $('#ProdCost_Parameters_save_ProdCost_ParametersQATests').modal('show')
+        } else {
+            ParmID_ = r.detail.ParmID;
+            ParmCode_ = r.detail.ParmCode;
+            document.getElementById('ProdCost_Parameters_save_LocalDesc').value = r.detail.LocalDesc;
+            document.getElementById('ProdCost_Parameters_save_EngDesc').value = r.detail.EngDesc;
+            $('#ProdCost_Parameters_save_ProdCost_Parameters').modal('show')
+        }
+
+    }
+
+    function DeleteProdCost_ParametersHF(ParmID, ParmCode, e) {
+        debugger
+        if (RemoveRow(e)) {
+            ParmID_ = ParmID; ParmCode_ = ParmCode;
+            var detail = {
+                ParmID: ParmID_,
+                ParmCode: ParmCode_
+            };
+            burn({ detail: detail }, '../../../Parameters/DeleteDetail', '', '', true)
+
+        }
+    }
+
+</script>

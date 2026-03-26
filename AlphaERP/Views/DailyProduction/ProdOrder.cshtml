@@ -1,0 +1,65 @@
+﻿@model IEnumerable<AlphaERP.Controllers.DailyProductionController.ProdOrders>
+@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+}
+<div class="form-group">
+    <div class="col-md-12">
+        <table class="table table-hover" id="SelectDailyProd_ProdOrdersTable">
+            <thead>
+                <tr>
+                    <th style="text-align:center;">@Html.Recource(2063)</th>
+                    <th style="text-align:center;">@Html.Recource(2064)</th>
+                    <th style="text-align:center;">@Html.Recource(2065)</th>
+                    <th style="text-align:center;">@Html.Recource(44)</th>
+                    <th style="text-align:center;">@Html.Recource(66)</th>
+                    <th style="text-align:center;">@Html.Recource(49)</th>
+                    <th style="text-align:center;">@Html.Recource(1)</th>
+                    <th style="text-align:center;">@Html.Recource(307)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    string stgeDesc = "";
+                    if (item.stage_code != null)
+                    {
+                        int stagecode = int.Parse(item.stage_code);
+                        stgeDesc = new MDB().prod_prodstage_info.Where(x => x.comp_no == company.comp_num && x.stage_code == stagecode).FirstOrDefault().stage_desc;
+                    }
+
+                  <tr onclick="SelectDailyProd_ProdOrders(this)" stage_code="@item.stage_code" stge_Desc ="@stgeDesc" unitSerial="@item.UnitSerial" tunit="@item.TUnit">
+        <td style="text-align:center;">@item.prepare_year</td>
+        <td style="text-align:center;">@item.prepare_code</td>
+        <td style="text-align:center;">@item.prepare_date.ToString("yyyy-MM-dd")</td>
+        <td style="text-align:center;">@item.item_no</td>
+        <td style="text-align:center;">@Html.Translate(item.ItemDesc, item.ItemDesc_Ara)</td>
+        <td style="text-align:center;">@item.qty_prepare</td>
+        <td style="text-align:center;" storeNo="@item.StoreNo">@item.StoreName</td>
+        <td style="text-align:center;">
+            @if (item.ClosingStat == true)
+            {
+                <i class="fa fa-check"></i>
+            }
+            else
+            {
+                <i class="fa fa-times"></i>
+            }
+        </td>
+        <td></td>
+    </tr>
+                 }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<script>
+    $('#SelectDailyProd_ProdOrdersTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+</script>

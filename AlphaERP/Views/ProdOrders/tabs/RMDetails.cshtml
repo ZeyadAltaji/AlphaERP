@@ -1,0 +1,42 @@
+﻿
+<div class="form-group">
+    <div class="col-md-6">
+        <button onclick="ReplacementTotal(1)" type="button" class="btn btn-primary">@Html.Recource(9413)</button>
+    </div>
+    <div class="col-md-6">
+        <button style="float: @Html.Translate("left","right");" onclick="ReplacementPartial(1)" type="button" class="btn btn-primary">@Html.Recource(9414)</button>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12" style="width:865px !important ;overflow-y:auto">
+        <table class="table table-hover" id="RMDetailsTable">
+            <thead>
+                <tr>
+                    <th style="width: 110px;text-align:center;">@Html.Recource(44)</th>
+                    <th style="width:50px"></th>
+                    <th style="width:290px; text-align:center;">@Html.Recource(74)</th>
+                    <th style="width:50px"></th>
+                    <th style="width:55px;text-align:center;">@Html.Recource(67)</th>
+                    <th style="width: 75px;text-align:center;">@Html.Recource(49)</th>
+                    <th style="width: 75px;text-align:center;">@Html.Recource(4406)</th>
+                    <th style="width: 75px;text-align:center;">@Html.Recource(4407)</th>
+                    <th style="width:50px;">@Html.Recource(94)</th>
+                    <th style="width:50px;"></th>
+                    <th style="width:150px;text-align:center;">@Html.Recource(70)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="RMDetailsTbody" style="border-top: 1px solid #ddd;"></tbody>
+        </table>
+    </div>
+</div>
+
+
+<div class="form-group">
+    <div class="col-md-6" style="width: 442px;"></div>
+    <div class="col-md-1">
+        <label id="RMTotalQty" class="unselectable">
+            0.00
+        </label>
+    </div>
+</div>

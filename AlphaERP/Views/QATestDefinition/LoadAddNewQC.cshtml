@@ -1,0 +1,138 @@
+﻿@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+
+    List<Alpha_BusinessUnitDef> M_C = new MDB().Alpha_BusinessUnitDef.Where(x => x.CompNo == company.comp_num).ToList();
+
+}
+<style>
+    #NormalcolQC {
+        width: 20%;
+        height: 3rem;
+        font-size: 14px;
+        bottom: 33px;
+        background: #efefef;
+        position: inherit;
+        z-index: 2;
+        top: 0;
+        color: black;
+        height: 2rem;
+        padding-left: 8px !important;
+    }
+
+    #AlertcolQC {
+        position: absolute;
+        width: 21.6%;
+        font-size: 13.6px;
+        background: #efefef;
+        z-index: 2;
+        top: 0;
+        color: black;
+        height: 3.7rem;
+        padding-left: 8px !important;
+    }
+
+    #MainTestTable thead #Subheader-list-QCdefadd th {
+        background-color: #e6e6fa;
+    }
+
+        #MainTestTable thead #Subheader-list-QCdefadd th:nth-child(4),
+        #MainTestTable #MainTestTableBD tr td:nth-child(4) {
+        }
+
+
+
+    .alerttxtadd {
+        padding-left: 8px !important;
+    }
+</style>
+
+<div class="form-group">
+    <div class="col-md-4">
+        <label class="unselectable" for="PordCost_FormTest_save_FormDesc">@Html.Translate("النموذج", "Form") </label>
+    </div>
+    <div class="col-md-8" style="margin-bottom: 5px;">
+        <input required="false" type="text" id="PordCost_FormTest_save_FormDesc" placeholder="@Html.Translate("النموذج", "Form")" />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-4">
+        <label class="unselectable" for="PordCost_FormTest_save_Notes">@Html.Recource(70) </label>
+    </div>
+    <div class="col-md-8" style="margin-bottom: 5px;">
+        <input required="false" type="text" id="PordCost_FormTest_save_Notes" placeholder="@Html.Recource(70)" />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-4">
+        <label class="unselectable" for="ProcDesc">@Html.Translate("وحدة أعمال", "Business Unit")</label>
+
+    </div>
+    <div class="col-md-8" style="margin-bottom: 5px;">
+        <select style="width: 62%" id="AlertBU" name="AlertBU">
+            <option selected>@Html.Translate("أختار واحد من القائمة", "Chose one from the list")</option>
+
+            @foreach (var v in M_C)
+            {
+
+                <option value="@v.BusUnitID" name="BusUnitID">
+                    @Html.Translate(v.BusUnitDescAr, v.BusUnitDescEng)
+                </option>
+
+
+            }
+        </select>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12">
+        <label class="unselectable">@Html.Translate("الفحوصات", "Tests") : </label>
+        <button onclick="$('#SelectTestTableNew tr').removeClass('selected'); $('#Test_Add_Test').modal('show')" type="button" class="btn btn-primary"><i class="fa fa-plus"></i> @Resources.Resource.Add</button>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12">
+        <table class="table table-hover" id="MainTestTable">
+            <thead>
+                <tr>
+                    <th colspan="4" scope="colgroup"></th>
+                    <th colspan="2" scope="colgroup" id="NormalcolQCe">@Html.Translate("طبيعي", "Normal")</th>
+                    <th colspan="2" scope="colgroup" id="AlertcolQCe">@Html.Translate("تنبيه", "Alert")</th>
+                    <th colspan="2" scope="colgroup"></th>
+                </tr>
+                <tr id="Subheader-list-QCdef">
+                    <th scope="col" style="width:10%">@Html.Recource(9259)</th>
+                    <th scope="col" style="width:20%">@Html.Recource(9260)</th>
+                    <th scope="col" style="width:20%">@Html.Translate("مجموعة فحص الجودة", "Group QA Test")</th>
+                    <th scope="col" style="width:20%">@Html.Translate("نوع المدى", "Rang Type")</th>
+                    <th scope="col">@Html.Recource(1892)</th>
+                    <th scope="col" style="width: 12%;">@Html.Recource(2058)</th>
+                    <th scope="col" class="alerttxt" style="width: 10%;">@Html.Translate("من الرقم", "From No")</th>
+                    <th scope="col" style="width: 12%;">@Html.Translate("إلى الرقم", "To No")</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="MainTestTableBD"></tbody>
+        </table>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12">
+        <label class="unselectable">
+            @Html.Recource(4797) :
+        </label>
+        <button onclick=" $('#Attachments').click()" type="button" class="btn btn-primary"><i class="fa fa-plus"></i> @Resources.Resource.Add</button>
+        <input onchange="SelectedFiles()" style="display:none" multiple type="file" name="Attachments" id="Attachments" class="form-control" />
+        <label class="unselectable" id="SelectedAttachments"></label>
+        <p class="ticket-attachments-message text-muted m-b-0">
+            @Resources.Resource.AttTypes : .pdf, .jpg, .gif, .jpeg, .png, .zip,
+            .gz, .txt, .p7s;.xlsx;.xls;.doc;.docx
+            <br />
+            @Resources.Resource.AttSize
+        </p>
+
+    </div>
+</div>
+<script>
+    $('#AlertBU').select2()
+</script>

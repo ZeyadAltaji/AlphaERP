@@ -1,0 +1,44 @@
+﻿@using AlphaERP.Models;
+@{
+    Company company = (Company)Session["company"];
+    int OrdYear = ViewBag.OrdYear;
+    int OrdNo = ViewBag.OrdNo;
+    string TawreedNo = ViewBag.TawreedNo;
+    string ItemNo = ViewBag.ItemNo;
+
+    List<OrdRequestDF> OrdReqtDF = new MDB().Database.SqlQuery<OrdRequestDF>(string.Format("SELECT Ord_RequestDF.CompNo as CompNo,Ord_RequestDF.ReqYear as ReqYear ,Ord_RequestDF.ReqNo as ReqNo,Ord_RequestDF.ReqDeliveryDate as ReqDeliveryDate  " +
+"from Ord_RequestDF INNER JOIN  Ord_RequestHF ON Ord_RequestDF.CompNo = Ord_RequestHF.CompNo AND Ord_RequestDF.ReqYear = Ord_RequestHF.ReqYear AND Ord_RequestDF.ReqNo = Ord_RequestHF.ReqNo Inner Join " +
+"InvItemsMF on Ord_RequestDF.CompNo = InvItemsMF.CompNo AND Ord_RequestDF.SubItemNo = InvItemsMF.ItemNo " +
+"where (Ord_RequestDF.CompNo = '{0}') AND (Ord_RequestDF.PurchaseOrderYear = '{1}') AND (Ord_RequestDF.PurchaseOrderNo = '{2}') AND (Ord_RequestDF.PurchaseOrdTawreedNo = '{3}') AND (Ord_RequestDF.ItemNo = '{4}') ", company.comp_num, OrdYear, OrdNo, TawreedNo, ItemNo)).ToList();
+}
+
+<table class="table table-hover" id="ReqDeliveryDateTable">
+    <thead>
+        <tr>
+            <th style="width: 30%;">@Html.Recource(3196)</th>
+            <th style="width: 30%;">@Html.Recource(3197)</th>
+            <th style="width: 30%;">@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody style="text-align: center;" id="ReqDeliveryDateTBody">
+        @foreach (OrdRequestDF df in OrdReqtDF)
+        {
+            <tr ondblclick="Select_ReqDeliveryDate('@df.ReqDeliveryDate.ToString("yyyy-MM-dd")')" ReqDeliveryDate="@df.ReqDeliveryDate.ToString("yyyy-MM-dd")">
+                <td>@df.ReqYear</td>
+                <td>@df.ReqNo</td>
+                <td>@df.ReqDeliveryDate.ToShortDateString()</td>
+                <td></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+    $('#ReqDeliveryDateTable').DataTable({
+        "scrollY": TableHeight2(400),
+        "paging": true,
+        "pageLength": 25,
+    });
+</script>

@@ -1,0 +1,51 @@
+﻿@using AlphaERP.Models
+@model ProdCost_Parameter
+@{
+    List<ProdCost_Parameter> lParam = ViewBag.lParam;
+}
+<div class="form-group">
+    <div class="col-md-4">
+        <label class="unselectable" for="eProdCost_Parameters_LocalDescQATests">@Html.Recource(66) </label>
+    </div>
+    <div class="col-md-8" style="margin-bottom: 5px;">
+        <input required="false" type="text" id="eProdCost_Parameters_LocalDescQATests" placeholder="@Html.Recource(66)" value="@Model.LocalDesc" />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-4">
+        <label class="unselectable" for="eProdCost_Parameters_EngDescQATests">@Html.Recource(118) </label>
+    </div>
+    <div class="col-md-8" style="margin-bottom: 5px;">
+        <input required="false" type="text" id="eProdCost_Parameters_EngDescQATests" placeholder="@Html.Recource(118)" value="@Model.EngDesc" />
+    </div>
+</div>
+@if (Model.Groups != 0)
+{
+    <div class="form-group">
+        <div class="col-md-4">
+            <label class="unselectable" for="eQATestsGroupsSelect">@Html.Translate("مجموعات فحوصات الانتاج", "QA Tests Groups") </label>
+        </div>
+        <div class="col-md-8" style="margin-bottom: 5px;">
+            <select style="width:100%" id="eQATestsGroupsSelect">
+                @foreach (var v in lParam.Where(x => x.ParmID == 9))
+                {
+                    if (Model.Groups == v.ParmCode)
+                    {
+                        <option selected value="@v.ParmCode">@Html.Translate(v.LocalDesc, v.EngDesc)</option>
+
+                    }
+                    else
+                    {
+                        <option value="@v.ParmCode">@Html.Translate(v.LocalDesc, v.EngDesc)</option>
+
+                    }
+                }
+            </select>
+        </div>
+    </div>
+}
+<script>
+    $('#eQATestsGroupsSelect').select2()
+</script>
+
+

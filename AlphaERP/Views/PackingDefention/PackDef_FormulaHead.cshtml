@@ -1,0 +1,168 @@
+﻿@model AlphaERP.Models.prod_formula_header_info
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    DataTable Dt = new DataTable();
+    List<BOM_PakingInfo> PakingInfo = new MDB().BOM_PakingInfo.Where(x => x.CompNo == Model.comp_no
+    && x.FormCode == Model.formula_code).ToList();
+    string Fromdate =DateTime.Now.AddYears(-1).ToString("yyyy-MM-dd");
+    string Todate = DateTime.Now.ToString("yyyy-MM-dd");
+
+    
+
+}
+
+<style>
+    .GroupTitle {
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        background-color: lightblue;
+    }
+</style>
+
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_PackingDef_formula_code">@Html.Recource(4286) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <label id="Prod_PackingDef_formula_code">@Model.formula_code</label>
+    </div>
+    <div class="col-md-7" style="margin-bottom: 5px;">
+        <label id="Prod_PackingDef_formula_codeDesc">@Model.formula_desc</label>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_PackingDef_item_no">@Html.Recource(306) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <label id="Prod_PackingDef_item_no">@Model.item_no</label>
+    </div>
+    <div class="col-md-7" style="margin-bottom: 5px;">
+        <label id="Prod_PackingDef_itemDesc">@Html.Translate(Model.item.ItemDesc, Model.item.ItemDesc_Ara)</label>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_PackingDef_UnitCode">@Html.Recource(67) </label>
+    </div>
+    <div class="col-md-2">
+        @{
+            using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+            {
+                Dt = new DataTable();
+                cn.Open();
+                using (SqlCommand cmd = new SqlCommand())
+                {
+                    cmd.Connection = cn;
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                    cmd.CommandText = "InvT_LoadItemUnits";
+                    cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                    cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = Model.item_no;
+                    using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                    {
+                        DA.Fill(Dt);
+                    }
+                }
+            }
+        }
+        @foreach (DataRow row in Dt.Rows)
+        {
+            if (@row["UnitSerial"].ToString() == Model.UnitSerial.ToString())
+            {
+        <label id="Prod_PackingDef_UnitCode">@Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())</label>
+            }
+        }
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_PackingDef_FormQty">@Html.Recource(2544) </label>
+    </div>
+    <div class="col-md-2">
+        <label id="Prod_PackingDef_FormQty">@Model.best_qty</label>
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_PackingDef_CalcSG">@Html.Recource(9255) </label>
+    </div>
+    <div class="col-md-2">
+        <label id="Prod_PackingDef_CalcSG">@Model.Calculated_SG</label>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12" id="AddPackingItems">
+        <button onclick="Add_PackingItems()" type="button" class="btn btn-default">@Html.Recource(7348)</button>
+    </div>
+    <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+        <table class="table table-hover" id="PackingItemTable">
+            <thead>
+                <tr>
+                    <th style="width:75px !important;">@Html.Recource(9258)</th>
+                    <th style="width: 152px !important;">@Html.Recource(9257)</th>
+                    <th>@Html.Recource(3827)</th>
+                    <th>@Html.Recource(9256)</th>
+                    <th>@Html.Recource(434)</th>
+                    <th style="text-align: center;">@Html.Recource(4276)</th>
+                    <th style="text-align: center;">@Html.Recource(5495)</th>
+                    <th style="text-align: center;" id="thbutton"></th>
+                    <th style="text-align: center;">@Html.Recource(97)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="PackingItemTBody">
+                @foreach (BOM_PakingInfo item in PakingInfo)
+                {
+                    string PackDesc = Html.Translate(item.PackItems.ItemDesc, item.PackItems.ItemDesc_Ara).ToString();
+                    string FinDesc = Html.Translate(item.FinItems.ItemDesc, item.FinItems.ItemDesc_Ara).ToString();
+                    decimal FinSellPrice = new MDB().Database.SqlQuery<decimal>(string.Format("select  isnull(dbo.Sales_GetItemAvgPrice('{0}', '{1}', 4, '{2}', '{3}'),0) as LastSellPrice", company.comp_num, item.FinItem, Fromdate, Todate)).FirstOrDefault();
+
+                    <tr id="PackDef_ItemNo_@item.PackItem">
+                        <td style="width:75px !important;" id="PackDef_ItemNo" title="@item.PackItem">@item.PackItem</td>
+                        <td style="width: 152px !important;" title="@PackDesc">@Html.Trim(PackDesc, 30)</td>
+                        <td>
+                            <input id="PackDef_LastPrice" value="@item.PackItems.LastRecCost" type="text" style="width:40px !important" disabled />
+                        </td>
+                        <td>
+                            @if (item.IsLiter == true)
+                            {
+                                <input id="PackDef_Ltr_Kg" type="checkbox" checked />
+                            }
+                            else
+                            {
+                                <input id="PackDef_Ltr_Kg" type="checkbox" />
+                            }
+                        </td>
+                        <td>
+                            <input id="PackDef_Capacity" value="@item.Capacity" type="number" style="width:40px !important" />
+                        </td>
+                        <td>
+                            <input id="PackDef_FinCode" type="text" disabled value="@item.FinItem" />
+                        </td>
+                        <td>
+                            <input id="PackDef_FinItemDesc" type="text" value="@Html.Trim(FinDesc,30)" title="@FinDesc" disabled />
+                        </td>
+                        <td class="FinCodePack">
+                            <button onclick="AddFinCode('#PackDef_ItemNo_@item.PackItem')" type="button" class="btn btn-primary"   >
+                                @Html.Recource(306)
+                            </button>
+                        </td>
+                        <td>
+                            <input id="PackDef_SellPrice" disabled value="@FinSellPrice" type="text" style="width:60px !important" />
+                        </td>
+                        <td class="PackingAccessories">
+                            <button onclick="AddPackingAccessories('@item.FormCode','@item.FinItem','@item.PackItem')" type="button" class="btn btn-primary"  style="width:100px !important" >
+                                @Html.Recource(9585)
+                            </button>
+                        </td>
+                        <td class="RemoveRowPack">
+                            <button class="btn-de" type="button" onclick="RemoveRowPackDef(this,'@item.FormCode','@item.FinItem','@item.PackItem')"><i class="fa fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+

@@ -1,0 +1,242 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    List<int> Deptid = new List<int>();
+    List<GLN_UsersDept> UsersDept = new MDB().GLN_UsersDept.Where(x => x.CompNo == company.comp_num && x.UserID == me.UserID && x.Permission == true).ToList();
+    Deptid = UsersDept.Select(o => o.DeptID).ToList();
+    List<GLDEPMF> GLDEPMFs = new MDB().GLDEPMFs.Where(x => x.DEP_COMP == company.comp_num && Deptid.Contains(x.DEP_NUM)).ToList();
+}
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="Prod_LinkPurchOrdersAccListDiv">
+        @Html.Partial("~/Views/LinkPurchOrdersAcc/PurchaseRequestList.cshtml")
+    </div>
+</div>
+
+<div class="modal fade" id="Model_Edit_LinkPurchOrdersAcc">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title"></label>
+            </div>
+            <div class="box-body box-profile" id="LinkPurchOrdersAccDiv">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteEdit_LinkPurchOrdersAcc()" class="btn btn-primary">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div class="modal fade" id="Model_LinkPurchOrder_GLDEPMFs">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(1867)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="Select_LinkPurchOrder_GLDEPMFsTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(110)</th>
+                                    <th style="width: 55%;">@Html.Recource(109)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    foreach (var item in GLDEPMFs)
+                                    {
+                                        <tr onclick="Select_finGLDEPMFs(this)" DEP_NUM="@item.DEP_NUM" DepDesc="@Html.Translate(item.DEP_NAME, item.DEP_ENAME).ToString()">
+                                            <td style="width: 20%;" id="LinkPurchOrder_DEPNUM">@item.DEP_NUM</td>
+                                            <td style="width: 55%;" id="LinkPurchOrder_DEPNAME">@Html.Translate(item.DEP_NAME, item.DEP_ENAME).ToString()</td>
+                                            <td></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selecting_LinkPurchOrder_GLDEPMFs()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_LinkPurchOrder_GLDEPMFs').draggable({
+        handle: ".modal-header",
+    });
+
+    var GLDEPMFs = $('#Select_LinkPurchOrder_GLDEPMFsTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    function Serach_Dept() {
+        $('#Select_LinkPurchOrder_GLDEPMFsTable tr').removeClass("selected");
+        $('#Model_LinkPurchOrder_GLDEPMFs').modal('show')
+    }
+    function Select_finGLDEPMFs(e) {
+        var trs = GLDEPMFs.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Selecting_LinkPurchOrder_GLDEPMFs() {
+        var trs = GLDEPMFs.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار دائرة", "Select one Dept")');
+            return;
+        }
+
+        MRP_LinkPurchOrdersAcc_save_txtDeptNo.value = trs[0].getAttribute('DEP_NUM');
+        MRP_LinkPurchOrdersAcc_save_txtDeptDesc.value = trs[0].getAttribute('DepDesc');
+
+        MRP_LinkPurchOrdersAcc_save_txtAccNo.value = null;
+        MRP_LinkPurchOrdersAcc_save_txtAccDesc.value = null;
+
+        $('#Model_LinkPurchOrder_GLDEPMFs').modal('hide')
+    }
+</script>
+
+<div class="modal fade" id="Model_LinkPurchOrder_Acc">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(1867)</label>
+            </div>
+            <div class="modal-body row" id="LinkPurchOrder_Accbody">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selecting_LinkPurchOrder_Acc()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_LinkPurchOrder_Acc').draggable({
+        handle: ".modal-header",
+    });
+    function CheckValue(ID) {
+        if (document.getElementById(ID).getAttribute('required') == 'true') {
+            if (document.getElementById(ID).value == '') {
+                document.getElementById(ID).focus();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    function Serach_Acc() {
+        statusacc = 0;
+        if (CheckValue('MRP_LinkPurchOrdersAcc_save_txtDeptNo')) {
+            alert('@Html.Translate("يجب ادخال الدائرة", "You must enter the Dept")');
+            return;
+        }
+        wait();
+        burn({ DeptId: MRP_LinkPurchOrdersAcc_save_txtDeptNo.value }, '../../../LinkPurchOrdersAcc/Account', '', ReloadtAcc, true);
+    }
+    function ReloadtAcc(r) {
+        LinkPurchOrder_Accbody.innerHTML = "";
+        $('#LinkPurchOrder_Accbody').html(r);
+        $('#Model_LinkPurchOrder_Acc').modal('show');
+    }
+    function Select_finAcc(e) {
+        var table = $('#LinkPurchOrder_AccTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Selecting_LinkPurchOrder_Acc() {
+        var table = $('#LinkPurchOrder_AccTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار حساب", "Select one Acc")');
+            return;
+        }
+
+        MRP_LinkPurchOrdersAcc_save_txtAccNo.value = trs[0].getAttribute('acc_num');
+        MRP_LinkPurchOrdersAcc_save_txtAccDesc.value = trs[0].getAttribute('AccDesc');
+        $('#Model_LinkPurchOrder_Acc').modal('hide')
+    }
+</script>
+
+<script>
+    var _ReqYear = 0
+    var _ReqNo = 0
+
+    $('#Model_Edit_LinkPurchOrdersAcc').draggable({
+        handle: ".modal-header",
+    });
+    function Edit_PurchaseRequest(ReqYear, ReqNo) {
+        _ReqYear = ReqYear;
+        _ReqNo = ReqNo;
+        burn({ ReqYear: _ReqYear, ReqNo: _ReqNo  }, '../../../LinkPurchOrdersAcc/ePurchaseRequest', '', ReloadPurchaseRequest, true);
+    }
+    function ReloadPurchaseRequest(r) {
+        LinkPurchOrdersAccDiv.innerHTML = "";
+        $('#LinkPurchOrdersAccDiv').html(r);
+        $('#Model_Edit_LinkPurchOrdersAcc').modal('show')
+    }
+    function ExcuteEdit_LinkPurchOrdersAcc() {
+        if (CheckValue('MRP_LinkPurchOrdersAcc_save_txtDeptNo')) { return; }
+        if (CheckValue('MRP_LinkPurchOrdersAcc_save_txtAccNo')) { return; }
+
+        wait();
+        burn({ ReqYear: _ReqYear, ReqNo: _ReqNo,DeptNo: MRP_LinkPurchOrdersAcc_save_txtDeptNo.value, AccNo: MRP_LinkPurchOrdersAcc_save_txtAccNo.value }, '../../../LinkPurchOrdersAcc/EditPurchaseRequest', '', ReloadEditPurchaseRequest, true);
+    }
+    function ReloadEditPurchaseRequest() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#Model_Edit_LinkPurchOrdersAcc').modal('hide');
+        $('#Prod_LinkPurchOrdersAccListDiv').load('../../../LinkPurchOrdersAcc/PurchaseRequestList');
+    }
+</script>

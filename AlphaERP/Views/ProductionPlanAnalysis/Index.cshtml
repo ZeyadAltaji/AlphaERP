@@ -1,0 +1,87 @@
+﻿<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="SAVE_ProductionPlainAnalysis_Year">@Resources.Resource.Year </label>
+                <input style="width:165px !important;" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" required="true" type="number" id="SAVE_ProductionPlainAnalysis_Year" value="@DateTime.Now.Year" placeholder="@Resources.Resource.Year" onblur="Checkyear()" maxLength="4" />
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable"></label>
+                <button class="btn btn-success btn-block" onclick="SerachActivateProductionPlanAnalysis()">
+                    @Html.Recource(975)
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="ActivateProductionPlanAnalysisDiv">
+
+    </div>
+</div>
+<div class="modal fade" id="Model_ProductionPlanActivate">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="ProductionPlanActivateDiv">
+
+            </div>
+            
+        </form>
+    </div>
+</div>
+
+<script>
+    $('#SAVE_ProductionPlainAnalysis_PlanNo').select2();
+    $('#Model_ProductionPlanActivate').draggable({
+        handle: ".modal-header",
+    });
+    function CheckValue(ID) {
+        if (document.getElementById(ID).getAttribute('required') == 'true') {
+            if (document.getElementById(ID).value == '') {
+                document.getElementById(ID).focus();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    function Checkyear() {
+        if (SAVE_ProductionPlainAnalysis_Year.value < 2000) {
+            SAVE_ProductionPlainAnalysis_Year.value = "@DateTime.Now.Year"
+            SAVE_ProductionPlainAnalysis_Year.focus();
+        }
+    }    
+    function SerachActivateProductionPlanAnalysis() {
+        if (CheckValue('SAVE_ProductionPlainAnalysis_Year')) { return; }
+        ProductionPlanActivateDiv.innerHTML = "";
+        ActivateProductionPlanAnalysisDiv.innerHTML = "";
+        $('#ProductionPlanActivateDiv').load('../../../ProductionPlanAnalysis/ActivateProductionPlain?year=' + SAVE_ProductionPlainAnalysis_Year.value);
+        $('#Model_ProductionPlanActivate').modal('show');
+    }
+    function AddProductionPlanAnalysisDiv(PlanYear, PlanNo) {
+        wait();
+        burn({ Planyear: PlanYear, PlanNo: PlanNo }, '../../../ProductionPlanAnalysis/CalcActivatePlan', '', LoadActivatePlanAnalysis, true);
+    }
+    function LoadActivatePlanAnalysis(r) {
+        ActivateProductionPlanAnalysisDiv.innerHTML = "";
+        $('#ActivateProductionPlanAnalysisDiv').html(r);
+        $('#Model_ProductionPlanActivate').modal('hide');
+        done();
+    }
+    function LoadCreatePurchaseOrders() {
+        ActivateProductionPlanAnalysisDiv.innerHTML = "";
+        MsgBox('@Resources.Resource.PurchaseOrderNoIssued', 'green');
+        done();
+    }
+</script>

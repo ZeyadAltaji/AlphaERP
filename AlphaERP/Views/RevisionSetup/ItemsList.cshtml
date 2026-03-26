@@ -1,0 +1,53 @@
+﻿@model IEnumerable<InvItemsMF>
+@using AlphaERP.Models
+
+<table class="table table-hover" id="RevisionSetupItemsTable">
+    <thead>
+        <tr>
+            <th style="text-align: center !important;">@Html.Recource(44)</th>
+            <th style="text-align: center !important;">@Html.Recource(74)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="RevisionSetupItemsTbody">
+       @foreach (InvItemsMF item in Model)
+       {
+        <tr onclick="Select_RevisionSetupInvItems(this)" ondblclick="GetRevisionSetupItemNo(this)" ItemNo="@item.ItemNo" ItemDesc="@Html.Translate(item.ItemDesc,item.ItemDesc_Ara)">
+            <td style="text-align: center;" id="ItemNo">@item.ItemNo</td>
+            <td style="text-align: center;word-wrap: break-word; white-space: normal;" id="ItemDesca" title="@Html.Translate(item.ItemDesc,item.ItemDesc_Ara)">@Html.Translate(item.ItemDesc, item.ItemDesc_Ara)</td>
+            <td></td>
+        </tr>
+       }
+    </tbody>
+</table>
+
+<script>
+    $('#RevisionSetupItemsTable').DataTable({
+        "scrollY": 'calc( 100vh - 385px)',
+        "paging": true,
+        "pageLength": 25,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+    function Select_RevisionSetupInvItems(e) {
+        var trs = $('#RevisionSetupItemsTable tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function GetRevisionSetupItemNo(e) {
+        var trs = $('#RevisionSetupItemsTable tr[name=selected]');
+        RevisionSetup_save_ItemNo.value = trs[0].getAttribute('ItemNo');
+        RevisionSetup_save_ItemDesc.value = trs[0].getAttribute('ItemDesc');
+
+        wait();
+        $('#loadDataRevisionSetup').load('../../../RevisionSetup/RevisionSetuplist?ItemNo=' + RevisionSetup_save_ItemNo.value, function () {
+            done();
+            $('#Model_RevisionSetupInvItemsMF').modal('hide');
+        })
+    }
+</script>

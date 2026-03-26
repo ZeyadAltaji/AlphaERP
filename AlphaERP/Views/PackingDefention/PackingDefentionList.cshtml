@@ -1,0 +1,68 @@
+﻿@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+    List<prod_formula_header_info> lBomDef = new MDB().prod_formula_header_info.Where(x => x.comp_no == company.comp_num).OrderByDescending(o => o.formula_date).ToList();
+}
+<table id="Prod_PackingDefTable" class="table table-hover">
+    <thead>
+        <tr>
+            <th style="width: 10%;">@Html.Recource(282)</th>
+            <th style="width: 15%;">@Html.Recource(283)</th>
+            <th style="width: 12%;">@Html.Recource(4276)</th>
+            <th style="width: 25%;">@Html.Recource(5495)</th>
+            <th style="width: 10%;text-align:center !important">@Html.Recource(58)</th>
+            <th style="width: 10%;text-align:center !important">@Html.Recource(2544)</th>
+            <th style="width: 10%;text-align:center !important">@Html.Recource(9404)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in lBomDef)
+        {
+            string Desc = "";
+            if (item.item != null)
+            {
+                Desc = Html.Translate(item.item.ItemDesc, item.item.ItemDesc_Ara).ToString();
+            }
+            <tr>
+                <td style="width: 10%; ">@item.formula_code</td>
+                <td style="width: 15%;" title="item.formula_desc">@Html.Trim(item.formula_desc, 30)</td>
+                <td style="width: 12%;">@item.item_no</td>
+                <td style="width: 25%;" title="@Desc">@Html.Trim(Desc, 30)</td>
+                <td style="width: 10%;text-align:center !important">@item.formula_date.Value.ToString("yyyy/MM/dd")</td>
+                <td style="width: 10%;text-align:center !important">@item.best_qty</td>
+                <td style="width: 10%;text-align:center !important">
+                    @if (Convert.ToBoolean(item.SusFlag))
+                    {
+                        <i class="fa fa-check"></i>
+                    }
+                    else
+                    {
+                        <i class="fa fa-times"></i>
+                    }
+                </td>
+                <td>
+                    <button class="btn-ed" onclick="EditProd_PackingDefInfo('@item.comp_no', '@item.formula_code')">
+                        <i class="fa fa-pencil-alt"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+    function TableHeight() {
+        var el = document.getElementsByClassName('content-wrapper')[0]
+        var MyHeight = (window.getComputedStyle(el, null).getPropertyValue("min-height"))
+        MyHeight = Number(MyHeight.replace('px', '') - 200) + 'px'
+        return (MyHeight)
+    }
+    $('#Prod_PackingDefTable').DataTable({
+        "scrollY": TableHeight(),
+        "paging": true,
+        "pageLength": 25,
+        "ordering": false
+    });
+</script>

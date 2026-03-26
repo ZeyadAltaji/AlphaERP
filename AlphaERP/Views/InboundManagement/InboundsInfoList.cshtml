@@ -1,0 +1,175 @@
+﻿@model IEnumerable<AlphaERP.Models.LInboundsInfo>
+@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+}
+
+<table class="table" id="InboundManagementTable">
+    <thead>
+        <tr>
+            @if (CActive.ClientNo != 239)
+            {
+                <th>@Html.Translate("رقم الواردة", "Inbound No.")</th>
+                <th>@Html.Recource(206)</th>
+                <th>@Html.Recource(3197)</th>
+                <th>@Html.Recource(3797)</th>
+                <th>@Html.Recource(517)</th>
+                <th>@Html.Recource(1)</th>
+                <th>@Html.Recource(1627)</th>
+                <th></th>
+                <th></th>
+            }
+            else
+            {
+                <th>@Html.Translate("رقم الواردة", "Inbound No.")</th>
+                <th>@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</th>
+                <th>@Html.Recource(3197)</th>
+                <th>@Html.Translate("# طلب الشراء الفا", "# P.R No")</th>
+                <th>@Html.Translate("# إمر الشراء الفا", "# P.O No.")</th>
+                <th>@Html.Recource(517)</th>
+                <th>@Html.Recource(1)</th>
+                <th>@Html.Recource(1627)</th>
+                <th></th>
+            }
+        </tr>
+    </thead>
+    <tbody id="InboundManagementTbody">
+        @foreach (LInboundsInfo P in Model)
+        {
+            if (CActive.ClientNo != 239)
+            {
+                List<Ord_InboundManagementHF> InboundManagementHF = new MDB().Ord_InboundManagementHF.Where(x => x.CompNo == company.comp_num && x.OrderYear == P.OrdYear && x.OrderNo == P.OrderNo && x.TawreedNo == P.TawreedNo
+                && x.InboundSer == P.InboundSer).ToList();
+                string StautsPosted = "";
+                if (InboundManagementHF != null)
+                {
+                    int count = InboundManagementHF.Count();
+                    int countApproval = InboundManagementHF.Where(x => x.IsApproval == true).Count();
+                    if (countApproval == 0)
+                    {
+                        StautsPosted = Html.Translate("غير مرحل", "Not Posted").ToString();
+                    }
+                    else if (count == countApproval)
+                    {
+                        StautsPosted = Html.Translate("مرحل", "Posted").ToString();
+                    }
+                    else if (countApproval < count)
+                    {
+                        StautsPosted = Html.Translate("مرحل جزئي", "Partially Posted").ToString();
+                    }
+                }
+                else
+                {
+                    StautsPosted = Html.Translate("غير مرحل", "Not Posted").ToString();
+                }
+                <tr OrdYear="@P.OrdYear" OrderNo="@P.OrderNo" TawreedNo="@P.TawreedNo" InboundSer="@P.InboundSer" style="background-color: @P.colorName">
+                    <td style="direction:ltr;">@P.InboundSer</td>
+                    <td>@P.InboundDate.ToString("yyyy-MM-dd")</td>
+                    <td>@P.OrderNo</td>
+                    <td>@P.TawreedNo</td>
+                    <td>@Html.Translate(P.VenName, P.VenName_Eng)</td>
+                    <td>@Html.Translate(P.StoreName, P.StoreNameEng)</td>
+                    <td style="text-align center !important; word-wrap break-word; white-space normal; background-color: @P.colorName">
+                        @Html.Translate(P.RecStatusDescAr, P.RecStatusDescEn)
+                    </td>
+                    <td style="text-align: center !important; word-wrap: break-word; white-space: normal;">
+                        @StautsPosted
+                    </td>
+                    <td>
+                        <button onclick="btnexInboundManagement(this)" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default ex" title="@Html.Recource(769)">
+                            <i style="font-weight:100" class="fa fa-folder"></i>
+                        </button>
+                         @if (P.IsClosed == false)
+                         {
+                            <button onclick="CreateInboundsManagement('@P.OrdYear', '@P.OrderNo', '@P.TawreedNo', '@P.InboundSer')" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default" title="@Html.Translate("اضافة المعلومات الواردة", "Add Inbounds Information")">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                            <button id="AddInboundsManagement" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                                @Html.Translate("اضافة إدارة الواردة", "Add Inbounds Management")
+                            </button>
+                         }
+                    </td>
+                </tr>
+            }
+            else
+            {
+                
+                <tr OrdYear="@P.OrdYear" OrderNo="@P.OrderNo" TawreedNo="@P.TawreedNo" InboundSer="@P.InboundSer" style="background-color: @P.colorName">
+                    <td style="direction:ltr;">@P.InboundSer</td>
+                    <td>@P.InboundDate.ToString("yyyy-MM-dd")</td>
+                    <td>@P.ReqNo</td>
+                    <td>@P.OrderNo</td>
+                    <td>@P.TawreedNo</td>
+                    <td>@Html.Translate(P.VenName, P.VenName_Eng)</td>
+                    <td>@Html.Translate(P.StoreName, P.StoreNameEng)</td>
+                    <td style="text-align center !important; word-wrap break-word; white-space normal; background-color: @P.colorName">
+                        @Html.Translate(P.RecStatusDescAr, P.RecStatusDescEn)
+                    </td>
+                  
+                    <td>
+                        <button onclick="btnexInboundManagement(this)" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default ex" title="@Html.Recource(769)">
+                            <i style="font-weight:100" class="fa fa-folder"></i>
+                        </button>
+                        @if (P.IsClosed == false)
+                        {
+                            <button onclick="CreateInboundsManagement('@P.OrdYear', '@P.OrderNo', '@P.TawreedNo', '@P.InboundSer')" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default" title="@Html.Translate("اضافة المعلومات الواردة", "Add Inbounds Information")">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                            <button id="AddInboundsManagement" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                                @Html.Translate("اضافة إدارة الواردة", "Add Inbounds Management")
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+
+<script>
+    var InboundManagementTable;
+    InboundManagementTable = $('#InboundManagementTable').dataTable({
+        "scrollY": 'calc( 100vh - 270px)',
+        "paging": true,
+        "pageLength": 25,
+        "order": [[0, "desc"], [1, "desc"]],
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+
+    function btnexInboundManagement(e) {
+        var nTr = e.parentNode.parentNode;
+        if ($(e).attr("opened") == 'details_close') {
+            InboundManagementTable.fnClose(nTr);
+            $(e).attr("opened", "details_open");
+        }
+        else {
+            wait();
+            $(e).attr("opened", "details_close");
+            var OrdYear = $(e.parentNode.parentNode).attr("OrdYear");
+            var OrderNo = $(e.parentNode.parentNode).attr("OrderNo");
+            var TawreedNo = $(e.parentNode.parentNode).attr("TawreedNo");
+            var InboundSer = $(e.parentNode.parentNode).attr("InboundSer");
+
+
+            $.get("../../../../InboundManagement/DetailsInboundsManagement?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo + '&InboundSer=' + InboundSer, function (data) {
+                InboundManagementTable.fnOpen(nTr, data, 'details');
+                done();
+            });
+        }
+    }
+
+    function CreateInboundsManagement(OrdYear, OrdNo, TawreedNo, InboundSer) {
+        $('#AddInboundsManagement').attr("href", '/InboundManagement/AddInboundsManagement?OrdYear=' + OrdYear + '&OrderNo=' + OrdNo + '&TawreedNo=' + TawreedNo + '&InboundSer=' + InboundSer + '')
+        $('#AddInboundsManagement').click();
+    }
+</script>
+
+
+
+
+
+

@@ -1,0 +1,70 @@
+﻿@model IEnumerable<AlphaERP.Models.Prod_prepare_infoView>
+
+
+<table id="Prod_ProdOrders" class="table table-hover">
+    <thead>
+        <tr>
+            <th>@Html.Translate("تاريخ الطلب", "Order Date")</th>
+            <th>@Html.Translate("الأيام المستحقة", "Due Days")</th>
+            <th>@Html.Translate("رقم الأمر", "Order No")</th>
+            <th>@Html.Translate("رمز المنتج", "Product Code")</th>
+            <th>@Html.Translate("وصف المنتج", "Product Description")</th>
+            <th>@Html.Translate("رمز ", "BOM Code")</th>
+            <th>@Html.Translate("وصف ", "BOM Description")</th>
+            <th>@Html.Translate("كمية  ", "Quantity")</th>
+            <th>@Html.Translate("UOM  ", "UOM")</th>
+
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr style="height:37px !important ">
+                <td>@item.prepare_date.Value.ToString("yyyy-MM-dd")</td>
+                <td>@item.DueDays</td>
+                <td>@item.prepare_code</td>
+                <td>@item.item_no</td>
+                <td>@item.ItemDesc</td>
+                <td>@item.formula_code</td>
+                <td>@item.formula_desc</td>
+                <td>@item.best_qty</td>
+                <td>@item.UOM</td>
+                <td>
+                    <button class="btn-ed" onclick="Edit_ProdOrders('@item.comp_no','@item.prepare_year','@item.prepare_code','@item.formula_code','@item.item_no','@item.best_qty')">
+                        <i class="fa fa-pencil-alt"></i>
+                    </button>
+                    <button class="btn-de" onclick="Del_ProdOrders('@item.comp_no','@item.prepare_year','@item.prepare_code')">
+                        <i class="fa fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+    $('#Prod_ProdOrders').DataTable({
+        "scrollY": 302,
+        "paging": true,
+        "pageLength": 25,
+        "ordering": false
+    });
+    function Edit_ProdOrders(CompNo, prepare_year, prepare_code, Formula_code, Item_no, Qty) {
+        wait();
+        eProdOrderInfo.innerHTML = "";
+        eRMDetailsTbody.innerHTML = "";
+        eOrderProdStagesTbody.innerHTML = "";
+        eOrderProdByProductsTbody.innerHTML = "";
+        $('#eOrderProdByProductsTbody').load('../../../ProdOrders/eProduct?CompNo=' + CompNo + '&prepareyear=' + prepare_year + '&preparecode=' + prepare_code + '&formulaCode=' + Formula_code + '&Itemno=' + Item_no + '&ReqQty=' + Qty + '&sataus=' + 1);
+        $('#eOrderProdStagesTbody').load('../../../ProdOrders/eStages?CompNo=' + CompNo + '&prepareyear=' + prepare_year + '&preparecode=' + prepare_code + '&formulaCode=' + Formula_code + '&Itemno=' + Item_no + '&ReqQty=' + Qty + '&sataus=' + 1);
+        $('#eRMDetailsTbody').load('../../../ProdOrders/eRMItem?CompNo=' + CompNo + '&prepareyear=' + prepare_year + '&preparecode=' + prepare_code + '&formulaCode=' + Formula_code + '&Itemno=' + Item_no + '&ReqQty=' + Qty + '&sataus=' + 1);
+        $('#eProdOrderInfo').load('../../../ProdOrders/eProdOrderInfo?CompNo=' + CompNo + '&prepareyear=' + prepare_year + '&preparecode=' + prepare_code , function () {
+            $('.nav-tabs a[href="#eProdOrderInfo"]').tab('show')
+            $('#Prod_ProdOrder_Model').modal('hide')
+            $('#Prod_eProdOrder_Model').modal('show');
+            done();
+        });
+    }
+</script>

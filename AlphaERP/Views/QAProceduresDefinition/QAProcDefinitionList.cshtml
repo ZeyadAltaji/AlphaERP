@@ -1,0 +1,96 @@
+﻿@model IEnumerable<AlphaERP.Models.ProdCost_QASetupHF>
+@{
+    int count = 1;
+}
+<style>
+   .selected-row {
+        background-color: #cfcfcf;
+    }
+</style>
+<div class="form-group">
+    <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+        <table class="table table-hover QCStageDetailsTable">
+            <thead>
+                <tr>
+                    <th>@Html.Translate("التسلسل", "Ser")</th>
+                    <th style="text-align:center !important">@Html.Translate("الوصف ", "Description")</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="QCStageDetailsTbody">
+                @foreach (var item in Model)
+                {
+                    <tr class="table-row" onclick="selectTableRow(this)" ondblclick="triggerSelectAction(this)">
+                        <td>
+                            @count
+
+                        </td>
+                        <td style="text-align:center !important">
+                            @Html.DisplayFor(modelItem => item.QA_Desc)
+                        </td>
+                        <td>
+                            <input type="hidden" class="qa-procno-hidden" value="@item.QA_ProcNo" />
+                        </td>
+
+                    </tr>
+                    count++;
+                }
+
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+                
+<script>
+    var selectedRowData = {};
+    function doneBomDefinition() {
+        done();
+        $('#listQAprocDefinition_Model').modal('hide');
+    }
+    function selectTableRow(row) {
+        $(".table-row.selected-row").removeClass('selected-row');
+        $(row).addClass('selected-row');
+
+        var qaProcNo = $(row).find(".qa-procno-hidden").val();
+
+        selectedRowData.newQAProcNo = qaProcNo;
+ 
+    }
+    function selectbtn() {
+        debugger;
+        if (selectedRowData.newQAProcNo) {
+            console.log("Selected QAProcNo:", selectedRowData.newQAProcNo);
+            sendQAProcToController(selectedRowData.newQAProcNo)
+            $('#listQAprocDefinition_Model').modal('hide');
+        } else {
+            console.log("No QA procedure selected.");
+        }
+    }
+    function triggerSelectAction() {
+        if (selectedRowData.newQAProcNo) {
+            console.log("Selected QAProcNo:", selectedRowData.newQAProcNo);
+            sendQAProcToController(selectedRowData.newQAProcNo)
+
+             $('#listQAprocDefinition_Model').modal('hide');
+        } else {
+            console.log("No QA procedure selected.");
+        }
+    }
+    function sendQAProcToController(qaProcNo) {
+        $.ajax({
+            url: '/QAProceduresDefinition/Edit',
+            type: 'GET',
+            data: { QAProc: qaProcNo },
+            success: function (data) {
+                $('#partialViewContainer').html(data); 
+            },
+            error: function (xhr, status, error) {
+                console.error("AJAX Error:", status, error);
+            }
+        });
+    }
+
+
+</script>

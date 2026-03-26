@@ -1,0 +1,78 @@
+﻿<article>
+    <header class="content-header container-fluid">
+        <div class="row">
+            <div class="col-lg-12">
+                <h3 class="content-max-width">@Resources.Resource.Style</h3>
+            </div>
+        </div>
+    </header>
+    <div class="content container-fluid">
+        <div class="row">
+            <div class="col-lg-12">
+                <section class="content-max-width">
+                    <section id="layout">
+                        <div class="callout callout-info">
+                            <h4>@Resources.Resource.Dark</h4>
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <button type="button" onclick="theme(this)" data-skin="skin-blue" class="btn btn-primary "><i class="fa fa-eye"></i></button>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" onclick="theme(this)" data-skin="skin-yellow" class="btn btn-warning "><i class="fa fa-eye"></i></button>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" onclick="theme(this)" data-skin="skin-green" class="btn btn-success "><i class="fa fa-eye"></i></button>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" onclick="theme(this)" data-skin="skin-purple" class="btn bg-purple "><i class="fa fa-eye"></i></button>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" onclick="theme(this)" data-skin="skin-red" class="btn btn-danger "><i class="fa fa-eye"></i></button>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" onclick="theme(this)" data-skin="skin-black" class="btn bg-black "><i class="fa fa-eye"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="callout callout-danger">
+                            <h4>@Resources.Resource.Light</h4>
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <button type="button" onclick="theme(this)" data-skin="skin-blue-light" class="btn btn-primary "><i class="fa fa-eye"></i></button>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" onclick="theme(this)" data-skin="skin-yellow-light" class="btn btn-warning "><i class="fa fa-eye"></i></button>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" onclick="theme(this)" data-skin="skin-green-light" class="btn btn-success "><i class="fa fa-eye"></i></button>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" onclick="theme(this)" data-skin="skin-purple-light" class="btn bg-purple "><i class="fa fa-eye"></i></button>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" onclick="theme(this)" data-skin="skin-red-light" class="btn btn-danger "><i class="fa fa-eye"></i></button>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" onclick="theme(this)" data-skin="skin-black-light" class="btn btn-default "><i class="fa fa-eye"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </section>
+            </div>
+        </div>
+    </div>
+</article>
+<script>
+    function theme(e) {
+        debugger
+        if (body.classList.contains('sidebar-collapse')) {
+            body.className = 'sidebar-mini sidebar-collapse';
+        } else {
+            body.className = 'sidebar-mini';
+        }
+        body.classList.add(e.getAttribute("data-skin"))
+        localStorage.setItem("body", body.className);
+        SVM('t')
+    }
+</script>

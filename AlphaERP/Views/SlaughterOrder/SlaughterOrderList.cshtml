@@ -1,0 +1,116 @@
+﻿@using AlphaERP.Models
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    List<int> store = new MDB().InvStoreUsers.Where(x => x.CompNo == company.comp_num && x.UserID == me.UserID && x.AllPerm == true).Select(o => o.StoreNo).ToList();
+
+    List<long> OrderNo = new MDB().Invt_SlaughterOrderDF.Where(x => x.CompNo == company.comp_num && store.Contains(x.StoreNo.Value)).Select(o => o.SlaughterOrderNo).ToList();
+    List<Invt_SlaughterOrderHF> SlaughterOrdHF = new MDB().Invt_SlaughterOrderHF.Where(x => x.CompNo == company.comp_num && OrderNo.Contains(x.SlaughterOrderNo) && store.Contains(x.StoreNo.Value)).ToList();
+}
+
+
+<table id="SlaughterOrderTable" class="table table-hover">
+    <thead>
+        <tr>
+            <th style="width: 12%;text-align:center !important">@Html.Recource(206)</th>
+            <th style="width: 15%;text-align:center !important">@Html.Recource(205)</th>
+            <th style="width: 10%;text-align:center !important">@Html.Recource(4756)</th>
+            <th style="width: 10%;text-align:center !important">@Html.Recource(1)</th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (Invt_SlaughterOrderHF OrdHF in SlaughterOrdHF)
+        {
+            InvItemsMF MF = new MDB().InvItemsMFs.Where(x => x.CompNo == OrdHF.CompNo && x.ItemNo == OrdHF.ItemNo).FirstOrDefault();
+            InvStoresMF St = new MDB().InvStoresMFs.Where(x => x.CompNo == OrdHF.CompNo && x.StoreNo == OrdHF.StoreNo).FirstOrDefault();
+        <tr>
+            <td style="width: 12%;text-align:center !important">@OrdHF.SlaughterOrderDate.Value.ToShortDateString()</td>
+            <td style="width: 15%;text-align:center !important">@OrdHF.SlaughterOrderNo</td>
+            <td style="width: 25%;text-align:center !important">@Html.Translate(MF.ItemDesc, MF.ItemDesc_Ara)</td>
+            <td style="width: 25%;text-align:center !important">@Html.Translate(St.StoreName, St.StoreNameEng)</td>
+            <td>
+                @if (OrdHF.IsApproval == false)
+                {
+                    <button onclick="EditSlaughterOrder('@OrdHF.SlaughterOrderNo')" type="button" class="btn btn-ed ex" title="@Html.Translate("تعديل أمر الذبح", "Edit Slaughter Order")">
+                        <i class="fa fa-pencil-alt"></i>
+                    </button>
+                    <button id="eSlaughterOrder" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                        @Html.Translate("تعديل أمر الذبح", "Edit Slaughter Order")
+                    </button>
+                    <button class="btn-de" onclick="DeleteSlaughterOrder('@OrdHF.SlaughterOrderNo')" title="@Html.Translate("حذف أمر الذبح", "Delete Slaughter Order")" >
+                        <i class="fa fa-trash-alt" aria-hidden="true"></i>
+                    </button>
+                    <button class="btn btn-primary ex" title="@Html.Translate("ترحيل", "Posted")" onclick="PostedSlaughterOrder('@OrdHF.SlaughterOrderNo')">
+                        <i style="font-weight:100" class="fa fa-folder"></i>
+                        @Html.Translate("ترحيل", "Posted")
+                    </button>
+                    <button class="btn btn-default ex" title="@Html.Translate("عرض", "View")" href="/SlaughterOrder/ViewSlaughterOrder?SlaughterOrderNo=@OrdHF.SlaughterOrderNo" target="_blank">
+                        <i style="font-weight:100" class="fa fa-folder"></i>
+                        @Html.Translate("عرض", "View")
+                    </button>
+                }
+                else
+                {
+                    <button disabled type="button" class="btn btn-ed ex" title="@Html.Translate("تعديل أمر الذبح", "Edit Slaughter Order")">
+                        <i class="fa fa-pencil-alt"></i>
+                    </button>
+                    <button id="eSlaughterOrder" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                        @Html.Translate("تعديل أمر الذبح", "Edit Slaughter Order")
+                    </button>
+                    <button class="btn-de" disabled title="@Html.Translate("حذف أمر الذبح", "Delete Slaughter Order")">
+                        <i class="fa fa-trash-alt" aria-hidden="true"></i>
+                    </button>
+                    <button class="btn btn-primary ex" title="@Html.Translate("ترحيل", "Posted")" disabled>
+                        <i style="font-weight:100" class="fa fa-folder"></i>
+                        @Html.Translate("ترحيل", "Posted")
+                    </button>
+                    <button class="btn btn-default ex" title="@Html.Translate("عرض", "View")" href="/SlaughterOrder/ViewSlaughterOrder?SlaughterOrderNo=@OrdHF.SlaughterOrderNo" target="_blank">
+                        <i style="font-weight:100" class="fa fa-folder"></i>
+                        @Html.Translate("عرض", "View")
+                    </button>
+                }
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>
+<br />
+
+<div class="modal-footer">
+    <button style=" width: 15%; height: 40px !important;float:right;" onclick="AddSlaughterOrder()" class="btn btn-primary btn-block" title="@Html.Translate("اضافة أمر الذبح", "Add Slaughter Order")" target="_blank">
+        <i class="fa fa-plus"></i>
+        @Html.Recource(32)
+    </button>
+    <button id="addSlaughterOrder" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+        @Html.Translate("اضافة أمر الذبح", "Add Slaughter Order")
+    </button>
+</div>
+
+
+
+
+<script>
+    var SlaughterOrderTable;
+    SlaughterOrderTable = $('#SlaughterOrderTable').dataTable({
+        "scrollY": 'calc( 100vh - 335px)',
+        "paging": true,
+        "pageLength": 25,
+        "order": [[1, "desc"]],
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+
+    function AddSlaughterOrder() {
+        $('#addSlaughterOrder').attr("href", '/SlaughterOrder/AddSlaughterOrder')
+        $('#addSlaughterOrder').click();
+    }
+
+    function EditSlaughterOrder(SlaughterOrderNo) {
+        $('#eSlaughterOrder').attr("href", '/SlaughterOrder/EditSlaughterOrder?SlaughterOrderNo=' + SlaughterOrderNo + '')
+        $('#eSlaughterOrder').click();
+    }
+   
+</script>

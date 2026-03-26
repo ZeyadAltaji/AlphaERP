@@ -1,0 +1,60 @@
+﻿<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-10">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-success btn-block" onclick="SerachPriceOffersAnalysis()">
+                    @Resources.Resource.Search
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="MRP_PriceOffersAnalysisDiv">
+
+    </div>
+</div>
+
+<div class="modal fade" id="Model_PriceOffersAnalysis">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="PriceOffersAnalysisDiv">
+
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $('#Model_PriceOffersAnalysis').draggable({
+        handle: ".modal-header",
+    });
+    
+    function SerachPriceOffersAnalysis() {
+        PriceOffersAnalysisDiv.innerHTML = "";
+        MRP_PriceOffersAnalysisDiv.innerHTML = "";
+        $('#PriceOffersAnalysisDiv').load('../../../PriceOffersAnalysis/PriceOffersAnalysisList');
+        $('#Model_PriceOffersAnalysis').modal('show');
+    }
+
+    function SelectionPriceOffersAnalysis(ReqforQuotyear,ReqforQuotNo) {
+        wait();
+        burn({ ReqforQuotyear: ReqforQuotyear, ReqforQuotNo: ReqforQuotNo }, '../../../PriceOffersAnalysis/ChoosePriceOffersAnalysis', '', LoadChoosePriceOffersAnalysis, true);
+    }
+    function LoadChoosePriceOffersAnalysis(r) {
+        MRP_PriceOffersAnalysisDiv.innerHTML = "";
+        $('#MRP_PriceOffersAnalysisDiv').html(r);
+        $('#Model_PriceOffersAnalysis').modal('hide');
+        done();
+    }
+</script>

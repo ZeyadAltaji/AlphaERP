@@ -1,0 +1,114 @@
+﻿@model IEnumerable<AlphaERP.Models.InvItemsMF>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    DataTable DtBatch = new DataTable();
+    DataTable Dt = new DataTable();
+    string ItemNo = ViewBag.ItemNo;
+    int StoreNo = ViewBag.StoreNo;
+    long SlaughterOrderNo = ViewBag.SlaughterOrderNo;
+    string Batch = ViewBag.Batch;
+
+    List<InvKit> KitD = new MDB().InvKits.Where(x => x.CompNo == company.comp_num && x.Kit_ItemNo == ItemNo).ToList();
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    int Srial = 0;
+    if (ViewBag.Serial != 0)
+    {
+        Srial = ViewBag.Serial + 1;
+    }
+    else
+    {
+        Srial = 1;
+    }
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+}
+
+
+@foreach (InvKit item in KitD)
+{
+    InvItemsMF mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == item.ItemNo).FirstOrDefault();
+<tr id="eSlaughterOrderDF_@Srial">
+    <td style="text-align: center; width: 350px; word-wrap: break-word; white-space: normal;" id="eSlaughterOrderDFItemNo_@Srial">@item.ItemNo</td>
+    <td style="text-align: center; width: 990px; word-wrap: break-word; white-space: normal;">@Html.Translate(mf.ItemDesc, mf.ItemDesc_Ara)</td>
+    <td style="text-align: center; width: 10%;">
+        <input id="eSlaughterOrderDF_Batch_@Srial" value="@Batch" type="text" style="width: 115px !important;direction:ltr;text-align:right;" disabled />
+    </td>
+    <td style="text-align: center; width: 10%;">
+        <select style="width:100%" class="eSlaughterOrderDFItems_Unit">
+            @{
+                using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                {
+                    Dt = new DataTable();
+                    cn.Open();
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        cmd.Connection = cn;
+                        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                        cmd.CommandText = "InvT_LoadItemUnits";
+                        cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                        cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = item.ItemNo;
+                        using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                        {
+                            DA.Fill(Dt);
+                        }
+                    }
+                }
+            }
+            @foreach (DataRow row in Dt.Rows)
+            {
+                <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()">
+                    @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                </option>
+            }
+        </select>
+    </td>
+    <td style="text-align: center;">
+        <input id="eSlaughterOrderDF_Qty_@Srial" value="0" type="number" style="width:75px !important" onblur="GetValueqty(this)" />
+    </td>
+    @if (compMF.UseQty2 == true)
+    {
+        <td style="text-align: center;">
+            <input id="eSlaughterOrderDF_Qty2_@Srial" value="@item.Qty" type="number" style="width:75px !important" onblur="GetValueqty2(this)" />
+        </td>
+    }
+    else
+    {
+        <td style="text-align: center;" hidden>
+            <input id="eSlaughterOrderDF_Qty2_@Srial" value="@item.Qty" type="number" style="width:75px !important"  />
+        </td>
+    }
+    <td style="text-align: center;">
+        <input id="eSlaughterOrderDF_CostPercent_@Srial" value="@item.CostPercent" type="number" style="width:75px !important" onblur="SumTotalCostPercent(this,@SlaughterOrderNo)" />
+    </td>
+    <td>
+        <input type="hidden" id="eInputSerial" value="@(Srial++)" />
+    </td>
+</tr>
+}
+
+<script>
+    $('.eSlaughterOrderDFItems_Unit').select2();
+    function GetValueqty(e) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون الكمية اقل من 0", "The value of the Qty may not be less than 0")');
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+    }
+    function GetValueqty2(e) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون الكمية 2 اقل من 0", "The value of the Qty 2 may not be less than 0")');
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+    }
+    
+</script>

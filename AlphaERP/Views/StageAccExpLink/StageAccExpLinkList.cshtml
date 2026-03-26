@@ -1,0 +1,75 @@
+﻿@model IEnumerable<AlphaERP.Models.ProdCost_StageAccExpLink>
+@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+  //  var StageAccExpLink = Model.GroupBy( x => x.StageCode).ToList();
+
+    var StageAccExpLink =
+    from c in Model
+    group c by new
+    {
+        c.StageCode,
+        c.CloseDept,
+        c.CloseAcc,
+    };
+
+
+
+
+
+    List<prod_prodstage_info> stage_info = new MDB().prod_prodstage_info.Where(x => x.comp_no == company.comp_num).ToList();
+    List<Acc> acc = new MDB().Database.SqlQuery<Acc>(string.Format("SELECT glactmf.acc_num as AccId, glactmf.acc_desc as AccDescAr, glactmf.acc_edesc as AccDescEn " +
+                                                      "FROM glactmf " +
+                                                       "WHERE (glactmf.acc_comp = '{0}')", company.comp_num)).ToList();
+
+}
+
+<table id="ProdCost_StageAccExpLink" class="table table-hover">
+    <thead>
+        <tr>
+            <th>@Html.Recource(2558)</th>
+            <th>@Html.Recource(2559)</th>
+            <th>@Html.Recource(9590)</th>
+            <th>@Html.Recource(109)</th>
+            <th>@Html.Recource(7473)</th>
+            <th>@Html.Recource(256)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in StageAccExpLink)
+        {
+            int stagecode = item.Select(x => x.StageCode).FirstOrDefault();
+            string satgedsc = stage_info.Where(x => x.stage_code == stagecode).FirstOrDefault().stage_desc;
+            long accno = item.Select(x => x.CloseAcc).FirstOrDefault();
+            string Accdesc = acc.Where(x => x.AccId == accno).FirstOrDefault().AccDescAr;
+            string AccdescEn = acc.Where(x => x.AccId == accno).FirstOrDefault().AccDescEn;
+            <tr>
+                <td>@item.Select(x => x.StageCode).FirstOrDefault()</td>
+                <td>@satgedsc</td>
+                <td>@item.Select(x => x.CloseDept).FirstOrDefault()</td>
+                <td>@item.Select(x => @Html.Translate(x.dept.DEP_NAME, x.dept.DEP_ENAME) ).FirstOrDefault()</td>
+                <td>@item.Select(x => x.CloseAcc).FirstOrDefault()</td>
+                <td>@Html.Translate(Accdesc, AccdescEn)</td>
+                <td>
+                    <button class="btn-ed" onclick="Edit_StageAccExpLink('@stagecode','@item.Select(x => x.CloseDept).FirstOrDefault()','@accno')">
+                        <i class="fa fa-pencil-alt"></i>
+                    </button>
+                    <button class="btn-de" onclick="Del_StageAccExpLink('@stagecode','@item.Select(x => x.CloseDept).FirstOrDefault()','@accno')">
+                        <i class="fa fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+    $('#ProdCost_StageAccExpLink').DataTable({
+        "scrollY": TableHeight(),
+        "paging": true,
+        "pageLength": 25,
+        "ordering": false
+    });
+</script>

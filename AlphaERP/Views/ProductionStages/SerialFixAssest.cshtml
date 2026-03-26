@@ -1,0 +1,61 @@
+﻿@model int
+@using AlphaERP.Models;
+@using System.Data.SqlClient;
+@{
+    Company company = (Company)Session["company"];
+}
+
+<table id="SerialFixAssestTable" class="table table-hover">
+    <thead>
+        <tr>
+            <th>@Html.Recource(463)</th>
+            <th>@Html.Recource(309)</th>
+            <th>@Html.Recource(461)</th>
+            <th>@Html.Recource(2942)</th>
+            <th>@Html.Recource(3001)</th>
+            <th>@Html.Recource(2908)</th>
+            <th>@Html.Recource(2958)</th>
+            <th>@Html.Recource(312)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            int Comp_num = company.comp_num;
+            string query = string.Format("exec SP_Search {0},'WHERE (FASubCard.Comp_Num = {0})  AND (dbo.FASubCard.Item_Num = {1})',46", Comp_num,Model);
+            using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+            {
+                SqlCommand cmd = new SqlCommand(query, cn);
+                cn.Open();
+                SqlDataReader rdr = cmd.ExecuteReader();
+                if (rdr.HasRows)
+                {
+                    while (rdr.Read())
+                    {
+                        DateTime Rec_Date = Convert.ToDateTime(rdr["Rec_Date"]);
+                <tr onclick="Select_SerialFixAssest(this)" Item_Serl="@rdr["Item_Serl"]">
+                    <td id="Item_Num">@rdr["Item_Num"]</td>
+                    <td id="Item_Serl">@rdr["Item_Serl"]</td>
+                    <td id="Item_TradMark">@rdr["Item_TradMark"]</td>
+                    <td id="Manf_Num">@rdr["Manf_Num"]</td>
+                    <td id="Item_Location">@rdr["Item_Location"]</td>
+                    <td id="Holder_Name">@rdr["Holder_Name"]</td>
+                    <td id="Rec_Date">@Rec_Date.ToString("yyyy-MM-dd")</td>
+                    <td id="BarcodeNo">@rdr["BarcodeNo"]</td>
+                    <td></td>
+                </tr>
+                    }
+                }
+            }
+        }
+    </tbody>
+</table>
+
+
+<script>
+    $('#SerialFixAssestTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 10
+    });
+</script>

@@ -1,0 +1,56 @@
+﻿@using AlphaERP.Models;
+@using System.Data
+@model System.Data.DataSet
+@{
+    Company company = (Company)Session["company"];
+
+}
+<table class="table table-hover" id="LoadTableDefult">
+    <thead>
+        <tr>
+            <th style="text-align:center;">@Html.Translate("رمز المادة", "Item No")</th>
+            <th style="text-align:center;">@Html.Translate("الوصف", "desc")</th>
+            <th style="text-align:center;"></th>
+            <th style="text-align:center;">@Html.Translate("الوحدة", "Unit Code")</th>
+            <th style="text-align:center; display:none;">@Html.Translate("تسلسل الوحدة", "Unit Serial")</th>
+            <th style="text-align:center;"></th>
+            <th style="text-align:center;">@Html.Translate("الحزمة", "Batch")</th>
+            <th style="text-align:center;">@Html.Translate("الكمية المتوفرة", "AvlQty")</th>
+            <th style="text-align:center;">@Html.Translate("الكمية المطلوبة للأمر", "ProdQty")</th>
+            <th style="text-align:center;">@Html.Translate("كمية الخلطة", "MixQty")</th>
+            <th style="text-align:center;">@Html.Translate("الكمية المصروفة", "IssuedQty")</th>
+            <th style="text-align:center;">@Html.Translate("كمية الأوامر السابقة", "PreviousQty")</th>
+            <th style="text-align:center;">@Html.Translate("الكمية المحوّلة", "TranQty")</th>
+            <th style="text-align:center;">@Html.Translate("الكمية المتبقية", "RemQty")</th>
+            <th style="text-align:center;">@Html.Translate("الكمية", "Qty")</th>
+            <th style="text-align:center;">@Html.Translate("ملاحظات المادة", "ItemNotes")</th>
+
+
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="LoadTableDefultItems">
+        @foreach (DataRow row in Model.Tables["GetPrepDetlForIssueOrder"].Rows)
+        {
+            <tr>
+                <td>@row["ItemNo"]</td>
+                <td>@row["ItemDesc"]</td>
+                <td><button></button></td>
+                <td>@row["UnitCode"]</td>
+                <td style="display:none;">@row["UnitSerial"]</td>
+                <td><button onclick="LoadBatch('@company.comp_num','@row["ItemNo"]','@row["UnitSerial"]')">Batch</button></td>
+                <td><input class="batch-input" type="text" value="@row["Batch"]" /></td>
+                <td>@row["AvlQty"]</td>
+                <td>@row["ProdQty"]</td>
+                <td>@row["MixQty"]</td>
+                <td>@row["IssuedQty"]</td>
+                <td>@row["PreviousQty"]</td>
+                <td>@row["TranQty"]</td>
+                <td>@row["RemQty"]</td>
+                <td><input style="width: 33px !important;" id="Qty" type="number" value="@row["Qty"]" /></td>
+                <td><input type="text" value="@row["ItemNotes"]" /></td>
+            </tr>
+        }
+
+    </tbody>
+</table>

@@ -1,0 +1,441 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    long SlaughterOrderNo = ViewBag.SlaughterOrderNo;
+
+    Invt_SlaughterOrderHF SlaughterOrderHF = new MDB().Invt_SlaughterOrderHF.Where(x => x.CompNo == company.comp_num && x.SlaughterOrderNo == SlaughterOrderNo).FirstOrDefault();
+    InvItemsMF M = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == SlaughterOrderHF.ItemNo).FirstOrDefault();
+    List<Invt_SlaughterOrderDF> SlaughterOrderDF = new MDB().Invt_SlaughterOrderDF.Where(x => x.CompNo == company.comp_num && x.SlaughterOrderNo == SlaughterOrderNo).ToList();
+
+    List<Invt_OutlaySlaughter> OutlaySlaughter = new MDB().Invt_OutlaySlaughter.Where(x => x.CompNo == company.comp_num && x.SlaughterOrderNo == SlaughterOrderNo).ToList();
+
+    int Srial = 1;
+    List<InvKit> Mf = new MDB().InvKits.Where(x => x.CompNo == company.comp_num).ToList();
+    var litem = Mf.GroupBy(x => x.Kit_ItemNo).ToList();
+    DataTable Dt = new DataTable();
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+    List<int> store = new MDB().InvStoreUsers.Where(x => x.CompNo == company.comp_num && x.UserID == me.UserID && x.AllPerm == true).Select(o => o.StoreNo).ToList();
+    List<InvStoresMF> lStores = new MDB().InvStoresMFs.Where(x => x.CompNo == company.comp_num && store.Contains(x.StoreNo)).ToList();
+    List<PayCodes> Exp = new MDB().Database.SqlQuery<PayCodes>(string.Format("select MinCode as sys_minor ,CodeDesc as DescAr,isnull(CodeDescEng,'No Desc.') as DescEn from InvCodes where (CompNo = '{0}') AND (MajCode='DocEsp') AND (AllowEdit = 1) AND (MinCode <> 0) ", company.comp_num)).ToList();
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+
+}
+
+<style>
+    .modal-title {
+        width: calc(100% - 120px) !important;
+        text-align: center;
+        position: absolute;
+        font-weight: bold;
+    }
+
+    .modal-body {
+        max-height: 78vh !important;
+    }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(100vh - 210px) !important;">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item active">
+                    <a class="nav-link active" data-toggle="tab" href="#vSlaughterOrderInfo" role="tab">
+                        @Html.Translate("المدخلات و المخرجات", "In and Out")
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#vExpensesDetails" role="tab">
+                        @Html.Recource(6514)
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content" style="height:300px;padding:10px">
+                <div class="tab-pane active" id="vSlaughterOrderInfo" role="tabpanel">
+                    <div class="form-group">
+                        <div class="col-md-12" style="background-color: lightblue;">
+                            <label style="font-size: 15px;" class="unselectable">@Html.Translate("المدخلات", "Input")</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="Invt_SlaughterOrder_Date">@Html.Recource(206)</label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input required="false" style="width:120px !important;" type="date" id="Invt_vSlaughterOrder_Date" value="@SlaughterOrderHF.SlaughterOrderDate.Value.ToString("yyyy-MM-dd")" disabled />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="Invt_SlaughterOrder_SlaughterOrder">@Html.Translate("رفم أمر الذبح", "SlaughterOrder No.")</label>
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input required="false" style="width:120px !important;" type="text" id="Invt_vSlaughterOrder_SlaughterOrdNo" value="@SlaughterOrderHF.SlaughterOrderNo" disabled />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="Invt_SlaughterOrder_StoreNo">@Html.Recource(1)</label>
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select style="width: 85%" id="Invt_SlaughterOrder_CboStoreNo" disabled>
+                                    @foreach (var v in lStores)
+                                    {
+                                        if (v.StoreNo == SlaughterOrderHF.StoreNo)
+                                        {
+                                            <option value="@v.StoreNo" selected>@Html.Translate(v.StoreName, v.StoreNameEng)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.StoreNo">@Html.Translate(v.StoreName, v.StoreNameEng)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable" for="Invt_SlaughterOrder_ItemNo">@Html.Recource(42)</label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input required="false" type="text" id="Invt_vSlaughterOrder_ItemNo" value="@SlaughterOrderHF.ItemNo" disabled />
+                            </div>
+                            <div class="col-md-6" style="margin-bottom: 5px;">
+                                <input required="false" style="width: 100% !important;" type="text" id="Invt_vSlaughterOrder_ItemDesc" value="@Html.Translate(M.ItemDesc,M.ItemDesc_Ara)" disabled />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="Invt_SlaughterOrder_BatchNo">@Html.Recource(45)</label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;" id="BatchNo">
+                                <input required="false" style="direction:ltr; text-align:right" type="text" id="Invt_vSlaughterOrder_BatchNo" value="@SlaughterOrderHF.Batch" disabled />
+                            </div>
+                            <div class="col-md-1">
+                                <button onclick="Add_BatchNo(@SlaughterOrderNo)" type="button" class="btn btn-default">@Html.Recource(45)</button>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="Invt_SlaughterOrder_Unit">@Html.Recource(67)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <select style="width:100%" class="Invt_vSlaughterOrder_CboSubUnit" disabled>
+                                    @{
+                                        using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                        {
+                                            Dt = new DataTable();
+                                            cn.Open();
+                                            using (SqlCommand cmd = new SqlCommand())
+                                            {
+                                                cmd.Connection = cn;
+                                                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                                cmd.CommandText = "InvT_LoadItemUnits";
+                                                cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                                cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = SlaughterOrderHF.ItemNo;
+                                                using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                                {
+                                                    DA.Fill(Dt);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    @foreach (DataRow row in Dt.Rows)
+                                    {
+                                        if (SlaughterOrderHF.UnitSerial.ToString() == row["UnitSerial"].ToString())
+                                        {
+                                            <option value="@row["UnitSerial"].ToString()" selected>
+                                                @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                            </option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@row["UnitSerial"].ToString()">
+                                                @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                @if (CActive.ClientNo == 335)
+                                {
+                                    <label class="unselectable">@Html.Recource(5693)</label>
+                                }
+                                else
+                                {
+                                    <label class="unselectable">@Html.Recource(49)</label>
+                                }
+                            </div>
+                            <div class="col-md-3" style="margin-bottom: 5px;">
+                                <input id="Invt_vSlaughterOrderQty" value="@SlaughterOrderHF.Qty" type="number" disabled />
+                            </div>
+                            @if (compMF.UseQty2 == true)
+                            {
+                        <div class="col-md-2">
+                            @if (CActive.ClientNo == 335)
+                            {
+                                <label class="unselectable">@Html.Recource(442)</label>
+                            }
+                            else
+                            {
+                                <label class="unselectable">@Html.Recource(72)</label>
+                            }
+                        </div>
+                                <div class="col-md-2" style="margin-bottom: 5px;">
+                                    <input id="Invt_vSlaughterOrderQty2" value="@SlaughterOrderHF.Qty2" type="number" disabled />
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="col-md-4" style="margin-bottom: 5px;" hidden>
+                                    <input id="Invt_vSlaughterOrderQty2" value="@SlaughterOrderHF.Qty2" type="number" hidden />
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="Invt_SlaughterOrder_Notes">@Html.Recource(70)</label>
+                            </div>
+                            <div class="col-md-10">
+                                <textarea required="true" style="width: 100%;" id="Invt_vSlaughterOrder_Notes" disabled>@SlaughterOrderHF.Notes</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12" style="background-color: lightblue;">
+                            <label style="font-size: 15px;" class="unselectable">@Html.Translate("المخرجات", "output")</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable">@Html.Recource(1)</label>
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select style="width: 85%" id="Invt_vSlaughterOrder_CboOutStoreNo" disabled>
+                                    @foreach (var v in lStores)
+                                    {
+                                        if (v.StoreNo == SlaughterOrderDF.Select(x => x.StoreNo).FirstOrDefault())
+                                        {
+                                            <option value="@v.StoreNo" selected>@Html.Translate(v.StoreName, v.StoreNameEng)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.StoreNo">@Html.Translate(v.StoreName, v.StoreNameEng)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="form-group" style="display: block; height: 225px;">
+                        <div class="col-md-12 wrapperx" id="vSlaughterOrderDF_DIV">
+                            <table class="table table-hover vSlaughterOrderDF_Info" id="vSlaughterOrderDFTable">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: center !important; width: 350px; word-wrap: break-word; white-space: normal;">@Html.Recource(44)</th>
+                                        <th style="text-align: center !important; width: 990px; word-wrap: break-word; white-space: normal;">@Html.Recource(74)</th>
+                                        <th style="width: 205px; text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(45)</th>
+                                        <th style="width: 205px; text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(67)</th>
+                                        @if (CActive.ClientNo == 335)
+                                        {
+                                            <th style="width: 165px; text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(442)</th>
+                                        }
+                                        else
+                                        {
+                                            <th style="width: 165px; text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(49)</th>
+                                        }
+                                        @if (compMF.UseQty2 == true)
+                                        {
+                                            if (CActive.ClientNo == 335)
+                                            {
+                                                <th style="width: 165px; text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(5693)</th>
+                                            }
+                                            else
+                                            {
+                                                <th style="width: 165px; text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(72)</th>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <th hidden>@Html.Recource(72)</th>
+                                        }
+                                        <th style="width: 165px !important; text-align: center !important; word-wrap: break-word; white-space: normal; ">@Html.Recource(4397)</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody style="text-align: center;" id="vSlaughterOrderDFTBody">
+                                    @foreach (Invt_SlaughterOrderDF item in SlaughterOrderDF)
+                                    {
+                                        InvItemsMF mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == item.ItemNo).FirstOrDefault();
+                                        <tr id="eSlaughterOrderDF_@Srial">
+                                            <td style="text-align: center; width: 350px; word-wrap: break-word; white-space: normal;" id="vSlaughterOrderDFItemNo_@Srial">@item.ItemNo</td>
+                                            <td style="text-align: center; width: 990px; word-wrap: break-word; white-space: normal;">@Html.Translate(mf.ItemDesc, mf.ItemDesc_Ara)</td>
+                                            <td style="text-align: center; width: 10%;">
+                                                <input id="vSlaughterOrderDF_Batch_@Srial" value="@item.Batch" type="text" style="width: 115px !important" disabled />
+                                            </td>
+                                            <td style="text-align: center; width: 10%;">
+                                                <select style="width:100%" class="vSlaughterOrderDFItems_Unit" disabled>
+                                                    @{
+                                                        using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                                        {
+                                                            Dt = new DataTable();
+                                                            cn.Open();
+                                                            using (SqlCommand cmd = new SqlCommand())
+                                                            {
+                                                                cmd.Connection = cn;
+                                                                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                                                cmd.CommandText = "InvT_LoadItemUnits";
+                                                                cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                                                cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = item.ItemNo;
+                                                                using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                                                {
+                                                                    DA.Fill(Dt);
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    @foreach (DataRow row in Dt.Rows)
+                                                    {
+                                                        if (item.UnitSerial.ToString() == row["UnitSerial"].ToString())
+                                                        {
+                                                            <option value="@row["UnitSerial"].ToString()" selected>
+                                                                @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                            </option>
+                                                        }
+                                                        else
+                                                        {
+                                                            <option value="@row["UnitSerial"].ToString()">
+                                                                @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                            </option>
+                                                        }
+                                                    }
+                                                </select>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <input id="vSlaughterOrderDF_Qty_@Srial" value="@item.Qty" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            @if (compMF.UseQty2 == true)
+                                            {
+                                                <td style="text-align: center;">
+                                                    <input id="vSlaughterOrderDF_Qty2_@Srial" value="@item.Qty2" type="number" style="width:75px !important" disabled />
+                                                </td>
+                                            }
+                                            else
+                                            {
+                                                <td style="text-align: center;" hidden>
+                                                    <input id="vSlaughterOrderDF_Qty2_@Srial" value="@item.Qty2" type="number" style="width:75px !important" />
+                                                </td>
+                                            }
+                                            <td style="text-align: center;">
+                                                <input id="vSlaughterOrderDF_CostPercent_@Srial" value="@item.CostPercent" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            <td>
+                                                <input type="hidden" id="vInputSerial" value="@(Srial++)" />
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="vInvt_SlaughterOrder_TotalCostPercent">@Html.Recource(7041) </label>
+                            </div>
+                            <div class="col-md-4">
+                                <input required="false" style="width:117px !important;" type="text" id="vInvt_SlaughterOrder_TotalCostPercent" value="0" disabled />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="vExpensesDetails" role="tabpanel">
+                    <div class="form-group" style="display: block; height: 225px;">
+                        <div class="col-md-12 wrapperx" id="vExpensesDetails_DIV">
+                            <table class="table table-hover vExpensesDetails_Info" id="vExpensesDetailsTable">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: center !important; width: 350px; word-wrap: break-word; white-space: normal;">@Html.Recource(5064)</th>
+                                        <th style="text-align: center !important; width: 120px; word-wrap: break-word; white-space: normal;">@Html.Recource(972)</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody style="text-align: center;" id="vExpensesDetailsTBody">
+                                    @foreach (Invt_OutlaySlaughter item in OutlaySlaughter)
+                                    {
+                                        PayCodes E = new MDB().Database.SqlQuery<PayCodes>(string.Format("select MinCode as sys_minor ,CodeDesc as DescAr,isnull(CodeDescEng,'No Desc.') as DescEn from InvCodes where (CompNo = '{0}') AND (MinCode = '{1}') AND (MajCode='DocEsp') AND (AllowEdit = 1) ", company.comp_num, @item.DocEspCode)).FirstOrDefault();
+                                        if (E != null)
+                                        {
+                                            <tr>
+                                                <td style="text-align: center; width: 350px; word-wrap: break-word; white-space: normal;" Itemcode="@item.DocEspCode" id="vExpensesDetailsItemNo">@Html.Translate(E.DescAr, E.DescEn)</td>
+                                                <td style="text-align: center; width: 120px;">
+                                                    <input id="vExpensesDetails_Amount" value="@item.DocEspVal" type="number" style="text-align: center; width: 120px !important " disabled />
+                                                </td>
+                                                <td></td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+</div>
+
+
+
+<script>
+    $('.nav-tabs a[href="#vSlaughterOrderInfo"]').tab('show');
+
+    SumTotal();
+    function SumTotal() {
+        var table = $('#vSlaughterOrderDFTBody').find('tr');
+        var trs = table;
+
+        var TotalCostPercent = 0;
+
+        for (var i = 0; i < trs.length; i++) {
+            var vInputSerial = $(trs[i]).closest('tr').find('#vInputSerial')[0].value;
+            if ($(trs[i]).closest('tr').find('#vSlaughterOrderDF_Qty_' + vInputSerial)[0].value > 0) {
+                TotalCostPercent += Number($(trs[i]).closest('tr').find('#vSlaughterOrderDF_CostPercent_' + vInputSerial)[0].value);
+            }
+        }
+        $('#vInvt_SlaughterOrder_TotalCostPercent').val(Number(TotalCostPercent));
+    }
+</script>
+

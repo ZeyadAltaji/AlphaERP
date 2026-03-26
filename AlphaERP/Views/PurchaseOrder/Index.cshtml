@@ -1,0 +1,60 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@{
+    Company company = (Company)Session["company"];
+}
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-6" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="Ord_PurchaseOrder_OrdYear">@Resources.Resource.Year </label>
+            </div>
+            <div class="col-md-2">
+                <input onblur="Checkyear()" type="number" id="Ord_PurchaseOrder_OrdYear" value="@DateTime.Now.Year" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" />
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-success btn-block" onclick="SerachPurchaseOrderInfo()">
+                    @Resources.Resource.Search
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="Ord_PurchaseOrderListDiv">
+    </div>
+</div>
+
+<script>
+    function Checkyear() {
+        if (Ord_PurchaseOrder_OrdYear.value < 2000) {
+            Ord_PurchaseOrder_OrdYear.value = "@DateTime.Now.Year"
+            Ord_PurchaseOrder_OrdYear.focus();
+        }
+    }
+    SerachPurchaseOrderInfo()
+    function SerachPurchaseOrderInfo() {
+        wait()
+        Ord_PurchaseOrderListDiv.innerHTML = "";
+        $('#Ord_PurchaseOrderListDiv').load('../../../PurchaseOrder/PurchaseOrderList?OrdYear=' + Ord_PurchaseOrder_OrdYear.value);
+    }
+
+
+    function Delete_PurchaseOrder(OrdYear, OrderNo, TawreedNo) {
+         if (confirm('@Resources.Resource.ConfirmDeleteDialog')) {
+             wait();
+             burn({ OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo }, '../../../PurchaseOrder/Delete_PurchaseOrder', '', ReloadDelPurchaseOrder, false);
+        }
+    }
+
+    function ReloadDelPurchaseOrder() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        SerachPurchaseOrderInfo();
+    }
+</script>

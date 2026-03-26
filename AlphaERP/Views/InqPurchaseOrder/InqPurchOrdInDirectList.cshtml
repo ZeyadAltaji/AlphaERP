@@ -1,0 +1,135 @@
+﻿@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+    short CompNo = company.comp_num;
+    int OrdYear = ViewBag.OrdYear;
+    List<Order_HF> OrdHf = new MDB().Database.SqlQuery<Order_HF>(string.Format("SELECT OrderHF.OrdYear as OrdYear ,OrderHF.OrderNo as OrderNo,OrderHF.TawreedNo as TawreedNo,OrderHF.OfferNo as OfferNo,OrderHF.VendorNo as VendorNo,  " +
+    "OrderHF.CurType as CurType,OrderHF.ShipWay as ShipWay,OrderHF.DlvryPlace as DlvryPlace,OrderHF.NetAmt as NetAmt,Convert(date,OrderHF.EnterDate) as EnterDate,OrderHF.RefNo as RefNo  " +
+    "from OrderHF INNER JOIN Ord_RequestDF ON Ord_RequestDF.CompNo = OrderHF.CompNo AND Ord_RequestDF.PurchaseOrderYear = OrderHF.OrdYear " +
+    "AND Ord_RequestDF.PurchaseOrderNo = OrderHF.OrderNo AND Ord_RequestDF.PurchaseOrdTawreedNo = OrderHF.TawreedNo AND Ord_RequestDF.PurchaseOrdOfferNo = OrderHF.OfferNo  where (OrderHF.CompNo = '{0}') AND (OrderHF.OrdYear = '{1}') AND (OrderHF.OfferNo <> 0) " +
+    "Group by OrderHF.OrdYear,OrderHF.OrderNo,OrderHF.TawreedNo,OrderHF.OfferNo,OrderHF.VendorNo,OrderHF.CurType,OrderHF.ShipWay,OrderHF.DlvryPlace,OrderHF.NetAmt,Convert(date,OrderHF.EnterDate),OrderHF.RefNo order by OrderHF.OrderNo desc", CompNo, OrdYear)).ToList();
+    List<Vendor> Vend = new MDB().Vendors.Where(x => x.comp == CompNo).ToList();
+}
+
+@if (Session["language"].ToString() == "en")
+{
+    <style>
+        .dataTables_wrapper .dataTables_filter {
+            text-align: center !important;
+            direction: rtl;
+        }
+    </style>
+}
+
+
+<table id="InqPurchOrdInDirectTable" class="table table-hover">
+    <thead>
+        <tr>
+            <th style="text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(3197)</th>
+            <th style="text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(5680)</th>
+            <th style="text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(3753)</th>
+            <th style="text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(206)</th>
+            <th style="text-align: center !important;word-wrap: break-word; white-space: normal;">@Html.Recource(517)</th>
+            <th style="text-align: center !important;word-wrap: break-word; white-space: normal;">@Html.Recource(1671)</th>
+            <th style="text-align: center !important;word-wrap: break-word; white-space: normal;">@Html.Recource(3206)</th>
+            <th style="text-align: center !important;word-wrap: break-word; white-space: normal;">@Html.Recource(3207)</th>
+            <th style="text-align: center !important;word-wrap: break-word; white-space: normal;">@Html.Recource(972)</th>
+            <th style="text-align: center !important;word-wrap: break-word; white-space: normal;">@Html.Recource(96)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (Order_HF item in OrdHf)
+        {
+            string DlivPlaceNAme = "";
+            string CurrName = "";
+            string ShipMethodName = "";
+
+            PayCodes Currency = new MDB().Database.SqlQuery<PayCodes>(string.Format("select CurrType as Id ,CurrName as DescAr,isnull(CurrNameE,'No Desc.') as DescEn from CurrType where (CurrType = '{0}')", item.CurType)).FirstOrDefault();
+            if (Currency != null)
+            {
+                CurrName = Html.Translate(Currency.DescAr, Currency.DescEn).ToString();
+            }
+            PayCodes ShipMethod = new MDB().Database.SqlQuery<PayCodes>(string.Format("select sys_minor as sys_minor ,sys_adesc as DescAr,isnull(sys_edesc,'No Desc.') as DescEn from SysCodes where (CompNo = '{0}') AND (sys_minor = '{1}') AND sys_major='0f'", company.comp_num, item.ShipWay)).FirstOrDefault();
+            if (ShipMethod != null)
+            {
+                ShipMethodName = Html.Translate(ShipMethod.DescAr, ShipMethod.DescEn).ToString();
+            }
+            PayCodes DlivPlace = new MDB().Database.SqlQuery<PayCodes>(string.Format("select PlaceCode as Id ,Place as DescAr from OrdDlivPlace where (CompNo = '{0}') AND (PlaceCode = '{1}')", company.comp_num, item.DlvryPlace)).FirstOrDefault();
+            if (DlivPlace != null)
+            {
+                DlivPlaceNAme = Html.Translate(DlivPlace.DescAr, DlivPlace.DescEn).ToString();
+            }
+            Vendor VendorName = Vend.Where(x => x.VendorNo == item.VendorNo).FirstOrDefault();
+        <tr>
+            <td style="text-align: center !important">@item.OrderNo</td>
+            <td style="text-align: center !important">@item.TawreedNo</td>
+            <td style="text-align: center !important">@item.OfferNo</td>
+            <td style="text-align:center !important">@item.EnterDate.Value.ToShortDateString()</td>
+            <td style="text-align: center !important">@Html.Translate(VendorName.Name, VendorName.Eng_Name)</td>
+            <td style="text-align: center !important ">@CurrName</td>
+            <td style="text-align: center !important ">@ShipMethodName</td>
+            <td style="text-align: center !important ">@DlivPlaceNAme</td>
+            <td style="text-align: center !important ">@item.NetAmt</td>
+            <td style="text-align: center !important ">@item.RefNo</td>
+            <td>
+                <button class="btn btn-default ex" title="عرض" href="/InqPurchaseOrder/InqPurchOrdInDirect?OrdYear=@item.OrdYear&OrderNo=@item.OrderNo&TawreedNo=@item.TawreedNo&OfferNo=@item.OfferNo" target="_blank">
+                    <i style="font-weight:100" class="fa fa-folder"></i>
+                    @item.OrderNo
+                </button>
+                <button class="btn btn-info" id="btnReport" onclick="GetPrintReport(@item.OrdYear,@item.OrderNo,'@item.TawreedNo')">
+                    <i class="fa fa-print"></i>
+                </button>
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    $('#InqPurchOrdInDirectTable').DataTable({
+        "scrollY": 'calc( 100vh - 266px)',
+        "paging": true,
+        "pageLength": 25,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+
+    var _OrdYear = 0;
+    var _OrderNo = 0;
+    var _TawreedNo = "";
+
+
+    function GetPrintReport(OrdYear, OrderNo, TawreedNo) {
+        _OrdYear = OrdYear;
+        _OrderNo = OrderNo;
+        _TawreedNo = TawreedNo;
+        ReportManger.LoadReport();
+    }
+    var ReportManger = {
+
+        LoadReport: function () {
+            var jsonParam = "";
+            var ServiceUrl = "../InqPurchaseOrder/GenerateReport?OrdYear=" + _OrdYear + "&OrderNo=" + _OrderNo + "&TawreedNo=" + _TawreedNo;
+            ReportManger.GetReport(ServiceUrl, jsonParam, onFailed);
+            function onFailed(error) {
+                alert("Error");
+            }
+        },
+
+        GetReport: function (serviceUrl, jsonParams, errorCallback) {
+            jQuery.ajax({
+                url: serviceUrl,
+                async: false,
+                type: "POST",
+                data: "{" + jsonParams + "}",
+                contentType: "application/json; charset=utf-8",
+                success: function () {
+                    window.open('../Reports/CrystalViewer/ReportViewer.aspx', '_newtab');
+                },
+                error: errorCallback
+            });
+        }
+    }
+</script>

@@ -1,0 +1,167 @@
+@model IEnumerable<AlphaERP.Models.InvItemsMF>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    DataTable Dt = new DataTable();
+    int Srial = 0;
+    if (ViewBag.Serial != 0)
+    {
+        Srial = ViewBag.Serial + 1;
+    }
+    else
+    {
+        Srial = 1;
+    }
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+    string Id = ViewBag.Id;
+    double LastRecCost = 0;
+    double QtyOH = 0;
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+
+}
+
+
+@foreach (InvItemsMF item in Model)
+{
+    InvItemsMF MF = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == item.ItemNo).FirstOrDefault();
+    {
+        using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+        {
+            Dt = new DataTable();
+            cn.Open();
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.Connection = cn;
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.CommandText = "Ord_GetItemUnitCost";
+                cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                cmd.Parameters.Add(new SqlParameter("@ItemNo", System.Data.SqlDbType.VarChar, 20)).Value = item.ItemNo;
+                cmd.Parameters.Add(new SqlParameter("@UnitSerial", System.Data.SqlDbType.SmallInt, 4)).Value = 1;
+                using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                {
+                    DA.Fill(Dt);
+                }
+            }
+        }
+        foreach (DataRow row in Dt.Rows)
+        {
+            LastRecCost = Convert.ToDouble(row["LastRecCost"]);
+            QtyOH = Convert.ToDouble(row["AvlQty"]);
+        }
+    }
+    <tr style="height: 25px;" itemNo="@item.ItemNo" id="ePODF_Serial_@Srial">
+        <td class="first-col" style="text-align: center !important" id="ePODF_ItemSr">@Srial</td>
+        <td class="second-col" style="text-align: center !important; word-wrap: break-word; white-space: normal; " id="ePODF_ItemNo">@item.ItemNo</td>
+        <td class="third-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="ePODF_ItemDesc">@item.ItemDesc</td>
+        <td class="four-col" style="text-align: center !important" >
+            <select class="ePODF_Item_Unit" onchange="eGetchangeCost('@item.ItemNo',this.value,@Srial,'@Id')">
+                @{
+                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                    {
+                        Dt = new DataTable();
+                        cn.Open();
+                        using (SqlCommand cmd = new SqlCommand())
+                        {
+                            cmd.Connection = cn;
+                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                            cmd.CommandText = "InvT_LoadItemUnits";
+                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                            cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = item.ItemNo;
+                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                            {
+                                DA.Fill(Dt);
+                            }
+                        }
+                    }
+                }
+                @foreach (DataRow row in Dt.Rows)
+                {
+                    <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()">
+                        @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                    </option>
+                }
+            </select> 
+        </td>
+        <td>
+            <input id="ePODF_QtyOH_@Srial" value="@QtyOH.ToString("0.000")" type="number" style="width:75px !important" disabled />
+        </td>
+        <td>
+            <input id="ePODF_Qty_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckValueQty(@Srial,'@Id')" />
+        </td>
+        @if (compMF.UseQty2 == true)
+        {
+            <td>
+                <input id="ePODF_Qty2_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckValueQty2(@Srial,'@Id')" />
+            </td>
+        }
+        else
+        {
+            <td hidden>
+                <input id="ePODF_Qty2_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckValueQty2(@Srial,'@Id')" />
+            </td>
+        }
+        <td>
+            <input id="ePODF_Bonus_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckValueBouns(@Srial,'@Id')" />
+        </td>
+        <td>
+            <input id="ePODF_DiscPer_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckValuePerDiscount(@Srial,'@Id')" />
+        </td>
+        <td>
+            <input id="ePODF_OldPrice_@Srial" value="@LastRecCost.ToString("0.000")" type="number" style="width:75px !important" hidden />
+            <input id="ePODF_Price_@Srial" value="@LastRecCost.ToString("0.000")" type="number" style="width:75px !important" onblur="CheckValuePrice(@Srial,'@Id')" />
+        </td>
+        <td>
+            @if (CActive.ClientNo == 335)
+            {
+                <input id="ePODF_STax_Perc_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckValueSTaxPerc(@Srial,'@Id')" />
+            }
+            else
+            {
+                <input id="ePODF_STax_Perc_@Srial" value="@MF.STax_Perc" type="number" style="width:75px !important" onblur="CheckValueSTaxPerc(@Srial,'@Id')" />
+            }
+        </td>
+        <td>
+            @{
+                Prod_RevisionSetup revSetup = new MDB().Prod_RevisionSetup.Where(x => x.CompNo == company.comp_num && x.ItemNo == item.ItemNo && x.PurchasingFlag == true).OrderByDescending(x => x.Id).FirstOrDefault();
+                string revNo = "";
+                if(revSetup != null) {
+                    revNo = revSetup.RevisionNo;
+                }
+            }
+            <div style="display:flex; align-items:center;">
+                <input id="ePODF_RefNo_@Srial" value="@revNo" type="text" style="width:75px !important; padding:6px;" readonly="readonly" />
+                <button type="button" class="btn btn-sm btn-info" onclick="ShowRevisions(this, '@item.ItemNo')" title="@Html.Translate("البحث عن ارقام المراجعات","Search for revision numbers")" style="margin-right:5px; margin-left:5px;"><i class="fa fa-search"></i></button>
+            </div>
+        </td>
+        <td style="width: 8%;" id="ePODF_Total_@Srial">0</td>
+        <td style="text-align: center;">
+            <input type="date" required="true" style="width: 90px !important;" id="ePODF_RequestedDeliveryDate_@Srial" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+        </td>
+        <td style="width: 45%;text-align: center;">
+            <button onclick="ePOItemNote(@Srial,'@Id')" type="button" class="btn btn-primary">@Html.Recource(3799)</button>
+            <input type="text" id="ePODF_ItemNote_@Srial" value="" style="display:none;" />
+        </td>
+        <td>
+            <button onclick="ePODetailedNotes(@Srial,'@Id')" type="button" class="btn btn-primary">@Html.Translate("الملاحظات التفصيلية", "Detailed Notes")</button>
+            <input type="text" id="ePODF_DetailedNotes_@Srial" value="" style="display:none;" />
+        </td>
+        <td>
+            <button class="btn-de" onclick="RemoveRow(this)"><i class="fa fa-trash-alt"></i></button>
+            <input type="hidden" id="eInputSerial" value="@(Srial++)" />
+        </td>
+    </tr>
+}
+
+<script>
+    $('.ePODF_Item_Unit').select2();
+</script>
+
+

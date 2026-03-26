@@ -1,0 +1,41 @@
+﻿@model IEnumerable<AlphaERP.Models.Acc>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    int Id = ViewBag.Id;
+}
+<div class="form-group">
+    <div class="col-md-12">
+        <table class="table table-hover" id="eOrdPO_AccTable_@Id">
+            <thead>
+                <tr>
+                    <th style="width: 20%;">@Html.Recource(255)</th>
+                    <th style="width: 55%;">@Html.Recource(256)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="eOrdPO_AccTbody_@Id">
+                @foreach (var item in Model)
+                {
+                    Vendor Ven = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.VendorNo == item.AccId).FirstOrDefault();
+                    <tr onclick="Select_finAcc(this)" ondblclick="Select_Acc(this)" deptid="@item.deptid" Acc_NUM="@item.AccId"
+                        AccDesc="@Html.Translate(item.AccDescAr,item.AccDescEn)" VendAdrees="@Ven.Address" PaymentType="@Ven.Pmethod" Curr="@Ven.Curr">
+                        <td style="width: 20%;" id="PO_Acc_NUM">@item.AccId</td>
+                        <td style="width: 55%;" id="PO_AccDesc">@Html.Translate(item.AccDescAr, item.AccDescEn).ToString()</td>
+                        <td></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    $('#eOrdPO_AccTable_' + @Id).DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+</script>

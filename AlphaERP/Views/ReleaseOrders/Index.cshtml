@@ -1,0 +1,167 @@
+﻿<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-6">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-1">
+                <label class="unselectable" for="Ord_ReleaseOrders_OrdYear">@Resources.Resource.Year </label>
+            </div>
+            <div class="col-md-2">
+                <input onblur="Checkyear()" type="number" id="Ord_ReleaseOrders_OrdYear" value="@DateTime.Now.Year" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" />
+            </div>
+            <div class="col-md-1"></div>
+            <div class="col-md-2">
+                <button class="btn btn-success btn-block" onclick="SerachReleaseOrders()">
+                    @Resources.Resource.Search
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="Ord_ReleaseOrdersDiv">
+
+    </div>
+</div>
+
+
+<div class="modal fade wide" id="Model_ReleaseOrders" style="inset: 35px auto auto 75px;">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="ReleaseOrdersDiv">
+
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $('#Model_ReleaseOrders').draggable({
+        handle: ".modal-header",
+    });
+
+    function SerachReleaseOrders() {
+        ReleaseOrdersDiv.innerHTML = "";
+        Ord_ReleaseOrdersDiv.innerHTML = "";
+        $('#ReleaseOrdersDiv').load('../../../ReleaseOrders/ReleaseOrdersList?OrdYear=' + Ord_ReleaseOrders_OrdYear.value);
+        $('#Model_ReleaseOrders').modal('show');
+    }
+
+    function Checkyear() {
+        if (Ord_ReleaseOrders_OrdYear.value < 2000) {
+            Ord_ReleaseOrders_OrdYear.value = "@DateTime.Now.Year"
+            Ord_ReleaseOrders_OrdYear.focus();
+        }
+    }
+
+    function SelectionReleaseOrders(OrdYear, OrderNo, TawreedNo, InboundSer) {
+        wait();
+        burn({ OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo, InboundSer: InboundSer }, '../../../ReleaseOrders/ChooseReleaseOrders', '', LoadChooseReleaseOrders, true);
+    }
+    function LoadChooseReleaseOrders(r) {
+        Ord_ReleaseOrdersDiv.innerHTML = "";
+        $('#Ord_ReleaseOrdersDiv').html(r);
+        $('#Model_ReleaseOrders').modal('hide');
+        done();
+    }
+
+    var _OrderYear = 0;
+    var _OrderNo = 0;
+    var _TawreedNo = 0;
+    var _InboundSer = 0;
+    var _InboundGRN = 0;
+    var _ReleaseOrdId = 0;
+
+
+    function DeleteReleaseOrders(OrdYear, OrderNo, TawreedNo, InboundSer, InboundGRN, ReleaseOrdId) {
+        if (confirm('@Resources.Resource.ConfirmDeleteDialog')) {
+            _OrdYear = OrdYear;
+            _OrderNo = OrderNo;
+            _TawreedNo = TawreedNo;
+            _InboundSer = InboundSer;
+            _InboundGRN = InboundGRN;
+            _ReleaseOrdId = ReleaseOrdId;
+
+            burn({ OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo, InboundSer: InboundSer, InboundGRN: InboundGRN, ReleaseOrdId: ReleaseOrdId }, '../../../ReleaseOrders/Del_ReleaseOrders', '', ReloadDelReleaseOrdersInfo, false);
+        }
+    }
+    function ReloadDelReleaseOrdersInfo() {
+        MsgBox('@Html.Recource(2598)', 'red');
+
+        var table = $("#ReleaseOrdersHFTable tbody");
+        var trs = table.find('tr');
+
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i])[0].getAttribute('OrdYear') == _OrdYear && $(trs[i])[0].getAttribute('OrderNo') == _OrderNo && $(trs[i])[0].getAttribute('TawreedNo') == _TawreedNo && $(trs[i])[0].getAttribute('InboundSer') == _InboundSer && $(trs[i])[0].getAttribute('InboundGRN') == _InboundGRN) {
+                var nTr = $(trs[i])[0];
+                wait();
+                $(this).attr("opened", "details_close");
+
+                var OrdYear = _OrdYear;
+                var OrderNo = _OrderNo;
+                var TawreedNo = _TawreedNo;
+                var InboundSer = _InboundSer;
+                var InboundGRN = _InboundGRN;
+
+                $.get("../../../../ReleaseOrders/DetailsReleaseOrders?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo + '&InboundSer=' + InboundSer + '&InboundGRN=' + InboundGRN, function (data) {
+                    ReleaseOrdersHFTable.fnOpen(nTr, data, 'details');
+                    done();
+                });
+            }
+        }
+    }
+
+
+    //SerachReleaseOrders();
+    //function SerachReleaseOrders() {
+    //    Ord_ReleaseOrdersDiv.innerHTML = "";
+    //    $('#Ord_ReleaseOrdersDiv').load('../../../ReleaseOrders/ReleaseOrdersList?OrdYear=' + Ord_ReleaseOrders_OrdYear.value);
+    //}
+
+
+    function FreeReleaseOrder(OrdYear, OrderNo, TawreedNo, InboundSer, InboundGRN, ReleaseOrdId) {
+        if (confirm('@Resources.Resource.ApprovalVoucIssue')) {
+            _OrdYear = OrdYear;
+            _OrderNo = OrderNo;
+            _TawreedNo = TawreedNo;
+            _InboundSer = InboundSer;
+            _InboundGRN = InboundGRN;
+            _ReleaseOrdId = ReleaseOrdId;
+            burn({ OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo, InboundSer: InboundSer, InboundGRN: InboundGRN, ReleaseOrdId: ReleaseOrdId }, '../../../ReleaseOrders/Free_ReleaseOrder', '', ReloadFreeReleaseOrder, false);
+        }
+    }
+
+    function ReloadFreeReleaseOrder(r) {
+        MsgBox('@Html.Recource(475)', 'green');
+
+        var table = $("#ReleaseOrdersHFTable tbody");
+        var trs = table.find('tr');
+
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i])[0].getAttribute('OrdYear') == _OrdYear && $(trs[i])[0].getAttribute('OrderNo') == _OrderNo && $(trs[i])[0].getAttribute('TawreedNo') == _TawreedNo && $(trs[i])[0].getAttribute('InboundSer') == _InboundSer && $(trs[i])[0].getAttribute('InboundGRN') == _InboundGRN) {
+                var nTr = $(trs[i])[0];
+                wait();
+                $(this).attr("opened", "details_close");
+
+                var OrdYear = _OrdYear;
+                var OrderNo = _OrderNo;
+                var TawreedNo = _TawreedNo;
+                var InboundSer = _InboundSer;
+                var InboundGRN = _InboundGRN;
+
+                $.get("../../../../ReleaseOrders/DetailsReleaseOrders?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo + '&InboundSer=' + InboundSer + '&InboundGRN=' + InboundGRN, function (data) {
+                    ReleaseOrdersHFTable.fnOpen(nTr, data, 'details');
+                    done();
+                });
+            }
+        }
+    }
+</script>

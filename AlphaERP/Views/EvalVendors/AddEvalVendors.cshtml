@@ -1,0 +1,401 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+
+    List<int> Deptid = new List<int>();
+    List<GLN_UsersDept> UsersDept = new MDB().GLN_UsersDept.Where(x => x.CompNo == company.comp_num && x.UserID == me.UserID && x.Permission == true).ToList();
+    Deptid = UsersDept.Select(o => o.DeptID).ToList();
+    List<GLDEPMF> GLDEPMFs = new MDB().GLDEPMFs.Where(x => x.DEP_COMP == company.comp_num && Deptid.Contains(x.DEP_NUM)).ToList();
+
+    List<syscode> lsyscode = new MDB().syscodes.Where(x => x.CompNo == company.comp_num && x.sys_major == "EItem").ToList();
+
+    DataTable Dt = new DataTable();
+
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+}
+
+
+<link href="~/Content/stickytooltip.css" rel="stylesheet" />
+<script src="~/Scripts/stickytooltip.js?s=15"></script>
+
+<style>
+    #Ord_EvalVendorsTable span.badge {
+        border: none;
+        position: static;
+        z-index: 20 !important;
+        box-sizing: content-box;
+        visibility: visible;
+        z-index: 9999999999 !important;
+        padding: 1px;
+        font-family: Arial, verdana, tahoma;
+        font-size: 13px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        text-shadow: 1px 1px 1px rgba(0,0,0,.3);
+        background: #ff3019;
+        background: -webkit-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Chrome10+,Safari5.1+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff3019), color-stop(100%, #cf0404)); /* Chrome,Safari4+ */
+        background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* FF3.6+ */
+        background: -ms-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* IE10+ */
+        background: -o-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Opera 11.10+ */
+        background: linear-gradient(to bottom, #ff3019 0%, #cf0404 100%); /* W3C */
+        width: 18px;
+        height: 18px;
+        line-height: 20px;
+        border-radius: 50%;
+        filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff3019', endColorstr='#cf0404', GradientType=0)"; /* IE6-9 */
+        filter: "progid:DXImageTransform.Microsoft.Shadow(direction=135, strength=2, color=ff0000)"; /* IE10 text shadows */
+        box-shadow: 0 2px 5px rgba(0,0,0,.4);
+    }
+</style>
+
+<style>
+    #Ord_EvalVendors_DIV table th, #Ord_EvalVendors_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+
+    .wrapperx {
+        padding: 0;
+        position: relative;
+        white-space: nowrap;
+    }
+
+    .wrapperxOld {
+        padding: 0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+</style>
+
+<style>
+    .modal-body{
+        max-height: 78vh !important;
+    }
+    .modal-title {
+        width: calc(100% - 120px) !important;
+        text-align: center;
+        position: absolute;
+        font-weight: bold;
+    }
+    .form-group{
+        margin-bottom: 1px !important;
+    }
+    .col-md-12{
+        margin-bottom: 3px !important;
+    }
+    hr {
+        margin-top: 3px !important;
+        margin-bottom: 5px !important;
+    }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(100vh - 210px) !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_EvalVendors_OrderYear">@Html.Recource(3196)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input onblur="Checkyear(this.value)" type="number" id="Ord_EvalVendors_OrderYear" value="@DateTime.Now.Year" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_EvalVendors_OrdNo">@Html.Recource(3197)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 125px !important;" type="text" id="Ord_EvalVendors_OrdNo" value="" disabled />
+                        <button onclick="Serach_OrdNo()" type="button" class="btn btn-primary">
+                            <i class="fa fa-search" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_EvalVendors_TawreedNo">@Html.Recource(3797) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important;" type="text" id="Ord_EvalVendors_TawreedNo" value="" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_EvalVendors_VendorNo">@Html.Recource(3087)</label>
+                    </div>
+                    <div class="col-md-10" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 125px !important;" type="text" id="Ord_EvalVendors_VendorNo" value="" disabled />
+                        <input required="false" style="width: 390px !important;" type="text" id="Ord_EvalVendors_VendorName" value="" disabled />
+                    </div>
+                    
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3777) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important;" type="date" id="Ord_EvalVendors_AgreementDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_EvalVendors_RealDeliveryDate">@Html.Recource(3778)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important;" type="date" id="Ord_EvalVendors_RealDeliveryDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_EvalVendors_ClassificationDate">@Html.Recource(3780)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important;" type="date" id="Ord_EvalVendors_ClassificationDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_EvalVendors_Documents">@Html.Recource(3779)</label>
+                    </div>
+                    <div class="col-md-10">
+                        <textarea required="true" style="width: 100%;height:58px !important;" id="Ord_EvalVendors_Documents" placeholder="@Html.Recource(3779)" />
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group" style="height:calc(100vh - 550px) !important;">
+                <div class="col-md-12 wrapperx" id="Ord_EvalVendors_DIV">
+                    <table class="table table-hover Ord_EvalVendors" id="Ord_EvalVendorsTable">
+                        <thead>
+                            <tr>
+                                <th class="first-col">@Html.Recource(3781)</th>
+                                <th>@Html.Translate("علامة", "Marks")</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody style="text-align: center;" id="Ord_EvalVendorsTBody">
+                            @foreach (syscode item in lsyscode)
+                            {
+                                 <tr style="height: 25px;" CodeId="@item.sys_minor">
+                                     <td hidden id="EvalVendors_CodeId">@item.sys_minor</td>
+                                     <td class="second-col" style="text-align: center !important; word-wrap: break-word; white-space: normal; " id="EvalVendors_Name">@Html.Translate(item.sys_adesc, item.sys_edesc)</td>
+                                     <td>
+                                         <input id="EvalVendors_Mark" value="0" type="number" style="width:100px !important"  />
+                                     </td>
+                                     <td></td>
+                                 </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="ExcuteSaveOrd_EvalVendors()" class="btn btn-primary">@Resources.Resource.Save</button>
+        </div>
+    </div>
+</div>
+
+@*----------------------Vendor-----------------------*@
+<div class="modal fade wide" id="Model_EvalVendors_OrdNo" style="inset: 35px auto auto 75px;">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(3795)</label>
+            </div>
+            <div class="modal-body row" id="OrdEvalVendors_OrdNobody">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selecting_EvalVendors_OrdNo()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_EvalVendors_OrdNo').draggable({
+        handle: ".modal-header",
+    });
+    function CheckValue(ID) {
+        if (document.getElementById(ID).getAttribute('required') == 'true') {
+            if (document.getElementById(ID).value == '') {
+                document.getElementById(ID).focus();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    function Serach_OrdNo() {
+        if (CheckValue('Ord_EvalVendors_OrderYear')) {
+            alert('@Html.Translate("يجب ادخال السنة", "You must enter the Year")');
+            return;
+        }
+
+        burn({ OrdYear: Ord_EvalVendors_OrderYear.value }, '../../../EvalVendors/PR', '', ReloadtPR, true);
+    }
+    function ReloadtPR(r) {
+        OrdEvalVendors_OrdNobody.innerHTML = "";
+        $('#OrdEvalVendors_OrdNobody').html(r);
+        $('#Model_EvalVendors_OrdNo').modal('show');
+    }
+    function Select_finPROrder(e) {
+        var table = $('#Ord_PROrderTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Selecting_EvalVendors_OrdNo() {
+        var table = $('#Ord_PROrderTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار امر شراء", "Select one PR")');
+            return;
+        }
+
+        Ord_EvalVendors_OrdNo.value = trs[0].getAttribute('OrderNo');
+        Ord_EvalVendors_TawreedNo.value = trs[0].getAttribute('TawreedNo');
+        Ord_EvalVendors_VendorNo.value = trs[0].getAttribute('VendorNo');
+        Ord_EvalVendors_VendorName.value = trs[0].getAttribute('VenName');
+
+        $('#Model_EvalVendors_OrdNo').modal('hide')
+    }
+    function Select_PROrder(e) {
+        var table = $('#Ord_PROrderTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+
+        Ord_EvalVendors_OrdNo.value = trs[0].getAttribute('OrderNo');
+        Ord_EvalVendors_TawreedNo.value = trs[0].getAttribute('TawreedNo');
+        Ord_EvalVendors_VendorNo.value = trs[0].getAttribute('VendorNo');
+        Ord_EvalVendors_VendorName.value = trs[0].getAttribute('VenName');
+
+        $('#Model_EvalVendors_OrdNo').modal('hide')
+    }
+</script>
+
+<script>
+    var OrderYear = Ord_EvalVendors_OrderYear.value;
+    function Checkyear(e) {
+        if (Ord_EvalVendors_OrderYear.value < 2000) {
+            Ord_EvalVendors_OrderYear.value = "@DateTime.Now.Year"
+            Ord_EvalVendors_OrderYear.focus();
+        }
+        if (Ord_EvalVendors_OrderYear.value != OrderYear) {
+            Ord_EvalVendors_OrdNo.value = "";
+            Ord_EvalVendors_TawreedNo.value = "";
+            Ord_EvalVendors_VendorNo.value = "";
+            Ord_EvalVendors_VendorName.value = "";
+            OrderYear = Ord_EvalVendors_OrderYear.value;
+        }
+        else {
+            OrderYear = Ord_EvalVendors_OrderYear.value;
+        }
+    }
+    function CheckValueGridTotlal(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt <= 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function ExcuteSaveOrd_EvalVendors() {
+        if (Ord_EvalVendors_OrderYear.value == "") {
+            alert('@Html.Translate("يجب إدخال السنة", "You Must Enter Year")');
+            return;
+        }
+        if (Ord_EvalVendors_OrdNo.value == "") {
+            alert('@Html.Translate("يجب إدخال رقم طلب الشراء", "You Must Enter P.O.No")');
+            return;
+        }
+        if (Ord_EvalVendors_TawreedNo.value == "") {
+            alert('@Html.Translate("يجب إدخال رقم امر الشراء", "You Must Enter P.R.No")');
+            return;
+        }
+        if (Ord_EvalVendors_VendorNo.value == "") {
+            alert('@Html.Translate("يجب إدخال المورد", "You Must Enter Vendor")');
+            return;
+        }
+
+        var table = $('#Ord_EvalVendorsTBody tr');
+        var trs = table;
+
+
+        var EvalVenodrsHF = {
+            CompNo: '@company.comp_num',
+            Orderyear: Ord_EvalVendors_OrderYear.value,
+            OrderNo: Ord_EvalVendors_OrdNo.value,
+            TawreedNo: Ord_EvalVendors_TawreedNo.value,
+            EvalVendId: 0,
+            VendorNo: Ord_EvalVendors_VendorNo.value,
+            doc: Ord_EvalVendors_Documents.value,
+            recdate: Ord_EvalVendors_AgreementDate.value,
+            realdate: Ord_EvalVendors_RealDeliveryDate.value,
+            catdate: Ord_EvalVendors_ClassificationDate.value
+        };
+
+        var EvalVenodrsDF = new Array();
+        var Count = 0;
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i]).closest('tr').find('#EvalVendors_Mark')[0].value > 0) {
+                Count = Count + 1;
+            }
+            EvalVenodrsDF.push({
+                CompNo: '@company.comp_num',
+                EvalVendId: 0,
+                CodeId: $(trs[i]).closest('tr').find('#EvalVendors_CodeId')[0].innerHTML,
+                Marks: $(trs[i]).closest('tr').find('#EvalVendors_Mark')[0].value
+            });
+        }
+        if (Count < 1) {
+            alert('@Html.Translate("يجب إدخال العلامة", "You Must Enter Mark")');
+            return;
+        }
+        wait();
+        burn({ EvalVenodrsHF: EvalVenodrsHF, EvalVenodrsDF: EvalVenodrsDF }, '../../../EvalVendors/Save_EvalVendors', '', ReloadEvalVendors, false);
+    }
+    function ReloadEvalVendors(r) {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        CloseWindow('/EvalVendors/AddEvalVendors');
+        SerachOrdEvalVendors();
+    }
+</script>

@@ -1,0 +1,1738 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    int OrdYear = ViewBag.OrdYear;
+    int OrderNo = ViewBag.OrderNo;
+    string TawreedNo = ViewBag.TawreedNo;
+    string ShipSer = ViewBag.ShipSer;
+    string srl = ViewBag.srl;
+
+    Ord_OrderShippingHF OrderShippingHF = new MDB().Ord_OrderShippingHF.Where(x => x.CompNo == company.comp_num && x.OrderYear == OrdYear
+    && x.OrderNo == OrderNo && x.TawreedNo == TawreedNo && x.ShipSer == ShipSer).FirstOrDefault();
+
+    List<Ord_OrderShippingDF> OrdShipDF = new MDB().Ord_OrderShippingDF.Where(x => x.CompNo == company.comp_num && x.OrderYear == OrdYear
+                && x.OrderNo == OrderNo && x.TawreedNo == TawreedNo && x.ShipSer == ShipSer).ToList();
+    List<InvItemsMF> Mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+    int Srial = 1;
+    DataTable Dt = new DataTable();
+    List<PayCodes> Currency = new MDB().Database.SqlQuery<PayCodes>("select CurrType as Id ,CurrName as DescAr,isnull(CurrNameE,'No Desc.') as DescEn from CurrType").ToList();
+
+    List<Vendor> Vend = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.IsHalt == false).ToList();
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+
+    DataTable DtAttachment = new DataTable();
+    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+    {
+        DtAttachment = new DataTable();
+        cn.Open();
+        using (SqlCommand cmd = new SqlCommand())
+        {
+            cmd.Connection = cn;
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+            cmd.CommandText = "Ord_GetOrdShipmentsInfoArchiveInfo";
+            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+            cmd.Parameters.Add(new SqlParameter("@OrderYear", SqlDbType.SmallInt)).Value = OrdYear;
+            cmd.Parameters.Add(new SqlParameter("@OrderNo", SqlDbType.Int)).Value = OrderNo;
+            cmd.Parameters.Add(new SqlParameter("@TawreedNo", SqlDbType.VarChar)).Value = TawreedNo;
+            cmd.Parameters.Add(new SqlParameter("@ShipSer", SqlDbType.VarChar)).Value = ShipSer;
+
+            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+            {
+                DA.Fill(DtAttachment);
+            }
+        }
+    }
+    var Count = 1;
+
+}
+
+<style>
+
+    #MRP_eShipmentsInfo_DIV table th, #MRP_eShipmentsInfo_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+    .wrapperx {
+        padding:0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+
+    .sticky-col {
+        z-index:2;
+        position: sticky;
+        position: -webkit-sticky;
+        background-color: white;
+    }
+
+    .first-col {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        @Html.Translate("right: 0px;", "left: 0px;")
+    }
+
+    .second-col {
+        width: 80px;
+        min-width: 80px;
+        max-width: 80px;
+        @Html.Translate("right: 60px;", "left: 60px;")
+    }
+
+    .third-col {
+        width: 150px;
+        min-width: 150px;
+        max-width: 150px;
+        @Html.Translate("right: 125px;", "left: 125px;")
+    }
+
+    .four-col {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        @Html.Translate("right: 280px;", "left: 280px;")
+    }
+    .stickytooltip {
+        max-height: 80vh !important;
+        overflow: auto !important
+    }
+</style>
+
+<link href="~/Content/stickytooltip.css" rel="stylesheet" />
+<script src="~/Scripts/stickytooltip.js?s=15"></script>
+
+<style>
+    #eShipmentsInfoTable span.badge {
+        border: none;
+        position: static;
+        z-index: 20 !important;
+        box-sizing: content-box;
+        visibility: visible;
+        z-index: 9999999999 !important;
+        padding: 1px;
+        font-family: Arial, verdana, tahoma;
+        font-size: 13px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        text-shadow: 1px 1px 1px rgba(0,0,0,.3);
+        background: #ff3019;
+        background: -webkit-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Chrome10+,Safari5.1+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff3019), color-stop(100%, #cf0404)); /* Chrome,Safari4+ */
+        background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* FF3.6+ */
+        background: -ms-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* IE10+ */
+        background: -o-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Opera 11.10+ */
+        background: linear-gradient(to bottom, #ff3019 0%, #cf0404 100%); /* W3C */
+        width: 18px;
+        height: 18px;
+        line-height: 20px;
+        border-radius: 50%;
+        filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff3019', endColorstr='#cf0404', GradientType=0)"; /* IE6-9 */
+        filter: "progid:DXImageTransform.Microsoft.Shadow(direction=135, strength=2, color=ff0000)"; /* IE10 text shadows */
+        box-shadow: 0 2px 5px rgba(0,0,0,.4);
+    }
+
+    .modal-body{
+        max-height: 78vh !important;
+    }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(100vh - 210px) !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_eShipmentsInfo_OrdYear">@Html.Recource(3196) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="text" id="MRP_eShipmentsInfo_OrdYear_@srl" value="@OrderShippingHF.OrderYear" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_eShipmentsInfo_OrderNo">@Html.Recource(3197) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:90px !important;" type="text" id="MRP_eShipmentsInfo_OrderNo_@srl" value="@OrderShippingHF.OrderNo" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_eShipmentsInfo_TawreedNo">@Html.Recource(3797) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:150px !important;" type="text" id="MRP_eShipmentsInfo_TawreedNo_@srl" value="@OrderShippingHF.TawreedNo" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="MRP_eShipmentsInfo_ShipSer">@Html.Recource(696) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 120px !important; direction: ltr; text-align: right;" type="text" id="MRP_eShipmentsInfo_ShipSer_@srl" value="@OrderShippingHF.ShipSer" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_eShipmentsInfo_ClearanceCompany">@Resources.Resource.ClearanceCompany </label>
+                    </div>
+                    <div class="col-md-6" style="margin-bottom: 5px;">
+                        <select onchange="$('#MRP_eShipmentsInfo_ClearanceCompany').val(this.value)" style="width: 150px !important;" id="MRP_eShipmentsInfo_CboClearanceCompany_@srl">
+                            @foreach (var v in Vend)
+                            {
+                                if (v.VendorNo.ToString() == OrderShippingHF.ClearanceCompany)
+                                {
+                                    <option value="@v.VendorNo" selected>@Html.Translate(v.Name, v.Eng_Name)</option>
+                                }
+                                else
+                                {
+                                    <option value="@v.VendorNo">@Html.Translate(v.Name, v.Eng_Name)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_eShipmentsInfo_ShippingPolicyNo">@Resources.Resource.ShippingPolicyNo </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="text" id="MRP_eShipmentsInfo_ShippingPolicyNo_@srl" value="@OrderShippingHF.ShippingPolicyNo" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_eShipmentsInfo_ClearanceInvNo">@Resources.Resource.ClearanceInvNo</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" type="text" id="MRP_eShipmentsInfo_ClearanceInvNo_@srl" value="@OrderShippingHF.ClearanceInvNo" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_eShipmentsInfo_TransportInvNo">@Resources.Resource.TransportInvNo</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:150px !important;" type="text" id="MRP_eShipmentsInfo_TransportInvNo_@srl" value="@OrderShippingHF.TransportInvNo" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="MRP_eShipmentsInfo_ArrivalDate">@Html.Recource(3833) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="date" id="MRP_eShipmentsInfo_ArrivalDate_@srl" value="@OrderShippingHF.ArrivalDate.Value.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_eShipmentsInfo_ShippingDate">@Html.Recource(3832) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="date" id="MRP_eShipmentsInfo_ShippingDate_@srl" value="@OrderShippingHF.ShippingDate.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_eShipmentsInfo_Transporter">@Resources.Resource.Transporter</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:150px !important;" type="text" id="MRP_eShipmentsInfo_Transporter_@srl" value="@OrderShippingHF.Transporter" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_eShipmentsInfo_ShippingNotes">@Html.Recource(70)</label>
+                    </div>
+                    <div class="col-md-8">
+                        <textarea required="true" style="width: 100%; height: 25px !important; " id="MRP_eShipmentsInfo_ShippingNotes_@srl">@OrderShippingHF.ShippingNotes</textarea>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary btn-block" onclick="Edit_ShipmentsInfoDocuments(@srl)">
+                            @Html.Recource(7744)
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group" style="display: block; height: calc(100vh - 470px) !important;">
+                <div class="col-md-12 wrapperx" id="MRP_eShipmentsInfo_DIV">
+                    <table class="table table-hover MRP_eShipmentsInfo" id="eShipmentsInfoTable">
+                        @if (Session["language"].ToString() == "en")
+                        {
+                            if (compMF.UseQty2 == true)
+                            {
+                                <thead style="background-color: lightblue">
+                                    <tr>
+                                        <th colspan="2" style="text-align: center; width: 350px;border-right: 1px solid;">@Html.Translate("المواد", "Items")</th>
+                                        <th colspan="3" style="text-align: center; width: 350px;border-right: 1px solid;">@Html.Translate("بيانات أمر الشراء", "Purchase order Info")</th>
+                                        <th colspan="4" style="text-align: center; width: 350px;border-right: 1px solid;">@Html.Translate("الكميات", "Quantities")</th>
+                                       @if (CActive.ClientNo == 239)
+                                       {
+                                        <th colspan="14" style="text-align: center; width: 350px;">@Html.Translate("بيانات الشحنات", "Shipments Data")</th>
+                                       }
+                                       else
+                                       {
+                                        <th colspan="2" style="text-align: center; width: 350px;">@Html.Translate("الفروقات", "Differences")</th>
+                                       }
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            }
+                            else
+                            {
+                                <thead style="background-color: lightblue">
+                                    <tr>
+                                        <th colspan="2" style="text-align: center; width: 350px;border-right: 1px solid;">@Html.Translate("المواد", "Items")</th>
+                                        <th colspan="2" style="text-align: center !important; width: 350px; border-right: 1px solid;">@Html.Translate("بيانات أمر الشراء", "Purchase order Info")</th>
+                                        <th colspan="3" style="text-align: center; width: 350px;border-right: 1px solid;">@Html.Translate("الكميات", "Quantities")</th>
+                                        @if (CActive.ClientNo == 239)
+                                        {
+                                            <th colspan="14" style="text-align: center; width: 350px;">@Html.Translate("بيانات الشحنات", "Shipments Data")</th>
+                                        }
+                                        else
+                                        {
+                                            <th colspan="1" style="text-align: center; width: 350px;">@Html.Translate("الفروقات", "Differences")</th>
+                                        }
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            }
+                                <thead>
+                                   <tr>
+                                       <th class="second-col">@Html.Recource(44)</th>
+                                       <th class="third-col"style="border-right: 1px solid;">@Html.Recource(74)</th>
+                                       <th style="width: 600px;">@Html.Recource(67)</th>
+                                       @if (compMF.UseQty2 == true)
+                                       {
+                                           if (CActive.ClientNo == 335)
+                                           {
+                                               <th style="width: 165px;">@Html.Recource(5693)</th>
+                                               <th style="width: 165px;border-right: 1px solid;">@Html.Recource(442)</th>
+                                           }
+                                           else
+                                           {
+                                              <th style="width: 165px;">@Html.Recource(49)</th>
+                                              <th style="width: 165px;border-right: 1px solid;">@Html.Recource(72)</th>
+                                           }
+                                       }
+                                       else
+                                       {
+                                           if (CActive.ClientNo == 335)
+                                           {
+                                            <th style="width: 165px;border-right: 1px solid;">@Html.Recource(5693)</th>
+                                            <th style="width: 165px;border-right: 1px solid;" hidden>@Html.Recource(442)</th>
+                                           }
+                                           else
+                                           {
+                                            <th style="width: 165px;border-right: 1px solid;">@Html.Recource(49)</th>
+                                            <th style="width: 165px;border-right: 1px solid;" hidden>@Html.Recource(72)</th>
+                                           }
+                                       }
+                                       <th style="width: 90px !important; text-align: center !important;">@Html.Recource(5432)</th>
+                                       <th style="width: 90px !important; text-align: center !important;">@Html.Recource(243)</th>
+                                      
+                                       @if (compMF.UseQty2 == true)
+                                       {
+                                           if (CActive.ClientNo == 335)
+                                           {
+                                               <th style="width: 165px;">@Html.Recource(5693)</th>
+                                               <th style="width: 165px;border-right: 1px solid;">@Html.Recource(442)</th>
+                                           }
+                                           else
+                                           {
+                                               <th style="width: 165px;">@Html.Recource(49)</th>
+                                               <th style="width: 165px;border-right: 1px solid;">@Html.Recource(72)</th>
+                                           }
+                                       }
+                                       else
+                                       {
+                                           if (CActive.ClientNo == 335)
+                                           {
+                                            <th style="width: 165px;border-right: 1px solid;">@Html.Recource(5693)</th>
+                                            <th style="width: 165px;border-right: 1px solid;" hidden>@Html.Recource(442)</th>
+                                           }
+                                           else
+                                           {
+                                            <th style="width: 165px;border-right: 1px solid;">@Html.Recource(49)</th>
+                                            <th style="width: 165px;border-right: 1px solid;" hidden>@Html.Recource(72)</th>
+                                           }
+                                       }
+                                       @if (CActive.ClientNo == 239)
+                                       {
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("تاريخ الوصول المتوقع", "ETA")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("متطلبات الفحص", "Receiving Inspection Requirements")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("فاتورة المورد", "Supplier Invoice Number")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("القيمة", "Amount")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("العملة", "Currency")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("تاريخ الشحن", "Shipping Date")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("الغذاء والدواء", "JFDA")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("تاريخ العينة", "Sample Date")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("تاريخ الموافقة", "JFDA Approval Date")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("البيان الجمركي", "Declaration")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("تاريخ الوصول الفعلي", "Actual Arrival Date")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("رقم البوليصة", "AWB/ BL")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("الناقل", "Transporter")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("فاتورة الناقل", "Transportation Invoice")</th>
+
+                                       }
+                                       else
+                                       {
+                                        <th style="text-align: center !important; width: 165px;">@Html.Translate("فرق 1", "difference 1")</th>
+                                        if (compMF.UseQty2 == true)
+                                        {
+                                            <th style="text-align: center !important; width: 165px;">@Html.Translate("فرق 2", "difference 2")</th>
+                                        }
+                                        else
+                                        {
+                                            <th style="text-align: center !important; width: 165px;" hidden>@Html.Translate("فرق 2", "difference 2")</th>
+                                        }
+                                       }
+                                       <th></th>
+                                   </tr>
+                                 </thead>
+                                <tfoot>
+                                    <tr>
+                                        <th style="text-align: center; border-right: 1px solid;" colspan="2">@Html.Translate("الاجمالي", "Total")</th>
+                                        <th></th>
+                                        @if (compMF.UseQty2 == true)
+                                        {
+                                            <th style="text-align:center;" id="eTotalShipmentPOQty1_@srl">0</th>
+                                            <th style="text-align: center; border-right: 1px solid;" id="eTotalShipmentPOQty2_@srl">0</th>
+                                        }
+                                        else
+                                        {
+                                            <th style="text-align: center; border-right: 1px solid;" id="eTotalShipmentPOQty1_@srl">0</th>
+                                            <th hidden id="eTotalShipmentPOQty2_@srl">0</th>
+                                        }
+                                        <th style="text-align: center;" id="eTotalShipmentReservedQty_@srl">0</th>
+                                        <th style="text-align: center;" id="eTotalShipmentRemainingQty_@srl">0</th>
+                                        @if (compMF.UseQty2 == true)
+                                        {
+                                            <th style="text-align:center;" id="eTotalShipmentQty1_@srl">0</th>
+                                            <th style="text-align: center; border-right: 1px solid;" id="eTotalShipmentQty2_@srl">0</th>
+                                        }
+                                        else
+                                        {
+                                            <th style="text-align: center; border-right: 1px solid;" id="eTotalShipmentQty1_@srl">0</th>
+                                            <th hidden id="eTotalShipmentQty2_@srl">0</th>
+                                        }
+                                        @if (CActive.ClientNo == 239)
+                                        {
+                                            <th colspan="14"></th>
+                                        }
+                                        else
+                                        {
+                                            <th style="text-align: center !important;" id="eTotalShipmentDifferenceQty1_@srl">0</th>
+                                           if (compMF.UseQty2 == true)
+                                            {
+                                                <th style="text-align: center !important;" id="eTotalShipmentDifferenceQty2_@srl">0</th>
+                                            }
+                                            else
+                                            {
+                                                <th style="text-align: center !important;" id="eTotalShipmentDifferenceQty2_@srl" hidden>0</th>
+                                            }
+                                        }
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                                <tbody style="text-align: center;" id="eShipmentsInfoDFTBody_@srl">
+                            @foreach (Ord_OrderShippingDF DF in OrdShipDF)
+                            {
+                                double ResQty = 0;
+                                {
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        Dt = new DataTable();
+                                        cn.Open();
+                                        using (SqlCommand cmd = new SqlCommand())
+                                        {
+                                            cmd.Connection = cn;
+                                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                            cmd.CommandText = "Ord_GetItemUnitCost";
+                                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                            cmd.Parameters.Add(new SqlParameter("@ItemNo", System.Data.SqlDbType.VarChar, 20)).Value = DF.ItemNo;
+                                            cmd.Parameters.Add(new SqlParameter("@UnitSerial", System.Data.SqlDbType.SmallInt, 4)).Value = DF.UnitSerial.Value;
+                                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                            {
+                                                DA.Fill(Dt);
+                                            }
+                                        }
+                                    }
+                                    foreach (DataRow row in Dt.Rows)
+                                    {
+                                        ResQty = Convert.ToDouble(row["ResQty"]);
+                                    }
+                                }
+                                OrderDF OrdDF = new MDB().OrderDFs.Where(x => x.CompNo == company.comp_num && x.OrdYear == DF.OrderYear && x.OrderNo == DF.OrderNo && x.TawreedNo == DF.TawreedNo && x.ItemNo == DF.ItemNo).FirstOrDefault();
+                                double RemainingQty = new MDB().Ord_OrderShippingDF.Where(x => x.CompNo == company.comp_num && x.OrderYear == DF.OrderYear && x.OrderNo == DF.OrderNo && x.TawreedNo == DF.TawreedNo && x.ItemNo == DF.ItemNo).Sum(o => o.ShippingQty).Value;
+                                RemainingQty = OrdDF.Qty.Value - (RemainingQty);
+                                string ItemDesc = Mf.Where(x => x.ItemNo == DF.ItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                                string UnitSerial = DF.UnitSerial.Value.ToString();
+                            <tr style="height: 25px;" id="eShipmentsInfo_@Srial">
+                                <td class="second-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="eShipmentsInfo_ItemNo_@Srial">@DF.ItemNo</td>
+                                <td class="third-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;border-right: 1px solid;" id="eShipmentsInfo_ItemDesc_@Srial">@ItemDesc</td>
+                                @*<td style="text-align: center;">
+                                    <button onclick="EditRmCode(@Srial,@srl)" type="button" class="btn btn-primary">@Html.Recource(4756)</button>
+                                </td>*@
+                                <td style="text-align: center;">
+                                    <select class="eShipmentsInfo_ItemNo_Unit">
+                                        @{
+                                            using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                            {
+                                                Dt = new DataTable();
+                                                cn.Open();
+                                                using (SqlCommand cmd = new SqlCommand())
+                                                {
+                                                    cmd.Connection = cn;
+                                                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                                    cmd.CommandText = "InvT_LoadItemUnits";
+                                                    cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                                    cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = DF.ItemNo;
+                                                    using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                                    {
+                                                        DA.Fill(Dt);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        @foreach (DataRow row in Dt.Rows)
+                                        {
+                                            if (UnitSerial == row["UnitSerial"].ToString())
+                                            {
+                                                <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()" selected>
+                                                    @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                </option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()">
+                                                    @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                </option>
+                                            }
+
+                                        }
+                                    </select>
+                                </td>
+                                
+                                @if (compMF.UseQty2 == true)
+                                {
+                                    <td style="text-align:center !important">
+                                        <input id="eShipmentsInfoPO_Qty_@Srial" value="@OrdDF.Qty.Value.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                    <td style="text-align:center !important;border-right: 1px solid;">
+                                        <input id="eShipmentsInfoPO_Qty2_@Srial" value="@OrdDF.Qty2.Value.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td style="text-align:center !important;border-right: 1px solid;">
+                                        <input id="eShipmentsInfoPO_Qty_@Srial" value="@OrdDF.Qty.Value.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                    <td style="text-align:center !important" hidden>
+                                        <input id="eShipmentsInfoPO_Qty2_@Srial" value="@OrdDF.Qty2.Value.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                }
+                                <td style="text-align:center !important">
+                                    <input id="eShipmentsInfo_ReservedQty_@Srial" value="@ResQty.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                </td>
+                                <td style="text-align:center !important">
+                                    <input id="eShipmentsInfo_RemainingQty_@Srial" value="@RemainingQty.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                </td>
+                                @if (compMF.UseQty2 == true)
+                                {
+                                    <td style="text-align:center !important">
+                                        <input id="eShipmentsInfo_Qty_@Srial" value="@DF.ShippingQty.Value.ToString("0.000")" type="number" style="width:75px !important" onblur="CheckValueQty(this,@srl)" />
+                                    </td>
+                                    <td style="text-align:center !important;border-right: 1px solid;">
+                                        <input id="eShipmentsInfo_Qty2_@Srial" value="@DF.Qty2.Value.ToString("0.000")" type="number" style="width:75px !important" onblur="CheckValueQty2(this,@srl)" />
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td style="text-align:center !important;border-right: 1px solid;">
+                                        <input id="eShipmentsInfo_Qty_@Srial" value="@DF.ShippingQty.Value.ToString("0.000")" type="number" style="width:75px !important" onblur="CheckValueQty(this,@srl)" />
+                                    </td>
+                                    <td style="text-align:center !important;border-right: 1px solid;" hidden>
+                                        <input id="eShipmentsInfo_Qty2_@Srial" value="@DF.Qty2.Value.ToString("0.000")" type="number" style="width:75px !important" onblur="CheckValueQty2(this,@srl)" />
+                                    </td>
+                                }
+
+                                @if (CActive.ClientNo == 239)
+                                {
+                                   <td style="text-align:center !important">
+                                        <input id="eShipmentsInfo_ETA_@Srial" value="@DF.ETA.Value.ToString("yyyy-MM-dd")" type="date" style="width: 105px !important; text-align: center;" />
+                                    </td>
+                                   <td style="text-align:center !important">
+                                       @if (DF.Marketing == true)
+                                       {
+                                        <label class="unselectable" for="eShipmentsInfo_Marketing_@Srial">
+                                            <input name="eShipmentsInfo_Marketing" type="checkbox" id="eShipmentsInfo_Marketing_@Srial" checked />
+                                            @Html.Translate("تسويق", "Marketing")
+                                        </label>
+                                       }
+                                       else
+                                       {
+                                        <label class="unselectable" for="eShipmentsInfo_Marketing_@Srial">
+                                            <input name="eShipmentsInfo_Marketing" type="checkbox" id="eShipmentsInfo_Marketing_@Srial" />
+                                            @Html.Translate("تسويق", "Marketing")
+                                        </label>
+                                       }
+                                       @if (DF.tqm == true)
+                                       {
+                                        <label class="unselectable" for="eShipmentsInfo_tqm_@Srial">
+                                            <input name="eShipmentsInfo_tqm" type="checkbox" id="eShipmentsInfo_tqm_@Srial" checked />
+                                            @Html.Translate("tqm", "tqm")
+                                        </label>
+                                       }
+                                       else
+                                       {
+                                        <label class="unselectable" for="eShipmentsInfo_tqm_@Srial">
+                                            <input name="eShipmentsInfo_tqm" type="checkbox" id="eShipmentsInfo_tqm_@Srial" />
+                                            @Html.Translate("tqm", "tqm")
+                                        </label>
+                                       }
+                                       @if (DF.tqm == true)
+                                       {
+                                        <label class="unselectable" for="eShipmentsInfo_QualityControl_@Srial">
+                                            <input name="eShipmentsInfo_QualityControl" type="checkbox" id="eShipmentsInfo_QualityControl_@Srial" checked />
+                                            @Html.Translate("فحص الجودة", "Quality Control")
+                                        </label>
+                                       }
+                                       else
+                                       {
+                                        <label class="unselectable" for="eShipmentsInfo_QualityControl_@Srial">
+                                            <input name="eShipmentsInfo_QualityControl" type="checkbox" id="eShipmentsInfo_QualityControl_@Srial" />
+                                            @Html.Translate("فحص الجودة", "Quality Control")
+                                        </label>
+                                       }
+                                   </td>
+                                   <td style="text-align:center !important">
+                                       <input id="eShipmentsInfo_SupplierInvoiceNo_@Srial" value="@DF.SupplierInvoiceNo" type="text" style="width: 105px !important; text-align: center;" />
+                                   </td>
+                                   <td style="text-align:center !important">
+                                       <input id="eShipmentsInfo_Amount_@Srial" value="@DF.Amount.Value.ToString("0.000")" type="number" style="width: 75px !important; text-align: center;" />
+                                   </td>
+                                   <td style="text-align: center;">
+                                       <select class="eShipmentsInfo_Currency">
+                                           @foreach (var v in Currency)
+                                           {
+                                               if (DF.CurrCode == v.Id)
+                                               {
+                                                <option value="@v.Id" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                               }
+                                               else
+                                               {
+                                                <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                               }
+                                           }
+                                       </select>
+                                   </td>
+                                   <td style="text-align:center !important">
+                                       <input id="eShipmentsInfo_ShippingDate_@Srial" value="@DF.ShippingDate.Value.ToString("yyyy-MM-dd")" type="date" style="width: 105px !important; text-align: center;" />
+                                   </td>
+                                   <td style="text-align: center;">
+                                       <select class="eShipmentsInfo_JFDA">
+                                           @if (DF.JFDA == 0)
+                                           {
+                                            <option value="0" selected>@Html.Translate("موافق", "Approved")</option>
+                                           }
+                                           else
+                                           {
+                                            <option value="0">@Html.Translate("موافق", "Approved")</option>
+                                           }
+                                           @if (DF.JFDA == 1)
+                                           {
+                                            <option value="1" selected>@Html.Translate("قيد الانتظار", "Pending")</option>
+                                           }
+                                           else
+                                           {
+                                            <option value="1">@Html.Translate("قيد الانتظار", "Pending")</option>
+                                           }
+                                           @if (DF.JFDA == 2)
+                                           {
+                                            <option value="2" selected>@Html.Translate("مرفوض", "Rejected")</option>
+                                           }
+                                           else
+                                           {
+                                            <option value="2">@Html.Translate("مرفوض", "Rejected")</option>
+                                           }
+                                       </select>
+                                   </td>
+                                   <td style="text-align:center !important">
+                                       <input id="eShipmentsInfo_SampleDate_@Srial" value="@DF.SampleDate.Value.ToString("yyyy-MM-dd")" type="date" style="width: 105px !important; text-align: center;" />
+                                   </td>
+                                   <td style="text-align:center !important">
+                                       <input id="eShipmentsInfo_JFDAApprovalDate_@Srial" value="@DF.JFDAApprovalDate.Value.ToString("yyyy-MM-dd")" type="date" style="width: 105px !important; text-align: center;" />
+                                   </td>
+                                   <td style="text-align:center !important">
+                                       <input id="eShipmentsInfo_Declaration_@Srial" value="@DF.Declaration" type="text" style="width: 105px !important; text-align: center;" />
+                                   </td>
+                                   <td style="text-align:center !important">
+                                       <input id="eShipmentsInfo_ActualArrivalDate_@Srial" value="@DF.ActualArrivalDate.Value.ToString("yyyy-MM-dd")" type="date" style="width: 105px !important; text-align: center;" />
+                                   </td>
+                                   <td style="text-align:center !important">
+                                       <input id="eShipmentsInfo_AWBBL_@Srial" value="@DF.AWBBL" type="text" style="width: 105px !important; text-align: center;" />
+                                   </td>
+                                   <td style="text-align:center !important">
+                                       <input id="eShipmentsInfo_Transporter_@Srial" value="@DF.Transporter" type="text" style="width: 105px !important; text-align: center;" />
+                                   </td>
+                                   <td style="text-align:center !important">
+                                       <input id="eShipmentsInfo_TransporterInvoice_@Srial" value="@DF.TransporterInvoice" type="text" style="width: 105px !important; text-align: center;" />
+                                   </td>
+                                }
+                                else
+                                {
+                                    <td style="text-align:center !important">
+                                        <input id="eShipmentsInfo_Difference1_@Srial" value="0" type="number" style="width: 75px !important; text-align: center;" disabled />
+                                    </td>
+                                    if (compMF.UseQty2 == true)
+                                    {
+                                        <td style="text-align:center !important">
+                                            <input id="eShipmentsInfo_Difference2_@Srial" value="0" type="number" style="width: 75px !important; text-align: center;" disabled />
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td style="text-align:center !important" hidden>
+                                            <input id="eShipmentsInfo_Difference2_@Srial" value="0" type="number" style="width: 75px !important; text-align: center;" disabled />
+                                        </td>
+                                    }
+                                }
+                                <td>
+                                    <input type="hidden" id="eInputItemSerial" value="@(Srial++)" />
+                                </td>
+                            </tr>
+                               
+                            }
+                        </tbody>
+                        }
+                        else {
+                           if (compMF.UseQty2 == true)
+                            {
+                                <thead style="background-color: lightblue">
+                                    <tr>
+                                        <th colspan="2" style="text-align: center; width: 350px;border-left: 1px solid;">@Html.Translate("المواد", "Items")</th>
+                                        <th colspan="3" style="text-align: center; width: 350px;border-left: 1px solid;">@Html.Translate("بيانات أمر الشراء", "Purchase order Info")</th>
+                                        <th colspan="4" style="text-align: center; width: 350px;border-left: 1px solid;">@Html.Translate("الكميات", "Quantities")</th>
+                                        @if (CActive.ClientNo == 239)
+                                        {
+                                            <th colspan="14" style="text-align: center; width: 350px;">@Html.Translate("بيانات الشحنات", "Shipments Data")</th>
+                                        }
+                                        else
+                                        {
+                                            <th colspan="2" style="text-align: center; width: 350px;">@Html.Translate("الفروقات", "Differences")</th>
+                                        }
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            }
+                            else
+                            {
+                                <thead style="background-color: lightblue">
+                                    <tr>
+                                        <th colspan="2" style="text-align: center; width: 350px;border-left: 1px solid;">@Html.Translate("المواد", "Items")</th>
+                                        <th colspan="2" style="text-align: center !important; width: 350px; border-left: 1px solid;">@Html.Translate("بيانات أمر الشراء", "Purchase order Info")</th>
+                                        <th colspan="3" style="text-align: center; width: 350px;border-left: 1px solid;">@Html.Translate("الكميات", "Quantities")</th>
+                                        @if (CActive.ClientNo == 239)
+                                        {
+                                            <th colspan="14" style="text-align: center; width: 350px;">@Html.Translate("بيانات الشحنات", "Shipments Data")</th>
+                                        }
+                                        else
+                                        {
+                                            <th colspan="1" style="text-align: center; width: 350px;">@Html.Translate("الفروقات", "Differences")</th>
+                                        }
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            }
+                                <thead>
+                                   <tr>
+                                       <th class="second-col">@Html.Recource(44)</th>
+                                       <th class="third-col"style="border-left: 1px solid;">@Html.Recource(74)</th>
+                                       <th style="width: 600px;">@Html.Recource(67)</th>
+                                       @if (compMF.UseQty2 == true)
+                                       {
+                                           if (CActive.ClientNo == 335)
+                                           {
+                                               <th style="width: 165px;">@Html.Recource(5693)</th>
+                                               <th style="width: 165px;border-left: 1px solid;">@Html.Recource(442)</th>
+                                           }
+                                           else
+                                           {
+                                              <th style="width: 165px;">@Html.Recource(49)</th>
+                                              <th style="width: 165px;border-left: 1px solid;">@Html.Recource(72)</th>
+                                           }
+                                       }
+                                       else
+                                       {
+                                           if (CActive.ClientNo == 335)
+                                           {
+                                            <th style="width: 165px;border-left: 1px solid;">@Html.Recource(5693)</th>
+                                            <th style="width: 165px;border-left: 1px solid;" hidden>@Html.Recource(442)</th>
+                                           }
+                                           else
+                                           {
+                                            <th style="width: 165px;border-left: 1px solid;">@Html.Recource(49)</th>
+                                            <th style="width: 165px;border-left: 1px solid;" hidden>@Html.Recource(72)</th>
+                                           }
+                                       }
+                                       <th style="width: 90px !important; text-align: center !important;">@Html.Recource(5432)</th>
+                                       <th style="width: 90px !important; text-align: center !important;">@Html.Recource(243)</th>
+                                      
+                                       @if (compMF.UseQty2 == true)
+                                       {
+                                           if (CActive.ClientNo == 335)
+                                           {
+                                               <th style="width: 165px;">@Html.Recource(5693)</th>
+                                               <th style="width: 165px;border-left: 1px solid;">@Html.Recource(442)</th>
+                                           }
+                                           else
+                                           {
+                                               <th style="width: 165px;">@Html.Recource(49)</th>
+                                               <th style="width: 165px;border-left: 1px solid;">@Html.Recource(72)</th>
+                                           }
+                                       }
+                                       else
+                                       {
+                                           if (CActive.ClientNo == 335)
+                                           {
+                                            <th style="width: 165px;border-left: 1px solid;">@Html.Recource(5693)</th>
+                                            <th style="width: 165px;border-left: 1px solid;" hidden>@Html.Recource(442)</th>
+                                           }
+                                           else
+                                           {
+                                            <th style="width: 165px;border-left: 1px solid;">@Html.Recource(49)</th>
+                                            <th style="width: 165px;border-left: 1px solid;" hidden>@Html.Recource(72)</th>
+                                           }
+                                       }
+                                       @if (CActive.ClientNo == 239)
+                                       {
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("تاريخ الوصول المتوقع", "ETA")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("متطلبات الفحص", "Receiving Inspection Requirements")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("فاتورة المورد", "Supplier Invoice Number")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("القيمة", "Amount")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("العملة", "Currency")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("تاريخ الشحن", "Shipping Date")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("الغذاء والدواء", "JFDA")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("تاريخ العينة", "Sample Date")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("تاريخ الموافقة", "JFDA Approval Date")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("البيان الجمركي", "Declaration")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("تاريخ الوصول الفعلي", "Actual Arrival Date")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("رقم البوليصة", "AWB/ BL")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("الناقل", "Transporter")</th>
+                                           <th style="text-align: center !important; width: 165px;">@Html.Translate("فاتورة الناقل", "Transportation Invoice")</th>
+
+                                       }
+                                       else
+                                       {
+                                        <th style="text-align: center !important; width: 165px;">@Html.Translate("فرق 1", "difference 1")</th>
+                                            if (compMF.UseQty2 == true)
+                                            {
+                                                <th style="text-align: center !important; width: 165px;">@Html.Translate("فرق 2", "difference 2")</th>
+                                            }
+                                            else
+                                            {
+                                                <th style="text-align: center !important; width: 165px;" hidden>@Html.Translate("فرق 2", "difference 2")</th>
+                                            }
+                                       }
+                                       <th></th>
+                                   </tr>
+                                 </thead>
+                                <tfoot>
+                                    <tr>
+                                        <th style="text-align: center; border-left: 1px solid;" colspan="2">@Html.Translate("الاجمالي", "Total")</th>
+                                        <th></th>
+                                        @if (compMF.UseQty2 == true)
+                                        {
+                                            <th style="text-align:center;" id="eTotalShipmentPOQty1_@srl">0</th>
+                                            <th style="text-align: center; border-left: 1px solid;" id="eTotalShipmentPOQty2_@srl">0</th>
+                                        }
+                                        else
+                                        {
+                                            <th style="text-align: center; border-left: 1px solid;" id="eTotalShipmentPOQty1_@srl">0</th>
+                                            <th hidden id="eTotalShipmentPOQty2_@srl">0</th>
+                                        }
+                                        <th style="text-align: center;" id="eTotalShipmentReservedQty_@srl">0</th>
+                                        <th style="text-align: center;" id="eTotalShipmentRemainingQty_@srl">0</th>
+                                        @if (compMF.UseQty2 == true)
+                                        {
+                                            <th style="text-align:center;" id="eTotalShipmentQty1_@srl">0</th>
+                                            <th style="text-align: center; border-left: 1px solid;" id="eTotalShipmentQty2_@srl">0</th>
+                                        }
+                                        else
+                                        {
+                                            <th style="text-align: center; border-left: 1px solid;" id="eTotalShipmentQty1_@srl">0</th>
+                                            <th hidden id="eTotalShipmentQty2_@srl">0</th>
+                                        }
+                                        @if (CActive.ClientNo == 239)
+                                        {
+                                            <th colspan="14"></th>
+                                        }
+                                        else
+                                        {
+                                            <th style="text-align: center !important;" id="eTotalShipmentDifferenceQty1_@srl">0</th>
+                                            if (compMF.UseQty2 == true)
+                                            {
+                                                <th style="text-align: center !important;" id="eTotalShipmentDifferenceQty2_@srl">0</th>
+                                            }
+                                            else
+                                            {
+                                                <th style="text-align: center !important;" id="eTotalShipmentDifferenceQty2_@srl" hidden>0</th>
+                                            }
+                                        }
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                                <tbody style="text-align: center;" id="eShipmentsInfoDFTBody_@srl">
+                            @foreach (Ord_OrderShippingDF DF in OrdShipDF)
+                            {
+                                double ResQty = 0;
+                                {
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        Dt = new DataTable();
+                                        cn.Open();
+                                        using (SqlCommand cmd = new SqlCommand())
+                                        {
+                                            cmd.Connection = cn;
+                                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                            cmd.CommandText = "Ord_GetItemUnitCost";
+                                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                            cmd.Parameters.Add(new SqlParameter("@ItemNo", System.Data.SqlDbType.VarChar, 20)).Value = DF.ItemNo;
+                                            cmd.Parameters.Add(new SqlParameter("@UnitSerial", System.Data.SqlDbType.SmallInt, 4)).Value = DF.UnitSerial.Value;
+                                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                            {
+                                                DA.Fill(Dt);
+                                            }
+                                        }
+                                    }
+                                    foreach (DataRow row in Dt.Rows)
+                                    {
+                                        ResQty = Convert.ToDouble(row["ResQty"]);
+                                    }
+                                }
+                                OrderDF OrdDF = new MDB().OrderDFs.Where(x => x.CompNo == company.comp_num && x.OrdYear == DF.OrderYear && x.OrderNo == DF.OrderNo && x.TawreedNo == DF.TawreedNo && x.ItemNo == DF.ItemNo).FirstOrDefault();
+                                double RemainingQty = new MDB().Ord_OrderShippingDF.Where(x => x.CompNo == company.comp_num && x.OrderYear == DF.OrderYear && x.OrderNo == DF.OrderNo && x.TawreedNo == DF.TawreedNo && x.ItemNo == DF.ItemNo).Sum(o => o.ShippingQty).Value;
+                                RemainingQty = OrdDF.Qty.Value - (RemainingQty);
+                                string ItemDesc = Mf.Where(x => x.ItemNo == DF.ItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                                string UnitSerial = DF.UnitSerial.Value.ToString();
+                            <tr style="height: 25px;" id="eShipmentsInfo_@Srial">
+                                <td class="second-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="eShipmentsInfo_ItemNo_@Srial">@DF.ItemNo</td>
+                                <td class="third-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;border-left: 1px solid;" id="eShipmentsInfo_ItemDesc_@Srial">@ItemDesc</td>
+                                @*<td style="text-align: center;">
+                                    <button onclick="EditRmCode(@Srial,@srl)" type="button" class="btn btn-primary">@Html.Recource(4756)</button>
+                                </td>*@
+                                <td style="text-align: center;">
+                                    <select class="eShipmentsInfo_ItemNo_Unit">
+                                        @{
+                                            using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                            {
+                                                Dt = new DataTable();
+                                                cn.Open();
+                                                using (SqlCommand cmd = new SqlCommand())
+                                                {
+                                                    cmd.Connection = cn;
+                                                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                                    cmd.CommandText = "InvT_LoadItemUnits";
+                                                    cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                                    cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = DF.ItemNo;
+                                                    using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                                    {
+                                                        DA.Fill(Dt);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        @foreach (DataRow row in Dt.Rows)
+                                        {
+                                            if (UnitSerial == row["UnitSerial"].ToString())
+                                            {
+                                                <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()" selected>
+                                                    @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                </option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()">
+                                                    @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                </option>
+                                            }
+
+                                        }
+                                    </select>
+                                </td>
+                                
+                                @if (compMF.UseQty2 == true)
+                                {
+                                    <td style="text-align:center !important">
+                                        <input id="eShipmentsInfoPO_Qty_@Srial" value="@OrdDF.Qty.Value.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                    <td style="text-align:center !important;border-left: 1px solid;">
+                                        <input id="eShipmentsInfoPO_Qty2_@Srial" value="@OrdDF.Qty2.Value.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td style="text-align:center !important;border-left: 1px solid;">
+                                        <input id="eShipmentsInfoPO_Qty_@Srial" value="@OrdDF.Qty.Value.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                    <td style="text-align:center !important" hidden>
+                                        <input id="eShipmentsInfoPO_Qty2_@Srial" value="@OrdDF.Qty2.Value.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                }
+                                <td style="text-align:center !important">
+                                    <input id="eShipmentsInfo_ReservedQty_@Srial" value="@ResQty.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                </td>
+                                <td style="text-align:center !important">
+                                    <input id="eShipmentsInfo_RemainingQty_@Srial" value="@RemainingQty.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                </td>
+                                @if (compMF.UseQty2 == true)
+                                {
+                                    <td style="text-align:center !important">
+                                        <input id="eShipmentsInfo_Qty_@Srial" value="@DF.ShippingQty.Value.ToString("0.000")" type="number" style="width:75px !important" onblur="CheckValueQty(this,@srl)" />
+                                    </td>
+                                    <td style="text-align:center !important;border-left: 1px solid;">
+                                        <input id="eShipmentsInfo_Qty2_@Srial" value="@DF.Qty2.Value.ToString("0.000")" type="number" style="width:75px !important" onblur="CheckValueQty2(this,@srl)" />
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td style="text-align:center !important;border-left: 1px solid;">
+                                        <input id="eShipmentsInfo_Qty_@Srial" value="@DF.ShippingQty.Value.ToString("0.000")" type="number" style="width:75px !important" onblur="CheckValueQty(this,@srl)" />
+                                    </td>
+                                    <td style="text-align:center !important;border-left: 1px solid;" hidden>
+                                        <input id="eShipmentsInfo_Qty2_@Srial" value="@DF.Qty2.Value.ToString("0.000")" type="number" style="width:75px !important" onblur="CheckValueQty2(this,@srl)" />
+                                    </td>
+                                }
+                                @if (CActive.ClientNo == 239)
+                                {
+                                    <td style="text-align:center !important">
+                                        <input id="eShipmentsInfo_ETA_@Srial" value="@DF.ETA.Value.ToString("yyyy-MM-dd")" type="date" style="width: 105px !important; text-align: center;" />
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        @if (DF.Marketing.Value == true)
+                                        {
+                                            <label class="unselectable" for="eShipmentsInfo_Marketing_@Srial">
+                                                <input name="eShipmentsInfo_Marketing" type="checkbox" id="eShipmentsInfo_Marketing_@Srial" checked />
+                                                @Html.Translate("تسويق", "Marketing")
+                                            </label>
+                                        }
+                                        else
+                                        {
+                                            <label class="unselectable" for="eShipmentsInfo_Marketing_@Srial">
+                                                <input name="eShipmentsInfo_Marketing" type="checkbox" id="eShipmentsInfo_Marketing_@Srial" />
+                                                @Html.Translate("تسويق", "Marketing")
+                                            </label>
+                                        }
+                                        @if (DF.tqm.Value == true)
+                                        {
+                                            <label class="unselectable" for="eShipmentsInfo_tqm_@Srial">
+                                                <input name="eShipmentsInfo_tqm" type="checkbox" id="eShipmentsInfo_tqm_@Srial" checked />
+                                                @Html.Translate("tqm", "tqm")
+                                            </label>
+                                        }
+                                        else
+                                        {
+                                            <label class="unselectable" for="eShipmentsInfo_tqm_@Srial">
+                                                <input name="eShipmentsInfo_tqm" type="checkbox" id="eShipmentsInfo_tqm_@Srial" />
+                                                @Html.Translate("tqm", "tqm")
+                                            </label>
+                                        }
+                                        @if (DF.QualityControl.Value == true)
+                                        {
+                                            <label class="unselectable" for="eShipmentsInfo_QualityControl_@Srial">
+                                                <input name="eShipmentsInfo_QualityControl" type="checkbox" id="eShipmentsInfo_QualityControl_@Srial" checked />
+                                                @Html.Translate("فحص الجودة", "Quality Control")
+                                            </label>
+                                        }
+                                        else
+                                        {
+                                            <label class="unselectable" for="eShipmentsInfo_QualityControl_@Srial">
+                                                <input name="eShipmentsInfo_QualityControl" type="checkbox" id="eShipmentsInfo_QualityControl_@Srial" />
+                                                @Html.Translate("فحص الجودة", "Quality Control")
+                                            </label>
+                                        }
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="eShipmentsInfo_SupplierInvoiceNo_@Srial" value="@DF.SupplierInvoiceNo" type="text" style="width: 105px !important; text-align: center;" />
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="eShipmentsInfo_Amount_@Srial" value="@DF.Amount.Value.ToString("0.000")" type="number" style="width: 75px !important; text-align: center;" />
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <select class="eShipmentsInfo_Currency">
+                                            @foreach (var v in Currency)
+                                            {
+                                                if (DF.CurrCode == v.Id)
+                                                {
+                                                    <option value="@v.Id" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                                }
+                                            }
+                                        </select>
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="eShipmentsInfo_ShippingDate_@Srial" value="@DF.ShippingDate.Value.ToString("yyyy-MM-dd")" type="date" style="width: 105px !important; text-align: center;" />
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <select class="eShipmentsInfo_JFDA">
+                                            @if (DF.JFDA == 0)
+                                            {
+                                                <option value="0" selected>@Html.Translate("موافق", "Approved")</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="0">@Html.Translate("موافق", "Approved")</option>
+                                            }
+                                            @if (DF.JFDA == 1)
+                                            {
+                                                <option value="1" selected>@Html.Translate("قيد الانتظار", "Pending")</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="1">@Html.Translate("قيد الانتظار", "Pending")</option>
+                                            }
+                                            @if (DF.JFDA == 2)
+                                            {
+                                                <option value="2" selected>@Html.Translate("مرفوض", "Rejected")</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="2">@Html.Translate("مرفوض", "Rejected")</option>
+                                            }
+                                        </select>
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="eShipmentsInfo_SampleDate_@Srial" value="@DF.SampleDate.Value.ToString("yyyy-MM-dd")" type="date" style="width: 105px !important; text-align: center;" />
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="eShipmentsInfo_JFDAApprovalDate_@Srial" value="@DF.JFDAApprovalDate.Value.ToString("yyyy-MM-dd")" type="date" style="width: 105px !important; text-align: center;" />
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="eShipmentsInfo_Declaration_@Srial" value="@DF.Declaration" type="text" style="width: 105px !important; text-align: center;" />
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="eShipmentsInfo_ActualArrivalDate_@Srial" value="@DF.ActualArrivalDate.Value.ToString("yyyy-MM-dd")" type="date" style="width: 105px !important; text-align: center;" />
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="eShipmentsInfo_AWBBL_@Srial" value="@DF.AWBBL" type="text" style="width: 105px !important; text-align: center;" />
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="eShipmentsInfo_Transporter_@Srial" value="@DF.Transporter" type="text" style="width: 105px !important; text-align: center;" />
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="eShipmentsInfo_TransporterInvoice_@Srial" value="@DF.TransporterInvoice" type="text" style="width: 105px !important; text-align: center;" />
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td style="text-align:center !important">
+                                        <input id="eShipmentsInfo_Difference1_@Srial" value="0" type="number" style="width: 75px !important; text-align: center;" disabled />
+                                    </td>
+                                    if (compMF.UseQty2 == true)
+                                    {
+                                        <td style="text-align:center !important">
+                                            <input id="eShipmentsInfo_Difference2_@Srial" value="0" type="number" style="width: 75px !important; text-align: center;" disabled />
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td style="text-align:center !important" hidden>
+                                            <input id="eShipmentsInfo_Difference2_@Srial" value="0" type="number" style="width: 75px !important; text-align: center;" disabled />
+                                        </td>
+                                    }
+                                }
+                               
+                                <td>
+                                    <input type="hidden" id="eInputItemSerial" value="@(Srial++)" />
+                                </td>
+                            </tr>
+                               
+                            }
+                        </tbody>
+                        }
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="ExcuteEditMRP_ShipmentsInfo(@srl)" class="btn btn-primary">@Resources.Resource.Save</button>
+        </div>
+    </div>
+</div>
+
+@*-----------------------------Model Documents-------------------------------------*@
+<div class="modal fade" id="Model_eShipmentsInfo_DocumentsArchive_@srl">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أرشفة الوثائق", "Archive Documents")</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <button onclick="eShipmentsInfo_DocumentsArchive(@srl)" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="eShipmentsInfo_DocumentArchiveTable_@srl">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(66)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5628)</th>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(5629)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5630)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5631)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5632)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5633)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="eShipmentsInfo_DocumentArchiveTbody_@srl" style="border-top: 1px solid #ddd;">
+                                @foreach (DataRow row in DtAttachment.Rows)
+                                {
+                                    DateTime date = Convert.ToDateTime(row["DataUpload"].ToString());
+                                    <tr id="EditShipmentsInfoDocumentArchive_@Count">
+                                        <td>
+                                            <input id="eShipmentsInfo_EditDocumentArchive_FileId" type="hidden" value="@Count" />
+                                        </td>
+                                        <td>
+                                            <input type="text" style="width: 115px !important; text-align: center !important" id="eShipmentsInfo_EditDocumentArchive_Description_@Count" value="@row["Description"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <div class="image-upload"><label for="file-input"><span class="glyphicon glyphicon-upload" onclick="OpenFileUpload(this)"></span></label><input type="file" name="uploadFile_7" style="display:none" id="eShipmentsInfo_EditDocumentArchive_File_@Count" onchange="uploadFile(this,@Count,@srl)" /></div>
+                                        </td>
+                                        <td></td>
+                                        <td>
+                                            <a id="eShipmentsInfo_AddDownloadFile_@Count" onclick="DownloadFile('@row["FileName"].ToString()','@Convert.ToBase64String((byte[])row["ArchiveData"])')"><span class="glyphicon glyphicon-download"></span></a>
+                                        </td>
+                                        <td>
+                                            <input id="eShipmentsInfo_EditAttachmentFiles_FileName_@Count" type="text" style="text-align: center !important" value="@row["FileName"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="eShipmentsInfo_EditDocumentArchive_UploadDate_@Count" type="text" style="width: 95px; text-align: center !important" value="@date.ToShortDateString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="eShipmentsInfo_EditDocumentArchive_FileSize_@Count" type="text" style="width: 70px; text-align: center !important" value="@row["FileSize"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="eShipmentsInfo_EditDocumentArchive_FileType_@Count" type="text" style="width: 55px; text-align: center !important" value="@row["ContentType"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <button class="btn-de" onclick="RemoveRowUpload(this,@Count,@srl)" type="button"><i class="fa fa-trash-alt"></i></button>
+                                            <input type="hidden" id="InputSerial" value="@(Count++)" />
+                                        </td>
+                                    </tr>
+                                }
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="EditeShipmentsInfoDocumentArchive(@srl)" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+
+    function Edit_ShipmentsInfoDocuments(Srl) {
+        $('#Model_eShipmentsInfo_DocumentsArchive_' + Srl).draggable({
+            handle: ".modal-header",
+        });
+        $('#Model_eShipmentsInfo_DocumentsArchive_' + Srl).modal('show');
+
+        var table = $("#eShipmentsInfo_DocumentArchiveTbody_" + Srl);
+        var trs = table.find('tr');
+        Count = trs.length;
+    }
+    function eShipmentsInfo_DocumentsArchive(Srl) {
+        var table = $("#eShipmentsInfo_DocumentArchiveTbody_" + Srl);
+        Count++;
+        var newarray = [];
+        newarray.push('<input id="eShipmentsInfo_EditDocumentArchive_FileId" type="hidden" value="' + Count + '" />')
+        newarray.push('<input id="eShipmentsInfo_EditDocumentArchive_Description_' + Count + '" type="text" style="width: 115px !important;text-align: center !important" />')
+        newarray.push('<div class="image-upload"><label for="file-input"><span class="glyphicon glyphicon-upload" onclick="OpenFileUpload(this)"></span></label><input type="file" name="uploadFile_7" style="display:none" id="eShipmentsInfo_EditDocumentArchive_File_' + Count + '" onchange="uploadFile(this,' + Count + ',' + Srl + ')" /></div>')
+        newarray.push('')
+        newarray.push('<a id="eShipmentsInfo_AddDownloadFile_' + Count + '" onclick="DownloadFile()"><span class="glyphicon glyphicon-download"></span></a>')
+        newarray.push('<input id="eShipmentsInfo_EditAttachmentFiles_FileName_' + Count + '" type="text" style="text-align: center !important" disabled />')
+        newarray.push('<input id="eShipmentsInfo_EditDocumentArchive_UploadDate_' + Count + '" type="text" style="width: 95px;text-align: center !important" disabled />')
+        newarray.push('<input id="eShipmentsInfo_EditDocumentArchive_FileSize_' + Count + '" type="text" style="width: 70px;text-align: center !important" disabled />')
+        newarray.push('<input id="eShipmentsInfo_EditDocumentArchive_FileType_' + Count + '" type="text" style="width: 55px;text-align: center !important" disabled />')
+        newarray.push('<button class="btn-de" onclick="RemoveRowUpload(this,' + Count + ',' + Srl + ')" type="button"><i class= "fa fa-trash-alt"></i ></button>')
+        $(table).append(
+            GenRowDocumentArchive(newarray, 'EditShipmentsInfoDocumentArchive_' + Count)
+        );
+    }
+    function GenRowDocumentArchive(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function OpenFileUpload(ID) {
+        var $td = $(ID).closest("td");
+        $($td).find("input[type=file]").click();
+    }
+    function uploadFile(Elem, Count, srl) {
+        var uploadDate = new Date($.now());
+        var shortDate = moment(uploadDate).format('DD/MM/YYYY');
+        var InputID = $(Elem).attr("id");
+        var file_size = $(Elem)[0].files[0].size;
+
+        var table = $("#eShipmentsInfo_DocumentArchiveTbody_" + srl);
+        var tr = table.find('#EditShipmentsInfoDocumentArchive_' + Count);
+
+        var fileName = tr.find("#eShipmentsInfo_EditDocumentArchive_File_" + Count).val().replace(/C:\\fakepath\\/i, '');
+        var filetype = fileName.split('.').pop();
+
+        tr.find('#eShipmentsInfo_EditAttachmentFiles_FileName_' + Count)[0].value = fileName;
+        tr.find('#eShipmentsInfo_EditDocumentArchive_UploadDate_' + Count)[0].value = shortDate;
+        tr.find('#eShipmentsInfo_EditDocumentArchive_FileSize_' + Count)[0].value = file_size;
+        tr.find('#eShipmentsInfo_EditDocumentArchive_FileType_' + Count)[0].value = "." + filetype;
+
+        var $file = document.getElementById(InputID);
+        $formData = new FormData();
+        if ($file.files.length > 0) {
+            for (var i = 0; i < $file.files.length; i++) {
+                $formData.append('file-' + i, $file.files[i]);
+            }
+            var OrderYear = $('#MRP_eShipmentsInfo_OrdYear_' + srl).val();
+            var OrderNo = $('#MRP_eShipmentsInfo_OrderNo_' + srl).val();
+            var TawreedNo = $('#MRP_eShipmentsInfo_TawreedNo_' + srl).val();
+            var ShipSer = $('#MRP_eShipmentsInfo_ShipSer_' + srl).val();
+
+            $formData.append('Id', Count);
+            $formData.append('OrderYear', OrderYear);
+            $formData.append('OrderNo', OrderNo);
+            $formData.append('TawreedNo', TawreedNo);
+            $formData.append('ShipSer', ShipSer);
+
+        }
+
+        $.ajax({
+            url: '@Url.Action("InsertFile", "ShipmentsInfo")',
+            type: 'POST',
+            data: $formData,
+            contentType: false,
+            processData: false,
+            success: function (r) {
+                var table = $("#eShipmentsInfo_DocumentArchiveTbody_" + srl);
+                var tr = table.find('#EditShipmentsInfoDocumentArchive_' + Count);
+                tr.find('#eShipmentsInfo_AddDownloadFile_' + Count)[0].setAttribute('onclick', 'DownloadFile("' + fileName + '","' + r + '")')
+            },
+            error: function (error) {
+            }
+        });
+    }
+    function RemoveRowUpload(e, Count, srl) {
+        if (confirm('@Resources.Resource.DeleteConfirm')) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+
+            
+            var OrderYear = $('#MRP_eShipmentsInfo_OrdYear_' + srl).val();
+            var OrderNo = $('#MRP_eShipmentsInfo_OrderNo_' + srl).val();
+            var TawreedNo = $('#MRP_eShipmentsInfo_TawreedNo_' + srl).val();
+            var ShipSer = $('#MRP_eShipmentsInfo_ShipSer_' + srl).val();
+
+            $.ajax({
+                type: "POST",
+                url:'@Url.Action("RemoveFile", "ShipmentsInfo")',
+                data: { Id: Count, OrderYear: OrderYear, OrderNo: OrderNo, TawreedNo: TawreedNo, ShipSer: ShipSer },
+                success: function (response) {
+
+                },
+            });
+
+            return true;
+        }
+        return false;
+    }
+    function DownloadFile(FileName, base64) {
+        var binaryString = window.atob(base64);
+        var binaryLen = binaryString.length;
+        var bytes = new Uint8Array(binaryLen);
+        for (var i = 0; i < binaryLen; i++) {
+            var ascii = binaryString.charCodeAt(i);
+            bytes[i] = ascii;
+        }
+        saveByteArray(FileName, bytes)
+    }
+    function saveByteArray(reportName, byte) {
+        var blob = new Blob([byte], { type: "application/pdf" });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        var fileName = reportName;
+        link.download = fileName;
+        link.click();
+    }
+    function EditeShipmentsInfoDocumentArchive(srl) {
+        $('#Model_eShipmentsInfo_DocumentsArchive_' + srl).modal('hide')
+    }
+</script>
+@*--------------------------------END Model Documents -----------------------------*@
+
+
+<div class="modal fade" id="Model_eShipmentsInfo_InvItems_@srl">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4756)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="eShipmentsInfoItem_@srl">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(44)</th>
+                                    <th style="width: 55%;">@Html.Recource(74)</th>
+                                    <th style="width: 10%;">@Html.Recource(96)</th>
+                                    <th style="text-align: center;">@Html.Recource(312)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="eShipmentsInfoItemTbody_@srl">
+                                @{
+                                    string query2 = string.Format("exec SP_Search {0},'WHERE (CompNo = {0}) AND (IsHalt Between Case When 2 = 2 Then 0 else 2 end And Case When 2 = 2 Then 1 else 2 end)',7", company.comp_num);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query2, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                string ItemDesc = rdr["ItemDesc"].ToString();
+                                                string ItemDescEn = rdr["ItemDesc_Ara"].ToString();
+                                                string Desc = Html.Translate(ItemDesc, ItemDescEn).ToString();
+                                                <tr onclick="eShipmentsInfoItem_InvItems(this,@srl)" ItemNo="@rdr["ItemNo"]" ItemDesc="@Html.Trim(Desc,50)">
+                                                    <td style="width: 20%;">@rdr["ItemNo"]</td>
+                                                    <td style="width: 55%;" title="@Desc">@Html.Trim(Desc, 50)</td>
+                                                    <td style="width: 10%;text-align: center;">@rdr["RefrenceNo"]</td>
+                                                    <td style="text-align: center !important;">@rdr["BarCode"]</td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingeShipmentsInfoItem_InvItems(@srl)" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $('#MRP_eShipmentsInfo_CboClearanceCompany_' + @srl).select2();
+
+
+    $('#eShipmentsInfoItem_' + @srl).DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+
+    var SerialVal = 0;
+    function EditRmCode(val, srl) {
+        SerialVal = val;
+        var table = $("#eShipmentsInfoItemTbody_" + srl);
+        table.find('tr').removeClass("selected");
+        $('#Model_eShipmentsInfo_InvItems_' + srl).draggable({
+            handle: ".modal-header",
+        });
+        $('#Model_eShipmentsInfo_InvItems_'+ srl).modal('show')
+    }
+    function eShipmentsInfoItem_InvItems(e, srl) {
+        var table = $("#eShipmentsInfoItemTbody_" + srl);
+        var trs = table.find('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function SelectingeShipmentsInfoItem_InvItems(srl) {
+        var table = $("#eShipmentsInfoItemTbody_" + srl);
+        var trs = table.find('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة", "Select one Item")');
+            return;
+        }
+
+        var ids = '#eShipmentsInfoDFTBody_' + srl;
+
+        var tr = $(ids + " #eShipmentsInfo_" + SerialVal + "");
+        $(tr).find('#eShipmentsInfo_ItemNo_' + SerialVal).html(trs[0].getAttribute('ItemNo'));
+        $(tr).find('#eShipmentsInfo_ItemDesc_' + SerialVal).html(trs[0].getAttribute('ItemDesc'));
+
+        burn({ ItemNo: trs[0].getAttribute('ItemNo'), srl: srl }, '../../../ShipmentsInfo/LoadUnitItem', '', LoadUnitByItem, true);
+
+        $('#Model_eShipmentsInfo_InvItems_' + srl).modal('hide')
+    }
+    function LoadUnitByItem(r) {
+        var tr = "";
+        var srl = r.Id;
+
+        var id = '#eShipmentsInfoDFTBody_' + srl;
+        tr = $(id + " #eShipmentsInfo_" + SerialVal + "");
+
+
+        tr.find('.eShipmentsInfo_ItemNo_Unit').empty().trigger("change");
+
+        for (var i = 0; i < r.unit.length; i++) {
+            var newOption = new Option(r.unit[i].UnitName, r.unit[i].VSUnitCode, false, false);
+            tr.find('.eShipmentsInfo_ItemNo_Unit').append(newOption).trigger('change');
+        }
+    }
+
+    function CheckValueQty(e,srl) {
+        if (e.value < 0) {
+            alert('@Html.Translate("يجب أن تكون الكمية أكبر من صفر", "The Qty Must be Greater Than Zero")');
+            e.value = 0;
+            e.focus();
+        }
+        if (e.value == "") {
+            e.value = 0;
+        }
+        SumTotalQty(srl)
+    }
+    function CheckValueQty2(e,srl) {
+        if (e.value < 0) {
+            alert('@Html.Translate("يجب أن تكون الكمية 2 أكبر من صفر", "The Qty 2 Must be Greater Than Zero")');
+            e.value = 0;
+            e.focus();
+        }
+        if (e.value == "") {
+            e.value = 0;
+        }
+        SumTotalQty(srl)
+    }
+    SumTotalQty(@srl)
+    function SumTotalQty(id) {
+        var table = $("#eShipmentsInfoDFTBody_" + id);
+        var trs = table.find('tr');
+
+        var TotaleShipmentPOQty1 = 0;
+        var TotaleShipmentPOQty2 = 0;
+        var TotaleShipmentRemainingQty = 0;
+
+        var TotaleShipmentQty1 = 0;
+        var TotaleShipmentQty2 = 0;
+        var TotaleDiffQty1 = 0;
+        var TotaleDiffQty2 = 0;
+        var Total1 = 0
+        var Total2 = 0
+
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#eInputItemSerial')[0].value
+            TotaleShipmentPOQty1 += Number($(trs[i]).closest('tr').find('#eShipmentsInfoPO_Qty_' + InputSerial)[0].value);
+            TotaleShipmentPOQty2 += Number($(trs[i]).closest('tr').find('#eShipmentsInfoPO_Qty2_' + InputSerial)[0].value);
+            TotaleShipmentRemainingQty += Number($(trs[i]).closest('tr').find('#eShipmentsInfo_RemainingQty_' + InputSerial)[0].value);
+
+            TotaleShipmentQty1 += Number($(trs[i]).closest('tr').find('#eShipmentsInfo_Qty_' + InputSerial)[0].value);
+            TotaleShipmentQty2 += Number($(trs[i]).closest('tr').find('#eShipmentsInfo_Qty2_' + InputSerial)[0].value);
+
+            TotaleDiffQty1 = Number($(trs[i]).closest('tr').find('#eShipmentsInfoPO_Qty_' + InputSerial)[0].value) - Number($(trs[i]).closest('tr').find('#eShipmentsInfo_Qty_' + InputSerial)[0].value);
+            TotaleDiffQty2 = Number($(trs[i]).closest('tr').find('#eShipmentsInfoPO_Qty2_' + InputSerial)[0].value) - Number($(trs[i]).closest('tr').find('#eShipmentsInfo_Qty2_' + InputSerial)[0].value);
+            if(@CActive.ClientNo != 239){
+                $(trs[i]).closest('tr').find('#eShipmentsInfo_Difference1_' + InputSerial)[0].value = Number(TotaleDiffQty1);
+                $(trs[i]).closest('tr').find('#eShipmentsInfo_Difference2_' + InputSerial)[0].value = Number(TotaleDiffQty2);
+            }
+
+            Total1 = Number(Total1) + Number(TotaleDiffQty1);
+            Total2 = Number(Total2) + Number(TotaleDiffQty2);
+        }
+
+        $('#eTotalShipmentPOQty1_' + id).html(Number(TotaleShipmentPOQty1));
+        $('#eTotalShipmentPOQty2_' + id).html(Number(TotaleShipmentPOQty2));
+        $('#eTotalShipmentRemainingQty_' + id).html(Number(TotaleShipmentRemainingQty));
+        $('#eTotalShipmentQty1_' + id).html(Number(TotaleShipmentQty1));
+        $('#eTotalShipmentQty2_' + id).html(Number(TotaleShipmentQty2));
+        $('#eTotalShipmentDifferenceQty1_' + id).html(Number(Total1));
+        $('#eTotalShipmentDifferenceQty2_' + id).html(Number(Total2));
+    }
+    function ExcuteEditMRP_ShipmentsInfo(id) {
+
+        var table = $("#eShipmentsInfoDFTBody_" + id);
+        var trs = table.find('tr');
+
+        var OrderShippingHF = {
+            CompNo: '@company.comp_num',
+            OrderYear: $('#MRP_eShipmentsInfo_OrdYear_' + id).val(),
+            OrderNo: $('#MRP_eShipmentsInfo_OrderNo_' + id).val(),
+            TawreedNo: $('#MRP_eShipmentsInfo_TawreedNo_' + id).val(),
+            ShipSer: $('#MRP_eShipmentsInfo_ShipSer_' + id).val(),
+            ShippingDate: $('#MRP_eShipmentsInfo_ShippingDate_' + id).val(),
+            ArrivalDate: $('#MRP_eShipmentsInfo_ArrivalDate_' + id).val(),
+            ShippingPolicyNo: $('#MRP_eShipmentsInfo_ShippingPolicyNo_' + id).val(),
+            ClearanceInvNo: $('#MRP_eShipmentsInfo_ClearanceInvNo_' + id).val(),
+            ClearanceCompany: $('#MRP_eShipmentsInfo_CboClearanceCompany_' + id).val(),
+            Transporter: $('#MRP_eShipmentsInfo_Transporter_' + id).val(),
+            TransportInvNo: $('#MRP_eShipmentsInfo_TransportInvNo_' + id).val(),
+            ShippingNotes: $('#MRP_eShipmentsInfo_ShippingNotes_' + id).val(),
+        }
+
+        var OrderShippingDF = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#eInputItemSerial')[0].value
+            if ($(trs[i]).closest('tr').find('#eShipmentsInfo_Qty_' + InputSerial)[0].value > 0) {
+                if(@CActive.ClientNo == 239) {
+                    OrderShippingDF.push({
+                        CompNo: '@company.comp_num',
+                        OrderYear: $('#MRP_eShipmentsInfo_OrdYear_' + id).val(),
+                        OrderNo: $('#MRP_eShipmentsInfo_OrderNo_' + id).val(),
+                        TawreedNo: $('#MRP_eShipmentsInfo_TawreedNo_' + id).val(),
+                        ShipSer: $('#MRP_eShipmentsInfo_ShipSer_' + id).val(),
+                        ItemNo: $(trs[i]).closest('tr').find('#eShipmentsInfo_ItemNo_' + InputSerial)[0].innerHTML,
+                        ShippingQty: $(trs[i]).closest('tr').find('#eShipmentsInfo_Qty_' + InputSerial)[0].value,
+                        Qty2: $(trs[i]).closest('tr').find('#eShipmentsInfo_Qty2_' + InputSerial)[0].value,
+                        TUnit: $(trs[i]).closest('tr').find('.eShipmentsInfo_ItemNo_Unit option:Selected')[0].getAttribute('unitCode'),
+                        UnitSerial: $(trs[i]).closest('tr').find('.eShipmentsInfo_ItemNo_Unit')[0].value,
+                        ETA: $(trs[i]).closest('tr').find('#eShipmentsInfo_ETA_' + InputSerial)[0].value,
+                        Marketing: $(trs[i]).closest('tr').find('#eShipmentsInfo_Marketing_' + InputSerial)[0].checked,
+                        tqm: $(trs[i]).closest('tr').find('#eShipmentsInfo_tqm_' + InputSerial)[0].checked,
+                        QualityControl: $(trs[i]).closest('tr').find('#eShipmentsInfo_QualityControl_' + InputSerial)[0].checked,
+                        SupplierInvoiceNo: $(trs[i]).closest('tr').find('#eShipmentsInfo_SupplierInvoiceNo_' + InputSerial)[0].value,
+                        Amount: $(trs[i]).closest('tr').find('#eShipmentsInfo_Amount_' + InputSerial)[0].value,
+                        CurrCode: $(trs[i]).closest('tr').find('.eShipmentsInfo_Currency')[0].value,
+                        ShippingDate: $(trs[i]).closest('tr').find('#eShipmentsInfo_ShippingDate_' + InputSerial)[0].value,
+                        JFDA: $(trs[i]).closest('tr').find('.eShipmentsInfo_JFDA')[0].value,
+                        SampleDate: $(trs[i]).closest('tr').find('#eShipmentsInfo_SampleDate_' + InputSerial)[0].value,
+                        JFDAApprovalDate: $(trs[i]).closest('tr').find('#eShipmentsInfo_JFDAApprovalDate_' + InputSerial)[0].value,
+                        Declaration: $(trs[i]).closest('tr').find('#eShipmentsInfo_Declaration_' + InputSerial)[0].value,
+                        ActualArrivalDate: $(trs[i]).closest('tr').find('#eShipmentsInfo_ActualArrivalDate_' + InputSerial)[0].value,
+                        AWBBL: $(trs[i]).closest('tr').find('#eShipmentsInfo_AWBBL_' + InputSerial)[0].value,
+                        Transporter: $(trs[i]).closest('tr').find('#eShipmentsInfo_Transporter_' + InputSerial)[0].value,
+                        TransporterInvoice: $(trs[i]).closest('tr').find('#eShipmentsInfo_TransporterInvoice_' + InputSerial)[0].value
+                    })
+                }
+                else{
+                    OrderShippingDF.push({
+                        CompNo: '@company.comp_num',
+                        OrderYear: $('#MRP_eShipmentsInfo_OrdYear_' + id).val(),
+                        OrderNo: $('#MRP_eShipmentsInfo_OrderNo_' + id).val(),
+                        TawreedNo: $('#MRP_eShipmentsInfo_TawreedNo_' + id).val(),
+                        ShipSer: $('#MRP_eShipmentsInfo_ShipSer_' + id).val(),
+                        ItemNo: $(trs[i]).closest('tr').find('#eShipmentsInfo_ItemNo_' + InputSerial)[0].innerHTML,
+                        ShippingQty: $(trs[i]).closest('tr').find('#eShipmentsInfo_Qty_' + InputSerial)[0].value,
+                        Qty2: $(trs[i]).closest('tr').find('#eShipmentsInfo_Qty2_' + InputSerial)[0].value,
+                        TUnit: $(trs[i]).closest('tr').find('.eShipmentsInfo_ItemNo_Unit option:Selected')[0].getAttribute('unitCode'),
+                        UnitSerial: $(trs[i]).closest('tr').find('.eShipmentsInfo_ItemNo_Unit')[0].value,
+                        ETA: '@DateTime.Now.ToShortDateString()',
+                        Marketing: false,
+                        tqm: false,
+                        QualityControl: false,
+                        SupplierInvoiceNo: '',
+                        Amount: 0,
+                        CurrCode: 0,
+                        ShippingDate: '@DateTime.Now.ToShortDateString()',
+                        JFDA: 0,
+                        SampleDate: '@DateTime.Now.ToShortDateString()',
+                        JFDAApprovalDate: '@DateTime.Now.ToShortDateString()',
+                        Declaration: '',
+                        ActualArrivalDate: '@DateTime.Now.ToShortDateString()',
+                        AWBBL: '',
+                        Transporter: '',
+                        TransporterInvoice: ''
+                    })
+                }
+            }
+        }
+
+        if (OrderShippingDF.length == 0) {
+            alert('@Html.Translate("يجب إدخال كمية لمادة واحده على الاقل", "A quantity must be entered for at least one substance")');
+            return false;
+        }
+
+        var DocumentArchivetable = $("#eShipmentsInfo_DocumentArchiveTbody_" + id);
+        var trsDocumentArchive = DocumentArchivetable.find('tr');
+
+        var DocumentArchive = new Array();
+        for (var i = 0; i < trsDocumentArchive.length; i++) {
+            var InputSerial = $(trsDocumentArchive[i]).closest('tr').find('#eShipmentsInfo_EditDocumentArchive_FileId')[0].value;
+            DocumentArchive.push({
+                OrderYear: $('#MRP_eShipmentsInfo_OrdYear_' + id).val(),
+                OrderNo: $('#MRP_eShipmentsInfo_OrderNo_' + id).val(),
+                TawreedNo: $('#MRP_eShipmentsInfo_TawreedNo_' + id).val(),
+                ShipSer: $('#MRP_eShipmentsInfo_ShipSer_' + id).val(),
+                FileId: InputSerial,
+                Description: $(trsDocumentArchive[i]).closest('tr').find('#eShipmentsInfo_EditDocumentArchive_Description_' + InputSerial)[0].value,
+                DateUploded: $(trsDocumentArchive[i]).closest('tr').find('#eShipmentsInfo_EditDocumentArchive_UploadDate_' + InputSerial)[0].value,
+                ContentType: $(trsDocumentArchive[i]).closest('tr').find('#eShipmentsInfo_EditDocumentArchive_FileType_' + InputSerial)[0].value
+            })
+        }
+
+        wait();
+        burn({ OrderShippingHF: OrderShippingHF, OrderShippingDF: OrderShippingDF, FileArchive: DocumentArchive }, '../../../ShipmentsInfo/Edit_ShipmentsInfo', '', ReloadeShipmentsInfo, false);
+    }
+    function ReloadeShipmentsInfo(r) {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#ShipmentsInfoTBody').empty();
+        var TawreedNo = r.TawreedNo;
+        var ShipSer = r.ShipSer;
+        CloseWindow('/ShipmentsInfo/eShipmentsInfo?OrdYear=' + r.OrdYear + '&OrderNo=' + r.OrdNo + '&TawreedNo=' + TawreedNo + '&ShipSer=' + ShipSer + '')
+        var table = $("#PurchaseOrderInfoTable tbody");
+        var trs = table.find('tr');
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i])[0].getAttribute('OrdYear') == r.OrdYear && $(trs[i])[0].getAttribute('OrderNo') == r.OrdNo && $(trs[i])[0].getAttribute('TawreedNo') == TawreedNo) {
+                var nTr = $(trs[i])[0];
+                wait();
+                $(this).attr("opened", "details_close");
+                var OrdYear = $(trs[i])[0].getAttribute('OrdYear');
+                var OrderNo = $(trs[i])[0].getAttribute('OrderNo');
+                var TawreedNo = $(trs[i])[0].getAttribute('TawreedNo');
+
+                $.get("../../../../ShipmentsInfo/DetailsShipmentsInfo?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo, function (data) {
+                    PurchOrdTable.fnOpen(nTr, data, 'details');
+                    done();
+                });
+            }
+        }
+    }
+
+</script>

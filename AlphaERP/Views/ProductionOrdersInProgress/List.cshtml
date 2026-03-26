@@ -1,0 +1,168 @@
+﻿@using System.Data.SqlClient
+
+<style>
+    #ProductionOrdersInProgressDataTable tr:nth-child(old) {
+        background-color: #f2f2f2;
+    }
+
+    #ProductionOrdersInProgressDataTable tr {
+        height: 37px;
+    }
+
+
+    td .details {
+        background: #fff !important;
+    }
+
+    .highlighted-row {
+        background-color: #f5f5f5;
+        transform: scale(1.00);
+        box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.2), -1px -1px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    tr.opened-row {
+        background-color: unset !important;
+    }
+
+    .table tbody .list-tr:hover {
+        background: #cfcfcf;
+    }
+</style>
+
+<table id="ProductionOrdersInProgressDataTable" class="table dataTable">
+    <thead>
+        <tr>
+            <th>@Html.Translate("تاريخ الطلب", "Order Date")</th>
+            <th>@Html.Translate("الأيام المستحقة", "Due Days")</th>
+            <th>@Html.Recource(8610)</th>
+            <th>@Html.Recource(306)</th>
+            <th>@Html.Translate("رمز الصيغة", "Formula Code")</th>
+            <th>@Html.Translate("اسم الوحدة", "Unit Name")</th>
+            <th>@Html.Recource(9240)</th>
+            <th>@Html.Translate("", "UOM")</th>
+            <th>@Html.Translate("تلقى", "Received")</th>
+            <th>%</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+
+        @{
+            string ItemDesc = "";
+
+            string query = string.Format("ProdCost_WebLists {0},{1}", Html.CompNo().ToString(), 4);
+            using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+            {
+                SqlCommand cmd = new SqlCommand(query, cn);
+                cn.Open();
+                SqlDataReader rdr = cmd.ExecuteReader();
+                if (rdr.HasRows)
+                {
+                    while (rdr.Read())
+                    {
+                        decimal Qty_qty_prepareResult = Convert.ToDecimal(rdr["qty_prepare"]);
+                        decimal QtyReceivedResult = Convert.ToDecimal(rdr["QtyReceived"]);
+                        decimal Result = QtyReceivedResult / Qty_qty_prepareResult;
+                        DateTime prepareDate = Convert.ToDateTime(rdr["prepare_date"]);
+                        int prepareYear = prepareDate.Year;
+                        <tr class="list-tr" ItemDesc="@rdr["ItemDesc"]" OrderYear="@prepareYear" OrderNo="@rdr["prepare_code"]" FormCode="@rdr["formula_code"].ToString().Trim()">
+                            <td>@Convert.ToDateTime(rdr["prepare_date"].ToString()).ToString("yyyy/MM/dd")</td>
+                            <td>@rdr["DueDays"]</td>
+                            <td>@rdr["prepare_code"]</td>
+                            <td>@rdr["ItemDesc"]</td>
+                            <td>@rdr["formula_code"]</td>
+                            <td>@rdr["UnitName"]</td>
+                            <td>@Convert.ToDecimal(rdr["qty_prepare"]).ToString("0.00")</td>
+                            <td>@rdr["UOM"]</td>
+                            <td>@Convert.ToDecimal(rdr["QtyReceived"]).ToString("0.00")</td>
+                            <td>@Result.ToString("0.00 %")</td>
+                            <td></td>
+
+                        </tr>
+                    }
+                }
+            }
+
+
+        }
+
+    </tbody>
+</table>
+
+
+
+<script>
+
+   var ProductionOrdersInProgressTable;
+    $('#Prod_Liststage_Model').draggable({
+        handle: ".modal-header",
+    });
+    $('#QAEventShowModalInProgress').draggable({
+        handle: ".modal-header",
+    });
+    $('#ViewQCResultModal').draggable({
+        handle: ".modal-header",
+    });
+    $('#ModalLoadViewRawMateria').draggable({
+        handle: ".modal-header",
+    });
+    $('#ModalLoadIssueOrder').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_Warehouse').draggable({
+        handle: ".modal-header",
+    });
+    $('#ModalProductionReceiving').draggable({
+        handle: ".modal-header",
+    });
+    $('#ModelLoadBatch').draggable({
+        handle: ".modal-header",
+    });
+    $('#ModalSelectIssueOrder').draggable({
+        handle: ".modal-header",
+    }); 
+
+    function ViewQAProcedure(CompNo, OrderYear, OrderNo, StageSer, stage_code) {
+         $.ajax({
+            url: '@Url.Action("ViewQAEventData", "ProductionOrdersInProgress")',
+            type: 'GET',
+            data: {
+                CompNo: CompNo,
+                OrderYear: OrderYear,
+                OrderNo: OrderNo,
+                StageSer: StageSer,
+                stage_code: stage_code
+
+
+            },
+            success: function (ListDataEvents) {
+                $('#QAEventShowModalInProgress').modal('show');
+                ShowListEventInProgress(ListDataEvents, CompNo, OrderYear, OrderNo);
+
+            }
+        });
+    }
+    function ViewQCResult(CompNo, OrderYear, OrderNo, StageSer, stage_code) {
+         wait();
+
+        $('#ViewQCResult').load("../../../ProductionOrdersInProgress/ViewQCResult?CompNo=" + CompNo + '&OrderYear=' + OrderYear + '&OrderNo=' + OrderNo + '&StageSer=' + StageSer + '&stage_code=' + stage_code);
+        $('#ViewQCResultModal').modal('show');
+        done();
+    }
+
+    ProductionOrdersInProgressTable = $('#ProductionOrdersInProgressDataTable').dataTable({
+        "scrollY": '56vh',
+        "paging": true,
+        "pageLength": 150,
+
+    });
+    function Pbtnclosemodal() {
+        $('.opacity').removeClass('Overlay')
+        $('#Prod_Liststage_Model').modal('hide');
+        $('#ProductionOrdersInProgressDataTable tbody tr').removeClass('highlighted-row');
+        $('#ProductionOrdersInProgressDataTable tbody tr').removeClass('opened-row');
+
+    }
+
+  
+</script>

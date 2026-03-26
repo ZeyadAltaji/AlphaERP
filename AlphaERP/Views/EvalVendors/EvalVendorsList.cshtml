@@ -1,0 +1,92 @@
+﻿@using System.Data.SqlClient;
+@using AlphaERP.Models
+@{
+    int OrdYear = 0;
+    if (ViewBag.OrdYear == null)
+    {
+        OrdYear = DateTime.Now.Year;
+    }
+    else
+    {
+        OrdYear = ViewBag.OrdYear;
+    }
+
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    List<Ord_Web_EvalVenodrsHF> lEvalVenodrsHF = new MDB().Ord_Web_EvalVenodrsHF.Where(x => x.CompNo == company.comp_num && x.Orderyear == OrdYear).ToList();
+    List<Vendor> Vend = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.IsHalt == false).ToList();
+}
+
+<table class="table" id="OrdEvalVenodrsHFTable">
+    <thead>
+        <tr>
+            <th style="text-align: center;">@Html.Translate("رقم طلب التقييم", "Eval RequestNo.")</th>
+            <th style="text-align: center;">@Html.Recource(3197)</th>
+            <th style="text-align: center;">@Html.Recource(3797)</th>
+            <th style="text-align: center;">@Html.Recource(517)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="OrdEvalVenodrsHFTbody">
+        @foreach (Ord_Web_EvalVenodrsHF P in lEvalVenodrsHF)
+        {
+            Vendor v = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.VendorNo == P.VendorNo).FirstOrDefault();
+        <tr OrdYear="@P.Orderyear" OrderNo="@P.OrderNo" TawreedNo="@P.TawreedNo" EvalVendId="@P.EvalVendId">
+            <td style="text-align: center;">@P.EvalVendId</td>
+            <td style="text-align: center;">@P.OrderNo</td>
+            <td style="text-align: center;">@P.TawreedNo</td>
+            <td style="text-align: center;">@Html.Translate(v.Name, v.Eng_Name)</td>
+            <td>
+                <button onclick="EditEvalVenodrs('@P.Orderyear','@P.OrderNo','@P.TawreedNo','@P.EvalVendId')" type="button" class="btn btn-ed ex" title="@Html.Translate("تعديل طلب شراء", "Edit Purchase Request")">
+                    <i class="fa fa-pencil-alt"></i>
+                </button>
+                <button id="eEvalVenodrs" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                    @Html.Translate("تعديل تقييم المورد", "Edit Evaluation Vendor")
+                </button>
+                <button class="btn-de" onclick="Delete_EvalVenodrs('@P.Orderyear','@P.OrderNo','@P.TawreedNo','@P.EvalVendId')">
+                    <i class="fa fa-times-circle"></i>
+                </button>
+                <button class="btn btn-default ex" title="@Html.Translate("عرض", "View")" href="/EvalVendors/ViewEvalVendors?OrdYear=@P.Orderyear&OrderNo=@P.OrderNo&TawreedNo=@P.TawreedNo&EvalVendId=@P.EvalVendId" target="_blank">
+                    <i style="font-weight:100" class="fa fa-folder"></i>
+                    @P.EvalVendId
+                </button>
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>
+<br />
+<div class="form-group">
+    <div class="col-md-12">
+        <div class="col-md-4">
+            <button style="width: 35%; height: 40px !important;" class="btn btn-primary btn-block" href="/EvalVendors/AddEvalVendors" target="_blank">
+                <i class="fa fa-plus"></i>
+                @Html.Recource(32)
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    var OrdEvalVenodrsHFTable;
+    OrdEvalVenodrsHFTable = $('#OrdEvalVenodrsHFTable').dataTable({
+        "scrollY": 'calc( 100vh - 340px)',
+        "paging": true,
+        "pageLength": 25,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+
+    function EditEvalVenodrs(OrdYear, OrdNo, TawreedNo, EvalVendId) {
+        $('#eEvalVenodrs').attr("href", '/EvalVendors/EditEvalVendors?OrdYear=' + OrdYear + '&OrderNo=' + OrdNo + '&TawreedNo=' + TawreedNo + '&EvalVendId=' + EvalVendId + '')
+        $('#eEvalVenodrs').click();
+    }
+
+</script>
+
+
+
+
+
+

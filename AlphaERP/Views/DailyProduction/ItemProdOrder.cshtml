@@ -1,0 +1,36 @@
+﻿@model IEnumerable<AlphaERP.Controllers.DailyProductionController.ProdOrders>
+@{ 
+    int i = Model.FirstOrDefault().serial;
+}
+
+@foreach (var item in Model.OrderBy(o => o.serial))
+{
+    <tr id="ItemDailyProd_@i" unitserial="@item.UnitSerial" tunit="@item.TUnit">
+        <td style="text-align:center;" id="ItemDailyProd_ItemNo">@item.item_no</td>
+        <td style="text-align:center;">@item.ItemDesc</td>
+        <td style="text-align:center;">
+            <input style="width: 75px; text-align:center;" id="ItemDailyProd_Qty" value="@item.Qty" type="number" onblur="GetCheckValueSumTotal(this)" />
+        </td>
+        <td>
+            <button class="btn-de" id="removeButton" onclick="RemoveRowDailyProdItem(this)" type="button"><i class="fa fa-trash-alt"></i></button>
+        </td>
+        <td id="PostFlag" hidden></td>
+        <td id="ProdRecYear" hidden></td>
+        <td id="ProdRecNo" hidden></td>
+        <td id="TransferFlag" hidden></td>
+        <td id="ConsVouYear" hidden></td>
+        <td id="ConsVouNo" hidden></td>
+        <td id="TransNoIn" hidden></td>
+        <td id="TransNoOut" hidden></td>
+        <td id="TransDateIn" hidden></td>
+        <td id="TransDateOut" hidden></td>
+        <td id="TransUserIn" hidden></td>
+        <td id="TransUserOut" hidden></td>
+        <td id="Batch" hidden></td>
+        <td id="ManDate" hidden></td>
+        <td id="ExpDate" hidden></td>
+        <td id="ConsQty" hidden></td>
+    </tr>
+    i++;
+}
+

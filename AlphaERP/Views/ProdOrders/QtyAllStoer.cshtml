@@ -1,0 +1,39 @@
+﻿@model IEnumerable<AlphaERP.Controllers.ProdOrdersController.Itemstore>
+
+
+
+<div class="col-md-12">
+    <table class="table table-hover" id="SelectAllQtyStoreItems">
+        <thead>
+            <tr>
+                <th style="text-align: center;">@Html.Recource(1)</th>
+                <th style="text-align: center;">@Html.Recource(30)</th>
+                <th style="text-align: center;">@Html.Recource(91)</th>
+                <th style="text-align: center;">@Html.Recource(67)</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="SelectAllQtyStoreItemsTbody">
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td style="text-align: center;" id="StoreNo">@item.StoreNo</td>
+                    <td style="text-align: center;" id="StoreName">@item.StoreName</td>
+                    <td style="text-align: center;" id="Store_Qty" title="@item.StoreQty.ToString("0.000")">@item.StoreQty.ToString("0.000")</td>
+                    <td style="text-align: center;" id="UnitC4">@item.UnitC4</td>
+                    <td></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+
+<script>
+    $('#SelectAllQtyStoreItems').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+
+</script>

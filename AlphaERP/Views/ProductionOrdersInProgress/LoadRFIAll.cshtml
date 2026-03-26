@@ -1,0 +1,34 @@
+﻿@using AlphaERP.Models;
+@model List<InvStoresMFView>
+    @{ 
+        string FormCode = ViewBag.FormCode;
+        short OrderYear = ViewBag.OrderYear;
+        int OrderNo = ViewBag.OrderNo;
+        Company company = (Company)Session["company"];
+
+    }
+ 
+        @foreach (var item in Model)
+        {
+            <tr style="height: 26px;" onclick="OrderSelect(this)"  ondblclick="DoubleOrderSelect(this)">
+
+                <td style="text-align:center !important;"></td>
+                <td id="OrdYear" style="display:none;">@item.OrdYear</td>
+                <td style="text-align:center !important;" id="OrdNo">@item.OrdNo</td>
+                <td style="text-align:center !important;">@item.OrdDate.ToString("yyyy-MM-dd")</td>
+                <td style="text-align:center !important;">
+                    @if (item.IsApproved == true)
+                    {
+                        <span style="background-color: #0b9f0b !important;" class="badge badge-success">@Html.Translate("موافق عليه", "Approved")</span>
+
+                    }
+                    else
+                    {
+                        <span  class="badge badge-danger">@Html.Translate("غير موافق", "Non Approved")</span>
+                    }
+                </td>
+             </tr>
+        }
+
+
+ 

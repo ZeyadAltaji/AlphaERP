@@ -1,0 +1,48 @@
+﻿@model List<AlphaERP.Models.ProdCost_QASetupHFView>
+<table id="QAProceduresDefinitionDataTable" class="table table-hover dataTable">
+    <thead>
+        <tr>
+            <th>@Resources.Resource.Id</th>
+             <th>@Html.Translate("الوصف", "description")</th>
+            <th>@Html.Translate("عدد الأجراءات ", "Total Steps")</th>
+            <th>@Html.Translate("وحدة أعمال صانعي", "Maker Business Unit")</th>
+            <th>@Html.Translate("وحدة أعمال المدقق", "Checker Business Unit")</th>
+            <th>@Html.Translate("BOM","BOM")</th>
+
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.QA_ProcNo</td>
+                <td>@item.QA_Desc</td>
+                <td>@item.TotalQASteps</td>
+                <td>@item.MakerBusUnitDesc</td>
+                <td>@item.CheckerBusUnitDesc</td>
+                <td>@item.UsedInBOMs</td>
+
+
+                 <td>
+                    <button class="btn-ed" onclick="EditQAprocDefinition('@item.QA_ProcNo')">
+                        <i class="fa fa-pencil-alt"></i>
+                    </button>
+                    <button class="btn-de" onclick="DeleteQAprocDefinition('@item.QA_ProcNo', this)">
+                        <i class="fa fa-trash-alt" aria-hidden="true"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+    var table = $('#QAProceduresDefinitionDataTable').DataTable({
+        "scrollY": '56vh',
+        "paging": true,
+        "pageLength":100
+    });
+
+</script>

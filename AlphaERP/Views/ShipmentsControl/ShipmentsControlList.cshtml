@@ -1,0 +1,221 @@
+﻿@model IEnumerable<AlphaERP.Models.ShipmentsControl>
+@using System.Data.SqlClient;
+@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+    int i = 1;
+    string Date = ViewBag.Date;
+}
+<style>
+
+    #Ord_ShipControl_DIV table th, #Ord_ShipControl_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+    .wrapperx {
+        padding:0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+
+    .sticky-col {
+        z-index:2;
+        position: sticky;
+        position: -webkit-sticky;
+        background-color: white;
+    }
+
+    .first-col {
+        width: 100px;
+        min-width: 100px;
+        max-width: 100px;
+        @Html.Translate("right: 0px;", "left: 0px;")
+    }
+
+    .second-col {
+        width: 150px;
+        min-width: 150px;
+        max-width: 150px;
+     @Html.Translate("right: 100px;", "left: 100px;")
+    }
+
+    .third-col {
+        width: 40px;
+        min-width: 40px;
+        max-width: 40px;
+        @Html.Translate("right: 250px;", "left: 250px;")
+    }
+    .stickytooltip {
+        max-height: 80vh !important;
+        overflow: auto !important
+    }
+</style>
+
+<link href="~/Content/stickytooltip.css" rel="stylesheet" />
+<script src="~/Scripts/stickytooltip.js?s=15"></script>
+
+<style>
+    #Ord_ShipControlTable span.badge {
+        border: none;
+        position: static;
+        z-index: 20 !important;
+        box-sizing: content-box;
+        visibility: visible;
+        z-index: 9999999999 !important;
+        padding: 1px;
+        font-family: Arial, verdana, tahoma;
+        font-size: 13px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        text-shadow: 1px 1px 1px rgba(0,0,0,.3);
+        background: #ff3019;
+        background: -webkit-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Chrome10+,Safari5.1+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff3019), color-stop(100%, #cf0404)); /* Chrome,Safari4+ */
+        background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* FF3.6+ */
+        background: -ms-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* IE10+ */
+        background: -o-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Opera 11.10+ */
+        background: linear-gradient(to bottom, #ff3019 0%, #cf0404 100%); /* W3C */
+        width: 18px;
+        height: 18px;
+        line-height: 20px;
+        border-radius: 50%;
+        filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff3019', endColorstr='#cf0404', GradientType=0)"; /* IE6-9 */
+        filter: "progid:DXImageTransform.Microsoft.Shadow(direction=135, strength=2, color=ff0000)"; /* IE10 text shadows */
+        box-shadow: 0 2px 5px rgba(0,0,0,.4);
+    }
+</style>
+
+<div class="modal-body row" style="display: block; height: calc( 100vh - 190px);">
+    <div class="form-group">
+        <div class="col-md-12">
+            <div class="col-md-2" style="margin-bottom: 5px;">
+                <select style="width: 85%" id="Ord_ShipmentsControl_ShipSer" onchange="changeShipSerTable(this.value)">
+                    <option value="0">@Html.Translate("الكل","All")</option>
+                    @foreach (ShipmentsControl v in Model)
+                    {
+                        string RefNo = new MDB().OrderHFs.Where(x => x.CompNo == company.comp_num && x.OrdYear == v.OrdYear && x.OrderNo == v.OrderNo && x.TawreedNo == v.TawreedNo).Select(o => o.RefNo).FirstOrDefault();
+                          <option style="text-align: center !important;direction:ltr" value="@v.ShipSer">@v.ShipSer  @RefNo</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="form-group viewx"style="display: block;">
+        <div class="col-md-12 wrapperx" id="Ord_ShipControl_DIV">
+            <table class="table table-hover Ord_ShipControl" id="Ord_ShipControlTable">
+                <thead style="background-color: lightblue">
+                    <tr>
+                        <th class="sticky-col first-col" style="background-color: lightblue;text-align: center; border-left: 1px solid;"colspan="2">@Html.Translate("معلومات الشحنة", "Shipments Info")</thclass="headcol">
+                        <th style="text-align: center; border-left: 1px solid;" colspan="2">@Html.Translate("معلومات امر الشراء والميناء", "Purchase order and port information")</th>
+                        <th style="text-align: center; border-left: 1px solid;" colspan="2">@Html.Translate("الكمية المستلمة", "Quantity Received")</th>
+                        <th style="text-align: center; border-left: 1px solid;" colspan="2">@Html.Translate("الوفيات", "WriteOff")</th>
+                        <th style="text-align: center; border-left: 1px solid;" colspan="2">@Html.Translate("المباع", "Sales")</th>
+                        <th style="text-align: center; border-left: 1px solid;" colspan="1">@Html.Translate("الوزن المعدل", "Adjusted Weight")</th>
+                        <th style="text-align: center; border-left: 1px solid;" colspan="2">@Html.Translate("الرصيد الحالي", "Current Bal.")</th>
+                        <th style="text-align: center; border-left: 1px solid;" colspan="2">@Html.Translate("مجموع المصروفات", "Expense Total")</th>
+                        <th style="text-align: center; border-left: 1px solid;" colspan="2">@Html.Translate("الصروفات بتاريخ : " + Date, "Expense Dated : " + Date)</th>
+                        <th style="text-align: center; border-left: 1px solid;" colspan="1"></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <thead style="background-color: gray">
+                    <tr>
+                        <th class="sticky-col first-col" style="background-color: gray">@Html.Recource(696)</thclass="headcol">
+                        <th class="sticky-col second-col" style="text-align: center; border-left: 1px solid; background-color: gray">@Html.Translate("بداية الاستلام", "Receiving start")</th>
+
+                        <th>@Html.Translate("امر الشراء", "Purchase Order")</th>
+                        <th style="border-left: 1px solid;">@Html.Translate("الميناء", "Port")</th>
+
+                        <th>@Html.Recource(49)</th>
+                        <th style="text-align: center; border-left: 1px solid;">@Html.Recource(72)</th>
+
+                        <th>@Html.Recource(49)</th>
+                        <th style="text-align: center; border-left: 1px solid;">@Html.Recource(72)</th>
+
+                        <th>@Html.Recource(49)</th>
+                        <th style="text-align: center; border-left: 1px solid;">@Html.Recource(72)</th>
+                        <th style="text-align: center; border-left: 1px solid;">@Html.Translate("مجمع الوزن المعدل", "Total Adjusted Weight")</th>
+                        <th>@Html.Recource(49)</th>
+                        <th style="text-align: center; border-left: 1px solid;">@Html.Recource(72)</th>
+                        <th style="text-align: center;">@Html.Translate("مجموع صروفات الاعلاف", "Total feed Issues")</th>
+                        <th style="text-align: center; border-left: 1px solid;">@Html.Translate("مجموع صروفات العلاجات", "Total Treatment Issues")</th>
+                        <th style="text-align: center;">@Html.Translate("اعلاف", "feed")</th>
+                        <th style="text-align: center; border-left: 1px solid;">@Html.Translate("علاجات", "Treatment")</th>
+                        <th style="text-align: center; border-left: 1px solid;">@Html.Translate("المصاريف المحملة", "Charged expenses")</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody style="text-align: center;"  id="Ord_ShipControlTbody">
+                    @foreach (ShipmentsControl ShipControl in Model)
+                    {
+                    <tr style="height: 25px;" class="OrderStat">
+                        <td class="sticky-col first-col" style="text-align: center !important;direction:ltr" id="ShipControl_ShipSrl">@ShipControl.ShipSer</td>
+                        <td class="sticky-col second-col" style="text-align: center !important; border-left: 1px solid;">@ShipControl.RecDate.ToString("yyyy-MM-dd")</td>
+                        <td style="text-align: center !important">@ShipControl.PurchOrdQty</td>
+                        <td style="text-align: center !important; border-left: 1px solid;">@ShipControl.PortQty</td>
+
+                        <td style="text-align: center !important">@ShipControl.ReceiptQty</td>
+                        <td style="text-align: center !important; border-left: 1px solid;">@ShipControl.ReceiptQty2</td>
+
+                        <td style="text-align: center !important">@ShipControl.WriteOffQty</td>
+                        <td style="text-align: center !important; border-left: 1px solid;">@ShipControl.WriteOffQty2</td>
+
+                        <td style="text-align: center !important">@ShipControl.SalesQty</td>
+                        <td style="text-align: center !important; border-left: 1px solid;">@ShipControl.SalesQty2</td>
+
+                        <td style="text-align: center !important; border-left: 1px solid;">@ShipControl.TotalAdjustedWeight</td>
+
+                        <td style="text-align: center !important">@ShipControl.QtyOH</td>
+                        <td style="text-align: center !important; border-left: 1px solid;">@ShipControl.QtyOH2</td>
+
+                        <td style="text-align: center !important">@ShipControl.TotalIssues.ToString("0.000")</td>
+                        <td style="text-align: center !important; border-left: 1px solid;">@ShipControl.TotalIssuesTreatments.ToString("0.000")</td>
+                        <td style="text-align: center !important">@ShipControl.IssuesQty.ToString("0.000")</td>
+                        <td style="text-align: center !important; border-left: 1px solid;">@ShipControl.IssuesTreatmentsQty.ToString("0.000")</td>
+                        <td style="text-align: center !important; border-left: 1px solid;">@ShipControl.Total</td>
+                        <td>
+                            <button type="button" class="btn btn-primary">@Html.Translate("ادخال صرف", "Issues Entry")</button>
+                            <button type="button" class="btn btn-primary">@Html.Translate("ادخال وفيات", "WriteOff Entry")</button>
+                            <button type="button" class="btn btn-primary">@Html.Translate("ادخال مبيعات", "Sales Entry")</button>
+                            <button type="button" class="btn btn-primary">@Html.Translate("احتساب الوزن المعدل", "Calculating Adjusted Weight")</button>
+                            <button type="button" class="btn btn-primary">@Html.Translate("تكليف المخزون اليومي", "Daily inventory assignment")</button>
+                            <button type="button" class="btn btn-primary">@Html.Translate("اغلاق الشحنة", "Shipment Closed")</button>
+                        </td>
+                    </tr>
+                        i++;
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+
+
+
+
+<script>
+ 
+    $('#Ord_ShipmentsControl_ShipSer').select2();
+    function changeShipSerTable(e) {
+        var table = $("#Ord_ShipControlTable tbody");
+        var trs = table.find('tr');
+        
+        for (var i = 0; i < trs.length; i++) {
+            if (e != 0) {
+                if ($(trs[i]).closest('tr').find('#ShipControl_ShipSrl')[0].innerHTML != e) {
+                    $(trs[i]).closest('tr').css("display", "none");
+                }
+                else {
+                    $(trs[i]).closest('tr').css("display", "");
+                }
+            }
+            else {
+                    $(trs[i]).closest('tr').css("display", "");
+            }
+        }
+    }
+</script>

@@ -1,0 +1,410 @@
+﻿@using AlphaERP.Models;
+@using System.Data.SqlClient;
+@{
+    var getdata = new MDB();
+    short QAProc = ViewBag.QAProc;
+    List<Alpha_BusinessUnitDef> M_C = new MDB().Alpha_BusinessUnitDef.ToList();
+
+
+    Company company = (Company)Session["company"];
+    var queryString = "SELECT SU.CompNo, SU.QA_ProcNo, SU.Proc_SubNo, SU.Description, SU.AddDate, SU.UserID  " +
+            "FROM ProdCost_QASetup AS SU " +
+            "where SU.QA_ProcNo = @QAProc and SU.CompNo = @CompNo";
+    var parameter = new SqlParameter[]
+{
+        new SqlParameter("@QAProc", QAProc ),
+        new SqlParameter("@CompNo", company.comp_num)
+};
+
+    var queryResult = new MDB().Database.SqlQuery<ProdCost_QASetupView>(queryString, parameter).ToList();
+
+    var queryQASetupHF = "SELECT HF.QA_ProcNo,HF.QA_Desc, HF.PostOnSeq, HF.M_BusUnitID, HF.C_BusUnitID " +
+               "FROM ProdCost_QASetupHF AS HF " +
+               "WHERE HF.QA_ProcNo = @QAProc and HF.CompNo = @CompNo";
+
+    var parameters = new SqlParameter[]
+    {
+        new SqlParameter("@QAProc", QAProc ),
+        new SqlParameter("@CompNo", company.comp_num)
+    };
+
+    var queryResultQASetupHF = getdata.Database.SqlQuery<ProdCost_QASetupHFVie>(queryQASetupHF, parameters).ToList();
+    int count = 1;
+
+}
+<style>
+    .table-row .description {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .table-row:hover .description {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+    }
+
+        .table-row:hover .description::before {
+            content: attr(data-description);
+            display: block;
+            position: absolute;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 10px;
+            max-width: 300px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            left: 30%;
+        }
+</style>
+ 
+        <div class="form-group">
+            @if (queryResultQASetupHF.Any())
+            {
+                var data = queryResultQASetupHF.FirstOrDefault();
+                <div class="myfrom">
+                    <div class="form-group">
+                        <div class="col-md-4">
+                            <label class="unselectable" for="ProcDesc">@Html.Translate("وصف الإجراء", "Procedure Description")</label>
+                        </div>
+                        <div class="col-md-8" style="margin-bottom: 5px;">
+                            <input required type="text" id="eProcDesc" value="@data.QA_Desc" name="QA_Desc" data-desc="@data.QA_Desc" />
+                            <input required type="hidden" id="QA_ProcNo" value="@data.QA_ProcNo" name="QA_ProcNo" data-QA_ProcNo="@data.QA_ProcNo" />
+
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-4">
+                            <label class="unselectable" for="ProcDesc">@Html.Translate("وحدة أعمال صانع", "Maker Business Unit")</label>
+
+                        </div>
+                        <div class="col-md-8" style="margin-bottom: 5px;">
+                            <select style="width: 62%" id="eMakerList" name="M_BusUnitID">
+                                <option selected>@Html.Translate("أختار واحد من القائمة", "Chose one from the list")</option>
+
+                                @foreach (var v in M_C)
+                                {
+                                    <option value="@v.BusUnitID" name="M_BusUnitID" @(v.BusUnitID == data.M_BusUnitID ? "selected" : "")>
+                                        @Html.Translate(v.BusUnitDescAr, v.BusUnitDescEng)
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-4">
+                            <label class="unselectable" for="ProcDesc">@Html.Translate("وحدة أعمال المدقق", "Checker Business Unit")</label>
+
+                        </div>
+                        <div class="col-md-8" style="margin-bottom: 5px;">
+                            <select style="width: 62%" id="eCheckerList" name="C_BusUnitID">
+                                <option selected>@Html.Translate("أختار واحد من القائمة", "Chose one from the list")</option>
+
+                                @foreach (var v in M_C)
+                                {
+                                    <option value="@v.BusUnitID" name="C_BusUnitID" @(v.BusUnitID == data.C_BusUnitID ? "selected" : "")>
+                                        @Html.Translate(v.BusUnitDescAr, v.BusUnitDescEng)
+                                    </option>                            }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-4">
+                            <label class="unselectable" for="ProcDesc">@Html.Translate("النشر بالتسلسل", "Post in Sequence")</label>
+                        </div>
+                        <div class="col-md-8" style="margin-bottom: 5px;">
+                            <input type="checkbox" id="ePostOnSeq" value="true" name="ePostOnSeq" @(data.PostOnSeq.HasValue && data.PostOnSeq.Value ? "checked" : "")>
+
+
+                        </div>
+                    </div>
+                </div>
+            }
+            <div class="form-group">
+                <div class="col-md-4">
+                    <label class="unselectable">@Html.Translate("أضافة وصف", "Add Description") </label>
+                </div>
+                <div class="col-md-8" style="margin-bottom: 5px;">
+                    <input  type="text" id="newDescription"   style="width: calc(108% - 106px);" name="QA_Desc" />
+                    <button type="button" onclick="addNewDescription()" id="addButton" class="btn btn-default">@Html.Recource(32)</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-md-12">
+                    <table class="table table-hover ePostinSequence" id="eMainQATable" width="100%">
+                        <thead>
+                            <tr>
+                                <th>Ser</th>
+                                <th style="text-align:center !important">Description</th>
+                                <th></th> 
+                              </tr>
+                        </thead>
+                        <tbody id="eMainQATableBD">
+                            @if (queryResultQASetupHF.Any())
+                            {
+                                var data1 = queryResult.FirstOrDefault();
+                                foreach (var item in queryResult)
+                                {
+                                    <tr class="listdescription" draggable="true" ondragstart="start()" ondragover="dragover()">
+                                        <td>
+                                            @count
+                                        </td>
+
+                                        <td class="description"
+                                            data-description="@item.Description"
+                                            data-qa-procno="@item.QA_ProcNo"
+                                            data-proc-subno="@item.Proc_SubNo"
+                                            data-add-date="@item.AddDate"
+                                            data-user-id="@item.UserID"
+                                            style="text-align: center !important;">
+                                            @{
+                                                var words = @item.Description.Split(' ');
+                                                var truncatedDescription = string.Join(" ", words.Take(5));
+                                            }
+                                            @truncatedDescription @if (words.Length > 4)
+                                            { <span>...</span> }
+                                            <input class="CompNo" type="hidden" data-CompNo="@item.CompNo" value="@item.CompNo" name="CompNo" />
+                                            <input class="QA_ProcNo" type="hidden" data-CompNo="@item.QA_ProcNo" value="@item.QA_ProcNo" name="QA_ProcNo" />
+                                            <input type="hidden" data-CompNo="@item.Proc_SubNo" value="@item.Proc_SubNo" name="Proc_SubNo" />
+                                            <input type="hidden" data-CompNo="@item.AddDate" value="@item.AddDate" name="AddDate" />
+                                            <input type="hidden" data-CompNo="@item.UserID" value="@item.UserID" name="UserID" />
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn-ed" onclick="editRow(@count, '@item.Description')"><i class="fa fa-pencil-alt"></i></button>
+
+                                            <button type="button" class ="btn-de" onclick="deleteRow(@count)"><i class="fa fa-trash-alt"></i></button>
+                                        </td>
+                                       
+                                     </tr>
+                                            count++;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="3" style="text-align: center;">No items found</td>
+                                        </tr>
+                                    }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+
+        </div>
+                                                 
+
+<script>
+
+
+        var eCount =0;
+        var newarray = [];
+        var row;
+        $('#CheckerList').select2();
+        $('#MakerList').select2();
+    
+
+        function start() {
+            row = event.target;
+        }
+
+        function dragover() {
+            var e = event;
+            e.preventDefault();
+            let children = Array.from(e.target.parentNode.parentNode.children);
+            if (children.indexOf(e.target.parentNode) > children.indexOf(row)) {
+                e.target.parentNode.after(row);
+            } else {
+                e.target.parentNode.before(row);
+            }
+        }
+
+        function addNewDescription() {
+            var newDescription = $("#newDescription").val();
+
+            if (newDescription === "") {
+                // Blank value, display an error message or take appropriate action
+                alert('@Html.Translate("لا يمكن أن يكون الوصف فارغًا", "Description cannot be blank")');
+                return;
+            }
+            if (eCount == 0) {
+                var tr = $("#eMainQATableBD .listdescription");
+                eCount = tr.length;
+            }
+
+            eCount++;
+            var newarray = [];
+            newarray.push(`<td>${eCount}</td>`);
+            newarray.push(`<td class="description" data-description="${newDescription}" style="text-align: center !important;">${newDescription}</td>`);
+            newarray.push(`<td style="width:8%;"><button type="button" class="btn-ed" onclick="editRow(${eCount}, '${newDescription}')"><i class="fa fa-pencil-alt"></i></button><button type="button" class="btn-de" onclick="deleteRow(${eCount})"><i class="fa fa-trash-alt"></i></button></td>`);
+
+            $("#eMainQATableBD").append(`<tr class="listdescription" draggable="true" ondragstart="start()" ondragover="dragover()">${newarray.join("")}</tr>`);
+
+            $("#newDescription").val("");
+
+        }
+
+
+        function deleteRow(rowCount) {
+             if (confirm('@Html.Translate("هل تريد الحذف ؟", "Do you want to delete?")')) {
+
+                $("#eMainQATableBD .listdescription").each(function (eCount) {
+
+                    var row = $(this);
+                    var rowCounter = parseInt(row.find("td:first-child").text());
+                    if (rowCounter === rowCount) {
+                        row.remove();
+                    } else if (rowCounter > rowCount) {
+
+                        row.find("td:first-child").text(rowCounter - 1);
+                    }
+                });
+                eCount--;
+            }
+        }
+     
+        function createEditInput(olddescription, qaProcNo, procSubNo, addDate, userID) {
+            return `
+            <input type="text" id="editdescription" value="${olddescription}" />
+            <input type="hidden" id="qaProcNo" value="${qaProcNo}" />
+            <input type="hidden" id="procSubNo" value="${procSubNo}" />
+            <input type="hidden" id="addDate" value="${addDate}" />
+            <input type="hidden" id="userID" value="${userID}" />
+         `;
+        }
+    
+        
+    
+        function editRow(index, olddescription) {
+            debugger
+            editindex = index;
+            const editcell = document.querySelector(`#eMainQATableBD .listdescription:nth-child(${index}) td:nth-child(2)`);
+            if (editcell) {
+                const qaProcNo = editcell.getAttribute("data-qa-procno");
+                const procSubNo = editcell.getAttribute("data-proc-subno");
+                const addDate = editcell.getAttribute("data-add-date");
+                const userID = editcell.getAttribute("data-user-id");
+
+                editcell.innerHTML = createEditInput(olddescription, qaProcNo, procSubNo, addDate, userID);
+
+                const editdescriptioninput = editcell.querySelector("#editdescription");
+                if (editdescriptioninput) {
+                    editdescriptioninput.focus();
+                    editdescriptioninput.addEventListener("blur", function () {
+                        saveEditedDescription(index, editdescriptioninput.value, qaProcNo, procSubNo, addDate, userID);
+                    });
+                }
+            }
+        }
+
+        function saveEditedDescription(index, newdescription, qaProcNo, procSubNo, addDate, userID) {
+            const editedcell = document.querySelector(`#eMainQATableBD .listdescription:nth-child(${index}) td:nth-child(2)`);
+            if (editedcell) {
+                editedcell.innerHTML = newdescription;
+                editedcell.setAttribute('data-description', newdescription);
+                editedcell.setAttribute('data-qa-procno', qaProcNo);
+                editedcell.setAttribute('data-proc-subno', procSubNo);
+                editedcell.setAttribute('data-add-date', addDate);
+                editedcell.setAttribute('data-user-id', userID);
+                editindex = -1;
+            }
+        }
+        
+
+        function eSave() {
+            debugger;
+            var formData = {};
+            var descriptions = [];
+
+            var myFromDiv = document.querySelector('.myfrom');
+             var procDesc = $('#eProcDesc').val();
+             var makerList = $('#eMakerList').val();
+             var checkerList = $('#eCheckerList').val();
+             var postOnSeqValue = $('#ePostOnSeq').is(":checked");
+             var QA_ProcNo = $('#QA_ProcNo').val();
+                if (procDesc.trim() === "") {
+                    alert("These fields must be populated: Procedure Description.");
+                    return;  
+
+                }
+                if (makerList === "" || makerList === "Chose one from the list") {
+                    alert("These fields must be populated Maker Business Unit.");
+                 return false;
+                }
+                if (checkerList === "" || checkerList === "Chose one from the list") {
+                 alert("These fields must be populated Checker Business Unit.");
+                 return false;
+             }
+                formData.QA_Desc = $('#eProcDesc').val();
+                formData.QA_ProcNo = $('#QA_ProcNo').val();  
+
+            formData.M_BusUnitID = $('#eMakerList').val();
+            formData.C_BusUnitID = $('#eCheckerList').val();
+            formData.PostOnSeq = $('#ePostOnSeq').is(":checked");
+            //var tableRows = document.querySelectorAll("#eMainTestTable tbody tr");
+            //if (tableRows.length === 0) {
+            //    alert("You should add at least one row to the table.");
+            //    return;
+            //}
+
+            $("#eMainQATableBD .listdescription").each(function () {
+                debugger
+                var description = $(this).find(".description").attr("data-description");
+                var QA_ProcNo = $(this).find(".description").attr("data-qa-procno");
+                var Proc_SubNo = $(this).find(".description").attr("data-proc-subno");
+                var add_date = $(this).find(".description").attr("data-add-date");
+                var user_id = $(this).find(".description").attr("data-user-id");
+                    descriptions.push({
+                        description: description,
+                        QA_ProcNo: QA_ProcNo,
+                        Proc_SubNo: Proc_SubNo,
+                        AddDate: add_date,
+                        UserID: user_id
+                    });
+                    console.log(descriptions);
+            });
+             if (confirm('@Html.Translate("هل تريد حفظ تعديل تعريف إجراءات ضمان الجودة ؟", "Do you want to save the modification of the definition of quality assurance procedures?")')) {
+                 $.ajax({
+                     type: "POST",
+                     url: "@Url.Action("Edit", "QAProceduresDefinition")",
+                    data: {
+                    ProdCost_QASetupHF: formData,
+                    Description: descriptions
+                    },
+                success: function (response) {
+                    eLoadPordCost_FormTest()
+
+                } 
+            });
+
+              
+            }
+            else {
+                 done();
+                 $('.box-primary').removeClass('Overlay')
+            }
+
+        
+        }
+
+    function eLoadPordCost_FormTest() {
+        wait();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#EditQAprocDefinition_Model').modal('hide');
+        $('#PordCost_FormQAListTableDiv').load('../../../QAProceduresDefinition/List');
+        $('.box-primary').removeClass('Overlay')
+        done();
+    }
+ 
+
+
+
+</script>
+
+
+
+
+
+

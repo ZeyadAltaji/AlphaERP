@@ -1,0 +1,147 @@
+﻿@model System.Data.DataSet
+@using System.Data
+@{
+    string gu = "Qc_" + Guid.NewGuid().ToString();
+}
+<style>
+    #StagesQcInProcessDataTable tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    #StagesQcInProcessDataTable tr {
+        height: 36px;
+    }
+
+
+    td .details {
+        background: #fff !important
+    }
+        tr.opened-row {
+        background-color: unset !important;
+    }
+
+    .highlighted-rows {
+
+        background-color: #ffffff !important;
+        transform: scale(1.00);
+        box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.2), -1px -1px 8px rgba(0, 0, 0, 0.2);
+    }
+     
+    .details-container {
+        background: #fff !important;
+    }
+</style>
+<table id="StagesQcInProcessDataTable" class="table dataTable">
+    <thead>
+        <tr>
+            <th>@Html.Translate("رقم الطلب", "Order Number")</th>
+            <th>@Html.Translate("تاريخ الطلب", "Request Date")</th>
+            <th>@Html.Translate("Product Code", "Product Code")</th>
+            <th>@Html.Translate("Product Desc", "Product Desc")</th>
+            <th>@Html.Translate("Bom Code", "Bom Code")</th>
+            <th>@Html.Translate("Bom Desc", "Bom Desc")</th>
+            <th>@Html.Translate("رقم الطلب", "Order No")</th>
+            <th>@Html.Translate("المرحلة", "Stage")</th>
+            <th>@Html.Translate("QC Procdeure", "QC Procdeure")</th>
+
+            <th></th>
+
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (DataRow Dr in Model.Tables["Orders"].Rows)
+        {
+            <tr style="background:#fff !important" onclick="OpenListQCone(this,'@Dr["refNo"]')"   orderyear="@Dr["prepare_year"]" refno="@Dr["refNo"]" formula_code="@Dr["formula_code"]" orderno="@Dr["prepare_code"]" gformuladesc="@Dr["formula_desc"]" gitemdesc="@Dr["ItemDesc"]" gstagedesc="@Dr["stage_desc"]" >
+ 
+                <td>@Dr["prepare_code"]</td>
+                <td>@Dr["prepare_year"]</td>
+                <td>@Dr["formula_code"]</td>
+                <td>@Dr["formula_desc"]</td>
+                <td>@Dr["ItemNo"]</td>
+                <td>@Dr["ItemDesc"]</td>
+                <td>@Dr["prepare_year"]</td>
+                <td>@Dr["stage_desc"]</td>
+                <td>@Dr["TestDesc"]</td>
+
+                
+                <td></td>
+                 
+
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+    var StagesQcInProcessTable;
+    var _RefNo;
+    var _OrderYear;
+    var _OrderNo;
+    var gFormCode;
+    var gFormulaDesc;
+    var gItemDesc;
+    var gStageDesc;
+    var lastClickedRow = null;
+    var openedRow = null;
+
+    StagesQcInProcessTable = $('#StagesQcInProcessDataTable').dataTable({
+        "scrollY": '56vh',
+        "paging": true,
+        "pageLength": 100
+    });
+    function OpenListQCone(row) {
+        var nTr = $(row);
+        var clickedRow = nTr;
+        var _RefNo = nTr.attr("refno");
+        var orderyear = nTr.attr("orderyear");
+        var orderno = nTr.attr("orderno");
+
+        if (openedRow !== null) {
+            StagesQcInProcessTable.fnClose(openedRow);
+            $(openedRow).removeClass('highlighted-rows');
+            $(openedRow).removeClass('opened-row');
+        }
+        if (openedRow !== clickedRow) {
+            wait();
+            $(clickedRow).attr("opened", "details_close");   
+            var reqNo = $(clickedRow).attr("reqno");
+            var QA_ProcNo = $(clickedRow).attr("qa-procno");
+
+            $.get("../../../../StagesQcInProcess/LoadQcPros?RefNo=" + _RefNo+ "&orderyear="+orderyear+"&orderno="+orderno, function (data) {
+                StagesQcInProcessTable.fnOpen(nTr[0], data, 'details');
+                done();
+
+            });
+        }
+
+        openedRow = (openedRow === clickedRow) ? null : clickedRow;
+        if (openedRow !== null) {
+            $(clickedRow).addClass('highlighted-rows');
+            $(clickedRow).addClass('opened-row');
+
+        }
+
+        //if (lastClickedRow === row) {
+        //     StagesQcInProcessTable.fnClose(nTr[0]);
+        //    nTr.attr("opened", "details_close");
+        //    lastClickedRow = null;
+        //}
+        //else {
+        //     if (lastClickedRow) {
+        //        StagesQcInProcessTable.fnClose(lastClickedRow);
+        //        $(lastClickedRow).attr("opened", "details_close");
+ 
+        //    }
+        //    wait();
+
+        //    $.get("../../../../StagesQcInProcess/LoadQcPros?RefNo=" + _RefNo+ "&orderyear="+orderyear+"&orderno="+orderno, function (data) {
+        //        StagesQcInProcessTable.fnOpen(nTr[0], data, 'details');
+        //        done();
+        //        lastClickedRow = row;
+        //    });
+        //}
+    }
+     
+
+</script>

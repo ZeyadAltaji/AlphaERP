@@ -1,0 +1,501 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    int OrdYear = ViewBag.OrdYear;
+    int OrderNo = ViewBag.OrderNo;
+    string TawreedNo = ViewBag.TawreedNo;
+    int VouType = ViewBag.VouType;
+    int VouNo = ViewBag.VouNo;
+
+    Ord_VoucIssueHF VoucIssueHF = new MDB().Ord_VoucIssueHF.Where(x => x.CompNo == company.comp_num && x.OrderYear == OrdYear && x.OrderNo == OrderNo
+    && x.TawreedNo == TawreedNo && x.VouType == VouType && x.VouNo == VouNo).FirstOrDefault();
+
+    List<Ord_VoucIssueDF> VoucIssueDF = new MDB().Ord_VoucIssueDF.Where(x => x.CompNo == company.comp_num && x.OrderYear == OrdYear && x.OrderNo == OrderNo
+    && x.TawreedNo == TawreedNo && x.VouType == VouType && x.VouNo == VouNo).ToList();
+
+    List<InvItemsMF> Mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+    DataTable Dt = new DataTable();
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    int Srial = 1;
+    List<int> store = new MDB().InvStoreUsers.Where(x => x.CompNo == company.comp_num && x.UserID == me.UserID && x.AllPerm == true).Select(o => o.StoreNo).ToList();
+    List<Vendor> Vend = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.IsHalt == false).ToList();
+    List<InvStoresMF> lStores = new MDB().InvStoresMFs.Where(x => x.CompNo == company.comp_num && store.Contains(x.StoreNo)).ToList();
+    List<InvDocType> DocType = new MDB().InvDocTypes.Where(x => x.CompNo == company.comp_num && x.VouchType == 11).ToList();
+
+    DataTable DtAttachment = new DataTable();
+    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+    {
+        DtAttachment = new DataTable();
+        cn.Open();
+        using (SqlCommand cmd = new SqlCommand())
+        {
+            cmd.Connection = cn;
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+            cmd.CommandText = "Ord_GetVoucIssueArchInfo";
+            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+            cmd.Parameters.Add(new SqlParameter("@OrderYear", System.Data.SqlDbType.SmallInt)).Value = OrdYear;
+            cmd.Parameters.Add(new SqlParameter("@OrderNo", System.Data.SqlDbType.Int)).Value = OrderNo;
+            cmd.Parameters.Add(new SqlParameter("@TawreedNo", System.Data.SqlDbType.VarChar)).Value = TawreedNo;
+            cmd.Parameters.Add(new SqlParameter("@VouType", System.Data.SqlDbType.SmallInt)).Value = VouType;
+            cmd.Parameters.Add(new SqlParameter("@VouNo", SqlDbType.Int)).Value = VouNo;
+            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+            {
+                DA.Fill(DtAttachment);
+            }
+        }
+    }
+    var Count = 1;
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+}
+
+<style>
+
+    #ViewPaymentOrd_DIV table th, #ViewPaymentOrd_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+    .wrapperx {
+        padding:0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+
+    .sticky-col {
+        z-index:2;
+        position: sticky;
+        position: -webkit-sticky;
+        background-color: white;
+    }
+
+    .first-col {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        @Html.Translate("right: 0px;", "left: 0px;")
+    }
+
+    .second-col {
+        width: 80px;
+        min-width: 80px;
+        max-width: 80px;
+        @Html.Translate("right: 60px;", "left: 60px;")
+    }
+
+    .third-col {
+        width: 150px;
+        min-width: 150px;
+        max-width: 150px;
+        @Html.Translate("right: 125px;", "left: 125px;")
+    }
+
+    .four-col {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        @Html.Translate("right: 280px;", "left: 280px;")
+    }
+    .stickytooltip {
+        max-height: 80vh !important;
+        overflow: auto !important
+    }
+</style>
+
+<link href="~/Content/stickytooltip.css" rel="stylesheet" />
+<script src="~/Scripts/stickytooltip.js?s=15"></script>
+
+<style>
+    #PaymentOrdDFTable span.badge {
+        border: none;
+        position: static;
+        z-index: 20 !important;
+        box-sizing: content-box;
+        visibility: visible;
+        z-index: 9999999999 !important;
+        padding: 1px;
+        font-family: Arial, verdana, tahoma;
+        font-size: 13px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        text-shadow: 1px 1px 1px rgba(0,0,0,.3);
+        background: #ff3019;
+        background: -webkit-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Chrome10+,Safari5.1+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff3019), color-stop(100%, #cf0404)); /* Chrome,Safari4+ */
+        background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* FF3.6+ */
+        background: -ms-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* IE10+ */
+        background: -o-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Opera 11.10+ */
+        background: linear-gradient(to bottom, #ff3019 0%, #cf0404 100%); /* W3C */
+        width: 18px;
+        height: 18px;
+        line-height: 20px;
+        border-radius: 50%;
+        filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff3019', endColorstr='#cf0404', GradientType=0)"; /* IE6-9 */
+        filter: "progid:DXImageTransform.Microsoft.Shadow(direction=135, strength=2, color=ff0000)"; /* IE10 text shadows */
+        box-shadow: 0 2px 5px rgba(0,0,0,.4);
+    }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="max-height: 68vh !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_VPaymentOrder_OrdYear">@Html.Recource(3196) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="text" id="Ord_VPaymentOrder_OrdYear" value="@OrdYear" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_VPaymentOrder_OrderNo">@Html.Recource(3197) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:90px !important;" type="text" id="Ord_VPaymentOrder_OrderNo" value="@OrderNo" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_VPaymentOrder_TawreedNo">@Html.Recource(3797) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="text" id="Ord_VPaymentOrder_TawreedNo" value="@TawreedNo" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_VPaymentOrder_PayOrderNo">@Html.Translate("رقم الصرف", "Payment Order") </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 120px !important; direction: ltr; text-align: right;" type="text" id="Ord_VPaymentOrder_PayOrderNo" value="@VouNo" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_VPaymentOrder_PayOrderDate">@Html.Recource(206)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="date" id="Ord_VPaymentOrder_PayOrderDate" value="@VoucIssueHF.VouDate.Value.ToString("yyyy-MM-dd")" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_VPaymentOrder_DocType">@Html.Recource(61)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select onchange="$('#Ord_VPaymentOrder_DocType').val(this.value)" style="width: 85%" id="Ord_VPaymentOrder_CboDocType" disabled>
+                            @foreach (var v in DocType)
+                            {
+                                if (v.DocType == VoucIssueHF.DocType)
+                                {
+                                    <option value="@v.DocType" selected>@Html.Translate(v.DocName, v.DocNameEng)</option>
+                                }
+                                else
+                                {
+                                    <option value="@v.DocType">@Html.Translate(v.DocName, v.DocNameEng)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_VPaymentOrder_StoreNo">@Html.Recource(1)</label>
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <select onchange="$('#Ord_VPaymentOrder_StoreNo').val(this.value)" style="width: 85%" id="Ord_VPaymentOrder_CboStoreNo" disabled>
+                            @foreach (var v in lStores)
+                            {
+                                if (v.StoreNo == VoucIssueHF.StoreNo)
+                                {
+                                    <option value="@v.StoreNo" selected>@Html.Translate(v.StoreName, v.StoreNameEng)</option>
+                                }
+                                else
+                                {
+                                    <option value="@v.StoreNo">@Html.Translate(v.StoreName, v.StoreNameEng)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_VPaymentOrder_Notes">@Html.Recource(70)</label>
+                    </div>
+                    <div class="col-md-8">
+                        <textarea required="true" style="width: 96%; height: 25px !important; " id="Ord_VPaymentOrder_Notes">@VoucIssueHF.Notes</textarea>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary btn-block" onclick="ViewPaymentOrdDocuments()" style="width:100px !important;">
+                            @Html.Recource(7744)
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group" style="display: block; height: 225px;">
+                <div class="col-md-12 wrapperx" id="ViewPaymentOrd_DIV">
+                    <table class="table table-hover ViewPaymentOrdDF_Info" id="ViewPaymentOrdDF_Info">
+                        <thead>
+                            <tr>
+                                <th style="text-align: center; width: 350px; word-wrap: break-word; white-space: normal;">@Html.Recource(44)</th>
+                                <th style="text-align: center; width: 990px; word-wrap: break-word; white-space: normal;">@Html.Recource(74)</th>
+                                <th style="width: 205px; word-wrap: break-word; white-space: normal;">@Html.Recource(67)</th>
+                                @if (CActive.ClientNo == 335)
+                                {
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(5693)</th>
+                                }
+                                else
+                                {
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(49)</th>
+                                }
+                                @if (compMF.UseQty2 == true)
+                                {
+                                    if (CActive.ClientNo == 335)
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(442)</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(72)</th>
+                                    }
+                                }
+                                else
+                                {
+                                    <th hidden>@Html.Recource(72)</th>
+                                }
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <th style="text-align: center;" colspan="3">@Html.Translate("الاجمالي", "Total")</th>
+                                <th style="text-align:center;" id="vTotalQty1">0</th>
+                                @if (compMF.UseQty2 == true)
+                                {
+                                    <th style="text-align:center;" id="vTotalQty2">0</th>
+                                }
+                                else
+                                {
+                                    <th hidden id="vTotalQty2">0</th>
+                                }
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                        <tbody style="text-align: center;" id="ViewPaymentOrdDFTBody">
+                            @foreach (Ord_VoucIssueDF DF in VoucIssueDF)
+                            {
+                                string ItemDesc = Mf.Where(x => x.ItemNo == DF.ItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                                string UnitSerial = DF.UnitSerial.Value.ToString();
+
+                                <tr id="ViewOrderItems_Serial_@Srial">
+                                    <td style="width: 10%; word-wrap: break-word; white-space: normal;" id="ViewOrderItems_ItemNo">@DF.ItemNo</td>
+                                    <td style="width: 35%; word-wrap: break-word; white-space: normal;">@ItemDesc</td>
+                                    <td style="text-align: center; width: 10%;">
+                                        <select style="width:100%" class="ViewOrderItems_Unit" disabled>
+                                            @{
+                                                using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                                {
+                                                    Dt = new DataTable();
+                                                    cn.Open();
+                                                    using (SqlCommand cmd = new SqlCommand())
+                                                    {
+                                                        cmd.Connection = cn;
+                                                        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                                        cmd.CommandText = "InvT_LoadItemUnits";
+                                                        cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                                        cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = DF.ItemNo;
+                                                        using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                                        {
+                                                            DA.Fill(Dt);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            @foreach (DataRow row in Dt.Rows)
+                                            {
+                                                if (UnitSerial == row["UnitSerial"].ToString())
+                                                {
+                                                    <option value="@row["UnitSerial"].ToString()" selected>
+                                                        @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                    </option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@row["UnitSerial"].ToString()">
+                                                        @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                    </option>
+                                                }
+                                            }
+                                        </select>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <input id="ViewOrderItems_Qty_@Srial" value="@DF.Qty" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <td style="text-align: center;">
+                                            <input id="ViewOrderItems_Qty2_@Srial" value="@DF.Qty2" type="number" style="width:75px !important" disabled />
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td style="text-align: center;" hidden>
+                                            <input id="ViewOrderItems_Qty2_@Srial" value="@DF.Qty2" type="number" style="width:75px !important" disabled />
+                                        </td>
+                                    }
+                                <td>
+                                    <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                                </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*-----------------------------Model PaymentOrd_Documents-------------------------------------*@
+<div class="modal fade" id="Model_ViewPaymentOrd_DocumentsArchive">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أرشفة الوثائق", "Archive Documents")</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="VPaymentOrd_DocumentArchiveTable">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(66)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5629)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5630)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5631)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5632)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5633)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="VPaymentOrd_DocumentArchiveTbody" style="border-top: 1px solid #ddd;">
+                                @foreach (DataRow row in DtAttachment.Rows)
+                                {
+                                    DateTime date = Convert.ToDateTime(row["DataUpload"].ToString());
+                                    <tr id="ePaymentOrd_DocumentArchive_@Count">
+                                        <td>
+                                            <input  type="hidden" value="@Count" />
+                                        </td>
+                                        <td>
+                                            <input type="text" style="width: 115px !important; text-align: center !important" id="ePaymentOrd_DocumentArchive_Description_@Count" value="@row["Description"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <a  onclick="DownloadFile('@row["FileName"].ToString()','@Convert.ToBase64String((byte[])row["ArchiveData"])')"><span class="glyphicon glyphicon-download"></span></a>
+                                        </td>
+                                        <td>
+                                            <input type="text" style="text-align: center !important" value="@row["FileName"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input type="text" style="width: 95px; text-align: center !important" value="@date.ToShortDateString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input type="text" style="width: 70px; text-align: center !important" value="@row["FileSize"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input type="text" style="width: 55px; text-align: center !important" value="@row["ContentType"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input type="hidden" id="InputSerial" value="@(Count++)" />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="VPaymentOrdDocumentArchive()" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var DocumentsArchiveValue = 0;
+    var Count = 0;
+    $('#Model_ViewPaymentOrd_DocumentsArchive').draggable({
+        handle: ".modal-header",
+    });
+    function ViewPaymentOrdDocuments(val) {
+        DocumentsArchiveValue = val;
+        $('#Model_ViewPaymentOrd_DocumentsArchive').modal('show')
+    }
+    function DownloadFile(FileName, base64) {
+        var binaryString = window.atob(base64);
+        var binaryLen = binaryString.length;
+        var bytes = new Uint8Array(binaryLen);
+        for (var i = 0; i < binaryLen; i++) {
+            var ascii = binaryString.charCodeAt(i);
+            bytes[i] = ascii;
+        }
+        saveByteArray(FileName, bytes)
+    }
+    function saveByteArray(reportName, byte) {
+        var blob = new Blob([byte], { type: "application/pdf" });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        var fileName = reportName;
+        link.download = fileName;
+        link.click();
+    }
+    function VPaymentOrdDocumentArchive() {
+        $('#Model_ViewPaymentOrd_DocumentsArchive').modal('hide')
+    }
+</script>
+@*--------------------------------END Model PaymentOrd_Documents -----------------------------*@
+
+
+<script>
+    $('#Ord_VPaymentOrder_CboDocType').select2();
+    $('#Ord_VPaymentOrder_CboStoreNo').select2();
+    $('.ViewOrderItems_Unit').select2();
+    SumTotalQty()
+    function SumTotalQty() {
+        var table = $('#ViewPaymentOrdDFTBody tr');
+        var trs = table;
+        var TotalQty = 0
+        var TotalQty2 = 0
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value
+            TotalQty += Number($(trs[i]).closest('tr').find('#ViewOrderItems_Qty_' + InputSerial)[0].value);
+            TotalQty2 += Number($(trs[i]).closest('tr').find('#ViewOrderItems_Qty2_' + InputSerial)[0].value);
+        }
+
+        $('#vTotalQty1').html(Number(TotalQty).toFixed(3));
+        $('#vTotalQty2').html(Number(TotalQty2).toFixed(3));
+    }
+</script>

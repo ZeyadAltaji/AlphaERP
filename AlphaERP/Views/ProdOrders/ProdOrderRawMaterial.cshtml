@@ -1,0 +1,172 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    string date = DateTime.Now.ToString("yyyy-MM-dd");
+    List<InvUnitCode> UC = new MDB().InvUnitCodes.Where(x => x.CompNo == company.comp_num).ToList();
+    List<ProdCost_Parameter> lProdCost = new MDB().ProdCost_Parameters.Where(x => x.CompNo == company.comp_num && x.ParmID == 1).ToList();
+
+    List<BusunisUnit> BU = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("SELECT  Alpha_BusinessUnitDef.BusUnitID as Id, BusUnitDescAr as DescAr,BusUnitDescEng as DescEn  " +
+  "from Alpha_BusinessUnitDef INNER Join Alpha_BusinessUnitUsers ON Alpha_BusinessUnitDef.CompNo = Alpha_BusinessUnitUsers.CompNo AND Alpha_BusinessUnitDef.BusUnitID = Alpha_BusinessUnitUsers.BusUnitID " +
+  "where Alpha_BusinessUnitUsers.CompNo = '{0}' AND Alpha_BusinessUnitUsers.UserID = '{1}' AND Permission = 1 AND (Alpha_BusinessUnitUsers.BusUnitID In " +
+  "(Select distinct BU from Alpha_WorkFlowSetUP where Alpha_WorkFlowSetUP.CompNo = '{0}' AND Alpha_WorkFlowSetUP.FID = 14))", company.comp_num, me.UserID)).ToList();
+}
+<style>
+    .GroupTitle {
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        background-color: lightblue;
+    }
+</style>
+
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_OrderYear">@Html.Recource(2063) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <input value="@DateTime.Now.Year" required="false" type="number" id="Prod_ProdOrder_Add_OrderYear" placeholder="@Html.Recource(2063)" />
+    </div>
+
+    <div class="col-md-2">
+        <label class="unselectable" style="text-align: center;" for="Prod_ProdOrder_Add_OrderNo">@Html.Recource(8610) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <input required="false" type="number" style="width: 120px;" disabled id="Prod_ProdOrder_Add_OrderNo" placeholder="@Html.Recource(8610)" />
+    </div>
+
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_OrderDate">@Html.Recource(2065)</label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <input value="@DateTime.Now.ToString("yyyy-MM-dd")" required="false" type="date" id="Prod_ProdOrder_Add_OrderDate" placeholder="@Html.Recource(2065)" />
+    </div>
+
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_formulacode">@Html.Recource(4286) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <input required="true" type="text" id="Prod_ProdOrder_Add_formulacode" placeholder="@Html.Recource(282)" />
+    </div>
+    <div class="col-md-6" style="margin-bottom: 5px;">
+        <input style="width: 105%;" required="true" type="text" id="Prod_ProdOrder_Add_formulaDesc" disabled placeholder="@Html.Recource(360)" />
+    </div>
+    <div class="col-md-1">
+        <button style="width: 146%;" type="button" class="btn btn-success btn-block" onclick="SearchProdOrder_FormulaCode()">
+            @Html.Recource(975)
+        </button>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_ItemNo">@Html.Recource(306) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <input required="true" type="text" id="Prod_ProdOrder_Add_ItemNo" placeholder="@Html.Recource(4276)" disabled />
+    </div>
+    <div class="col-md-4" style="margin-bottom: 5px;">
+        <input required="true" style="width: 105%;" type="text" id="Prod_ProdOrder_Add_ItemDesc" placeholder="@Html.Recource(5495)" disabled />
+    </div>
+    <div class="col-md-1">
+        <label class="unselectable" for="Prod_ProdOrder_Add_UnitCode">@Html.Recource(67) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <input required="true" style="width: 80%;" type="text" id="Prod_ProdOrder_Add_UnitCode" placeholder="@Html.Recource(67)" disabled />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-1">
+        <label class="unselectable" for="Prod_ProdOrder_Add_Qty">@Html.Recource(49) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <input required="true" type="number" id="Prod_ProdOrder_Add_Qty" placeholder="@Html.Recource(49)" onblur="GetValueRMByQty()" />
+    </div>
+    <div class="col-md-1">
+        <label class="unselectable" for="Prod_ProdOrder_Add_WastQty">@Html.Recource(4405) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <input type="text" id="Prod_ProdOrder_Add_WastQty" placeholder="@Html.Recource(4405)" />
+    </div>
+
+    <div class="col-md-1" style="margin-bottom: 5px;">
+        <label class="unselectable" for="Prod_ProdOrder_Add_SQ">@Html.Recource(9255) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <input type="text" id="Prod_ProdOrder_Add_SQ" placeholder="@Html.Recource(9255)" disabled />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-1">
+        <label class="unselectable" for="Prod_ProdOrder_Add_StoreNo">@Html.Recource(1) </label>
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <input required="true" type="text" style="width: 126%;" id="Prod_ProdOrder_Add_StoreNo" placeholder="@Html.Recource(41)" onblur="GetStoreDesc()" />
+    </div>
+    <div class="col-md-5" style="margin-bottom: 5px;">
+        <input style="width: 105%;" required="true" type="text" id="Prod_ProdOrder_Add_StoreDesc" disabled placeholder="@Html.Recource(31)" />
+    </div>
+    <div class="col-md-3" style="margin-bottom: 5px;">
+        <button type="button" class="btn btn-success btn-block" onclick="SearchProdOrder_StoreNo()">
+            @Html.Recource(1)
+        </button>
+    </div>
+
+</div>
+<div class="form-group">
+    <div class="col-md-1">
+        <label class="unselectable" for="Prod_ProdOrder_Add_SalesOrder">@Html.Recource(241) </label>
+    </div>
+    <div class="col-md-1" style="margin-bottom: 5px;">
+        <input value="@DateTime.Now.Year" required="false" style="width: 126%;" type="number" id="Prod_ProdOrder_Add_SalesOrderYear" placeholder="@Html.Recource(204)" />
+    </div>
+
+    <div class="col-md-1" style="margin-bottom: 5px;">
+        <input style="width: 105%;" required="true" type="text" id="Prod_ProdOrder_Add_SalesOrderNo" placeholder="@Html.Recource(205)" />
+    </div>
+    <div class="col-md-1" style="margin-bottom: 5px;">
+        <button style="width: 146%;" type="button" class="btn btn-success btn-block" onclick="SearchProdOrder_SalesOrder()">
+            @Html.Recource(6377)
+        </button>
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_BusUnitID">@Html.Recource(5667)</label>
+    </div>
+    <div class="col-md-4" style="margin-bottom: 5px;">
+        <select style="width:100%" id="Prod_ProdOrder_Add_BusUnitID" required="true">
+            @foreach (var item in BU)
+            {
+                <option value="@item.Id">@Html.Translate(item.DescAr, item.DescEn) </option>
+            }
+        </select>
+    </div>
+
+</div>
+
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_Year"> @Html.Recource(5327)</label>
+    </div>
+    <div class="col-md-1" style="margin-bottom: 5px;">
+        <input value="@DateTime.Now.Year" required="false" style="width: 126%;" type="number" id="Prod_ProdOrder_Add_Year" />
+    </div>
+    <div class="col-md-1" style="margin-bottom: 5px;">
+        <input value="@DateTime.Now.Month" required="false" style="width: 126%;" type="number" id="Prod_ProdOrder_Add_Month" />
+    </div>
+</div>
+
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Add_Notes"> @Html.Recource(70)</label>
+    </div>
+    <div class="col-md-10" style="margin-bottom: 5px;">
+        <textarea style="width: 100%;height:55px !important;" id="Prod_ProdOrder_Add_Notes" placeholder="@Html.Recource(70)" disabled></textarea>
+    </div>
+</div>
+<script>
+    $('#Prod_ProdOrder_Add_BusUnitID').select2();
+</script>
+
+

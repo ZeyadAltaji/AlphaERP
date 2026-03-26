@@ -1,0 +1,121 @@
+﻿@model IEnumerable<AlphaERP.Models.InvItemsMF>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    int StoreNo = ViewBag.StoreNo;
+    int srl = ViewBag.srl;
+}
+
+
+
+<div class="modal-body row">
+    <div class="form-group">
+        <div class="col-md-12">
+            <table class="table table-hover" id="SelectPaymentOrdItemTable_@srl">
+                <thead>
+                    <tr>
+                        <th style="width: 20% !important; text-align: center;">@Html.Recource(44)</th>
+                        <th style="width: 30% !important; text-align: center;">@Html.Recource(74)</th>
+                        <th style="width: 10% !important; text-align: center;">@Html.Recource(96)</th>
+                        <th style="text-align: center;">@Html.Recource(312)</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int Comp_num = company.comp_num;
+                        string query = string.Format("exec SP_Search {0},'WHERE (InvSItemsMF.CompNo = {0}) AND (StoreNo = {1}) AND (IsHalt = 0)',5", Comp_num, StoreNo);
+                        using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                        {
+                            SqlCommand cmd = new SqlCommand(query, cn);
+                            cn.Open();
+                            SqlDataReader rdr = cmd.ExecuteReader();
+                            if (rdr.HasRows)
+                            {
+                                while (rdr.Read())
+                                {
+                                    string ItemDesc = rdr["ItemDesc"].ToString();
+                                    string ItemDescEn = rdr["ItemDesc_Ara"].ToString();
+                                    string Desc = Html.Translate(ItemDesc, ItemDescEn).ToString();
+                                    <tr onclick="$(this).toggleClass('selected');">
+                                        <td style="width: 20%; text-align: center;" id="ItemNo">@rdr["ItemNo"]</td>
+                                        <td style="width: 30%; text-align: center;" id="ItemDesca" title="@Desc">@Html.Trim(Desc, 50)</td>
+                                        <td style="width: 10%;text-align: center;">@rdr["RefrenceNo"]</td>
+                                        <td style="text-align: center !important;">@rdr["BarCode"]</td>
+                                        <td></td>
+                                    </tr>
+                                }
+                            }
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" onclick="Selecting_PaymentOrd_InvItemsMF(@srl)" class="btn btn-primary">@Html.Recource(4599)</button>
+    <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+</div>
+
+<script>
+
+    var Items = $('#SelectPaymentOrdItemTable_' + @srl).DataTable({
+        "scrollY": TableHeight2(350),
+        "paging": true,
+        "pageLength": 25,
+        "scrollX": true,
+        "autoWidth": false
+    });
+
+    function Selecting_PaymentOrd_InvItemsMF(id) {
+        var data = Items.rows('.selected').data();
+
+        if (data.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة واحدة على الاقل", "Select one item at least")');
+            return;
+        }
+        if (frmSatus == 1) {
+            if (itemType == 1) {
+                var table_ = $("#PaymentOrdDFTBody_" + id);
+                var item = new Array();
+                for (var i = 0; i < data.length; i++) {
+                    var Added = false;
+                    if (table_.find("tr").length != 0) {
+                        table_.find("tr").each(function () {
+                            var ItemNo_ = $(this).find("td:first-child").text();
+                            if (ItemNo_ == data[i][0]) {
+                                Added = true;
+                                return false;
+                            }
+                            else {
+                                Added = false;
+                            }
+                        });
+                        if (!Added) {
+                            item.push({
+                                ItemNo: data[i][0],
+                                ItemDesc: data[i][1]
+                            });
+                        }
+                    }
+                    else {
+                        item.push({
+                            ItemNo: data[i][0],
+                            ItemDesc: data[i][1]
+                        });
+                    }
+                }
+                if (item.length != 0) {
+                    burn({ items: item, srl: table_.find("tr").length, id: id}, '../../../VoucIssue/ChoosePaymentOrdItems', '', LoadItemRawMaterial, true);
+                }
+                else {
+                    $('#Model_PaymentOrd_InvItemsMF_' + id).modal('hide')
+                }
+            }
+        }
+    }
+</script>

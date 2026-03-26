@@ -1,0 +1,914 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    int OrdYear = ViewBag.OrdYear;
+    int OrderNo = ViewBag.OrderNo;
+    string TawreedNo = ViewBag.TawreedNo;
+    string InboundSer = ViewBag.InboundSer;
+    string InboundGRN = ViewBag.InboundGRN;
+    string srl = ViewBag.srl;
+
+    Ord_InboundManagementHF InboundManagementHF = new MDB().Ord_InboundManagementHF.Where(x => x.CompNo == company.comp_num && x.OrderYear == OrdYear &&
+    x.OrderNo == OrderNo && x.TawreedNo == TawreedNo && x.InboundSer == InboundSer && x.InboundGRN == InboundGRN).FirstOrDefault();
+
+    List<Ord_InboundManagementDF> InboundManagementDF = new MDB().Ord_InboundManagementDF.Where(x => x.CompNo == company.comp_num
+    && x.OrderYear == OrdYear && x.OrderNo == OrderNo && x.TawreedNo == TawreedNo
+    && x.InboundSer == InboundSer && x.InboundGRN == InboundGRN).ToList();
+
+    List<InvItemsMF> Mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+    DataTable Dt = new DataTable();
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+    int Srial = 1;
+    InvStoresMF store = new MDB().InvStoresMFs.Where(x => x.CompNo == company.comp_num && x.StoreNo == InboundManagementHF.InboundGRNStoreNo).FirstOrDefault();
+}
+
+<style>
+
+    #VOrdVInboundManagement_DIV table th, #VOrdVInboundManagement_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+    .wrapperx {
+        padding:0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+
+    .sticky-col {
+        z-index:2;
+        position: sticky;
+        position: -webkit-sticky;
+        background-color: white;
+    }
+
+    .first-col {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        @Html.Translate("right: 0px;", "left: 0px;")
+    }
+
+    .second-col {
+        width: 80px;
+        min-width: 80px;
+        max-width: 80px;
+        @Html.Translate("right: 60px;", "left: 60px;")
+    }
+
+    .third-col {
+        width: 150px;
+        min-width: 150px;
+        max-width: 150px;
+        @Html.Translate("right: 125px;", "left: 125px;")
+    }
+
+    .four-col {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        @Html.Translate("right: 280px;", "left: 280px;")
+    }
+    .stickytooltip {
+        max-height: 80vh !important;
+        overflow: auto !important
+    }
+</style>
+
+<link href="~/Content/stickytooltip.css" rel="stylesheet" />
+<script src="~/Scripts/stickytooltip.js?s=15"></script>
+
+<style>
+    #VOrdInboundManagementDFTable span.badge {
+        border: none;
+        position: static;
+        z-index: 20 !important;
+        box-sizing: content-box;
+        visibility: visible;
+        z-index: 9999999999 !important;
+        padding: 1px;
+        font-family: Arial, verdana, tahoma;
+        font-size: 13px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        text-shadow: 1px 1px 1px rgba(0,0,0,.3);
+        background: #ff3019;
+        background: -webkit-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Chrome10+,Safari5.1+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff3019), color-stop(100%, #cf0404)); /* Chrome,Safari4+ */
+        background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* FF3.6+ */
+        background: -ms-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* IE10+ */
+        background: -o-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Opera 11.10+ */
+        background: linear-gradient(to bottom, #ff3019 0%, #cf0404 100%); /* W3C */
+        width: 18px;
+        height: 18px;
+        line-height: 20px;
+        border-radius: 50%;
+        filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff3019', endColorstr='#cf0404', GradientType=0)"; /* IE6-9 */
+        filter: "progid:DXImageTransform.Microsoft.Shadow(direction=135, strength=2, color=ff0000)"; /* IE10 text shadows */
+        box-shadow: 0 2px 5px rgba(0,0,0,.4);
+    }
+</style>
+
+<style>
+    .modal-title {
+        width: calc(100% - 120px) !important;
+        text-align: center;
+        position: absolute;
+        font-weight: bold;
+    }
+
+    .modal-body {
+        max-height: 78vh !important;
+    }
+</style>
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(100vh - 210px) !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_VVInboundManagement_OrdYear">@Html.Recource(3196) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="text" id="Ord_VVInboundManagement_OrdYear_@srl" value="@OrdYear" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_VVInboundManagement_OrderNo">@Html.Recource(3197) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:90px !important;" type="text" id="Ord_VVInboundManagement_OrderNo_@srl" value="@OrderNo" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_VVInboundManagement_TawreedNo">@Html.Recource(3797) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="text" id="Ord_VVInboundManagement_TawreedNo_@srl" value="@TawreedNo" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_VVInboundManagement_InboundSer">@Html.Translate("رقم الواردة", "Inbound No.") </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        @if (Session["language"].ToString() == "en")
+                        {
+                            <input required="false" style="width: 120px !important; direction: ltr; text-align: left;" type="text" id="Ord_VVInboundManagement_InboundSer_@srl" value="@InboundSer" disabled />
+                        }
+                        else
+                        {
+                            <input required="false" style="width: 120px !important; direction: ltr; text-align: right;" type="text" id="Ord_VVInboundManagement_InboundSer_@srl" value="@InboundSer" disabled />
+                        }
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_VVInboundManagement_ReceiptNo">@Html.Recource(3229)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        @if (Session["language"].ToString() == "en")
+                        {
+                            <input required="false" style="width: 120px !important; direction: ltr; text-align: left;" type="text" id="Ord_VVInboundManagement_ReceiptNo_@srl" value="@InboundGRN" disabled />
+                        }
+                        else
+                        {
+                            <input required="false" style="width: 120px !important; direction: ltr; text-align: right;" type="text" id="Ord_VVInboundManagement_ReceiptNo_@srl" value="@InboundGRN" disabled />
+                        }
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_VVInboundManagement_InboundGRNDate">@Html.Recource(206)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="date" id="Ord_VVInboundManagement_InboundGRNDate_@srl" value="@InboundManagementHF.InboundGRNDate.Value.ToString("yyyy-MM-dd")" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_VVInboundManagement_StoreNo">@Html.Recource(1)</label>
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <input hidden type="text" id="Ord_VVInboundManagement_StoreNo_@srl" value="@InboundManagementHF.InboundGRNStoreNo" />
+                        <input required="false" style="width: 100% !important;" type="text" id="Ord_VVInboundManagement_StoreName_@srl" value="@Html.Translate(store.StoreName, store.StoreNameEng)" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_VInboundManagement_InvoiceNo">@Html.Recource(3231)</label>
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 100% !important;" type="text" id="Ord_VInboundManagement_InvoiceNo_@srl" value="@InboundManagementHF.InvNo" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_VVInboundManagement_Notes">@Html.Recource(70)</label>
+                    </div>
+                    <div class="col-md-6">
+                        <textarea required="true" style="width: 96%; height: 25px !important; " id="Ord_VVInboundManagement_Notes_@srl">@InboundManagementHF.InboundGRNNotes</textarea>
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="Ord_VVInboundManagement_Marketing_@srl">
+                            <input name="Ord_VVInboundManagement_Marketing" type="checkbox" id="Ord_VVInboundManagement_Marketing_@srl" checked="@InboundManagementHF.IsMarketing" />
+                            @Html.Translate("تسويق", "Marketing")
+                        </label>
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="Ord_VVInboundManagement_tqm_@srl">
+                            <input name="Ord_VVInboundManagement_tqm" type="checkbox" id="Ord_VVInboundManagement_tqm_@srl" checked="@InboundManagementHF.Istqm" />
+                            @Html.Translate("tqm", "tqm")
+                        </label>
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="Ord_VVInboundManagement_QualityControl_@srl">
+                            <input name="Ord_VVInboundManagement_QualityControl" type="checkbox" id="Ord_VVInboundManagement_QualityControl_@srl" checked="@InboundManagementHF.IsQualityControl" />
+                            @Html.Translate("فحص الجودة", "Quality Control")
+                        </label>
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="Ord_VInboundManagement_Production_@srl">
+                            <input name="Ord_VInboundManagement_Production" type="checkbox" id="Ord_VInboundManagement_Production_@srl" checked="@InboundManagementHF.IsProduction" />
+                            @Html.Translate("الانتاج", "Production")
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group" style="display: block; height: 125px;">
+                <div class="col-md-12 wrapperx" id="VOrdVInboundManagement_DIV">
+                    <table class="table table-hover VOrdInboundManagementDF_Info" id="VOrdInboundManagementDFTable">
+                        @if (compMF.UseQty2 == true)
+                        {
+                            if (Session["language"].ToString() == "en")
+                            {
+                                <thead style="background-color: lightblue">
+                                    <tr>
+                                        <th colspan="5" style="text-align: center; width: 350px; border-right: 1px solid;">@Html.Translate("المواد", "Items")</th>
+                                        <th colspan="4" style="text-align: center; width: 350px;border-right: 1px solid;">@Html.Translate("المعلومات الوارده", "Inbounds Info")</th>
+                                        <th colspan="5" style="text-align: center; width: 350px;border-right: 1px solid;">@Html.Translate("معلومات محضر الاستلام", "Goods Receipt Information")</th>
+                                        <th colspan="2" style="text-align: center; width: 350px;">@Html.Translate("الفروقات", "Differences")</th>
+                                    </tr>
+                                </thead>
+                            }
+                            else
+                            {
+                                <thead style="background-color: lightblue">
+                                    <tr>
+                                        <th colspan="5" style="text-align: center; width: 350px; border-left: 1px solid;">@Html.Translate("المواد", "Items")</th>
+                                        <th colspan="4" style="text-align: center; width: 350px; border-left: 1px solid;">@Html.Translate("المعلومات الوارده", "Inbounds Info")</th>
+                                        <th colspan="5" style="text-align: center; width: 350px; border-left: 1px solid;">@Html.Translate("معلومات محضر الاستلام", "Goods Receipt Information")</th>
+                                        <th colspan="2" style="text-align: center; width: 350px;">@Html.Translate("الفروقات", "Differences")</th>
+                                    </tr>
+                                </thead>
+                            }
+                        }
+                        else
+                        {
+                            if (Session["language"].ToString() == "en")
+                            {
+                                <thead style="background-color: lightblue">
+                                    <tr>
+                                        <th colspan="5" style="text-align: center; width: 350px; border-right: 1px solid;">@Html.Translate("المواد", "Items")</th>
+                                        <th colspan="3" style="text-align: center; width: 350px;border-right: 1px solid;">@Html.Translate("المعلومات الوارده", "Inbounds Info")</th>
+                                        <th colspan="4" style="text-align: center; width: 350px;border-right: 1px solid;">@Html.Translate("معلومات محضر الاستلام", "Goods Receipt Information")</th>
+                                        <th colspan="1" style="text-align: center; width: 350px;">@Html.Translate("الفروقات", "Differences")</th>
+                                    </tr>
+                                </thead>
+                            }
+                            else
+                            {
+                                <thead style="background-color: lightblue">
+                                    <tr>
+                                        <th colspan="5" style="text-align: center; width: 350px; border-left: 1px solid;">@Html.Translate("المواد", "Items")</th>
+                                        <th colspan="3" style="text-align: center; width: 350px; border-left: 1px solid;">@Html.Translate("المعلومات الوارده", "Inbounds Info")</th>
+                                        <th colspan="4" style="text-align: center; width: 350px; border-left: 1px solid;">@Html.Translate("معلومات محضر الاستلام", "Goods Receipt Information")</th>
+                                        <th colspan="1" style="text-align: center; width: 350px;">@Html.Translate("الفروقات", "Differences")</th>
+                                    </tr>
+                                </thead>
+                            }
+                        }
+                        @if (Session["language"].ToString() == "en")
+                        {
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center; width: 350px; word-wrap: break-word; white-space: normal;">@Html.Recource(44)</th>
+                                    <th style="text-align: center; width: 990px; word-wrap: break-word; white-space: normal;">@Html.Recource(74)</th>
+                                    <th style="width: 205px; text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(45)</th>
+                                    <th style="width: 205px; text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(46)</th>
+                                    <th style="width: 205px; text-align: center !important; word-wrap: break-word; white-space: normal;border-right: 1px solid;">@Html.Recource(976)</th>
+                                    <th style="width: 205px; word-wrap: break-word; white-space: normal;">@Html.Recource(67)</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(49)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(3200)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal; border-right: 1px solid;">@Html.Recource(72)</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(49)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;border-right: 1px solid;">@Html.Recource(3200)</th>
+                                        <th hidden>@Html.Recource(72)</th>
+                                    }
+                                    <th style="width: 205px; word-wrap: break-word; white-space: normal;">@Html.Recource(67)</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(49)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(3200)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(72)</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(49)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(3200)</th>
+                                        <th hidden>@Html.Recource(72)</th>
+                                    }
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal; border-right: 1px solid;">@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</th>
+                                    <th style="text-align: center !important; width: 165px;">@Html.Translate("فرق 1", "difference 1")</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="text-align: center !important; width: 165px;">@Html.Translate("فرق 2", "difference 2")</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="text-align: center !important; width: 165px;" hidden>@Html.Translate("فرق 2", "difference 2")</th>
+                                    }
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tfoot>
+                                <tr>
+                                    <th style="text-align: center; border-right: 1px solid;" colspan="5">@Html.Translate("الاجمالي", "Total")</th>
+                                    <th></th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="text-align:center;" id="VTotalInboundQty1_@srl">0</th>
+                                        <th style="text-align:center;" id="VTotalInboundBounsQty_@srl">0</th>
+                                        <th style="text-align: center; border-right: 1px solid;" id="VTotalInboundQty2_@srl">0</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="text-align: center;" id="VTotalInboundQty1_@srl">0</th>
+                                        <th style="text-align:center;border-right: 1px solid;" id="VTotalInboundBounsQty_@srl">0</th>
+                                        <th hidden id="VTotalInboundQty2_@srl">0</th>
+                                    }
+                                    <th></th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="text-align:center;" id="VTotalInboundGRNQty1_@srl">0</th>
+                                        <th style="text-align:center;" id="VTotalInboundGRNBounsQty_@srl">0</th>
+                                        <th style="text-align: center;" id="VTotalInboundGRNQty2_@srl">0</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="text-align: center;" id="VTotalInboundGRNQty1_@srl">0</th>
+                                        <th style="text-align:center;" id="VTotalInboundGRNBounsQty_@srl">0</th>
+                                        <th hidden id="VTotalInboundGRNQty2_@srl">0</th>
+                                    }
+                                    <th style="text-align: center; border-right: 1px solid;"></th>
+                                    <th style="text-align: center !important;" id="VTotalInboundDifferenceQty1_@srl">0</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="text-align: center !important;" id="VTotalInboundDifferenceQty2_@srl">0</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="text-align: center !important;" id="VTotalInboundDifferenceQty2_@srl" hidden>0</th>
+                                    }
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                            <tbody style="text-align: center;" id="VOrdInboundManagementTBody_@srl">
+                                @foreach (Ord_InboundManagementDF DF in InboundManagementDF)
+                                {
+                                    string ItemDesc = Mf.Where(x => x.ItemNo == DF.ItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                                    string UnitSerial = DF.UnitSerial.Value.ToString();
+                                    string UnitSerialGRN = DF.InboundGRNUnitSerial.Value.ToString();
+
+                                    <tr style="height: 25px;" id="VInboundManagement_@Srial">
+                                        <td class="second-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="VInboundManagement_ItemNo_@Srial">@DF.ItemNo</td>
+                                        <td class="third-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="VInboundManagement_ItemDesc">@ItemDesc</td>
+                                        <td style="text-align: center; width: 10%;">
+                                            <input id="VInboundManagement_Batch_@Srial" value="@DF.batchNo" type="text" style="width: 115px !important;" disabled />
+                                        </td>
+                                        <td style="width: 45%;text-align: center;">
+                                            <input style="width: 115px !important;" type="date" id="vInboundManagement_ManfDate_@Srial" value="@DF.ManfDate.Value.ToString("yyyy-MM-dd")" />
+                                        </td>
+                                        <td style="width: 45%;text-align: center;border-right: 1px solid;">
+                                            <input style="width: 115px !important;" type="date" id="vInboundManagement_EndDate_@Srial" value="@DF.EndDate.Value.ToString("yyyy-MM-dd")" />
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <select class="VInboundManagement_ItemNo_Unit" disabled>
+                                                @{
+                                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                                    {
+                                                        Dt = new DataTable();
+                                                        cn.Open();
+                                                        using (SqlCommand cmd = new SqlCommand())
+                                                        {
+                                                            cmd.Connection = cn;
+                                                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                                            cmd.CommandText = "InvT_LoadItemUnits";
+                                                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                                            cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = DF.ItemNo;
+                                                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                                            {
+                                                                DA.Fill(Dt);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                @foreach (DataRow row in Dt.Rows)
+                                                {
+                                                    if (UnitSerial == row["UnitSerial"].ToString())
+                                                    {
+                                                        <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()" selected>
+                                                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                        </option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()">
+                                                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                        </option>
+                                                    }
+                                                }
+                                            </select>
+                                        </td>
+                                        @if (compMF.UseQty2 == true)
+                                        {
+                                            <td style="text-align:center !important">
+                                                <input id="VInboundManagement_Qty_@Srial" value="@DF.Qty" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            <td style="text-align:center !important">
+                                                <input id="VInboundManagement_BounsQty_@Srial" value="@DF.BounsQty" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            <td style="text-align: center !important; border-right: 1px solid;">
+                                                <input id="VInboundManagement_Qty2_@Srial" value="@DF.Qty2" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td style="text-align: center !important;">
+                                                <input id="VInboundManagement_Qty_@Srial" value="@DF.Qty" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            <td style="text-align:center !important;border-right: 1px solid;">
+                                                <input id="VInboundManagement_BounsQty_@Srial" value="@DF.BounsQty" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            <td style="text-align:center !important" hidden>
+                                                <input id="VInboundManagement_Qty2_@Srial" value="@DF.Qty2" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                        }
+                                        <td style="text-align: center;">
+                                            <select class="VInboundManagement_ItemNo_GRNUnit" disabled>
+                                                @{
+                                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                                    {
+                                                        Dt = new DataTable();
+                                                        cn.Open();
+                                                        using (SqlCommand cmd = new SqlCommand())
+                                                        {
+                                                            cmd.Connection = cn;
+                                                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                                            cmd.CommandText = "InvT_LoadItemUnits";
+                                                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                                            cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = DF.ItemNo;
+                                                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                                            {
+                                                                DA.Fill(Dt);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                @foreach (DataRow row in Dt.Rows)
+                                                {
+                                                    if (UnitSerialGRN == row["UnitSerial"].ToString())
+                                                    {
+                                                        <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()" selected>
+                                                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                        </option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()">
+                                                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                        </option>
+                                                    }
+                                                }
+                                            </select>
+                                        </td>
+                                        @if (compMF.UseQty2 == true)
+                                        {
+                                            <td style="text-align:center !important">
+                                                <input id="VInboundManagement_GRNQty_@Srial" value="@DF.InboundGRNQty" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            <td style="text-align:center !important">
+                                                <input id="VInboundManagement_GRNBounsQty_@Srial" value="@DF.InboundGRNBounsQty" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            <td style="text-align: center !important;">
+                                                <input id="VInboundManagement_GRNQty2_@Srial" value="@DF.InboundGRNQty2" type="number" style="width:75px !important"disabled />
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td style="text-align: center !important;">
+                                                <input id="VInboundManagement_GRNQty_@Srial" value="@DF.InboundGRNQty" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            <td style="text-align:center !important">
+                                                <input id="VInboundManagement_GRNBounsQty_@Srial" value="@DF.InboundGRNBounsQty" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            <td style="text-align:center !important" hidden>
+                                                <input id="VInboundManagement_GRNQty2_@Srial" value="@DF.InboundGRNQty2" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                        }
+                                        <td style="width: 45%;text-align: center;border-right: 1px solid;">
+                                            <input style="width: 115px !important;" type="date" id="vInboundManagement_ReqDeliveryDate_@Srial" value="@DF.ReqDeliveryDate.Value.ToString("yyyy-MM-dd")" />
+                                        </td>
+                                        <td style="text-align:center !important">
+                                            <input id="VInboundManagement_GRNDifference1_@Srial" value="0" type="number" style="width: 75px !important; text-align: center;" disabled />
+                                        </td>
+                                        @if (compMF.UseQty2 == true)
+                                        {
+                                            <td style="text-align:center !important">
+                                                <input id="VInboundManagement_GRNDifference2_@Srial" value="0" type="number" style="width: 75px !important; text-align: center;" disabled />
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td style="text-align:center !important" hidden>
+                                                <input id="VInboundManagement_GRNDifference2_@Srial" value="0" type="number" style="width: 75px !important; text-align: center;" disabled />
+                                            </td>
+                                        }
+                                        <td>
+                                            <input type="hidden" id="VInboundManagement_ItemSrl" value="@Srial" />
+                                            <input type="hidden" id="VInputSerial" value="@(Srial++)" />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        }
+                        else
+                        {
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center; width: 350px; word-wrap: break-word; white-space: normal;">@Html.Recource(44)</th>
+                                    <th style="text-align: center; width: 990px; word-wrap: break-word; white-space: normal;">@Html.Recource(74)</th>
+                                    <th style="width: 205px; text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(45)</th>
+                                    <th style="width: 205px; text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(46)</th>
+                                    <th style="width: 205px; text-align: center !important; word-wrap: break-word; white-space: normal;border-left: 1px solid;">@Html.Recource(976)</th>
+                                    <th style="width: 205px; word-wrap: break-word; white-space: normal;">@Html.Recource(67)</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(49)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(3200)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal; border-left: 1px solid;">@Html.Recource(72)</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(49)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;border-left: 1px solid;">@Html.Recource(3200)</th>
+                                        <th hidden>@Html.Recource(72)</th>
+                                    }
+                                    <th style="width: 205px; word-wrap: break-word; white-space: normal;">@Html.Recource(67)</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(49)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(3200)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(72)</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(49)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(3200)</th>
+                                        <th hidden>@Html.Recource(72)</th>
+                                    }
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal; border-left: 1px solid;">@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</th>
+                                    <th style="text-align: center !important; width: 165px;">@Html.Translate("فرق 1", "difference 1")</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="text-align: center !important; width: 165px;">@Html.Translate("فرق 2", "difference 2")</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="text-align: center !important; width: 165px;" hidden>@Html.Translate("فرق 2", "difference 2")</th>
+                                    }
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tfoot>
+                                <tr>
+                                    <th style="text-align: center; border-left: 1px solid;" colspan="5">@Html.Translate("الاجمالي", "Total")</th>
+                                    <th></th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="text-align:center;" id="VTotalInboundQty1_@srl">0</th>
+                                        <th style="text-align:center;" id="VTotalInboundBounsQty_@srl">0</th>
+                                        <th style="text-align: center; border-left: 1px solid;" id="VTotalInboundQty2_@srl">0</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="text-align: center;" id="VTotalInboundQty1_@srl">0</th>
+                                        <th style="text-align:center;border-left: 1px solid;" id="VTotalInboundBounsQty_@srl">0</th>
+                                        <th hidden id="VTotalInboundQty2_@srl">0</th>
+                                    }
+                                    <th></th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="text-align:center;" id="VTotalInboundGRNQty1_@srl">0</th>
+                                        <th style="text-align:center;" id="VTotalInboundGRNBounsQty_@srl">0</th>
+                                        <th style="text-align: center;" id="VTotalInboundGRNQty2_@srl">0</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="text-align: center;" id="VTotalInboundGRNQty1_@srl">0</th>
+                                        <th style="text-align:center;" id="VTotalInboundGRNBounsQty_@srl">0</th>
+                                        <th hidden id="VTotalInboundGRNQty2_@srl">0</th>
+                                    }
+                                    <th style="text-align: center; border-left: 1px solid;"></th>
+                                    <th style="text-align: center !important;" id="VTotalInboundDifferenceQty1_@srl">0</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="text-align: center !important;" id="VTotalInboundDifferenceQty2_@srl">0</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="text-align: center !important;" id="VTotalInboundDifferenceQty2_@srl" hidden>0</th>
+                                    }
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                            <tbody style="text-align: center;" id="VOrdInboundManagementTBody_@srl">
+                                @foreach (Ord_InboundManagementDF DF in InboundManagementDF)
+                                {
+                                    string ItemDesc = Mf.Where(x => x.ItemNo == DF.ItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                                    string UnitSerial = DF.UnitSerial.Value.ToString();
+                                    string UnitSerialGRN = DF.InboundGRNUnitSerial.Value.ToString();
+
+                                    <tr style="height: 25px;" id="VInboundManagement_@Srial">
+                                        <td class="second-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="VInboundManagement_ItemNo_@Srial">@DF.ItemNo</td>
+                                        <td class="third-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="VInboundManagement_ItemDesc">@ItemDesc</td>
+                                        <td style="text-align: center; width: 10%;">
+                                            <input id="VInboundManagement_Batch_@Srial" value="@DF.batchNo" type="text" style="width: 115px !important;" disabled />
+                                        </td>
+                                        <td style="width: 45%;text-align: center;">
+                                            <input style="width: 115px !important;" type="date" id="vInboundManagement_ManfDate_@Srial" value="@DF.ManfDate.Value.ToString("yyyy-MM-dd")" />
+                                        </td>
+                                        <td style="width: 45%;text-align: center;border-left: 1px solid;">
+                                            <input style="width: 115px !important;" type="date" id="vInboundManagement_EndDate_@Srial" value="@DF.EndDate.Value.ToString("yyyy-MM-dd")" />
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <select class="VInboundManagement_ItemNo_Unit" disabled>
+                                                @{
+                                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                                    {
+                                                        Dt = new DataTable();
+                                                        cn.Open();
+                                                        using (SqlCommand cmd = new SqlCommand())
+                                                        {
+                                                            cmd.Connection = cn;
+                                                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                                            cmd.CommandText = "InvT_LoadItemUnits";
+                                                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                                            cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = DF.ItemNo;
+                                                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                                            {
+                                                                DA.Fill(Dt);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                @foreach (DataRow row in Dt.Rows)
+                                                {
+                                                    if (UnitSerial == row["UnitSerial"].ToString())
+                                                    {
+                                                        <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()" selected>
+                                                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                        </option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()">
+                                                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                        </option>
+                                                    }
+                                                }
+                                            </select>
+                                        </td>
+                                        @if (compMF.UseQty2 == true)
+                                        {
+                                            <td style="text-align:center !important">
+                                                <input id="VInboundManagement_Qty_@Srial" value="@DF.Qty" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            <td style="text-align:center !important">
+                                                <input id="VInboundManagement_BounsQty_@Srial" value="@DF.BounsQty" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            <td style="text-align: center !important; border-left: 1px solid;">
+                                                <input id="VInboundManagement_Qty2_@Srial" value="@DF.Qty2" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td style="text-align: center !important;">
+                                                <input id="VInboundManagement_Qty_@Srial" value="@DF.Qty" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            <td style="text-align:center !important; border-left: 1px solid;">
+                                                <input id="VInboundManagement_BounsQty_@Srial" value="@DF.BounsQty" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            <td style="text-align:center !important" hidden>
+                                                <input id="VInboundManagement_Qty2_@Srial" value="@DF.Qty2" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                        }
+                                        <td style="text-align: center;">
+                                            <select class="VInboundManagement_ItemNo_GRNUnit" disabled>
+                                                @{
+                                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                                    {
+                                                        Dt = new DataTable();
+                                                        cn.Open();
+                                                        using (SqlCommand cmd = new SqlCommand())
+                                                        {
+                                                            cmd.Connection = cn;
+                                                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                                            cmd.CommandText = "InvT_LoadItemUnits";
+                                                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                                            cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = DF.ItemNo;
+                                                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                                            {
+                                                                DA.Fill(Dt);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                @foreach (DataRow row in Dt.Rows)
+                                                {
+                                                    if (UnitSerialGRN == row["UnitSerial"].ToString())
+                                                    {
+                                                        <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()" selected>
+                                                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                        </option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()">
+                                                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                        </option>
+                                                    }
+                                                }
+                                            </select>
+                                        </td>
+                                        @if (compMF.UseQty2 == true)
+                                        {
+                                            <td style="text-align:center !important">
+                                                <input id="VInboundManagement_GRNQty_@Srial" value="@DF.InboundGRNQty" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            <td style="text-align:center !important">
+                                                <input id="VInboundManagement_GRNBounsQty_@Srial" value="@DF.InboundGRNBounsQty" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            <td style="text-align: center !important;">
+                                                <input id="VInboundManagement_GRNQty2_@Srial" value="@DF.InboundGRNQty2" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td style="text-align: center !important;">
+                                                <input id="VInboundManagement_GRNQty_@Srial" value="@DF.InboundGRNQty" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            <td style="text-align:center !important">
+                                                <input id="VInboundManagement_GRNBounsQty_@Srial" value="@DF.InboundGRNBounsQty" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                            <td style="text-align:center !important" hidden>
+                                                <input id="VInboundManagement_GRNQty2_@Srial" value="@DF.InboundGRNQty2" type="number" style="width:75px !important" disabled />
+                                            </td>
+                                        }
+                                        <td style="width: 45%;text-align: center;border-left: 1px solid;">
+                                            <input style="width: 115px !important;" type="date" id="vInboundManagement_ReqDeliveryDate_@Srial" value="@DF.ReqDeliveryDate.Value.ToString("yyyy-MM-dd")" />
+                                        </td>
+                                        <td style="text-align:center !important">
+                                            <input id="VInboundManagement_GRNDifference1_@Srial" value="0" type="number" style="width: 75px !important; text-align: center;" disabled />
+                                        </td>
+                                        @if (compMF.UseQty2 == true)
+                                        {
+                                            <td style="text-align:center !important">
+                                                <input id="VInboundManagement_GRNDifference2_@Srial" value="0" type="number" style="width: 75px !important; text-align: center;" disabled />
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td style="text-align:center !important" hidden>
+                                                <input id="VInboundManagement_GRNDifference2_@Srial" value="0" type="number" style="width: 75px !important; text-align: center;" disabled />
+                                            </td>
+                                        }
+                                        <td>
+                                            <input type="hidden" id="VInboundManagement_ItemSrl" value="@Srial" />
+                                            <input type="hidden" id="VInputSerial" value="@(Srial++)" />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        }
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function CheckValueQty(e,srl) {
+         if (e.value < 0) {
+             e.value = 0;
+             e.focus();
+             alert('@Html.Translate("يجب أن تكون الكمية أكبر من صفر", "The Qty Must be Greater Than Zero")');
+        }
+         if (e.value == "") {
+             e.value = 0;
+        }
+        SumTotalQty(srl)
+    }
+    function CheckValueQty2(e, srl) {
+        if (e.value < 0) {
+            e.value = 0;
+            e.focus();
+             alert('@Html.Translate("يجب أن تكون الكمية 2 أكبر من صفر", "The Qty 2 Must be Greater Than Zero")');
+        }
+        if (e.value == "") {
+            e.value = 0;
+        }
+        SumTotalQty(srl)
+    }
+    SumTotalQty(@srl)
+    function SumTotalQty(id) {
+        var table = $("#VOrdInboundManagementTBody_" + id);
+        var trs = table.find('tr');
+
+        var TotalInboundQty1 = 0;
+
+        var TotalInboundBounsQty = 0;
+
+        var TotalInboundQty2 = 0;
+
+        var TotalInboundGRNQty1 = 0;
+
+        var TotalInboundGRNBounsQty = 0;
+
+        var TotalInboundGRNQty2 = 0;
+        var TotalDiffQty1 = 0;
+        var TotalDiffQty2 = 0;
+        var Total1 = 0
+        var Total2 = 0
+
+        for (var i = 0; i < trs.length; i++) {
+            var VInputSerial = $(trs[i]).closest('tr').find('#VInputSerial')[0].value
+            TotalInboundQty1 += Number($(trs[i]).closest('tr').find('#VInboundManagement_Qty_' + VInputSerial)[0].value);
+
+            TotalInboundBounsQty += Number($(trs[i]).closest('tr').find('#VInboundManagement_BounsQty_' + VInputSerial)[0].value);
+
+            TotalInboundQty2 += Number($(trs[i]).closest('tr').find('#VInboundManagement_Qty2_' + VInputSerial)[0].value);
+
+            TotalInboundGRNQty1 += Number($(trs[i]).closest('tr').find('#VInboundManagement_GRNQty_' + VInputSerial)[0].value);
+            TotalInboundGRNBounsQty += Number($(trs[i]).closest('tr').find('#VInboundManagement_GRNBounsQty_' + VInputSerial)[0].value);
+
+            TotalInboundGRNQty2 += Number($(trs[i]).closest('tr').find('#VInboundManagement_GRNQty2_' + VInputSerial)[0].value);
+
+            TotalDiffQty1 = Number($(trs[i]).closest('tr').find('#VInboundManagement_Qty_' + VInputSerial)[0].value) - Number($(trs[i]).closest('tr').find('#VInboundManagement_GRNQty_' + VInputSerial)[0].value);
+            TotalDiffQty2 = Number($(trs[i]).closest('tr').find('#VInboundManagement_Qty2_' + VInputSerial)[0].value) - Number($(trs[i]).closest('tr').find('#VInboundManagement_GRNQty2_' + VInputSerial)[0].value);
+
+            $(trs[i]).closest('tr').find('#VInboundManagement_GRNDifference1_' + VInputSerial)[0].value = Number(TotalDiffQty1);
+            $(trs[i]).closest('tr').find('#VInboundManagement_GRNDifference2_' + VInputSerial)[0].value = Number(TotalDiffQty2);
+
+            Total1 = Number(Total1) + Number(TotalDiffQty1);
+            Total2 = Number(Total2) + Number(TotalDiffQty2);
+        }
+
+        $('#VTotalInboundQty1_' + id).html(Number(TotalInboundQty1));
+        $('#VTotalInboundBounsQty_' + id).html(Number(TotalInboundBounsQty));
+        $('#VTotalInboundQty2_' + id).html(Number(TotalInboundQty2));
+        $('#VTotalInboundGRNQty1_' + id).html(Number(TotalInboundGRNQty1));
+        $('#VTotalInboundGRNBounsQty_' + id).html(Number(TotalInboundGRNBounsQty));
+        $('#VTotalInboundGRNQty2_' + id).html(Number(TotalInboundGRNQty2));
+        $('#VTotalInboundDifferenceQty1_' + id).html(Number(Total1));
+        $('#VTotalInboundDifferenceQty2_' + id).html(Number(Total2));
+    }
+</script>
+

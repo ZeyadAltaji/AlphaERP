@@ -1,0 +1,108 @@
+﻿@model IEnumerable<AlphaERP.Models.AllStores>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+}
+
+
+
+<table class="table table-hover" id="SelectAllStoresTable">
+    <thead>
+        <tr>
+            <th style="text-align: center !important;">@Html.Recource(45)</th>
+            <th style="text-align: center !important;">@Html.Recource(46)</th>
+            <th style="text-align: center !important;">@Html.Translate("تاريخ الانتهاء", "Exp.Date")</th>
+            <th style="text-align: center !important; ">@Html.Recource(48)</th>
+            <th style="text-align: center !important; ">@Html.Recource(49)</th>
+            <th style="text-align: center !important; ">@Html.Recource(5432)</th>
+            <th style="text-align: center !important; ">@Html.Recource(96)</th>
+            <th style="text-align: center !important; ">@Html.Recource(67)</th>
+            <th style="text-align: center !important; ">@Html.Recource(50)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="SelectAllStoresTbody">
+        @foreach (AllStores item in Model)
+            {
+            <tr>
+                <td style="text-align: center;" id="BatchNo">@item.BatchNo</td>
+                <td style="text-align: center;" id="ManDate">@item.ManDate.ToShortDateString()</td>
+                <td style="text-align: center;" id="ExpDate">@item.ExpDate.ToShortDateString()</td>
+                @if (item.IsHalt == true)
+                {
+                    <td style="text-align: center;">
+                        <input type="checkbox" checked>
+                    </td>
+                }
+                else
+                {
+                    <td style="text-align: center;">
+                        <input type="checkbox">
+                    </td>
+                }
+                <td style="text-align: center;" id="QtyOh">@item.QtyOh</td>
+                <td style="text-align: center;" id="TotQtyRes">@item.TotQtyRes</td>
+                <td style="text-align: center;" id="RefNo">@item.RefNo</td>
+                <td style="text-align: center;" id="UnitC4">@item.UnitC4</td>
+                <td style="text-align: center;" id="UnitCost">@item.UnitCost</td>
+                <td></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="modal-footer">
+    <div class="form-group">
+        <div class="col-md-12">
+            <div class="col-md-2">
+                <label class="unselectable" for="Invt_InqItemBalance_TotalQtyItemBatches">@Html.Recource(89) </label>
+            </div>
+            <div class="col-md-2" style="margin-bottom: 5px;">
+                <input required="true" style="width: 125px !important;" type="text" id="Invt_InqItemBalance_TotalQtyItemBatches" value="0" readonly />
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="Invt_InqItemBalance_TotalQtyReserved">@Html.Recource(5548) </label>
+            </div>
+            <div class="col-md-2" style="margin-bottom: 5px;">
+                <input required="true" style="width: 125px !important;" type="text" id="Invt_InqItemBalance_TotalQtyReserved" value="0" readonly />
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="Invt_InqItemBalance_TotalQty">@Html.Recource(4706)</label>
+            </div>
+            <div class="col-md-2" style="margin-bottom: 5px;">
+                <input required="true" style="width: 125px !important;" type="text" id="Invt_InqItemBalance_TotalQty" value="0" readonly />
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#SelectAllStoresTable').DataTable({
+        "scrollY": 'calc( 100vh - 385px)',
+        "paging": false,
+        "pageLength": 25,
+        "searching": false,
+        "ordering": false
+    });
+
+    sumTotal();
+    function sumTotal() {
+        var table = $('#SelectAllStoresTbody tr');
+        var trs = table;
+        var TotalQty = 0;
+        var ResQty = 0;
+        var Total = 0;
+        for (var i = 0; i < trs.length; i++) {
+            TotalQty += Number($(trs[i]).closest('tr').find('#QtyOh')[0].innerHTML);
+            ResQty += Number($(trs[i]).closest('tr').find('#TotQtyRes')[0].innerHTML);
+        }
+        Total = Number(TotalQty).toFixed(3) - Number(ResQty).toFixed(3);
+        $('#Invt_InqItemBalance_TotalQtyItemBatches').val(Number(TotalQty));
+        $('#Invt_InqItemBalance_TotalQtyReserved').val(Number(ResQty));
+        $('#Invt_InqItemBalance_TotalQty').val(Number(Total));
+    }
+    
+</script>

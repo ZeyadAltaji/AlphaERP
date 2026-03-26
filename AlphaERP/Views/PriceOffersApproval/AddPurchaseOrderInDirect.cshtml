@@ -1,0 +1,1174 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    int OrdYear = ViewBag.OrdYear;
+    int OrdNo = ViewBag.OrdNo;
+
+
+    OrderHF ordHf = new MDB().OrderHFs.Where(x => x.CompNo == company.comp_num && x.OrdYear == OrdYear && x.OrderNo == OrdNo && x.TawreedNo == OrdNo.ToString()).FirstOrDefault();
+    List<OrderDF> OrdDFs = new MDB().OrderDFs.Where(x => x.CompNo == company.comp_num && x.OrdYear == OrdYear && x.OrderNo == OrdNo && x.TawreedNo == OrdNo.ToString()).ToList();
+
+
+    GLDEPMF GLDEPMFs = new MDB().GLDEPMFs.Where(x => x.DEP_COMP == company.comp_num && x.DEP_NUM == ordHf.Vend_Dept).FirstOrDefault();
+    Vendor Ve = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.VendorNo == ordHf.VendorNo).FirstOrDefault();
+    List<InvItemsMF> MF = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+
+
+    List<PayCodes> Currency = new MDB().Database.SqlQuery<PayCodes>("select CurrType as Id ,CurrName as DescAr,isnull(CurrNameE,'No Desc.') as DescEn from CurrType").ToList();
+    List<PayCodes> ShipMethod = new MDB().Database.SqlQuery<PayCodes>(string.Format("select sys_minor as sys_minor ,sys_adesc as DescAr,isnull(sys_edesc,'No Desc.') as DescEn from SysCodes where (CompNo = '{0}') and sys_major='0f'", company.comp_num)).ToList();
+    List<PayCodes> Source = new MDB().Database.SqlQuery<PayCodes>(string.Format("select sys_minor as sys_minor ,sys_adesc as DescAr,isnull(sys_edesc,'No Desc.') as DescEn from SysCodes where (CompNo = '{0}') and sys_major='91k'", company.comp_num)).ToList();
+    List<BusunisUnit> PaymentM = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("select MCode as Id ,[Desc] as DescAr,isnull([EngDesc],'No Desc.') as DescEn from PayMethods where (Comp = '{0}')", company.comp_num)).ToList();
+    List<PayCodes> DlivPlace = new MDB().Database.SqlQuery<PayCodes>(string.Format("select PlaceCode as Id ,Place as DescAr from OrdDlivPlace where (CompNo = '{0}')", company.comp_num)).ToList();
+    OrdPreOrderHF PreOrderHF = new MDB().OrdPreOrderHFs.Where(x => x.CompNo == company.comp_num && x.Year == OrdYear && x.OrderNo == OrdNo).FirstOrDefault();
+    BusunisUnit BU = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("SELECT Alpha_BusinessUnitDef.BusUnitID as Id,BusUnitDescAr as DescAr,BusUnitDescEng as DescEn  " +
+    "from Alpha_BusinessUnitDef  " +
+    "where Alpha_BusinessUnitDef.CompNo = '{0}' AND Alpha_BusinessUnitDef.BusUnitID = '{1}' ", company.comp_num, PreOrderHF.BusUnitID)).FirstOrDefault();
+    int Srial = 1;
+    List<PayCodes> PaymentConditions = new MDB().Database.SqlQuery<PayCodes>(string.Format("select sys_minor as sys_minor ,sys_adesc as DescAr,isnull(sys_edesc,'No Desc.') as DescEn from SysCodes where (CompNo = '{0}') and sys_major='91u'", company.comp_num)).ToList();
+    List<PayCodes> Guaranty = new MDB().Database.SqlQuery<PayCodes>(string.Format("select sys_minor as sys_minor ,sys_adesc as DescAr,isnull(sys_edesc,'No Desc.') as DescEn from SysCodes where (CompNo = '{0}') and sys_major='91v'", company.comp_num)).ToList();
+    List<InvUnitCode> UC = new MDB().InvUnitCodes.Where(x => x.CompNo == company.comp_num).ToList();
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+}
+
+<style>
+
+    #MRP_PurchaseOrderInDirect_DIV table th, #MRP_PurchaseOrderInDirect_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+    .wrapperx {
+        padding:0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+
+    .sticky-col {
+        z-index:2;
+    position: sticky;
+    position: -webkit-sticky;
+        background-color: white;
+    }
+
+    .first-col {
+       width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        @Html.Translate("right: 0px;", "left: 0px;")
+    }
+
+    .second-col {
+       width: 80px;
+        min-width: 80px;
+        max-width: 80px;
+        @Html.Translate("right: 60px;", "left: 60px;")
+    }
+
+    .third-col {
+        width: 150px;
+        min-width: 150px;
+        max-width: 150px;
+        @Html.Translate("right: 125px;", "left: 125px;")
+    }
+
+    .four-col {
+    width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        @Html.Translate("right: 280px;", "left: 280px;")
+    }
+    .stickytooltip {
+        max-height: 80vh !important;
+    overflow: auto !important
+    }
+</style>
+
+<link href="~/Content/stickytooltip.css" rel="stylesheet" />
+<script src="~/Scripts/stickytooltip.js?s=15"></script>
+
+<style>
+    #MRP_PurchaseOrderInDirectTable span.badge {
+        border: none;
+        position: static;
+        z-index: 20 !important;
+        box-sizing: content-box;
+        visibility: visible;
+        z-index: 9999999999 !important;
+        padding: 1px;
+        font-family: Arial, verdana, tahoma;
+        font-size: 13px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        text-shadow: 1px 1px 1px rgba(0,0,0,.3);
+        background: #ff3019;
+        background: -webkit-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Chrome10+,Safari5.1+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff3019), color-stop(100%, #cf0404)); /* Chrome,Safari4+ */
+        background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* FF3.6+ */
+        background: -ms-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* IE10+ */
+        background: -o-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Opera 11.10+ */
+        background: linear-gradient(to bottom, #ff3019 0%, #cf0404 100%); /* W3C */
+        width: 18px;
+        height: 18px;
+        line-height: 20px;
+        border-radius: 50%;
+        filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff3019', endColorstr='#cf0404', GradientType=0)"; /* IE6-9 */
+        filter: "progid:DXImageTransform.Microsoft.Shadow(direction=135, strength=2, color=ff0000)"; /* IE10 text shadows */
+        box-shadow: 0 2px 5px rgba(0,0,0,.4);
+    }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="max-height: 68vh !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1">
+                        <label class="unselectable" for="MRP_PurchaseOrderInDirect_OrderYear">@Html.Recource(3196) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:80px !important;" type="text" id="MRP_PurchaseOrderInDirect_OrderYear" value="@ordHf.OrdYear" disabled />
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="MRP_PurchaseOrderInDirect_OrderNo">@Html.Recource(3197) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:90px !important;" type="text" id="MRP_PurchaseOrderInDirect_OrderNo" value="@ordHf.OrderNo" disabled />
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="MRP_PurchaseOrderInDirect_TawreedNo">@Html.Recource(3797) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:90px !important;" type="text" id="MRP_PurchaseOrderInDirect_TawreedNo" value="@ordHf.TawreedNo" disabled />
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="MRP_PurchaseOrderInDirect_PriceOfferNo">@Html.Recource(3753) </label>
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <input required="false" style="width:90px !important;" type="text" id="MRP_PurchaseOrderInDirect_PriceOfferNo" value="@ordHf.OfferNo" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(220) </label>
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <input style="width: 80px !important;" type="text" id="MRP_PurchaseOrderInDirect_DeptId" value="@ordHf.Vend_Dept" disabled />
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <input style="width:100%" type="text" id="MRP_PurchaseOrderInDirect_DeptName" value="@Html.Translate(GLDEPMFs.DEP_NAME,GLDEPMFs.DEP_ENAME)" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3087) </label>
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <input style="width: 80px !important;" type="text" id="MRP_PurchaseOrderInDirect_VendorNo" value="@ordHf.VendorNo" disabled />
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <input style="width:100%" type="text" id="MRP_PurchaseOrderInDirect_VendorName" value="@Html.Translate(Ve.Name,Ve.Eng_Name)" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3204) </label>
+                    </div>
+                    <div class="col-md-5" style="margin-bottom: 5px;">
+                        <input style="width:100%" type="text" id="MRP_PurchaseOrderInDirect_VendorAddress" value="@Ve.Address" />
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(96) </label>
+                    </div>
+                    <div class="col-md-3" style="margin-bottom: 5px;">
+                        <input style="width:100%" type="text" id="MRP_PurchaseOrderInDirect_RefNo" value="" />
+                    </div>
+                    <div class="col-md-1" style="width: 10% !important; min-width: 5% !important;">
+                        <button class="btn btn-primary btn-block" onclick="AddConditionsAndGuaranties()" style="width:130px !important;">
+                            @Html.Recource(3161)
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3205) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:130px !important;" type="date" id="MRP_PurchaseOrderInDirect_ConfDate" value="@ordHf.ConfDate.Value.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3832) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:130px !important;" type="date" id="MRP_PurchaseOrderInDirect_ETDate" value="@ordHf.ExpShDate.Value.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3833) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:130px !important;" type="date" id="MRP_PurchaseOrderInDirect_ETADate" value="@ordHf.ETA.Value.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="MRP_PurchaseOrderInDirect_BusinessUnit">@Html.Recource(5667) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" type="text" id="MRP_PurchaseOrderInDirect_BusinessUnit" value="@PreOrderHF.BusUnitID" hidden />
+                        <input required="false" style="width:118%  !important;" type="text" id="MRP_PurchaseOrderInDirect_BusinessUnitName" value="@Html.Translate(BU.DescAr,BU.DescEn)" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(1671) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtCurrCode" hidden />
+                        <select onchange="$('#MRP_PurchaseOrderInDirect_txtCurrCode').val(this.value)" style="width:112%" id="MRP_PurchaseOrderInDirect_CboCurrCode">
+                            @foreach (var v1 in Currency)
+                            {
+                                if (ordHf.CurType == v1.Id)
+                                {
+                                    <option value="@v1.Id" selected>@Html.Translate(v1.DescAr, v1.DescEn)</option>
+                                }
+                                else
+                                {
+                                    <option value="@v1.Id">@Html.Translate(v1.DescAr, v1.DescEn)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3206) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:85%" type="number" id="MRP_PurchaseOrderInDirect_txtShipMethod" hidden />
+                        <select onchange="$('#MRP_PurchaseOrderInDirect_txtShipMethod').val(this.value)" style="width:112%" id="MRP_PurchaseOrderInDirect_CboShipMethod">
+                            @foreach (var s in ShipMethod)
+                            {
+                                if (ordHf.ShipWay.ToString() == s.sys_minor)
+                                {
+                                    <option value="@s.sys_minor" selected>@Html.Translate(s.DescAr, s.DescEn)</option>
+                                }
+                                else
+                                {
+                                    <option value="@s.sys_minor">@Html.Translate(s.DescAr, s.DescEn)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(1874) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtPaymentType" hidden />
+                        <select onchange="$('#MRP_PurchaseOrderInDirect_txtPaymentType').val(this.value)" style="width:112%" id="MRP_PurchaseOrderInDirect_CboPaymentType">
+                            @foreach (var P in PaymentM)
+                            {
+                                if (ordHf.PayWay == P.Id)
+                                {
+                                    <option value="@P.Id" selected>@Html.Translate(P.DescAr, P.DescEn)</option>
+                                }
+                                else
+                                {
+                                    <option value="@P.Id">@Html.Translate(P.DescAr, P.DescEn)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3207) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtDeliveryPlace" onblur="DeliveryPlaceChange()" hidden />
+                        <select onchange="$('#MRP_PurchaseOrderInDirect_txtDeliveryPlace').val(this.value)" style="width:118%" id="MRP_PurchaseOrderInDirect_CboDeliveryPlace">
+                            @foreach (var s in DlivPlace)
+                            {
+                                if (ordHf.DlvryPlace == s.Id.ToString())
+                                {
+                                    <option value="@s.Id" selected>@s.DescAr</option>
+                                }
+                                else
+                                {
+                                    <option value="@s.Id">@s.DescAr</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1">
+                        <label class="unselectable" for="MRP_PurchaseOrderInDirect_ContactPerson">@Html.Recource(1166) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" type="text" id="MRP_PurchaseOrderInDirect_ContactPerson" value="@ordHf.PInCharge" />
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="MRP_PurchaseOrderInDirect_QutationRef">@Html.Recource(3209) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" type="text" id="MRP_PurchaseOrderInDirect_QutationRef" value="@ordHf.QutationRef" />
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="MRP_PurchaseOrderInDirect_DeliveryDays">@Html.Recource(3208) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" type="text" id="MRP_PurchaseOrderInDirect_DeliveryDays" value="@ordHf.DlvDays" />
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="MRP_PurchaseOrderInDirect_MaintPeriod">@Html.Recource(3210) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" type="text" id="MRP_PurchaseOrderInDirect_MaintPeriod" value="@ordHf.MainPeriod"style="width:118%;" />
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1">
+                        <label class="unselectable" for="MRP_PurchaseOrderInDirect_Notes">@Html.Recource(70) </label>
+                    </div>
+                    <div class="col-md-11" style="margin-bottom: 5px;">
+                        <textarea required="true" style="width: 103%;" id="MRP_PurchaseOrderInDirect_Notes" value="@ordHf.Notes">@ordHf.Notes</textarea>
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group" style="display: block; height: 100%;">
+                <div class="col-md-12 wrapperx" id="MRP_PurchaseOrderInDirect_DIV">
+                    <table class="table table-hover MRP_PurchaseOrderInDirect" id="MRP_PurchaseOrderInDirectTable">
+                        <thead>
+                            <tr>
+                                <th class="second-col">@Html.Recource(44)</thclass="headcol">
+                                <th class="third-col">@Html.Recource(74)</th>
+                                <th class="first-col">@Html.Recource(67)</th>
+                                <th class="first-col">@Html.Recource(49)</th>
+                                @if (compMF.UseQty2 == true)
+                                {
+                                    <th class="first-col">@Html.Recource(72)</th>
+                                }
+                                else
+                                {
+                                    <th class="first-col" hidden>@Html.Recource(72)</th>
+                                }
+                                <th class="second-col">@Html.Recource(3200)</th>
+                                <th style="text-align: center !important;">@Html.Recource(213)</th>
+                                <th style="text-align: center !important;">@Html.Recource(215)</th>
+                                <th style="text-align: center !important; direction: ltr;">@Html.Recource(9100)</th>
+                                <th style="text-align: center !important;">@Html.Recource(96)</th>
+                                <th style="text-align: center !important;">@Html.Recource(68)</th>
+                                <th style="text-align: center !important;">@Html.Recource(70)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody style="text-align: center;" id="PurchaseOrderInDirectTBody">
+                            @foreach (OrderDF OrdDF in OrdDFs)
+                            {
+                                InvItemsMF MFItem = MF.Where(x => x.ItemNo == OrdDF.ItemNo).FirstOrDefault();
+                                InvUnitCode UCItem = UC.Where(x => x.UnitCode == MFItem.UnitC4).FirstOrDefault();
+                                double Total = OrdDF.Qty.Value * Convert.ToDouble(OrdDF.Price.Value);
+                            <tr style="height: 25px;" itemNo="@OrdDF.ItemNo" id="PurchaseOrderInDirect_Serial_@Srial">
+                                <td class="second-col" style="text-align: center !important" id="PurchaseOrderInDirect_ItemNo">@OrdDF.ItemNo</td>
+                                <td class="third-col" style="text-align: center !important" id="PurchaseOrderInDirect_ItemDesc">@Html.Translate(MFItem.ItemDesc, MFItem.ItemDesc_Ara)</td>
+                                <td class="first-col" style="text-align: center !important" id="PurchaseOrderInDirect_UnitName">@UCItem.UnitName</td>
+                                <td>
+                                    <input id="PurchaseOrderInDirect_Qty_@Srial" value="@OrdDF.Qty" type="number" style="width:75px !important" onblur="CheckValueQty(@Srial)" />
+                                </td>
+                                @if (compMF.UseQty2 == true)
+                                {
+                                    <td>
+                                        <input id="PurchaseOrderInDirect_Qty2_@Srial" value="@OrdDF.Qty2" type="number" style="width:75px !important" onblur="CheckValueQty2(@Srial)" />
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td hidden>
+                                        <input id="PurchaseOrderInDirect_Qty2_@Srial" value="@OrdDF.Qty2" type="number" style="width:75px !important" onblur="CheckValueQty2(@Srial)" />
+                                    </td>
+                                }
+                                <td>
+                                    <input id="PurchaseOrderInDirect_Bouns_@Srial" value="@OrdDF.Bonus" type="number" style="width:75px !important" onblur="CheckValueBonus(@Srial)" />
+                                </td>
+                                <td>
+                                    <input id="PurchaseOrderInDirect_DiscPer_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckValuePerDiscount(@Srial)" />
+                                </td>
+                                <td>
+                                    <input id="PurchaseOrderInDirect_SellPrice_@Srial" value="@OrdDF.Price" type="number" style="width:75px !important" onblur="CheckValuePrice(@Srial)" />
+                                </td>
+                                <td>
+                                    <input id="PurchaseOrderInDirect_STax_Perc_@Srial" value="@MFItem.STax_Perc" type="number" style="width:75px !important" onblur="CheckValueSTaxPerc(@Srial)" />
+                                </td>
+                                <td>
+                                    <input id="PurchaseOrderInDirect_RefNo_@Srial" value="0" type="text" style="width:75px !important" />
+                                </td>
+                                <td style="width: 8%;" id="PurchaseOrderInDirect_Total_@Srial">@Total</td>
+                                <td style="text-align: center;">
+                                    <textarea required="true" id="PurchaseOrderInDirect_ReqNotes_@Srial" placeholder="@Html.Recource(70)" />
+                                </td>
+                                <td>
+                                    <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_PurchaseOrderInDirect_Amount">@Html.Recource(972) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="text" id="MRP_PurchaseOrderInDirect_Amount" value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_PurchaseOrderInDirect_Discount">@Html.Recource(213) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="number" id="MRP_PurchaseOrderInDirect_Discount" value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_PurchaseOrderInDirect_FreightCost">@Html.Recource(7637) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="number" id="MRP_PurchaseOrderInDirect_FreightCost" value="0" onblur="sumTotalAll()"  />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_PurchaseOrderInDirect_TaxAmount">@Html.Recource(3211) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="text" id="MRP_PurchaseOrderInDirect_TaxAmount" value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_PurchaseOrderInDirect_NetAmount">@Html.Recource(3212) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="text" id="MRP_PurchaseOrderInDirect_NetAmount" value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_PurchaseOrderInDirect_ExtraExp">@Html.Recource(9588) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="number" id="MRP_PurchaseOrderInDirect_ExtraExp" value="0" onblur="sumTotalAll()" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="ExcuteSaveProd_PurchOrd()" class="btn btn-primary">@Resources.Resource.Save</button>
+        </div>
+    </div>
+</div>
+
+
+
+@*-----------------------------Model CondsGuaranty-------------------------------------*@
+<div class="modal fade" id="Model_PurchaseOrderInDirectCondsGuaranty">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(66)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="modal-title">@Html.Recource(3162)</label>
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="modal-title">@Html.Recource(3164)</label>
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                </div>
+                <br />
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3165) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtPaymentCond1" onblur="PaymentCond1Change()" />
+                        </div>
+                        <div class="col-md-4" style="margin-bottom: 5px;">
+                            <select onchange="$('#MRP_PurchaseOrderInDirect_txtPaymentCond1').val(this.value)" style="width:100%" id="MRP_PurchaseOrderInDirect_CboPaymentCond1">
+                                <option></option>
+                                @foreach (var v2 in PaymentConditions)
+                                {
+                                    <option value="@v2.sys_minor">@Html.Translate(v2.DescAr, v2.DescEn)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3170) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtPaymentPerc1" value="0" />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3166) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtPaymentCond2" onblur="PaymentCond2Change()" />
+                        </div>
+                        <div class="col-md-4" style="margin-bottom: 5px;">
+                            <select onchange="$('#MRP_PurchaseOrderInDirect_txtPaymentCond2').val(this.value)" style="width:100%" id="MRP_PurchaseOrderInDirect_CboPaymentCond2">
+                                <option></option>
+                                @foreach (var v3 in PaymentConditions)
+                                {
+                                    <option value="@v3.sys_minor">@Html.Translate(v3.DescAr, v3.DescEn)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3170) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtPaymentPerc2" value="0" />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3167) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtPaymentCond3" onblur="PaymentCond3Change()" />
+                        </div>
+                        <div class="col-md-4" style="margin-bottom: 5px;">
+                            <select onchange="$('#MRP_PurchaseOrderInDirect_txtPaymentCond3').val(this.value)" style="width:100%" id="MRP_PurchaseOrderInDirect_CboPaymentCond3">
+                                <option></option>
+                                @foreach (var v4 in PaymentConditions)
+                                {
+                                    <option value="@v4.sys_minor">@Html.Translate(v4.DescAr, v4.DescEn)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3170) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtPaymentPerc3" value="0" />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3168) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtPaymentCond4" onblur="PaymentCond4Change()" />
+                        </div>
+                        <div class="col-md-4" style="margin-bottom: 5px;">
+                            <select onchange="$('#MRP_PurchaseOrderInDirect_txtPaymentCond4').val(this.value)" style="width:100%" id="MRP_PurchaseOrderInDirect_CboPaymentCond4">
+                                <option></option>
+                                @foreach (var v5 in PaymentConditions)
+                                {
+                                    <option value="@v5.sys_minor">@Html.Translate(v5.DescAr, v5.DescEn)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3170) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtPaymentPerc4" value="0" />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3169) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtPaymentCond5" onblur="PaymentCond5Change()" />
+                        </div>
+                        <div class="col-md-4" style="margin-bottom: 5px;">
+                            <select onchange="$('#MRP_PurchaseOrderInDirect_txtPaymentCond5').val(this.value)" style="width:100%" id="MRP_PurchaseOrderInDirect_CboPaymentCond5">
+                                <option></option>
+                                @foreach (var v6 in PaymentConditions)
+                                {
+                                    <option value="@v6.sys_minor">@Html.Translate(v6.DescAr, v6.DescEn)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3170) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtPaymentPerc5" value="0" />
+                        </div>
+                    </div>
+                </div>
+
+                <br />
+                <hr />
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="modal-title">@Html.Recource(3163)</label>
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="modal-title">@Html.Recource(3164)</label>
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                </div>
+                <br />
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3171) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtGuaranty1" onblur="Guaranty1Change()" />
+                        </div>
+                        <div class="col-md-4" style="margin-bottom: 5px;">
+                            <select onchange="$('#MRP_PurchaseOrderInDirect_txtGuaranty1').val(this.value)" style="width:100%" id="MRP_PurchaseOrderInDirect_CboGuaranty1">
+                                <option></option>
+                                @foreach (var v7 in Guaranty)
+                                {
+                                    <option value="@v7.sys_minor">@Html.Translate(v7.DescAr, v7.DescEn)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3176) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtGuarantyPerc1" value="0" />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3172) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtGuaranty2" onblur="Guaranty2Change()" />
+                        </div>
+                        <div class="col-md-4" style="margin-bottom: 5px;">
+                            <select onchange="$('#MRP_PurchaseOrderInDirect_txtGuaranty2').val(this.value)" style="width:100%" id="MRP_PurchaseOrderInDirect_CboGuaranty2">
+                                <option></option>
+                                @foreach (var v8 in Guaranty)
+                                {
+                                    <option value="@v8.sys_minor">@Html.Translate(v8.DescAr, v8.DescEn)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3176) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtGuarantyPerc2" value="0" />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3173) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtGuaranty3" onblur="Guaranty3Change()" />
+                        </div>
+                        <div class="col-md-4" style="margin-bottom: 5px;">
+                            <select onchange="$('#MRP_PurchaseOrderInDirect_txtGuaranty3').val(this.value)" style="width:100%" id="MRP_PurchaseOrderInDirect_CboGuaranty3">
+                                <option></option>
+                                @foreach (var v9 in Guaranty)
+                                {
+                                    <option value="@v9.sys_minor">@Html.Translate(v9.DescAr, v9.DescEn)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3176) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtGuarantyPerc3" value="0" />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3174) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtGuaranty4" onblur="Guaranty4Change()" />
+                        </div>
+                        <div class="col-md-4" style="margin-bottom: 5px;">
+                            <select onchange="$('#MRP_PurchaseOrderInDirect_txtGuaranty4').val(this.value)" style="width:100%" id="MRP_PurchaseOrderInDirect_CboGuaranty4">
+                                <option></option>
+                                @foreach (var v10 in Guaranty)
+                                {
+                                    <option value="@v10.sys_minor">@Html.Translate(v10.DescAr, v10.DescEn)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3176) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtGuarantyPerc4" value="0" />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3175) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtGuaranty5" onblur="Guaranty5Change()" />
+                        </div>
+                        <div class="col-md-4" style="margin-bottom: 5px;">
+                            <select onchange="$('#MRP_PurchaseOrderInDirect_txtGuaranty5').val(this.value)" style="width:100%" id="MRP_PurchaseOrderInDirect_CboGuaranty5">
+                                <option></option>
+                                @foreach (var v11 in Guaranty)
+                                {
+                                    <option value="@v11.sys_minor">@Html.Translate(v11.DescAr, v11.DescEn)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3176) </label>
+                        </div>
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <input style="width:100%" type="number" id="MRP_PurchaseOrderInDirect_txtGuarantyPerc5" value="0" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Save_PurchaseOrderInDirect_CondsGuaranty()" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_PurchaseOrderInDirectCondsGuaranty').draggable({
+        handle: ".modal-header",
+    });
+    function AddConditionsAndGuaranties(val) {
+        $('#Model_PurchaseOrderInDirectCondsGuaranty').modal('show')
+    }
+    function PaymentCond1Change() {
+        var v = $('#MRP_PurchaseOrderInDirect_txtPaymentCond1').val();
+        $('#MRP_PurchaseOrderInDirect_CboPaymentCond1').val(v)
+        if (document.getElementById('MRP_PurchaseOrderInDirect_CboPaymentCond1').value == '') {
+            MRP_PurchaseOrderInDirect_txtPaymentCond1.value = ''
+            return;
+        }
+    }
+    function PaymentCond2Change() {
+        var v = $('#MRP_PurchaseOrderInDirect_txtPaymentCond2').val();
+        $('#MRP_PurchaseOrderInDirect_CboPaymentCond2').val(v)
+        if (document.getElementById('MRP_PurchaseOrderInDirect_CboPaymentCond2').value == '') {
+            MRP_PurchaseOrderInDirect_txtPaymentCond2.value = ''
+            return;
+        }
+    }
+    function PaymentCond3Change() {
+        var v = $('#MRP_PurchaseOrderInDirect_txtPaymentCond3').val();
+        $('#MRP_PurchaseOrderInDirect_CboPaymentCond3').val(v)
+        if (document.getElementById('MRP_PurchaseOrderInDirect_CboPaymentCond3').value == '') {
+            MRP_PurchaseOrderInDirect_txtPaymentCond3.value = ''
+            return;
+        }
+    }
+    function PaymentCond4Change() {
+        var v = $('#MRP_PurchaseOrderInDirect_txtPaymentCond4').val();
+        $('#MRP_PurchaseOrderInDirect_CboPaymentCond4').val(v)
+        if (document.getElementById('MRP_PurchaseOrderInDirect_CboPaymentCond4').value == '') {
+            MRP_PurchaseOrderInDirect_txtPaymentCond4.value = ''
+            return;
+        }
+    }
+    function PaymentCond5Change() {
+        var v = $('#MRP_PurchaseOrderInDirect_txtPaymentCond5').val();
+        $('#MRP_PurchaseOrderInDirect_CboPaymentCond5').val(v)
+        if (document.getElementById('MRP_PurchaseOrderInDirect_CboPaymentCond5').value == '') {
+            MRP_PurchaseOrderInDirect_txtPaymentCond5.value = ''
+            return;
+        }
+    }
+    function Guaranty1Change() {
+        var v = $('#MRP_PurchaseOrderInDirect_txtGuaranty1').val();
+        $('#MRP_PurchaseOrderInDirect_CboGuaranty1').val(v)
+        if (document.getElementById('MRP_PurchaseOrderInDirect_CboGuaranty1').value == '') {
+            MRP_PurchaseOrderInDirect_txtGuaranty1.value = ''
+            return;
+        }
+    }
+    function Guaranty2Change() {
+        var v = $('#MRP_PurchaseOrderInDirect_txtGuaranty2').val();
+        $('#MRP_PurchaseOrderInDirect_CboGuaranty2').val(v)
+        if (document.getElementById('MRP_PurchaseOrderInDirect_CboGuaranty2').value == '') {
+            MRP_PurchaseOrderInDirect_txtGuaranty2.value = ''
+            return;
+        }
+    }
+    function Guaranty3Change() {
+        var v = $('#MRP_PurchaseOrderInDirect_txtGuaranty3').val();
+        $('#MRP_PurchaseOrderInDirect_CboGuaranty3').val(v)
+        if (document.getElementById('MRP_PurchaseOrderInDirect_CboGuaranty3').value == '') {
+            MRP_PurchaseOrderInDirect_txtGuaranty3.value = ''
+            return;
+        }
+    }
+    function Guaranty4Change() {
+        var v = $('#MRP_PurchaseOrderInDirect_txtGuaranty4').val();
+        $('#MRP_PurchaseOrderInDirect_CboGuaranty4').val(v)
+        if (document.getElementById('MRP_PurchaseOrderInDirect_CboGuaranty4').value == '') {
+            MRP_PurchaseOrderInDirect_txtGuaranty4.value = ''
+            return;
+        }
+    }
+    function Guaranty5Change() {
+        var v = $('#MRP_PurchaseOrderInDirect_txtGuaranty5').val();
+        $('#MRP_PurchaseOrderInDirect_CboGuaranty5').val(v)
+        if (document.getElementById('MRP_PurchaseOrderInDirect_CboGuaranty5').value == '') {
+            MRP_PurchaseOrderInDirect_txtGuaranty5.value = ''
+            return;
+        }
+    }
+    function Save_PurchaseOrderInDirect_CondsGuaranty() {
+        $('#Model_PurchaseOrderInDirectCondsGuaranty').modal('hide')
+    }
+</script>
+@*--------------------------------END Model CondsGuaranty -----------------------------*@
+
+
+<script>
+    var v = $('#MRP_PurchaseOrderInDirect_CboCurrCode').val()
+    $('#MRP_PurchaseOrderInDirect_txtCurrCode').val(v);
+    var v1 = $('#MRP_PurchaseOrderInDirect_CboDeliveryPlace').val()
+    $('#MRP_PurchaseOrderInDirect_txtDeliveryPlace').val(v1);
+    var v2 = $('#MRP_PurchaseOrderInDirect_CboPaymentType').val()
+    $('#MRP_PurchaseOrderInDirect_txtPaymentType').val(v2);
+    var v3 = $('#MRP_PurchaseOrderInDirect_CboShipMethod').val()
+    $('#MRP_PurchaseOrderInDirect_txtShipMethod').val(v3);
+     function CheckValuePerDiscount(Serial) {
+         if ($('#PurchaseOrderInDirect_DiscPer_' + Serial)[0].value < 0) {
+             $('#PurchaseOrderInDirect_DiscPer_' + Serial)[0].value = 0;
+             $('#PurchaseOrderInDirect_DiscPer_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن يكون الخصم أكبر من صفر", "The Discount Must be Greater Than Zero")');
+        }
+         if ($('#PurchaseOrderInDirect_DiscPer_' + Serial)[0].value == "") {
+             $('#PurchaseOrderInDirect_DiscPer_' + Serial)[0].value = 0;
+        }
+        sumPersTotal();
+    }
+    function CheckValuePrice(Serial) {
+        if ($('#PurchaseOrderInDirect_SellPrice_' + Serial)[0].value < 0) {
+            $('#PurchaseOrderInDirect_SellPrice_' + Serial)[0].value = 0;
+            $('#PurchaseOrderInDirect_SellPrice_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن يكون السعر أكبر من صفر", "The Price Must be Greater Than Zero")');
+        }
+        if ($('#PurchaseOrderInDirect_SellPrice_' + Serial)[0].value == "") {
+            $('#PurchaseOrderInDirect_SellPrice_' + Serial)[0].value = 0;
+        }
+        sumPersTotal();
+    }
+    function CheckValueSTaxPerc(Serial) {
+        if ($('#PurchaseOrderInDirect_STax_Perc_' + Serial)[0].value < 0) {
+            $('#PurchaseOrderInDirect_STax_Perc_' + Serial)[0].value = 0;
+            $('#PurchaseOrderInDirect_STax_Perc_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن تكون الضريبة أكبر من صفر", "The Tax Must be Greater Than Zero")');
+        }
+        if ($('#PurchaseOrderInDirect_STax_Perc_' + Serial)[0].value == "") {
+            $('#PurchaseOrderInDirect_STax_Perc_' + Serial)[0].value = 0;
+        }
+        sumPersTotal();
+    }
+
+    function CheckValueQty(Serial) {
+        if ($('#PurchaseOrderInDirect_Qty_' + Serial)[0].value < 0) {
+            $('#PurchaseOrderInDirect_Qty_' + Serial)[0].value = 0;
+            $('#PurchaseOrderInDirect_Qty_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن تكون الكمية أكبر من صفر", "The Qty Must be Greater Than Zero")');
+        }
+        if ($('#PurchaseOrderInDirect_Qty_' + Serial)[0].value == "") {
+            $('#PurchaseOrderInDirect_Qty_' + Serial)[0].value = 0;
+        }
+        sumPersTotal();
+    }
+
+    function CheckValueQty2(Serial) {
+        if ($('#PurchaseOrderInDirect_Qty2_' + Serial)[0].value < 0) {
+            $('#PurchaseOrderInDirect_Qty2_' + Serial)[0].value = 0;
+            $('#PurchaseOrderInDirect_Qty2_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن تكون الكمية 2 أكبر من صفر", "The Qty 2 Must be Greater Than Zero")');
+        }
+        if ($('#PurchaseOrderInDirect_Qty2_' + Serial)[0].value == "") {
+            $('#PurchaseOrderInDirect_Qty2_' + Serial)[0].value = 0;
+        }
+    }
+    function CheckValueBonus(Serial) {
+        if ($('#PurchaseOrderInDirect_Bouns_' + Serial)[0].value < 0) {
+            $('#PurchaseOrderInDirect_Bouns_' + Serial)[0].value = 0;
+            $('#PurchaseOrderInDirect_Bouns_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن تكون الكمية 2 أكبر من صفر", "The Qty 2 Must be Greater Than Zero")');
+        }
+        if ($('#PurchaseOrderInDirect_Bouns_' + Serial)[0].value == "") {
+            $('#PurchaseOrderInDirect_Bouns_' + Serial)[0].value = 0;
+        }
+    }
+    sumTotalAll()
+    function sumTotalAll() {
+        var table = $('#PurchaseOrderInDirectTBody tr');
+        var trs = table;
+        var totalAmount = 0;
+        var itemDiscVal = 0;
+        var totalDiscVal = 0;
+        var totalTaxVal = 0;
+        var itemTaxPer = 0;
+        var TotalNetAmount = 0;
+        var TotalAmnt = 0;
+        var Total = 0;
+        var FreightCost = 0;
+        var ExtraExp = 0;
+
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value;
+            itemTaxPer = Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_STax_Perc_' + InputSerial)[0].value);
+            itemDiscVal = Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_Qty_' + InputSerial)[0].value) * Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_SellPrice_' + InputSerial)[0].value) * Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_DiscPer_' + InputSerial)[0].value) / 100;
+            ItemTaxVal = (Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_Qty_' + InputSerial)[0].value) * Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_SellPrice_' + InputSerial)[0].value) - Number(itemDiscVal)) * (Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_STax_Perc_' + InputSerial)[0].value) / 100);
+
+
+            Total = (Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_SellPrice_' + InputSerial)[0].value) * Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_Qty_' + InputSerial)[0].value)) - ((Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_SellPrice_' + InputSerial)[0].value) * Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_Qty_' + InputSerial)[0].value)) * Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_DiscPer_' + InputSerial)[0].value)) / 100;
+            $(trs[i]).closest('tr').find('#PurchaseOrderInDirect_Total_' + InputSerial)[0].innerHTML = Number(Total).toFixed(3)
+
+            totalAmount = Number(totalAmount) + Number(Total);
+            totalTaxVal = Number(totalTaxVal) + Number(Total) * (itemTaxPer / 100);
+            totalDiscVal = Number(totalDiscVal) + itemDiscVal
+        }
+
+        FreightCost = Number($('#MRP_PurchaseOrderInDirect_FreightCost').val())
+        ExtraExp = Number($('#MRP_PurchaseOrderInDirect_ExtraExp').val())
+
+
+        TotalAmnt = Number(totalAmount) + Number(totalDiscVal)
+        TotalNetAmount = (Number(TotalAmnt) + Number(totalTaxVal)) - Number(totalDiscVal);
+        TotalNetAmount = Number(TotalNetAmount) + Number(FreightCost) + Number(ExtraExp);
+        $('#MRP_PurchaseOrderInDirect_Amount').val(Number(TotalAmnt).toFixed(3));
+        $('#MRP_PurchaseOrderInDirect_Discount').val(Number(totalDiscVal).toFixed(3));
+        $('#MRP_PurchaseOrderInDirect_TaxAmount').val(Number(totalTaxVal).toFixed(3));
+        $('#MRP_PurchaseOrderInDirect_NetAmount').val(Number(TotalNetAmount).toFixed(3));
+
+    }
+
+    function CheckValueGrid(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt == 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+        else {
+            if (Amt == '' || Amt == null) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function ExcuteSaveProd_PurchOrd() {
+
+        var table = $('#PurchaseOrderInDirectTBody tr');
+        var trs = table;
+        var Per_Tax = (Number(MRP_PurchaseOrderInDirect_TaxAmount.value) / Number(MRP_PurchaseOrderInDirect_Amount.value)) * 100
+
+        var OrdHF = {
+            CompNo: '@company.comp_num',
+            OrdYear: @OrdYear,
+            OrderNo: @OrdNo,
+            TawreedNo: @OrdNo,
+            OfferNo: @OrdNo,
+            Vend_Dept: MRP_PurchaseOrderInDirect_DeptId.value,
+            VendorNo: @ordHf.VendorNo,
+            EnterDate: '@DateTime.Now.ToShortDateString()',
+            ExpShDate: MRP_PurchaseOrderInDirect_ETDate.value,
+            CurType: MRP_PurchaseOrderInDirect_txtCurrCode.value,
+            PayWay: MRP_PurchaseOrderInDirect_txtPaymentType.value,
+            ShipWay: MRP_PurchaseOrderInDirect_txtShipMethod.value,
+            StoreNo: 0,
+            DlvryPlace: MRP_PurchaseOrderInDirect_txtDeliveryPlace.value,
+            Notes: MRP_PurchaseOrderInDirect_Notes.value,
+            QutationRef: MRP_PurchaseOrderInDirect_QutationRef.value,
+            DlvDays: MRP_PurchaseOrderInDirect_DeliveryDays.value,
+            MainPeriod: MRP_PurchaseOrderInDirect_MaintPeriod.value,
+            Vou_Tax: MRP_PurchaseOrderInDirect_TaxAmount.value,
+            Per_Tax: Number(Per_Tax).toFixed(3),
+            TotalAmt: MRP_PurchaseOrderInDirect_Amount.value,
+            NetAmt: MRP_PurchaseOrderInDirect_NetAmount.value,
+            OrderClose: false,
+            DlvState: 0,
+            UnitKind: 'Each',
+            PInCharge: MRP_PurchaseOrderInDirect_ContactPerson.value,
+            LcDept: 0,
+            LcAccNo: 0,
+            ConfDate: MRP_PurchaseOrderInDirect_ConfDate.value,
+            ApprovalDate: MRP_PurchaseOrderInDirect_ConfDate.value,
+            SourceType: 1,
+            GenNote: '',
+            UseOrderAprv: false,
+            Approved: false,
+            IsLC: 0,
+            ETA: MRP_PurchaseOrderInDirect_ETADate.value,
+            VouDiscount: 0,
+            PerDiscount: 0,
+            ShipTerms: 0,
+            ContactNo: 0,
+            Port: "",
+            FreightExpense: MRP_PurchaseOrderInDirect_FreightCost.value,
+            ExtraExpenses: MRP_PurchaseOrderInDirect_ExtraExp.value,
+            LastCost: 0,
+            RefNo: MRP_PurchaseOrderInDirect_RefNo.value
+        };
+
+        var OrdDF = new Array();
+
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#PurchaseOrderInDirect_Qty_' + InputSerial)[0].value)) {
+                alert('@Html.Translate("يجب إدخال الكمية", "You Must Enter Qty")');
+                return;
+            }
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#PurchaseOrderInDirect_SellPrice_' + InputSerial)[0].value)) {
+                alert('@Html.Translate("يجب إدخال السعر", "ou Must Enter Price")');
+                return;
+            }
+
+            var itemDiscVal = 0;
+            var ItemTaxVal = 0;
+
+            itemDiscVal = (Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_Qty_' + InputSerial)[0].value) * Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_SellPrice_' + InputSerial)[0].value) * Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_DiscPer_' + InputSerial)[0].value)) / 100;
+            ItemTaxVal = (Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_Qty_' + InputSerial)[0].value) * Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_SellPrice_' + InputSerial)[0].value) - Number(itemDiscVal)) * (Number($(trs[i]).closest('tr').find('#PurchaseOrderInDirect_STax_Perc_' + InputSerial)[0].value) / 100);
+            OrdDF.push({
+                CompNo: '@company.comp_num',
+                OrdYear: @OrdYear,
+                OrderNo: @OrdNo,
+                TawreedNo: @OrdNo,
+                ItemNo: $(trs[i]).closest('tr').find('#PurchaseOrderInDirect_ItemNo')[0].innerHTML,
+                PUnit: $(trs[i]).closest('tr').find('#PurchaseOrderInDirect_UnitName')[0].innerHTML,
+                PerDiscount: $(trs[i]).closest('tr').find('#PurchaseOrderInDirect_DiscPer_' + InputSerial)[0].value,
+                Bonus: $(trs[i]).closest('tr').find('#PurchaseOrderInDirect_Bouns_' + InputSerial)[0].value,
+                Qty: $(trs[i]).closest('tr').find('#PurchaseOrderInDirect_Qty_' + InputSerial)[0].value,
+                Qty2: $(trs[i]).closest('tr').find('#PurchaseOrderInDirect_Qty2_' + InputSerial)[0].value,
+                Price: $(trs[i]).closest('tr').find('#PurchaseOrderInDirect_SellPrice_' + InputSerial)[0].value,
+                ItemTaxVal: ItemTaxVal,
+                ItemTaxPer: $(trs[i]).closest('tr').find('#PurchaseOrderInDirect_STax_Perc_' + InputSerial)[0].value,
+                Price2: 0,
+                Price3: 0,
+                RefNo: $(trs[i]).closest('tr').find('#PurchaseOrderInDirect_RefNo_' + InputSerial)[0].value,
+                Paper: false,
+                ordamt: $(trs[i]).closest('tr').find('#PurchaseOrderInDirect_Total_' + InputSerial)[0].innerHTML,
+                Note: $(trs[i]).closest('tr').find('#PurchaseOrderInDirect_ReqNotes_' + InputSerial)[0].value
+            });
+        }
+
+        var OrdCondsGuaranty = {
+            CompNo: '@company.comp_num',
+            OrdYear: @OrdYear,
+            OrderNo: @OrdNo,
+            TwareedNo: @OrdNo,
+            PayCond1: MRP_PurchaseOrderInDirect_txtPaymentCond1.value,
+            PayCond2: MRP_PurchaseOrderInDirect_txtPaymentCond2.value,
+            PayCond3: MRP_PurchaseOrderInDirect_txtPaymentCond3.value,
+            PayCond4: MRP_PurchaseOrderInDirect_txtPaymentCond4.value,
+            PayCond5: MRP_PurchaseOrderInDirect_txtPaymentCond5.value,
+            CondPerc1: MRP_PurchaseOrderInDirect_txtPaymentPerc1.value,
+            CondPerc2: MRP_PurchaseOrderInDirect_txtPaymentPerc2.value,
+            CondPerc3: MRP_PurchaseOrderInDirect_txtPaymentPerc3.value,
+            CondPerc4: MRP_PurchaseOrderInDirect_txtPaymentPerc4.value,
+            CondPerc5: MRP_PurchaseOrderInDirect_txtPaymentPerc5.value,
+            Guaranty1: MRP_PurchaseOrderInDirect_txtGuaranty1.value,
+            Guaranty2: MRP_PurchaseOrderInDirect_txtGuaranty2.value,
+            Guaranty3: MRP_PurchaseOrderInDirect_txtGuaranty3.value,
+            Guaranty4: MRP_PurchaseOrderInDirect_txtGuaranty4.value,
+            Guaranty5: MRP_PurchaseOrderInDirect_txtGuaranty5.value,
+            GuarantyPerc1: MRP_PurchaseOrderInDirect_txtGuarantyPerc1.value,
+            GuarantyPerc2: MRP_PurchaseOrderInDirect_txtGuarantyPerc2.value,
+            GuarantyPerc3: MRP_PurchaseOrderInDirect_txtGuarantyPerc3.value,
+            GuarantyPerc4: MRP_PurchaseOrderInDirect_txtGuarantyPerc4.value,
+            GuarantyPerc5: MRP_PurchaseOrderInDirect_txtGuarantyPerc5.value
+        }
+
+        wait();
+        burn({ BU: MRP_PurchaseOrderInDirect_BusinessUnit.value, OrdHF: OrdHF, OrdDF: OrdDF, OrdCondsGuaranty: OrdCondsGuaranty }, '../../../PriceOffersApproval/CreatePurchaseOrderInDirect', '', ReloadPurchaseOrderInDirect, false);
+    }
+    function ReloadPurchaseOrderInDirect(r) {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        CloseWindow('/PriceOffersApproval/AddPurchaseOrderInDirect?OrdYear=' + r.OrdYear + '&OrdNo=' + r.OrdNo +'');
+    }
+
+</script>

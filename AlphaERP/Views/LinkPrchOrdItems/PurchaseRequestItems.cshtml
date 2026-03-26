@@ -1,0 +1,124 @@
+﻿@model IEnumerable<AlphaERP.Models.Ord_RequestDF>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    DataTable Dt = new DataTable();
+    List<InvItemsMF> Mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+    int Srial = 1;
+}
+
+
+@foreach (Ord_RequestDF item in Model)
+{
+    string ItemDesc = Mf.Where(x => x.ItemNo == item.SubItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+    string SubItemDesc = Mf.Where(x => x.ItemNo == item.SubItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+    string UnitSerial = item.SubUnitSerial.Value.ToString();
+<tr id="LinkPrchOrdDetItem_@Srial">
+    <td style="text-align:center;" id="LinkPrchOrdItems_ItemNo_@Srial">@item.ItemNo</td>
+    <input type="hidden" id="ItemSrl_@Srial" value="@item.ItemSr" />
+    <td style="text-align: center;">@ItemDesc</td>
+    <td style="text-align: center;">
+        @item.TUnit
+    </td>
+    <td style="text-align: center;" id="LinkPrchOrdItems_SubItemNo_@Srial">@item.SubItemNo</td>
+    <td style="text-align: center;" id="LinkPrchOrdItems_SubItemDesc_@Srial">@SubItemDesc</td>
+    @if (item.bPurchaseOrder == false)
+    {
+        <td style="text-align: center;">
+            <button onclick="EditRmCode(@Srial)" type="button" class="btn btn-primary">@Html.Recource(4756)</button>
+        </td>
+        <td style="text-align: center;">
+            <select style="width:100%" class="LinkPrchOrdItems_Item_SubUnit">
+                @{
+                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                    {
+                        Dt = new DataTable();
+                        cn.Open();
+                        using (SqlCommand cmd = new SqlCommand())
+                        {
+                            cmd.Connection = cn;
+                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                            cmd.CommandText = "InvT_LoadItemUnits";
+                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                            cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = item.SubItemNo;
+                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                            {
+                                DA.Fill(Dt);
+                            }
+                        }
+                    }
+                }
+                @foreach (DataRow row in Dt.Rows)
+                {
+                    if (UnitSerial == row["UnitSerial"].ToString())
+                    {
+                        <option value="@row["UnitSerial"].ToString()" selected>
+                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="@row["UnitSerial"].ToString()">
+                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                        </option>
+                    }
+
+                }
+            </select>
+        </td>
+    }
+    else
+    {
+        <td></td>
+        <td style="text-align: center;">
+            <select style="width:100%" class="LinkPrchOrdItems_Item_SubUnit" disabled>
+                @{
+                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                    {
+                        Dt = new DataTable();
+                        cn.Open();
+                        using (SqlCommand cmd = new SqlCommand())
+                        {
+                            cmd.Connection = cn;
+                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                            cmd.CommandText = "InvT_LoadItemUnits";
+                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                            cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = item.SubItemNo;
+                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                            {
+                                DA.Fill(Dt);
+                            }
+                        }
+                    }
+                }
+                @foreach (DataRow row in Dt.Rows)
+                {
+                    if (UnitSerial == row["UnitSerial"].ToString())
+                    {
+                        <option value="@row["UnitSerial"].ToString()" selected>
+                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="@row["UnitSerial"].ToString()">
+                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                        </option>
+                    }
+
+                }
+            </select>
+        </td>
+    }
+
+    <td></td>
+    <input type="hidden" id="InputItemSerial" value="@(Srial++)" />
+</tr>
+}
+
+<script>
+    $('.LinkPrchOrdItems_Item_Unit').select2();
+</script>

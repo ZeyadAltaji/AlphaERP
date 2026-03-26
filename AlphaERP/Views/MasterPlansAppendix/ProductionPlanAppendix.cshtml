@@ -1,0 +1,161 @@
+﻿@model AlphaERP.Models.MRP_ProdPlanDetails
+@using AlphaERP.Models
+@{  
+    Company company = (Company)Session["company"];
+    string date = DateTime.Now.ToString("yyyy-MM-dd");
+    string StartDate = Model.StartDate.Value.ToString("yyyy-MM-dd");
+    string EndDate = Model.EndDate.Value.ToString("yyyy-MM-dd");
+    List<MRP_GeneralPlanSubDtls> UPlanSubDtls = new MDB().MRPGeneralPlanSubDtls.Where(x => x.CompNo == company.comp_num && x.PlanYear == Model.PlanYear
+    && x.PlanNo == Model.PlanNo && x.ItemNo == Model.ItemNo && x.FormulaCode == Model.FormulaCode).ToList();
+}
+    <style>
+        .SubItemsDetailsTable thead tr th {
+            padding: 8px 15px !important;
+            text-align: center;
+        }
+
+        .SubItemsDetailsTable thead tr th, td {
+            white-space: nowrap;
+        }
+
+        .SubItemsDetailsTable .SubItemsDetailsTbody tr th, td {
+            text-align: center !important;
+        }
+    </style>
+<div class="modal-body row">
+    <div class="form-group">
+        <div class="col-md-2">
+            <label class="unselectable" for="SAVE_MasterPlansAppendix_ItemName">@Resources.Resource.ItemName </label>
+        </div>
+        <div class="col-md-4" style="margin-bottom: 5px;">
+            <label title="@Model.ItemDesc" class="unselectable" for="SAVE_MasterPlansAppendix_ItemName">
+                @Html.Trim(Model.ItemDesc,30)
+            </label>
+        </div>
+        <div class="col-md-2">
+            <label class="unselectable" for="SAVE_MasterPlansAppendix_formula_desc">@Html.Recource(283)</label>
+        </div>
+        <div class="col-md-4" style="margin-bottom: 5px;">
+            <label class="unselectable" for="SAVE_MasterPlansAppendix_formula_desc">
+                @Model.formula_desc
+            </label>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-2">
+            <label class="unselectable" for="SAVE_MasterPlansAppendix_MainUnit">@Resources.Resource.MainUnit </label>
+        </div>
+        <div class="col-md-4" style="margin-bottom: 5px;">
+            <label class="unselectable" for="SAVE_MasterPlansAppendix_MainUnit">
+                @Model.UnitDesc
+            </label>
+        </div>
+        <div class="col-md-2">
+            <label class="unselectable" for="SAVE_MasterPlansAppendix_QTY">@Resources.Resource.QTY</label>
+        </div>
+        <div class="col-md-4" style="margin-bottom: 5px;">
+            <label class="unselectable" for="SAVE_MasterPlansAppendix_QTY">
+                @Model.PQty
+            </label>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-12">
+            <button onclick="AddSubItem()" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+            <table class="table table-hover SubItemsDetailsTable">
+                <thead>
+                    <tr>
+                        <th>@Resources.Resource.StartDate</th>
+                        <th>@Resources.Resource.EndDate</th>
+                        <th>@Resources.Resource.QTY</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody class="SubItemsDetailsTbody">
+                    @foreach (MRP_GeneralPlanSubDtls item in UPlanSubDtls)
+                    {
+                        <tr>
+                            <td>
+                                <input id="subItem_startdate" type="date" style="width:125px !important" value="@item.FromDate.Value.ToString("yyyy-MM-dd")" />
+                            </td>
+                            <td>
+                                <input id="subItem_Endtdate" type="date" style="width:125px !important" value="@item.ToDate.Value.ToString("yyyy-MM-dd")" />
+                            </td>
+                            <td>
+                                <input id="subItem_Qty" type="number" style="width:75px !important;text-align: center !important;" value="@item.Qty" />
+                            </td>
+                            <td>
+                                <button class="btn-de" onclick="RemoveRow(this)"><i class="fa fa-trash-alt"></i></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tbody class="SubItemsDetailsTbody" id="SubItemsDetTbody" style="border-top: 1px solid #ddd;">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal-footer">
+    <button type="button" onclick="Save_SubItem()" class="btn btn-primary">@Resources.Resource.Save</button>
+    <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+</div>
+
+<script>
+    function AddSubItem() {
+        var newarray = [];
+        newarray.push('<input id="subItem_startdate" type="date" style="width:125px !important" value="@date" />')
+        newarray.push('<input id="subItem_Endtdate" type="date" style="width:125px !important" value="@date" />')
+        newarray.push('<input id="subItem_Qty" type="number" style="width:75px !important;text-align: center !important;" />')
+        newarray.push('<button class="btn-de" onclick="RemoveRow(this)"><i class= "fa fa-trash-alt"></i ></button>')
+        $("#SubItemsDetTbody").append(
+            GenRow(newarray)
+        );
+    }
+    function Save_SubItem() {
+        var Total = 0;
+        var overlap =0;
+        var ItemSub = new Array();
+        var table = $('.SubItemsDetailsTbody tr');
+        var trs = table;
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i]).closest('tr').find('#subItem_startdate')[0].value >= $(trs[i]).closest('tr').find('#subItem_Endtdate')[0].value) {
+                alert('@Html.Translate("تاريخ البداية اقل من تاريخ النهاية", "The start date is less than the end date")');
+                $(trs[i]).closest('tr').find('#subItem_startdate')[0].focus();
+                return false;
+            }
+            
+            if (($(trs[i]).closest('tr').find('#subItem_startdate')[0].value < '@StartDate') || ($(trs[i]).closest('tr').find('#subItem_Endtdate')[0].value > '@EndDate')) {
+                alert('@Html.Translate("التاريخ ليس من ضمن فترة الخطة", "History is not part of the plan period")');
+                $(trs[i]).closest('tr').find('#subItem_startdate')[0].focus();
+                return false;
+            }
+            
+            ItemSub.push({
+                PlanYear:  '@Model.PlanYear',
+                PlanNo: '@Model.PlanNo',
+                FormulaCode: '@Model.FormulaCode',
+                ItemNo: '@Model.ItemNo',
+                FromDate: $(trs[i]).closest('tr').find('#subItem_startdate')[0].value,
+                ToDate: $(trs[i]).closest('tr').find('#subItem_Endtdate')[0].value,
+                Qty: $(trs[i]).closest('tr').find('#subItem_Qty')[0].value
+            });
+            Total = Number(Total) + Number($(trs[i]).closest('tr').find('#subItem_Qty')[0].value);
+        }
+        Total = Number(Total).toFixed(3)
+        if (Total != Number('@Model.PQty').toFixed(3)) {
+            alert('@Html.Translate("الكمية المدخلة غير مطابقة للكمية المطلوبة", "The quantity entered does not match the required quantity")');
+            return false;
+        }
+
+        wait();
+        burn({ PlanSub: ItemSub }, '../../../MasterPlansAppendix/CreateGeneralPlanSub', '', LoadGeneralPlanSub, true);
+    }
+
+</script>

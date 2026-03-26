@@ -1,0 +1,132 @@
+﻿@using System.Data.SqlClient;
+@using AlphaERP.Models
+
+@{
+    int OrdYear = ViewBag.OrdYear;
+    int OrderNo = ViewBag.OrderNo;
+    string TawreedNo = ViewBag.TawreedNo;
+    string srl = TawreedNo + 1;
+    Company company = (Company)Session["company"];
+    User me = (User)Session["me"];
+    List<int> store = new MDB().InvStoreUsers.Where(x => x.CompNo == company.comp_num && x.UserID == me.UserID && x.AllPerm == true).Select(o => o.StoreNo).ToList();
+
+    List<Ord_VoucIssueHF> OrdIssueHF = new MDB().Ord_VoucIssueHF.Where(x => x.CompNo == company.comp_num && x.OrderYear == OrdYear
+&& x.OrderNo == OrderNo && x.TawreedNo == TawreedNo && x.VouType == 11 && store.Contains(x.StoreNo.Value)).ToList();
+    int Srial = 1;
+}
+
+<style>
+    tr.details {
+        max-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    tr.details {
+        background-color: gray !important;
+        border-style: solid !important;
+    }
+</style>
+
+<div id="OrdVoucIssueTable_@srl">
+    <div style="width: 100%; padding: 1px; background: #fff !important ">
+        <table class="table table-hover" id="OrdVoucIssueTable_@srl" style="background:lightgray;width:100%">
+            <thead>
+                <tr>
+                    <th>@Html.Recource(60)</th>
+                    <th>@Html.Recource(77)</th>
+                    <th>@Html.Recource(61)</th>
+                    <th>@Html.Recource(1)</th>
+                    <th>@Html.Recource(70)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (Ord_VoucIssueHF item in OrdIssueHF)
+                {
+                    InvDocType DocType = new MDB().InvDocTypes.Where(x => x.CompNo == company.comp_num && x.DocType == item.DocType && x.VouchType == 11).FirstOrDefault();
+                    InvStoresMF Stores = new MDB().InvStoresMFs.Where(x => x.CompNo == company.comp_num && x.StoreNo == item.StoreNo).FirstOrDefault();
+
+                    string VouTypeDesc = "";
+                    switch (item.VouType)
+                    {
+                        case 11:
+                            VouTypeDesc = Html.Translate("أمر صرف", "Order Issue").ToString();
+                            break;
+                        case 13:
+                            VouTypeDesc = Html.Translate("أمر اتلاف", "Write-off Order").ToString();
+                            break;
+                    }
+                <tr id="OrdVoucHF_@Srial">
+                    <td id="OrdVoucHF_VouNo_@Srial">@item.VouNo</td>
+                    <td id="OrdVoucHF_ReceiptDate_@Srial">@item.VouDate.Value.ToString("yyyy-MM-dd")</td>
+                    <td id="OrdVoucHF_DocType_@Srial">@Html.Translate(DocType.DocName, DocType.DocNameEng)</td>
+                    <td id="OrdVoucHF_Stores_@Srial">@Html.Translate(Stores.StoreName, Stores.StoreNameEng)</td>
+                    <td id="OrdVoucHF_Notes_@Srial">@item.Notes</td>
+                    <td>
+                        @if (item.IsApproval == false)
+                        {
+                            <button onclick="EditPaymentOrder('@item.OrderYear','@item.OrderNo','@item.TawreedNo','@item.VouNo','@item.VouType')" type="button" class="btn btn-ed ex" title="@Html.Translate("تعديل سند صرف", "Edit Payment Order")">
+                                <i class="fa fa-pencil-alt"></i>
+                            </button>
+                            <button id="ePaymentOrder" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                                @Html.Translate("تعديل سند صرف", "Edit Payment Order")
+                            </button>
+                            <button class="btn-de" onclick="DeleteVoucIssue('@item.OrderYear','@item.OrderNo', '@item.TawreedNo','@item.VouNo','@item.VouType')">
+                                <i class="fa fa-trash-alt" aria-hidden="true"></i>
+                            </button>
+                            <button class="btn btn-primary ex" title="ترحيل" onclick="PostedVoucIssue('@item.OrderYear','@item.OrderNo', '@item.TawreedNo','@item.VouNo','@item.VouType')">
+                                <i style="font-weight:100" class="fa fa-folder"></i>
+                                @Html.Translate("ترحيل", "Posted")
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-ed ex" target="_blank" disabled>
+                                <i class="fa fa-pencil-alt"></i>
+                            </button>
+                            <button class="btn-de" onclick="DeleteVoucIssue('@item.OrderYear','@item.OrderNo', '@item.TawreedNo','@item.VouNo','@item.VouType')" disabled>
+                                <i class="fa fa-trash-alt" aria-hidden="true"></i>
+                            </button>
+                            <button class="btn btn-primary ex" title="ترحيل" href="/VoucIssue/PostedVoucIssue?OrdYear=@item.OrderYear&OrderNo=@item.OrderNo&TawreedNo=@item.TawreedNo&VouNo=@item.VouNo&VouType=@item.VouType" target="_blank" disabled>
+                                <i style="font-weight:100" class="fa fa-folder"></i>
+                                @Html.Translate("ترحيل", "Posted")
+                            </button>
+                        }
+                        <button class="btn btn-primary ex" title=" @Html.Translate("نسخ", "Copy")" onclick="CopyVoucIssue('@item.OrderYear','@item.OrderNo','@item.TawreedNo','@item.VouNo','@item.VouType')" >
+                            <i style="font-weight:100" class="fa fa-folder"></i>
+                            @Html.Translate("نسخ", "Copy")
+                        </button>
+                        <button id="CVoucIssue" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                            @Html.Translate("اضافة سند صرف", "Add Payment Order")
+                        </button>
+                        <button class="btn btn-default ex" title="عرض" href="/VoucIssue/ViewPaymentOrder?OrdYear=@item.OrderYear&OrderNo=@item.OrderNo&TawreedNo=@item.TawreedNo&VouNo=@item.VouNo&VouType=@item.VouType" target="_blank">
+                            <i style="font-weight:100" class="fa fa-folder"></i>
+                            @Html.Translate("عرض", "View")
+                        </button>
+                        <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+
+
+<script>
+    function EditPaymentOrder(OrdYear, OrdNo, TawreedNo, VouNo, VouType) {
+        $('#ePaymentOrder').attr("href", '/VoucIssue/EditPaymentOrder?OrdYear=' + OrdYear + '&OrderNo=' + OrdNo + '&TawreedNo=' + TawreedNo + '&VouNo=' + VouNo + '&VouType=' + VouType + '')
+        $('#ePaymentOrder').click();
+    }
+
+    function CopyVoucIssue(OrdYear, OrdNo, TawreedNo, VouNo, VouType) {
+        $('#CVoucIssue').attr("href", '/VoucIssue/CopyVoucIssue?OrdYear=' + OrdYear + '&OrderNo=' + OrdNo + '&TawreedNo=' + TawreedNo + '&VouNo=' + VouNo + '&VouType=' + VouType + '')
+        $('#CVoucIssue').click();
+    }
+</script>
+
+

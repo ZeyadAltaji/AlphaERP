@@ -1,0 +1,12 @@
+﻿
+@model List<AlphaERP.Models.BOM_GetFormStagesView>
+
+
+<select class="col-form-label col-form-label-sm" style="width: 19rem;" id="stageSelect" onchange="handleStageSelection()">
+    <option selected value="0">@Html.Translate("أختار مرحلة","Select Stage")</option>
+    @foreach (var item in Model)
+    {
+        <option value="@item.Stage_code">@item.stage_desc</option>
+
+    }
+</select>

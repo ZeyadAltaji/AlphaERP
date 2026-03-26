@@ -1,0 +1,146 @@
+﻿@using AlphaERP.Models
+
+@{
+    int OrdYear = ViewBag.OrdYear;
+    int OrderNo = ViewBag.OrderNo;
+    string TawreedNo = ViewBag.TawreedNo;
+    string InboundSer = ViewBag.InboundSer;
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    List<Ord_InboundManagementHF> InboundManagementHF = new MDB().Ord_InboundManagementHF.Where(x => x.CompNo == company.comp_num && x.OrderYear == OrdYear
+&& x.OrderNo == OrderNo && x.TawreedNo == TawreedNo && x.InboundSer == InboundSer && x.IsApproval == true).ToList();
+
+    InboundManagementHF = InboundManagementHF.Where(x => x.IsMarketing == true || x.IsQualityControl == true || x.Istqm == true).ToList();
+    int Srial = 1;
+
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+}
+
+
+<table class="table table-hover" id="ReleaseOrdersHFTable">
+    <thead>
+        <tr>
+            @if (CActive.ClientNo != 239)
+            {
+                <th style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center !important;">@Html.Recource(3229)</th>
+                <th style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center !important;">@Html.Translate("رقم الواردة", "Inbound No.")</th>
+                <th style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center !important;">@Html.Recource(206)</th>
+                <th style="width: 15%; text-align: center !important;">@Html.Recource(3197)</th>
+                <th style="width: 15%; text-align: center !important;">@Html.Recource(3797)</th>
+                <th style="width: 15%; text-align: center !important;">@Html.Recource(1)</th>
+                <th style="width: 15%; text-align: center !important;">@Html.Recource(70)</th>
+                <th></th>
+            }
+            else
+            {
+                <th style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center !important;">@Html.Recource(3229)</th>
+                <th style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center !important;">@Html.Translate("رقم الواردة", "Inbound No.")</th>
+                <th style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center !important;">@Html.Recource(206)</th>
+                <th style="width: 15%; text-align: center !important;">@Html.Recource(3197)</th>
+                <th style="width: 15%; text-align: center !important;">@Html.Translate("# طلب الشراء الفا", "# P.R No")</th>
+                <th style="width: 15%; text-align: center !important;">@Html.Translate("# إمر الشراء الفا", "# P.O No.")</th>
+                <th style="width: 15%; text-align: center !important;">@Html.Recource(1)</th>
+                <th style="width: 15%; text-align: center !important;">@Html.Recource(70)</th>
+                <th></th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (Ord_InboundManagementHF item in InboundManagementHF)
+        {
+            InvStoresMF StoreM = new MDB().InvStoresMFs.Where(x => x.CompNo == item.CompNo && x.StoreNo == item.InboundGRNStoreNo).FirstOrDefault();
+            if (CActive.ClientNo != 239)
+            {
+                <tr id="ReleaseOrdersHF_@Srial" OrdYear="@item.OrderYear" OrderNo="@item.OrderNo" TawreedNo="@item.TawreedNo" InboundSer="@item.InboundSer" InboundGRN="@item.InboundGRN">
+                    <td style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center;direction:ltr;" id="ReleaseOrdersHF_InboundNo_@Srial">@item.InboundGRN</td>
+                    <td style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center; direction: ltr;">@item.InboundSer</td>
+                    <td style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center;" id="ReleaseOrdersHF_InboundDate_@Srial">@item.InboundGRNDate.Value.ToString("yyyy-MM-dd")</td>
+                    <td style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center;">@item.OrderNo</td>
+                    <td style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center;">@item.TawreedNo</td>
+                    <td style="width: 15%; text-align: center; word-wrap: break-word; white-space: normal;" id="ReleaseOrdersHF_InboundStores_@Srial">@Html.Translate(StoreM.StoreName, StoreM.StoreNameEng)</td>
+                    <td style="word-wrap: break-word; white-space: normal; width: 20%; text-align: center;">@item.InboundGRNNotes</td>
+                    <td>
+                        <button style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default ex" title="@Html.Recource(769)">
+                            <i style="font-weight:100" class="fa fa-folder"></i>
+                        </button>
+                        <button onclick="CreateReleaseOrders('@item.OrderYear', '@item.OrderNo', '@item.TawreedNo', '@item.InboundSer', '@item.InboundGRN','@item.InboundGRNStoreNo')" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default" title="@Html.Translate("اضافة فك الحجز", "Add Release Orders")">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                        <button id="AddReleaseOrders" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                            @Html.Translate("اضافة فك الحجز", "Add Release Orders")
+                        </button>
+                        <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                    </td>
+                </tr>
+            }
+            else
+            {
+                Ord_RequestDF DF = new MDB().Ord_RequestDF.Where(x => x.CompNo == company.comp_num && x.PurchaseOrderYear == item.OrderYear && x.PurchaseOrderNo == item.OrderNo && x.PurchaseOrdTawreedNo == item.TawreedNo).FirstOrDefault();
+                <tr id="ReleaseOrdersHF_@Srial" OrdYear="@item.OrderYear" OrderNo="@item.OrderNo" TawreedNo="@item.TawreedNo" InboundSer="@item.InboundSer" InboundGRN="@item.InboundGRN">
+                    <td style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center;direction:ltr;" id="ReleaseOrdersHF_InboundNo_@Srial">@item.InboundGRN</td>
+                    <td style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center; direction: ltr;">@item.InboundSer</td>
+                    <td style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center;" id="ReleaseOrdersHF_InboundDate_@Srial">@item.InboundGRNDate.Value.ToString("yyyy-MM-dd")</td>
+                    <td style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center;">@DF.ReqNo</td>
+                    <td style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center;">@item.OrderNo</td>
+                    <td style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center;">@item.TawreedNo</td>
+                    <td style="width: 15%; text-align: center; word-wrap: break-word; white-space: normal;" id="ReleaseOrdersHF_InboundStores_@Srial">@Html.Translate(StoreM.StoreName, StoreM.StoreNameEng)</td>
+                    <td style="word-wrap: break-word; white-space: normal; width: 20%; text-align: center;">@item.InboundGRNNotes</td>
+                    <td>
+                        <button style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default ex" title="@Html.Recource(769)">
+                            <i style="font-weight:100" class="fa fa-folder"></i>
+                        </button>
+                        <button onclick="CreateReleaseOrders('@item.OrderYear', '@item.OrderNo', '@item.TawreedNo', '@item.InboundSer', '@item.InboundGRN','@item.InboundGRNStoreNo')" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default" title="@Html.Translate("اضافة فك الحجز", "Add Release Orders")">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                        <button id="AddReleaseOrders" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                            @Html.Translate("اضافة فك الحجز", "Add Release Orders")
+                        </button>
+                        <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<script>
+    var ReleaseOrdersHFTable;
+    ReleaseOrdersHFTable = $('#ReleaseOrdersHFTable').dataTable({
+        "scrollY": 'calc( 100vh - 270px)',
+        "paging": true,
+        "pageLength": 25,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+
+    function CreateReleaseOrders(OrdYear, OrdNo, TawreedNo, InboundSer, InboundGRN,StoreNo) {
+        $('#AddReleaseOrders').attr("href", '/ReleaseOrders/AddReleaseOrders?OrdYear=' + OrdYear + '&OrderNo=' + OrdNo + '&TawreedNo=' + TawreedNo + '&InboundSer=' + InboundSer + '&InboundGRN=' + InboundGRN + '&StoreNo=' + StoreNo + '')
+        $('#AddReleaseOrders').click();
+    }
+
+
+    $('#ReleaseOrdersHFTable tbody td button.ex').click(function () {
+        var nTr = this.parentNode.parentNode;
+        if ($(this).attr("opened") == 'details_close') {
+            ReleaseOrdersHFTable.fnClose(nTr);
+            $(this).attr("opened", "details_open");
+        }
+        else {
+            wait();
+            $(this).attr("opened", "details_close");
+            
+            var OrdYear = $(this.parentNode.parentNode).attr("OrdYear");
+            var OrderNo = $(this.parentNode.parentNode).attr("OrderNo");
+            var TawreedNo = $(this.parentNode.parentNode).attr("TawreedNo");
+            var InboundSer = $(this.parentNode.parentNode).attr("InboundSer");
+            var InboundGRN = $(this.parentNode.parentNode).attr("InboundGRN");
+
+            $.get("../../../../ReleaseOrders/DetailsReleaseOrders?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo + '&InboundSer=' + InboundSer + '&InboundGRN=' + InboundGRN, function (data) {
+                ReleaseOrdersHFTable.fnOpen(nTr, data, 'details');
+                done();
+            });
+        }
+    });
+
+</script>

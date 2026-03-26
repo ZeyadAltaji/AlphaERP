@@ -1,0 +1,724 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@{
+    Company company = (Company)Session["company"];
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+    List<PayCodes> Currency = ViewBag.Currency;
+    List<PayCodes> PrdType = ViewBag.PrdType;
+    List<PayCodes> Purpose = ViewBag.Purpose;
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    List<User> users = new MDB().Users.ToList();
+}
+
+<style>
+    .modal-title {
+        width: calc(100% - 120px) !important;
+        text-align: center;
+        position: absolute;
+        font-weight: bold;
+    }
+    .modal-body{
+        max-height: 78vh !important;
+    }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(100vh - 210px) !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="ProdCost_PurchaseReqHF_save_ReqDate">@Html.Recource(58) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 125px !important;" type="date" id="ProdCost_PurchaseReqHF_save_ReqDate" placeholder="@Html.Recource(58)" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="ProdCost_PurchaseReqHF_save_ReqDeliveryDate">@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 125px !important;" type="date" id="ProdCost_PurchaseReqHF_save_ReqDeliveryDate" placeholder="@Html.Recource(58)" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="ProdCost_PurchaseReqHF_save_ReferenceNo">@Html.Recource(96) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important;" type="text" id="ProdCost_PurchaseReqHF_save_ReferenceNo" placeholder="@Html.Recource(96)" value="" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        @*<label class="unselectable">@Html.Recource(9700) </label>*@
+                        <label class="unselectable">@Html.Translate("موافقة المستخدم", "User approval")</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="ProdCost_PurchaseReqHF_save_CboReqBU">
+                            @*@Html.MyBusinessUnits()*@
+                            @foreach (var v in users)
+                            {
+                                <option value="@v.UserID">@v.UserName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(9701) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="ProdCost_PurchaseReqHF_save_CboAuthBU">
+                            @Html.MyBusinessUnits()
+                        </select>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3242) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="ProdCost_PurchaseReqHF_save_CboPurpose">
+                            @foreach (var v in Purpose)
+                            {
+                                <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(9704) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="ProdCost_PurchaseReqHF_save_CboOrderPriority">
+                            <option value="0">@Html.Translate("عادي", "Normal")</option>
+                            <option value="1">@Html.Translate("متوسط", "Medium")</option>
+                            <option value="2">@Html.Translate("عاجل", "Urgently")</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(1671) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="ProdCost_PurchaseReqHF_save_CboCurrCode">
+                            @foreach (var v in Currency)
+                            {
+                                <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3265) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="ProdCost_PurchaseReqHF_save_CboOrderType">
+                            @foreach (var v in PrdType)
+                            {
+                                <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="ProdCost_PurchaseReqHF_save_ReqNotes">@Html.Recource(70)</label>
+                    </div>
+                    <div class="col-md-8">
+                        <textarea required="true" style="width: 100%;height:58px !important;" id="ProdCost_PurchaseReqHF_save_ReqNotes" placeholder="@Html.Recource(70)" />
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary btn-block" onclick="AddDocuments()">
+                            @Html.Recource(7744)
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <label class="unselectable">@Html.Recource(4756) :</label>
+                    <button onclick="Add_InvItemsMF(1)" type="button" class="btn btn-default">@Html.Recource(4756)</button>
+                </div>
+                <div class="col-md-12" style="height:calc(100vh - 480px) !important;overflow-y:auto">
+                    <table class="table table-hover" id="PurchaseReqItemTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%; text-align: center !important;">@Html.Recource(44)</th>
+                                <th style="width: 35%; text-align: center !important;">@Html.Recource(74)</th>
+                                <th style="text-align: center !important;">@Html.Recource(67)</th>
+                                <th style="width: 90px !important; text-align: center !important;">@Html.Recource(3773)</th>
+                                <th style="width: 90px !important; text-align: center !important;">@Html.Recource(5432)</th>
+                                <th style="width: 90px !important; text-align: center !important;">@Html.Recource(3273)</th>
+                                @if (CActive.ClientNo == 335)
+                                {
+                                    <th style="text-align: center !important;">@Html.Recource(5693)</th>
+                                }
+                                else
+                                {
+                                    <th style="text-align: center !important;">@Html.Recource(49)</th>
+                                }
+                                @if (compMF.UseQty2 == true)
+                                {
+                                    if (CActive.ClientNo == 335)
+                                    {
+                                        <th style="text-align: center !important;">@Html.Recource(442)</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="text-align: center !important;">@Html.Recource(72)</th>
+                                    }
+                                }
+                                else
+                                {
+                                    <th hidden>@Html.Recource(72)</th>
+                                }
+                                <th style="text-align: center !important;">@Html.Translate("السعر المبدئي", "Budgetary Price")</th>
+                                <th style="text-align: center !important;">@Html.Recource(68)</th>
+                                <th style="text-align: center !important;">@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</th>
+                                <th style="text-align: center !important;">@Html.Recource(70)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <th style="text-align: center !important;"></th>
+                                <th style="text-align: center !important;"></th>
+                                <th style="text-align: center !important;"></th>
+                                <th style="text-align: center !important;"></th>
+                                <th style="text-align: center !important;"></th>
+                                <th style="text-align: center !important;"></th>
+                                <th style="text-align: center !important;"></th>
+                                @if (compMF.UseQty2 == true)
+                                {
+                                    <th style="text-align: center !important;"></th>
+                                }
+                                else
+                                {
+                                    <th hidden></th>
+                                }
+                                <th style="text-align: center !important;">Total</th>
+                                <th style="text-align: center !important;" id="TotalAll">0</th>
+                                <th style="text-align: center !important;"></th>
+                                <th style="text-align: center !important;"></th>
+                            </tr>
+                        </tfoot>
+                        <tbody id="PurchaseReqItemTBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="ExcuteSaveProd_PurchaseRequest()" class="btn btn-primary">@Resources.Resource.Save</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade wide" id="Model_InvItemsMF">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4756)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectPurchaseReqItemTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(44)</th>
+                                    <th style="width: 55%;">@Html.Recource(74)</th>
+                                    <th style="width: 10%;">@Html.Recource(96)</th>
+                                    <th style="text-align: center;">@Html.Recource(312)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    int Comp_num = company.comp_num;
+                                    string query = string.Format("exec SP_Search {0},'WHERE (CompNo = {0}) AND (IsHalt = 0)',7", Comp_num);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                string ItemDesc = rdr["ItemDesc"].ToString();
+                                                string ItemDescEn = rdr["ItemDesc_Ara"].ToString();
+                                                string Desc = Html.Translate(ItemDesc, ItemDescEn).ToString();
+                                                <tr onclick="$(this).toggleClass('selected');" ondblclick="GetItemNo($(this).toggleClass('selected'))">
+                                                    <td style="width: 20%;" id="ItemNo">@rdr["ItemNo"]</td>
+                                                    <td style="width: 55%;" id="ItemDesca" title="@Html.Translate(ItemDesc, ItemDescEn)">@Html.Translate(ItemDesc, ItemDescEn)</td>
+                                                    <td style="width: 10%;text-align: center;">@rdr["RefrenceNo"]</td>
+                                                    <td style="text-align: center !important;">@rdr["BarCode"]</td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingItemMaterial_InvItemsMF()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@*-----------------------------Model Documents-------------------------------------*@
+<div class="modal fade" id="Model_PR_DocumentsArchive">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أرشفة الوثائق", "Archive Documents")</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <button onclick="Add_PR_DocumentArchive()" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="Ord_PR_DocumentArchiveTable">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(66)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5628)</th>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(5629)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5630)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5631)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5632)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5633)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="Ord_PR_DocumentArchiveTbody" style="border-top: 1px solid #ddd;">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SavePurchaseRequestAcountDocumentArchive()" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+s<script>
+    var Count = 0;
+    $('#Model_PR_DocumentsArchive').draggable({
+        handle: ".modal-header",
+    });
+    function AddDocuments() {
+        $('#Model_PR_DocumentsArchive').modal('show');
+    }
+    function Add_PR_DocumentArchive() {
+        var table = $("#Ord_PR_DocumentArchiveTbody");
+        Count++;
+        var newarray = [];
+        newarray.push('<input id="Ord_PR_DocumentArchive_FileId" type="hidden" value="' + Count + '" />')
+        newarray.push('<input id="Ord_PR_DocumentArchive_Description_' + Count + '" type="text" style="width: 115px !important;text-align: center !important" />')
+        newarray.push('<div class="image-upload"><label for="file-input"><span class="glyphicon glyphicon-upload" onclick="OpenFileUpload(this)"></span></label><input type="file" name="uploadFile_7" style="display:none" id="Ord_PR_DocumentArchive_File_' + Count + '" onchange="uploadFile(this,' + Count + ')" /></div>')
+        newarray.push('')
+        newarray.push('<a id="Ord_PR_DownloadFile_' + Count + '" onclick="DownloadFile()"><span class="glyphicon glyphicon-download"></span></a>')
+        newarray.push('<input id="Ord_PR_DocumentArchive_FileName_' + Count + '" type="text" style="text-align: center !important" disabled />')
+        newarray.push('<input id="Ord_PR_DocumentArchive_UploadDate_' + Count + '" type="text" style="width: 95px;text-align: center !important" disabled />')
+        newarray.push('<input id="Ord_PR_DocumentArchive_FileSize_' + Count + '" type="text" style="width: 70px;text-align: center !important" disabled />')
+        newarray.push('<input id="Ord_PR_DocumentArchive_FileType_' + Count + '" type="text" style="width: 55px;text-align: center !important" disabled />')
+        newarray.push('<button class="btn-de" onclick="RemoveRowUpload(this,' + Count + ')" type="button"><i class= "fa fa-trash-alt"></i ></button>')
+        $(table).append(
+            GenRowDocumentArchive(newarray, 'Ord_PR_DocumentArchive_' + Count)
+        );
+    }
+    function GenRowDocumentArchive(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function OpenFileUpload(ID) {
+        debugger
+        var $td = $(ID).closest("td");
+        $($td).find("input[type=file]").click();
+    }
+    function uploadFile(Elem, Count) {
+        var uploadDate = new Date($.now());
+        var shortDate = moment(uploadDate).format('DD/MM/YYYY');
+        var InputID = $(Elem).attr("id");
+        var file_size = $(Elem)[0].files[0].size;
+
+        var table = $("#Ord_PR_DocumentArchiveTbody");
+        var tr = table.find('#Ord_PR_DocumentArchive_' + Count);
+
+        var fileName = tr.find("#Ord_PR_DocumentArchive_File_" + Count).val().replace(/C:\\fakepath\\/i, '');
+        var filetype = fileName.split('.').pop();
+
+        tr.find('#Ord_PR_DocumentArchive_FileName_' + Count)[0].value = fileName;
+        tr.find('#Ord_PR_DocumentArchive_UploadDate_' + Count)[0].value = shortDate;
+        tr.find('#Ord_PR_DocumentArchive_FileSize_' + Count)[0].value = file_size;
+        tr.find('#Ord_PR_DocumentArchive_FileType_' + Count)[0].value = "." + filetype;
+
+        var $file = document.getElementById(InputID);
+        $formData = new FormData();
+        if ($file.files.length > 0) {
+            for (var i = 0; i < $file.files.length; i++) {
+                $formData.append('file-' + i, $file.files[i]);
+            }
+
+            $formData.append('Id', Count);
+            $formData.append('OrderYear', 0);
+            $formData.append('OrderNo', 0);
+        }
+
+        $.ajax({
+            url: '@Url.Action("InsertFile", "PurchaseRequest")',
+            type: 'POST',
+            data: $formData,
+            contentType: false,
+            processData: false,
+            success: function (r) {
+                var table = $("#Ord_PR_DocumentArchiveTbody");
+                var tr = table.find('#Ord_PR_DocumentArchive_' + Count);
+                tr.find('#Ord_PR_DownloadFile_' + Count)[0].setAttribute('onclick', 'DownloadFile("' + fileName + '","' + r + '")')
+            },
+            error: function (error) {
+            }
+        });
+    }
+    function RemoveRowUpload(e, Count) {
+        if (confirm('@Resources.Resource.DeleteConfirm')) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+
+            $.ajax({
+                type: "POST",
+                url:'@Url.Action("RemoveFile", "PurchaseRequest")',
+                data: { Id: Count, OrderYear: 0, OrderNo: 0 },
+                success: function (response) {
+
+                },
+            });
+
+            return true;
+        }
+        return false;
+    }
+    function DownloadFile(FileName, base64) {
+        var binaryString = window.atob(base64);
+        var binaryLen = binaryString.length;
+        var bytes = new Uint8Array(binaryLen);
+        for (var i = 0; i < binaryLen; i++) {
+            var ascii = binaryString.charCodeAt(i);
+            bytes[i] = ascii;
+        }
+        saveByteArray(FileName, bytes)
+    }
+    function saveByteArray(reportName, byte) {
+        var blob = new Blob([byte], { type: "application/pdf" });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        var fileName = reportName;
+        link.download = fileName;
+        link.click();
+    }
+    function SavePurchaseRequestAcountDocumentArchive() {
+        $('#Model_PR_DocumentsArchive').modal('hide');
+    }
+</script>
+@*--------------------------------END Model Documents -----------------------------*@
+
+
+
+
+<script>
+    $('#ProdCost_PurchaseReqHF_save_CboReqBU').select2();
+    $('#ProdCost_PurchaseReqHF_save_CboAuthBU').select2();
+    $('#ProdCost_PurchaseReqHF_save_CboOrderPriority').select2();
+    $('#ProdCost_PurchaseReqHF_save_CboCurrCode').select2();
+    $('#ProdCost_PurchaseReqHF_save_CboOrderType').select2();
+    $('#ProdCost_PurchaseReqHF_save_CboPurpose').select2();
+
+    var itemType = 0;
+    var frmSatus = 1;
+    var _ReqYear = 0;
+    var _ReqNo = 0;
+    $('#PurchaseRequest').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_InvItemsMF').draggable({
+        handle: ".modal-header",
+    });
+    function addPurchaseRequest() {
+        ProdCost_PurchaseReqHF_save_ReqDate.value = '@DateTime.Now.ToString("yyyy-MM-dd")';
+        ProdCost_PurchaseReqHF_save_ReqNotes.value = '';
+        $('#PurchaseRequest').modal('show');
+    }
+    var RawMaterial = $('#SelectPurchaseReqItemTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+    function GetItemNo(e) {
+       var data = RawMaterial.rows('.selected').data();
+        if (data.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة واحدة على الاقل", "Select one item at least")');
+            return;
+        }
+        if (frmSatus == 1) {
+            if (itemType == 1) {
+                var table_ = $("#PurchaseReqItemTBody");
+                var item = new Array();
+                for (var i = 0; i < data.length; i++) {
+                    var Added = false;
+                    if (table_.find("tr").length != 0) {
+                        table_.find("tr").each(function () {
+                            var ItemNo_ = $(this).find("td:first-child").text();
+                            if (ItemNo_ == data[i][0]) {
+                                Added = true;
+                                return false;
+                            }
+                            else {
+                                Added = false;
+                            }
+                        });
+                        if (!Added) {
+                            item.push({
+                                ItemNo: data[i][0],
+                                ItemDesc: data[i][1]
+                            });
+                        }
+                    }
+                    else {
+                        item.push({
+                            ItemNo: data[i][0],
+                            ItemDesc: data[i][1]
+                        });
+                    }
+                }
+                if (item.length != 0) {
+                    burn({ items: item, srl: table_.find("tr").length }, '../../../PurchaseRequest/PurchaseRequestItems', '', LoadItemRawMaterial, true);
+                }
+                else {
+                    $('#Model_InvItemsMF').modal('hide')
+                }
+            }
+        }
+    }
+    function Add_InvItemsMF(type) {
+        itemType = type;
+        frmSatus = 1;
+        $('#SelectPurchaseReqItemTable tr').removeClass("selected");
+        $('#Model_InvItemsMF').modal('show')
+    }
+    function SelectingItemMaterial_InvItemsMF() {
+        var data = RawMaterial.rows('.selected').data();
+        if (data.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة واحدة على الاقل", "Select one item at least")');
+            return;
+        }
+        if (frmSatus == 1) {
+            if (itemType == 1) {
+                var table_ = $("#PurchaseReqItemTBody");
+                var item = new Array();
+                for (var i = 0; i < data.length; i++) {
+                    var Added = false;
+                    if (table_.find("tr").length != 0) {
+                        table_.find("tr").each(function () {
+                            var ItemNo_ = $(this).find("td:first-child").text();
+                            if (ItemNo_ == data[i][0]) {
+                                Added = true;
+                                return false;
+                            }
+                            else {
+                                Added = false;
+                            }
+                        });
+                        if (!Added) {
+                            item.push({
+                                ItemNo: data[i][0],
+                                ItemDesc: data[i][1]
+                            });
+                        }
+                    }
+                    else {
+                        item.push({
+                            ItemNo: data[i][0],
+                            ItemDesc: data[i][1]
+                        });
+                    }
+                }
+                if (item.length != 0) {
+                    burn({ items: item, srl: table_.find("tr").length }, '../../../PurchaseRequest/PurchaseRequestItems', '', LoadItemRawMaterial, true);
+                }
+                else {
+                    $('#Model_InvItemsMF').modal('hide')
+                }
+            }
+        }
+    }
+    function LoadItemRawMaterial(r) {
+        if (frmSatus == 1) {
+            $('#PurchaseReqItemTBody').append(r);
+        }
+        else {
+            $('#PurchaseReqItemTBody').append(r);
+        }
+        $('#Model_InvItemsMF').modal('hide')
+    }
+    function GetchangeCost(item, e, srl) {
+
+        burn({ itemNo: item, Unitserial: e, srl: srl }, '../../../PurchaseRequest/LoadUnitCost', '', LoadCost, true);
+    }
+
+    function LoadCost(r) {
+        var tr = $('#PurchaseReqItemTBody #PurchaseRequest_Serial_' + r.srl);
+        tr.find('#PurchaseRequest_QtyOH_' + r.srl)[0].value = r.QtyOH;
+        tr.find('#PurchaseRequest_ResQty_' + r.srl)[0].value = r.ResQty;
+
+    }
+
+    function CheckValueGrid(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt == 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+        else {
+            if (Amt == '' || Amt == null) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function ExcuteSaveProd_PurchaseRequest() {
+
+        var table = $('#PurchaseReqItemTBody tr');
+        var trs = table;
+        if (trs.length == 0) {
+            alert('@Html.Translate("يجب إدخال المواد", "Raw Items must be entered")');
+            return false;
+        }
+
+        var OrdReqHF = {
+            CompNo: '@company.comp_num',
+            ReqNo: 0,
+            ReqDate: ProdCost_PurchaseReqHF_save_ReqDate.value,
+            ReqDeliveryDate: ProdCost_PurchaseReqHF_save_ReqDeliveryDate.value,
+            //ReqBU: ProdCost_PurchaseReqHF_save_CboReqBU.value,
+            ReqBU: ProdCost_PurchaseReqHF_save_CboAuthBU.value,
+            UserIDApprovel: ProdCost_PurchaseReqHF_save_CboReqBU.value,
+            AuthBU: ProdCost_PurchaseReqHF_save_CboAuthBU.value,
+            Note: ProdCost_PurchaseReqHF_save_ReqNotes.value,
+            OrderPriority: ProdCost_PurchaseReqHF_save_CboOrderPriority.value,
+            CurrNo: ProdCost_PurchaseReqHF_save_CboCurrCode.value,
+            RefNo: ProdCost_PurchaseReqHF_save_ReferenceNo.value,
+            OrderType: ProdCost_PurchaseReqHF_save_CboOrderType.value,
+            Purpose: ProdCost_PurchaseReqHF_save_CboPurpose.value,
+        };
+        var OrdReqDF = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#PurchaseRequest_Qty_' + InputSerial)[0].value)) {
+                alert('@Html.Translate("يجب إدخال الكمية", "You Must Enter Qty")');
+                return;
+            }
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#PurchaseRequest_Price_' + InputSerial)[0].value)) {
+                alert('@Html.Translate("يجب إدخال السعر", "ou Must Enter Price")');
+                return;
+            }
+            
+            OrdReqDF.push({
+                CompNo: '@company.comp_num',
+                ItemNo: $(trs[i]).closest('tr').find('#PurchaseRequest_ItemNo')[0].innerHTML,
+                TUnit: $(trs[i]).closest('tr').find('.PurchaseRequest_Item_Unit option:Selected')[0].getAttribute('unitCode'),
+                Qty: $(trs[i]).closest('tr').find('#PurchaseRequest_Qtyth_' + InputSerial)[0].value,
+                Qty2: $(trs[i]).closest('tr').find('#PurchaseRequest_Qty2_' + InputSerial)[0].value,
+                Price: $(trs[i]).closest('tr').find('#PurchaseRequest_Priceth_' + InputSerial)[0].value,
+                TotalValue: $(trs[i]).closest('tr').find('#PurchaseReques_Totalth_' + InputSerial)[0].value,
+                Note: $(trs[i]).closest('tr').find('#PurchaseReques_Notes_' + InputSerial)[0].value,
+                UnitSerial: $(trs[i]).closest('tr').find('.PurchaseRequest_Item_Unit')[0].value,
+                ReqDeliveryDate:$(trs[i]).closest('tr').find('#PurchaseReques_RequestedDeliveryDate_' + InputSerial)[0].value,
+                QtyStock: $(trs[i]).closest('tr').find('#PurchaseRequest_QtyOHth_' + InputSerial)[0].value
+            });
+        }
+        
+        var DocumentArchivetable = $("#Ord_PR_DocumentArchiveTbody");
+        var trsDocumentArchive = DocumentArchivetable.find('tr');
+
+        var DocumentArchive = new Array();
+
+        for (var i = 0; i < trsDocumentArchive.length; i++) {
+            var InputSerial = $(trsDocumentArchive[i]).closest('tr').find('#Ord_PR_DocumentArchive_FileId')[0].value;
+            DocumentArchive.push({
+                OrderYear:0,
+                OrderNo: 0,
+                FileId: InputSerial,
+                Description: $(trsDocumentArchive[i]).closest('tr').find('#Ord_PR_DocumentArchive_Description_' + InputSerial)[0].value,
+                DateUploded: $(trsDocumentArchive[i]).closest('tr').find('#Ord_PR_DocumentArchive_UploadDate_' + InputSerial)[0].value,
+                ContentType: $(trsDocumentArchive[i]).closest('tr').find('#Ord_PR_DocumentArchive_FileType_' + InputSerial)[0].value
+            })
+        }
+
+        wait();
+        if (confirm('@Resources.Resource.ConfirmCreatePurchaseOrders')) {
+            burn({ OrdReqHF: OrdReqHF, OrdReqDF: OrdReqDF, FileArchive: DocumentArchive }, '../../../PurchaseRequest/Save_PurchaseRequest', '', ReloadPurchaseRequest, false);
+        }
+        else {
+            done();
+        }
+    }
+    function ReloadPurchaseRequest() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#PurchaseReqItemTBody').empty();
+        $('#PurchaseRequest').modal('hide');
+        CloseWindow('/PurchaseRequest/AddPurchaseRequest');
+        $('#Prod_PurchaseRequestListDiv').load('../../../PurchaseRequest/PurchaseRequestList?ReqStatus=0');
+    }
+
+</script>

@@ -1,0 +1,826 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    List<ProdCost_StageAccExpLink> StageAccExpLink = new MDB().ProdCost_StageAccExpLink.Where(x => x.CompNo == company.comp_num).ToList();
+
+    List<prod_prodstage_info> stage_info = new MDB().prod_prodstage_info.Where(x => x.comp_no == company.comp_num).ToList();
+    List<int> Deptid = new List<int>();
+    List<GLN_UsersDept> UsersDept = new MDB().GLN_UsersDept.Where(x => x.CompNo == company.comp_num && x.UserID == me.UserID && x.Permission == true).ToList();
+    Deptid = UsersDept.Select(o => o.DeptID).ToList();
+    List<GLDEPMF> GLDEPMFs = new MDB().GLDEPMFs.Where(x => x.DEP_COMP == company.comp_num && Deptid.Contains(x.DEP_NUM)).ToList();
+}
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-4 col-sm-2">
+                <button class="btn btn-primary btn-block" onclick="AddProd_StageAccExpLink()">
+                    <i class="fa fa-plus"></i> @Html.Recource(32)
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="Prod_stageAccExpLinkListDiv">
+        @Html.Partial("~/Views/StageAccExpLink/StageAccExpLinkList.cshtml")
+    </div>
+</div>
+
+
+<div class="modal fade wide" id="Prod_StageAccExpLink_Model">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4402)</label>
+            </div>
+
+            <div class="modal-body row" id="StageAccExpLinkDiv">
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Prod_StageAccExpLink_Stagecode">@Html.Recource(4482) </label>
+                    </div>
+                    <div class="col-md-2">
+                        <input required="true"  style="width: 125%;" id="Prod_StageAccExpLink_Stagecode" disabled />
+                    </div>
+                    <div class="col-md-6">
+                        <input style="width: 100%;" id="Prod_StageAccExpLink_StageDesc" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <button onclick="Serach_StageInfo()" type="button" class="btn btn-primary">@Html.Recource(975)</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Prod_StageAccExpLink_Deptcode">@Html.Recource(9590) </label>
+                    </div>
+                    <div class="col-md-2">
+                        <input required="true" style="width: 125%;" id="Prod_StageAccExpLink_Deptcode" disabled />
+                    </div>
+                    <div class="col-md-6">
+                        <input style="width: 100%;" id="Prod_StageAccExpLink_DeptDesc" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <button onclick="Serach_Dept()" type="button" class="btn btn-primary">@Html.Recource(975)</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Prod_StageAccExpLink_formula_code">@Html.Recource(7473) </label>
+                    </div>
+                    <div class="col-md-2">
+                        <input required="true"  style="width: 125%;" id="Prod_StageAccExpLink_Acccode" disabled />
+                    </div>
+                    <div class="col-md-6">
+                        <input style="width: 100%;" id="Prod_StageAccExpLink_AccDesc" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <button onclick="Serach_Acc()" type="button" class="btn btn-primary">@Html.Recource(975)</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <button   onclick="Add_DeptDet()" type="button" class="btn btn-primary" >@Html.Recource(32)</button>
+                    </div>
+
+
+                    <div class="col-md-12" style="width:872px !important;overflow-y:auto">
+                        <table class="table table-hover" id="PackingItemTable">
+                            <thead>
+                                <tr>
+
+                                    <th style="width: 35px !important; text-align:center">@Html.Recource(110)</th>
+                                    <th style=" text-align:center">@Html.Recource(109)</th>
+                                    <th></th>
+                                    <th style=" text-align:center">@Html.Recource(255)</th>
+                                    <th style=" text-align:center">@Html.Recource(256)</th>
+                                    <th></th>
+                                    <th style="width: 62px !important; text-align:center">@Html.Recource(9586)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="StageAccExpLinkTBody">
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteSaveProd_StageAccExpLink()" class="btn btn-primary">@Html.Recource(475)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade wide" id="Prod_eStageAccExpLink_Model">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4402)</label>
+            </div>
+
+            <div class="modal-body row" id="eStageAccExpLinkDiv">
+               
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteEditProd_StageAccExpLink()" class="btn btn-primary">@Html.Recource(475)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_StageAccExpLink_ProdstageInfo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(5527)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="Select_StageAccExpLink_ProdstageInfoTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(2558)</th>
+                                    <th style="width: 55%;">@Html.Recource(2559)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    foreach (var item in stage_info)
+                                    {
+                                        <tr onclick="Select_finItems(this)" Stagecode="@item.stage_code" StageDesc="@item.stage_desc">
+                                            <td style="width: 20%;" id="BOM_Stagecode">@item.stage_code</td>
+                                            <td style="width: 55%;" id="BOM_StageDesc">@item.stage_desc</td>
+                                            <td></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selecting_StageAccExpLink_ProdstageInfo()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_StageAccExpLink_GLDEPMFs">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(1867)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="Select_StageAccExpLink_GLDEPMFsTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(110)</th>
+                                    <th style="width: 55%;">@Html.Recource(109)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    foreach (var item in GLDEPMFs)
+                                    {
+                                        <tr onclick="Select_finItemsGLDEPMFs(this)" DEP_NUM="@item.DEP_NUM" DepDesc="@item.DEP_NAME">
+                                            <td style="width: 20%;" id="BOM_Stagecode">@item.DEP_NUM</td>
+                                            <td style="width: 55%;" id="BOM_StageDesc">@Html.Translate(item.DEP_NAME, item.DEP_ENAME).ToString()</td>
+                                            <td></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selecting_StageAccExpLink_GLDEPMFs()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_StageAccExpLink_Acc">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(1867)</label>
+            </div>
+            <div class="modal-body row" id="StageAccExpLink_Accbody">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selecting_StageAccExpLink_Acc()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade wide" id="Model_StageAccExpLink_DeptMF">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(1867)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectStageAccExpLinkTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(109)</th>
+                                    <th style="width: 55%;">@Html.Recource(110)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in GLDEPMFs)
+                                {
+                                    <tr onclick="$(this).toggleClass('selected');">
+                                        <td style="width: 20%;" id="DEP_NUM">@item.DEP_NUM</td>
+                                        <td style="width: 35%;" id="ItemDesca" title="@item.DEP_NAME">@item.DEP_ENAME</td>
+                                    </tr>
+                                }
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingPackingDefention_InvItemsMF()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    var count = 0;
+    var eCount = 0;
+    var thisValue = '';
+    var ethisValue = '';
+    var thisValueAcc = '';
+    var ethisValueAcc = '';
+
+    var status = 0;
+    var statusacc = 0;
+
+    // تحريك الموديل
+    $('#Prod_StageAccExpLink_Model').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_StageAccExpLink_ProdstageInfo').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_StageAccExpLink_GLDEPMFs').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_StageAccExpLink_Acc').draggable({
+        handle: ".modal-header",
+    });
+
+    $('#Model_StageAccExpLink_DeptMF').draggable({
+        handle: ".modal-header",
+    });
+    $('#Prod_eStageAccExpLink_Model').draggable({
+        handle: ".modal-header",
+    });
+
+    
+
+    function AddProd_StageAccExpLink() {
+        $('#Prod_StageAccExpLink_Model').modal('show')
+        Prod_StageAccExpLink_Stagecode.value =null;
+        Prod_StageAccExpLink_StageDesc.value = null;
+        Prod_StageAccExpLink_Deptcode.value = null;
+        Prod_StageAccExpLink_DeptDesc.value = null;
+        Prod_StageAccExpLink_Acccode.value = null;
+        Prod_StageAccExpLink_AccDesc.value = null;
+        $('#StageAccExpLinkTBody').empty();
+
+    }
+    var ProdstageInfo = $('#Select_StageAccExpLink_ProdstageInfoTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    var GLDEPMFs = $('#Select_StageAccExpLink_GLDEPMFsTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    function Serach_StageInfo() {
+        $('#Select_StageAccExpLink_ProdstageInfoTable tr').removeClass("selected");
+        $('#Model_StageAccExpLink_ProdstageInfo').modal('show')
+    }
+    function Serach_Dept() {
+        status = 0;
+        $('#Select_StageAccExpLink_GLDEPMFsTable tr').removeClass("selected");
+        $('#Model_StageAccExpLink_GLDEPMFs').modal('show')
+    }
+    function CheckValue(ID) {
+        if (document.getElementById(ID).getAttribute('required') == 'true') {
+            if (document.getElementById(ID).value == '') {
+                document.getElementById(ID).focus();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    function Serach_Acc() {
+        statusacc = 0;
+        if (CheckValue('Prod_StageAccExpLink_Deptcode')) {
+            alert('@Html.Translate("يجب ادخال الدائرة", "You must enter the Dept")');
+            return;
+        }
+        wait();
+        burn({ DeptId: Prod_StageAccExpLink_Deptcode.value }, '../../../StageAccExpLink/Account', '', ReloadtAcc, true);
+    }
+    function Select_finItems(e) {
+        var trs = ProdstageInfo.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Select_finItemsGLDEPMFs(e) {
+        var trs = GLDEPMFs.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function ReloadtAcc(r) {
+        StageAccExpLink_Accbody.innerHTML = "";
+        $('#StageAccExpLink_Accbody').html(r);
+        $('#Model_StageAccExpLink_Acc').modal('show');
+    }
+    function Select_finItemsAcc(e) {
+        var table = $('#StageAccExpLink_AccTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Selecting_StageAccExpLink_ProdstageInfo() {
+        var trs = ProdstageInfo.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مرحلة", "Select one stage ")');
+            return;
+        }
+
+        Prod_StageAccExpLink_Stagecode.value = trs[0].getAttribute('Stagecode');
+        Prod_StageAccExpLink_StageDesc.value = trs[0].getAttribute('StageDesc');
+        CheckIsExixts();
+        $('#Model_StageAccExpLink_ProdstageInfo').modal('hide')
+    }
+    function Selecting_StageAccExpLink_GLDEPMFs() {
+        if (status == 0) {
+            var trs = GLDEPMFs.$('tr[name=selected]');
+            if (trs.length == 0) {
+                alert('@Html.Translate("يرجى اختيار دائرة", "Select one Dept")');
+                return;
+            }
+
+            Prod_StageAccExpLink_Deptcode.value = trs[0].getAttribute('DEP_NUM');
+            Prod_StageAccExpLink_DeptDesc.value = trs[0].getAttribute('DepDesc');
+
+            Prod_StageAccExpLink_Acccode.value = null;
+            Prod_StageAccExpLink_AccDesc.value = null;
+        }
+        if (status == 1) {
+            var trs = GLDEPMFs.$('tr[name=selected]');
+            if (trs.length == 0) {
+                alert('@Html.Translate("يرجى اختيار دائرة", "Select one Dept")');
+                return;
+            }
+
+            var tr = $("#StageAccExpLinkTBody #StageAccExpLink_" + thisValue + "");
+            tr.find('#StageAccExpLink_DeptNoDet')[0].value = trs[0].getAttribute('DEP_NUM');
+            tr.find('#StageAccExpLink_DeptNameDet')[0].value = trs[0].getAttribute('DepDesc');
+
+            tr.find('#StageAccExpLink_AccNoDet')[0].value = null;
+            tr.find('#StageAccExpLink_AccNameDet')[0].value = null;
+        }
+         if (status == 2) {
+            var trs = GLDEPMFs.$('tr[name=selected]');
+            if (trs.length == 0) {
+                alert('@Html.Translate("يرجى اختيار دائرة", "Select one Dept")');
+                return;
+            }
+
+            var tr = $("#eStageAccExpLinkTBody #eStageAccExpLink_" + ethisValue + "");
+            tr.find('#StageAccExpLink_eDeptNoDet')[0].value = trs[0].getAttribute('DEP_NUM');
+             tr.find('#StageAccExpLink_eDeptNameDet')[0].value = trs[0].getAttribute('DepDesc');
+
+             tr.find('#StageAccExpLink_eAccNoDet')[0].value = null;
+             tr.find('#StageAccExpLink_eAccNameDet')[0].value = null;
+        }
+        $('#Model_StageAccExpLink_GLDEPMFs').modal('hide')
+    }
+    function Selecting_StageAccExpLink_Acc() {
+        if (statusacc == 0) {
+            var table = $('#StageAccExpLink_AccTable');
+            var oTable = table.dataTable();
+            var trs = oTable.$('tr[name=selected]');
+            if (trs.length == 0) {
+                alert('@Html.Translate("يرجى اختيار حساب", "Select one Acc")');
+                return;
+            }
+            Prod_StageAccExpLink_Acccode.value = trs[0].getAttribute('acc_num');
+            Prod_StageAccExpLink_AccDesc.value = trs[0].getAttribute('AccDesc');
+            CheckIsExixts();
+        }
+        if (statusacc == 1) {
+            var table = $('#StageAccExpLink_AccTable');
+            var oTable = table.dataTable();
+            var trs = oTable.$('tr[name=selected]');
+
+            if (trs.length == 0) {
+                alert('@Html.Translate("يرجى اختيار حساب", "Select one Acc")');
+                return;
+            }
+
+            var tr = $("#StageAccExpLinkTBody #StageAccExpLink_" + thisValueAcc + "");
+            var table = $('#StageAccExpLinkTBody tr');
+            var trs1 = table;
+            for (var i = 0; i < trs1.length; i++) {
+                var id = tr[0].getAttribute('id')
+                var trid = trs1[i].getAttribute('id')
+                if (id != trid) {
+                    if ($(trs1[i]).closest('tr').find('#StageAccExpLink_DeptNoDet')[0].value == tr.find('#StageAccExpLink_DeptNoDet')[0].value) {
+                        if ($(trs1[i]).closest('tr').find('#StageAccExpLink_AccNoDet')[0].value == trs[0].getAttribute('acc_num')) {
+                            alert('@Html.Translate("رقم الحساب مكرر لنفس الدائرة","ACC No Is Duplecated for Dept No")');
+                            return false;
+                        }
+                    }
+                }
+
+            }
+            tr.find('#StageAccExpLink_AccNoDet')[0].value = trs[0].getAttribute('acc_num');
+            tr.find('#StageAccExpLink_AccNameDet')[0].value = trs[0].getAttribute('AccDesc');
+        }
+        if (statusacc == 2) {
+            var table = $('#StageAccExpLink_AccTable');
+            var oTable = table.dataTable();
+            var trs = oTable.$('tr[name=selected]');
+
+            if (trs.length == 0) {
+                alert('@Html.Translate("يرجى اختيار حساب", "Select one Acc")');
+                return;
+            }
+
+            var tr = $("#eStageAccExpLinkTBody #eStageAccExpLink_" + ethisValueAcc + "");
+            var table = $('#eStageAccExpLinkTBody tr');
+            var trs1 = table;
+            for (var i = 0; i < trs1.length; i++) {
+                var id = tr[0].getAttribute('id')
+                var trid = trs1[i].getAttribute('id')
+                if (id != trid) {
+                    if ($(trs1[i]).closest('tr').find('#StageAccExpLink_eDeptNoDet')[0].value == tr.find('#StageAccExpLink_eDeptNoDet')[0].value) {
+                        if ($(trs1[i]).closest('tr').find('#StageAccExpLink_eAccNoDet')[0].value == trs[0].getAttribute('acc_num')) {
+                            alert('@Html.Translate("رقم الحساب مكرر لنفس الدائرة","ACC No Is Duplecated for Dept No")');
+                            return false;
+                        }
+                    }
+                }
+
+            }
+            tr.find('#StageAccExpLink_eAccNoDet')[0].value = trs[0].getAttribute('acc_num');
+            tr.find('#StageAccExpLink_eAccNameDet')[0].value = trs[0].getAttribute('AccDesc');
+        }
+        $('#Model_StageAccExpLink_Acc').modal('hide')
+    }
+    function CheckIsExixts() {
+        if (CheckValue('Prod_StageAccExpLink_Stagecode')) { Prod_StageAccExpLink_Stagecode.focus(); return; }
+        if (CheckValue('Prod_StageAccExpLink_Deptcode')) { Prod_StageAccExpLink_Deptcode.focus();  return; }
+        if (CheckValue('Prod_StageAccExpLink_Acccode')) { Prod_StageAccExpLink_Acccode.focus(); return; }
+
+        burn({ Stagecode: Prod_StageAccExpLink_Stagecode.value, Deptcode: Prod_StageAccExpLink_Deptcode.value, Acccode: Prod_StageAccExpLink_Acccode.value }, '../../../StageAccExpLink/CheckIsExixts', '', ReloadCheckIsExixts, true);
+    }
+    function ReloadCheckIsExixts(r) {
+        if (r.d == "IsExixts") {
+            MsgBox('@Html.Translate("البيانات معرفا مسبقا","Data Is Saved ")', 'red');
+            Prod_StageAccExpLink_Stagecode.value = '';
+            Prod_StageAccExpLink_StageDesc.value = '';
+        }
+    }
+    function GenRowMas(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function eRemoveRow(e) {
+        if (confirm('@Resources.Resource.DeleteConfirm')) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+            return true;
+            eCount++;
+        }
+        return false;
+    }
+    function Add_DeptDet() {
+        ststaus = 1;
+        count++;
+        var newarray = [];
+        newarray.push('<input id="StageAccExpLink_DeptNoDet" type="number" style="width: 40px !important;" disabled />')
+        newarray.push('<input id="StageAccExpLink_DeptNameDet" type="text" disabled />')
+        newarray.push('<button onclick="AddDeptNo(' + count + ')" type="button" class="btn btn-primary">@Html.Recource(1867)</button>')
+        newarray.push('<input id="StageAccExpLink_AccNoDet" type="number" disabled />')
+        newarray.push('<input id="StageAccExpLink_AccNameDet" type="text" disabled />')
+        newarray.push('<button onclick="AddAccNo(' + count + ')" type="button" class="btn btn-primary">@Html.Recource(219)</button>')
+        newarray.push('<input id="StageAccExpLink_CostShare" type="number" style="width: 62px !important;" onblur="CheckValueCostShare(1,' + count + ')"  />')
+        newarray.push('<button class="btn-de" onclick="RemoveRow(this)" type="button"><i class= "fa fa-trash-alt"></i ></button>')
+        $("#StageAccExpLinkTBody").append(
+            GenRowMas(newarray, 'StageAccExpLink_' + count)
+        );
+    }
+    function Edit_DeptDet() {
+        ststaus = 2;
+        if (eCount == 0) {
+            var tr = $("#eStageAccExpLinkTBody tr");
+            eCount = tr.length;
+        }
+        eCount++;
+        var newarray = [];
+        newarray.push('<input id="StageAccExpLink_eDeptNoDet" type="number" style="width: 40px !important;" disabled />')
+        newarray.push('<input id="StageAccExpLink_eDeptNameDet" type="text" disabled />')
+        newarray.push('<button onclick="eAddDeptNo(' + eCount + ')" type="button" class="btn btn-primary">@Html.Recource(1867)</button>')
+        newarray.push('<input id="StageAccExpLink_eAccNoDet" type="number" disabled />')
+        newarray.push('<input id="StageAccExpLink_eAccNameDet" type="text" disabled />')
+        newarray.push('<button onclick="eAddAccNo(' + eCount + ')" type="button" class="btn btn-primary">@Html.Recource(219)</button>')
+        newarray.push('<input id="StageAccExpLink_eCostShare" type="number" style="width: 62px !important;" onblur="CheckValueCostShare(2,' + eCount + ')"  />')
+        newarray.push('<button class="btn-de" onclick="eRemoveRow(this)" type="button"><i class= "fa fa-trash-alt"></i ></button>')
+        $("#eStageAccExpLinkTBody").append(
+            GenRowMas(newarray, 'eStageAccExpLink_' + eCount)
+        );
+    }
+    function CheckValueCostShare(statusCost,val) {
+        if (statusCost == 1) {
+            var tr = $("#StageAccExpLinkTBody #StageAccExpLink_" + val + "");
+            if (tr.find('#StageAccExpLink_CostShare')[0].value > 100 || tr.find('#StageAccExpLink_CostShare')[0].value < 0) {
+                MsgBox('@Html.Translate("النسبة يجب ان تكون بين 0 و 100", "The ratio should be between 0 and 100")', 'red');
+                tr.find('#StageAccExpLink_CostShare')[0].value = 0
+                tr.find('#StageAccExpLink_CostShare')[0].focus();
+                return false;
+            }
+        }
+        if (statusCost == 2) {
+            var tr = $("#eStageAccExpLinkTBody #eStageAccExpLink_" + val + "");
+            if (tr.find('#StageAccExpLink_eCostShare')[0].value > 100 || tr.find('#StageAccExpLink_eCostShare')[0].value < 0) {
+                MsgBox('@Html.Translate("النسبة يجب ان تكون بين 0 و 100", "The ratio should be between 0 and 100")', 'red');
+                tr.find('#StageAccExpLink_eCostShare')[0].value = 0
+                tr.find('#StageAccExpLink_eCostShare')[0].focus();
+                return false;
+            }
+        }
+    }
+    function AddDeptNo(val) {
+        status = 1;
+        var tr = $("#StageAccExpLinkTBody #StageAccExpLink_" + val + "");
+
+        thisValue = val;
+        $('#Select_StageAccExpLink_GLDEPMFsTable tr').removeClass("selected");
+        $('#Model_StageAccExpLink_GLDEPMFs').modal('show')
+    }
+    function eAddDeptNo(val) {
+        status = 2;
+        var tr = $("#eStageAccExpLinkTBody #eStageAccExpLink_" + val + "");
+
+        ethisValue = val;
+        $('#Select_StageAccExpLink_GLDEPMFsTable tr').removeClass("selected");
+        $('#Model_StageAccExpLink_GLDEPMFs').modal('show')
+    }
+    function AddAccNo(valacc) {
+        statusacc = 1;
+        var tr = $("#StageAccExpLinkTBody #StageAccExpLink_" + valacc + "");
+
+        if (tr.find('#StageAccExpLink_DeptNoDet')[0].value == '') {
+            alert('@Html.Translate("يجب ادخال الدائرة", "Dept must be entered")');
+            return false;
+        }
+        thisValueAcc = valacc;
+        wait();
+        burn({ DeptId: tr.find('#StageAccExpLink_DeptNoDet')[0].value }, '../../../StageAccExpLink/Account', '', ReloadtAcc, true);
+    }
+    function eAddAccNo(valacc) {
+        statusacc = 2;
+        var tr = $("#eStageAccExpLinkTBody #eStageAccExpLink_" + valacc + "");
+        
+        if (tr.find('#StageAccExpLink_eDeptNoDet')[0].value == '') {
+            alert('@Html.Translate("يجب ادخال الدائرة", "Dept must be entered")');
+            return false;
+        }
+        ethisValueAcc = valacc;
+        wait();
+        burn({ DeptId: tr.find('#StageAccExpLink_eDeptNoDet')[0].value }, '../../../StageAccExpLink/Account', '', ReloadtAcc, true);
+    }
+    function CheckValueGrid(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt == 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+        else {
+            if (Amt == '' || Amt == null) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function ExcuteSaveProd_StageAccExpLink() {
+        if (CheckValue('Prod_StageAccExpLink_Stagecode')) { return; }
+        if (CheckValue('Prod_StageAccExpLink_Deptcode')) { return; }
+        if (CheckValue('Prod_StageAccExpLink_Acccode')) { return; }
+
+        var StageAccExpLink = new Array();
+
+        var table = $('#StageAccExpLinkTBody tr');
+        var trs = table;
+
+        if (trs.length == 0) {
+            alert('@Html.Translate("يجب ادخال بيانات المصاريف", "Must Input Expenses Data")');
+            return false;
+        }
+
+        for (var i = 0; i < trs.length; i++) {
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#StageAccExpLink_DeptNoDet')[0].value)) {
+                alert('@Html.Translate("يجب ادخال الدائرة", "DeptNo must be entered")');
+                return false;
+            }
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#StageAccExpLink_AccNoDet')[0].value)) {
+                alert('@Html.Translate("يجب ادخال الحساب", "AccNo must be entered")');
+                return false;
+            }
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#StageAccExpLink_CostShare')[0].value)) {
+                alert('@Html.Translate("يجب ادخال نسبة التحميل", "Cost Share must be entered")');
+                return false;
+            }
+
+            StageAccExpLink.push({
+                CompNo: '@company.comp_num',
+                StageCode: Prod_StageAccExpLink_Stagecode.value,
+                CloseDept: Prod_StageAccExpLink_Deptcode.value,
+                CloseAcc: Prod_StageAccExpLink_Acccode.value,
+                ExpDept: $(trs[i]).closest('tr').find('#StageAccExpLink_DeptNoDet')[0].value,
+                ExpAcc: $(trs[i]).closest('tr').find('#StageAccExpLink_AccNoDet')[0].value,
+                CostShare: $(trs[i]).closest('tr').find('#StageAccExpLink_CostShare')[0].value
+            });
+        }
+        wait();
+
+        burn({ StageAccExpLink: StageAccExpLink }, '../../../StageAccExpLink/Save_StageAccExpLink', '', ReloadSaveStageAccExpLink, true);
+    }
+    function ReloadSaveStageAccExpLink() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#Prod_StageAccExpLink_Model').modal('hide');
+        $('#Prod_stageAccExpLinkListDiv').load('../../../StageAccExpLink/StageAccExpLinkList');
+    }
+    function Edit_StageAccExpLink(stagecode, CloseDept, accno) {
+        burn({ stagecode: stagecode, DeptId: CloseDept, AccNo: accno }, '../../../StageAccExpLink/eStageAccExpLink', '', ReloadStageAccExpLink, true);
+    }
+    function ReloadStageAccExpLink(r) {
+        eStageAccExpLinkDiv.innerHTML = "";
+        $('#eStageAccExpLinkDiv').html(r);
+        $('#Prod_eStageAccExpLink_Model').modal('show')
+    }
+    function ExcuteEditProd_StageAccExpLink() {
+         var StageAccExpLink = new Array();
+
+        var table = $('#eStageAccExpLinkTBody tr');
+        var trs = table;
+
+        if (trs.length == 0) {
+            alert('@Html.Translate("يجب ادخال بيانات المصاريف", "Must Input Expenses Data")');
+            return false;
+        }
+
+        for (var i = 0; i < trs.length; i++) {
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#StageAccExpLink_eDeptNoDet')[0].value)) {
+                alert('@Html.Translate("يجب ادخال الدائرة", "DeptNo must be entered")');
+                return false;
+            }
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#StageAccExpLink_eAccNoDet')[0].value)) {
+                alert('@Html.Translate("يجب ادخال الحساب", "AccNo must be entered")');
+                return false;
+            }
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#StageAccExpLink_eCostShare')[0].value)) {
+                alert('@Html.Translate("يجب ادخال نسبة التحميل", "Cost Share must be entered")');
+                return false;
+            }
+
+            StageAccExpLink.push({
+                CompNo: '@company.comp_num',
+                StageCode: Prod_eStageAccExpLink_Stagecode.value,
+                CloseDept: Prod_eStageAccExpLink_Deptcode.value,
+                CloseAcc: Prod_eStageAccExpLink_Acccode.value,
+                ExpDept: $(trs[i]).closest('tr').find('#StageAccExpLink_eDeptNoDet')[0].value,
+                ExpAcc: $(trs[i]).closest('tr').find('#StageAccExpLink_eAccNoDet')[0].value,
+                CostShare: $(trs[i]).closest('tr').find('#StageAccExpLink_eCostShare')[0].value
+            });
+        }
+        wait();
+
+        burn({ StageAccExpLink: StageAccExpLink }, '../../../StageAccExpLink/Edit_StageAccExpLink', '', eReloadStageAccExpLink, true);
+    }
+    function eReloadStageAccExpLink() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#Prod_eStageAccExpLink_Model').modal('hide');
+        $('#Prod_stageAccExpLinkListDiv').load('../../../StageAccExpLink/StageAccExpLinkList');
+    }
+
+    function Del_StageAccExpLink(stagecode, CloseDept, accno) {
+        if (confirm('@Resources.Resource.ConfirmDeleteDialog')) {
+            burn({ stagecode: stagecode, DeptId: CloseDept, AccNo: accno }, '../../../StageAccExpLink/Delete_StageAccExpLink', '', ReloadDelStageAccExpLink, true);
+        }
+    }
+    function ReloadDelStageAccExpLink() {
+        MsgBox('@Html.Recource(2598)', 'red');
+        $('#Prod_stageAccExpLinkListDiv').load('../../../StageAccExpLink/StageAccExpLinkList');
+    }
+
+    //function Next_StageAccExpLink() {
+
+    //    $(document).ready(function () {
+    //        $("input").each(function () {
+    //            $(this).val("");
+    //        });
+    //    });
+
+    //}
+    
+</script>

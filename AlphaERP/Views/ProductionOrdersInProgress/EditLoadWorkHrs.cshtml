@@ -1,0 +1,237 @@
+﻿
+@model List<AlphaERP.Models.ProdCost_GetEmpWorkHoursH_WebView>
+@{
+    AlphaERP.Models.Company company = (AlphaERP.Models.Company)Session["company"];
+    List<AlphaERP.Models.ProdCost_EmpWorkHoursD_WebView> lProdCost_EmpWorkHoursD_WebView = ViewBag.ListTestDF;
+    short OrderYear = ViewBag.OrderYear;
+    int OrderNo = ViewBag.OrderNo;
+    string stage_code = ViewBag.stage_code;
+    short StageSer = ViewBag.StageSer;
+
+
+}
+
+
+<div class="form-group">
+    <div class="myfrom">
+        <div class="form-group">
+            <div class="col-md-4">
+                <label class="unselectable" for="SelectDate_Time">@Html.Translate("التاريخ", "Date")</label>
+            </div>
+            <div class="col-md-8" style="margin-bottom: 5px;">
+
+
+                <input type="date" id="Date_Time" class="DateTime_stage" name="Date_Time" min="" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                <button id="submitButton" onclick="dateChanged(@company.comp_num, @OrderYear, @OrderNo, @StageSer, @stage_code)"><i class="fa fa-search"></i></button>
+            </div>
+
+        </div>
+        <div class="form-group">
+            <div class="col-md-4">
+                <label class="unselectable" for="NewEmp">@Html.Translate("اضافة موظف", "Add Of Employee")</label>
+            </div>
+            <div class="col-md-8" style="margin-bottom: 5px;">
+                <button onclick="Add_Emp_stage()" type="button" class="btn btn-primary"><i class="fa fa-plus"></i>@Resources.Resource.Add </button>
+            </div>
+        </div>
+        <hr />
+        <div class="form-group" id="tableEmplFrm">
+            <table class="table table-hover" id="tableEmpl" >
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>@Html.Translate("رقم الموظف", "Employee No ")</th>
+                        <th>@Html.Translate("اسم الموظف", "Employee Name")</th>
+                        <th>@Html.Translate("عدد الساعات", "Total Hours")</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="tableEmplBody">
+                    @foreach (var Emp in lProdCost_EmpWorkHoursD_WebView)
+                    {
+                        <tr style="height: 26px;">
+                     
+                                <td></td>
+                                <td>@Emp.EmpNo</td>
+                                <td>@Html.Translate(Emp.EmpName, Emp.EmpName)</td>
+                                <td><input type="text" value="@Emp.ActualWorkHours" onkeyup="calculateTotal()"/></td>
+                                <td></td>
+                        </tr>
+                    }
+
+
+                </tbody>
+               
+            </table>
+           
+        </div>
+        <div class="form-group">
+            <div class="col-md-4">
+                <label class="unselectable" for="NewEmp">@Html.Translate("عدد الساعات الكلي", "Total Hoursss")</label>
+            </div>
+            <div class="col-md-8" style="margin-bottom: 5px;">
+                <input required="true" type="text" id="TotalHours" value="00:00"  disabled />
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    var EmpWorkHoursD_Web = new Array();
+    var EmpWorkHoursH_Web = new Array();
+    var inputElements = document.querySelectorAll('#tableEmplBody input[type="text"]');
+    var totalHoursInput = document.getElementById('TotalHours');
+
+    function calculateTotal() {
+        debugger;
+        var totalMinutes = 0;
+        inputElements.forEach(function (input) {
+            var inputValue = input.value.trim();
+            if (inputValue.match(/^\d{2}:\d{2}$/)) {
+                var timeParts = inputValue.split(':');
+                var hours = parseInt(timeParts[0], 10);
+                var minutes = parseInt(timeParts[1], 10);
+                totalMinutes += hours * 60 + minutes;
+            }
+        });
+
+        var hoursTotal = Math.floor(totalMinutes / 60);
+        var minutesTotal = totalMinutes % 60;
+        var totalFormatted = ('0' + hoursTotal).slice(-2) + ':' + ('0' + minutesTotal).slice(-2);
+
+        // Update the Total Hours input field
+        var totalHoursInput = document.getElementById('TotalHours');
+        totalHoursInput.value = totalFormatted;
+        console.log(totalFormatted)
+    }
+    var inputElements = document.querySelectorAll('#tableEmplBody input[type="text"]');
+
+    document.addEventListener('input', function (event) {
+        var target = event.target;
+        if (target.tagName === 'INPUT' && target.type === 'text') {
+            calculateTotal();
+        }
+    });
+
+     
+
+
+    $('#Model_add_emp_toStage').draggable({
+        handle: ".modal-header",
+    });
+    function Add_Emp_stage() {
+        var CompNo = @company.comp_num;
+        $('#ProdCost_add_emp_toStage').load("../../../ProductionOrdersInProgress/GetEmp?CompNo=" + CompNo);
+
+        $('#Model_add_emp_toStage').modal('show')
+    }
+    function Save_WorkHrs() {
+        var CompNo = @company.comp_num;
+        var PrepYear = @OrderYear;
+        var PrepNo = @OrderNo;
+        var StageCode = @stage_code;
+        var StageSer = @StageSer;
+        var TrDate = document.getElementById("Date_Time").value;
+        var ShiftNo =0;
+
+        var tableBody = document.getElementById("tableEmplBody");
+
+        for (var i = 0; i < tableBody.rows.length; i++) {
+            debugger;
+            var row = tableBody.rows[i];
+            var cells = row.cells;
+
+            var EmpNo = cells[1].innerText;
+            var empName = cells[2].innerText;
+            var ActualWorkHoursInput = cells[3].querySelector("input");
+            var enteredValue = ActualWorkHoursInput.value;
+            enteredValue = enteredValue.replace(/::+/g, ":");
+             if(!enteredValue.includes(":")){
+                    enteredValue = enteredValue + ":00";
+            }
+            else if (/^\d$/.test(enteredValue) ) {
+                enteredValue = "0" + enteredValue + ":00";
+            } 
+            
+            else {
+                var parts = enteredValue.split(":");
+                var hours = parseInt(parts[0]);
+                var minutes = parseInt(parts[1]);
+
+                // Add leading zeros if necessary
+                var formattedHours = (hours < 10) ? "0" + hours : hours;
+                var formattedMinutes = (minutes < 10) ? "0" + minutes : minutes;
+
+                // Reconstruct the formatted time
+                enteredValue = formattedHours + ":" + formattedMinutes;
+            }
+
+            var rowData = {
+                CompNo:CompNo,
+                PrepYear:PrepYear,
+                PrepNo:PrepNo,
+                TrDate:TrDate,
+                ShiftNo:ShiftNo,
+                StageCode:StageCode,
+                EmpNo:EmpNo,
+                StageCode:StageCode,
+                ActualWorkHours: enteredValue,
+
+
+            };
+
+            EmpWorkHoursD_Web.push(rowData);
+
+        }
+        var Notes ="";
+        EmpWorkHoursH_Web.push(PrepYear, PrepNo, StageCode, StageSer, TrDate,Notes);
+
+        burn({
+            EmpWorkHoursD_Web:EmpWorkHoursD_Web,
+            PrepYear: PrepYear,
+            PrepNo: PrepNo,
+            StageSer: StageSer,
+            StageCode: StageCode,
+            TrDate: TrDate,
+            Notes:Notes
+        }, '../../../ProductionOrdersInProgress/Save_WorkHrs', '',LoadBaseTable, false);
+
+
+    }
+    function LoadBaseTable(){
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#DLaborModal').modal('hide');
+
+        refreshTable()
+
+    }
+    function dateChanged(CompNo, OrderYear, OrderNo, StageSer, stage_code) {
+        var selectedDate = document.getElementById("Date_Time").value;
+        var date = new Date(selectedDate);
+
+        if (date.getFullYear() < 1900) {
+            alert('@Html.Translate("التاريخ غير صالح !", "Date invalid !")');
+            return;
+        }
+        var tableEmpl = document.getElementById("tableEmplFrm");
+        var tableEmplBody = document.getElementById("tableEmplBody");
+        tableEmplBody.innerHTML = "";
+        $('#tableEmplBody').load("../../../ProductionOrdersInProgress/LoadTableEmp?CompNo=" + CompNo
+                      + "&OrderYear=" + OrderYear
+                      + "&OrderNo=" + OrderNo
+                      + "&StageSer=" + StageSer
+                      + "&stage_code=" + stage_code
+                      + "&selectedDate="+selectedDate,
+                      function() {
+                          inputElements = document.querySelectorAll('#tableEmplBody input[type="text"]');
+                          inputElements.forEach(function(input) {
+                              input.addEventListener('input', calculateTotal);
+                          });
+                          calculateTotal();
+                      });
+    }
+
+
+    calculateTotal();
+</script>

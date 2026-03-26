@@ -1,0 +1,56 @@
+﻿@using System.Data.SqlClient;
+@using AlphaERP.Models
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+
+    List<PayCodes> VendorEvalItems = new MDB().Database.SqlQuery<PayCodes>(string.Format("select sys_minor as sys_minor ,sys_adesc as DescAr,isnull(sys_edesc,'No Desc.') as DescEn from SysCodes where (CompNo = '{0}') and sys_major='EItem'", company.comp_num)).ToList();
+}
+
+<table class="table" id="VendorEvalItemsTable">
+    <thead>
+        <tr>
+            <th>@Html.Recource(117)</th>
+            <th>@Html.Recource(66)</th>
+            <th>@Html.Recource(118)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="VendorEvalItemsTbody">
+        @foreach (PayCodes P in VendorEvalItems)
+        {
+        <tr>
+            <td>@P.sys_minor</td>
+            <td>@P.DescAr</td>
+            <td>@P.DescEn</td>
+            <td>
+                <button class="btn-ed" onclick="EditEvalItems('@P.sys_minor','@P.DescAr','@P.DescEn')">
+                    <i class="fa fa-pencil-alt"></i>
+                </button>
+                <button class="btn-de" onclick="DeleteEvalItems('@P.sys_minor')">
+                    <i class="fa fa-trash-alt" aria-hidden="true"></i>
+                </button>
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+    var VendorEvalItemsTable;
+    VendorEvalItemsTable = $('#VendorEvalItemsTable').dataTable({
+        "scrollY": 'calc( 100vh - 270px)',
+        "paging": true,
+        "pageLength": 25,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+</script>
+
+
+
+
+
+

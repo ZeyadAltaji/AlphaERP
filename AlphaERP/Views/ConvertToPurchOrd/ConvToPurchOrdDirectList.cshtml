@@ -1,0 +1,685 @@
+﻿@model IEnumerable<AlphaERP.Models.OrdRequestDF>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    List<InvItemsMF> Mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+    List<int> Deptid = new List<int>();
+    List<GLN_UsersDept> UsersDept = new MDB().GLN_UsersDept.Where(x => x.CompNo == company.comp_num && x.UserID == me.UserID && x.Permission == true).ToList();
+    Deptid = UsersDept.Select(o => o.DeptID).ToList();
+    List<GLDEPMF> GLDEPMFs = new MDB().GLDEPMFs.Where(x => x.DEP_COMP == company.comp_num && Deptid.Contains(x.DEP_NUM)).ToList();
+    List<InvUnitCode> UnitC = new MDB().InvUnitCodes.Where(x => x.CompNo == company.comp_num).ToList();
+    List<BusunisUnit> BU = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("SELECT  Alpha_BusinessUnitDef.BusUnitID as Id, BusUnitDescAr as DescAr,BusUnitDescEng as DescEn  " +
+"from Alpha_BusinessUnitDef " +
+"where Alpha_BusinessUnitDef.CompNo = '{0}' ", company.comp_num)).ToList();
+    List<BusunisUnit> Venders = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("select VendorNo as VenderId ,name as DescAr,Eng_Name as DescEn from Vendors where (comp = '{0}') AND (IsHalt = 0)", company.comp_num)).ToList();
+    OrdCompMF ordCompMF = new MDB().OrdCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    var DivisionPurchaseOrder = ordCompMF.IsDivisionPurchaseOrder.Value;
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+    DataTable Dt = new DataTable();
+
+}
+<style>
+    #MRP_ConvertToPurchOrd_DIV table th, #MRP_ConvertToPurchOrd_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+
+    .wrapperx {
+        padding: 0;
+        position: relative;
+        white-space: nowrap;
+    }
+
+    .wrapperxOld {
+        padding: 0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+</style>
+
+<style>
+    #ConvertToPurchOrdTable_wrapper {
+        width: calc(181vh - 50px);
+    }
+     .modal-title {
+        width: calc(100% - 120px) !important;
+        text-align: center;
+        position: absolute;
+        font-weight: bold;
+    }
+</style>
+
+
+<link href="~/Content/stickytooltip.css" rel="stylesheet" />
+<script src="~/Scripts/stickytooltip.js?s=15"></script>
+
+@{
+    int i = 1;
+}
+<div class="form-group">
+    <div class="col-md-12 wrapperx" id="MRP_ConvertToPurchOrd_DIV">
+        <table class="table table-hover MRP_ConvertToPurchOrd" id="ConvertToPurchOrdTable">
+            <thead>
+                <tr>
+                    <th style="text-align: center !important;">@Html.Recource(3197)</th>
+                    <th style="text-align: center !important;">@Html.Recource(3265)</th>
+                    <th style="text-align: center !important;">@Html.Recource(96)</th>
+                    <th style="text-align: center !important;">@Html.Recource(44)</th>
+                    <th style="text-align: center !important; ">@Html.Recource(74)</th>
+                    <th style="text-align: center !important;">@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</th>
+                    <th>@Html.Recource(67)</th>
+                    @if (CActive.ClientNo == 335)
+                    {
+                        <th>@Html.Recource(5693)</th>
+                    }
+                    else
+                    {
+                        <th>@Html.Recource(49)</th>
+                        <th hidden>@Html.Recource(49)</th>
+
+                    }
+                    @if (compMF.UseQty2 == true)
+                    {
+                        if (CActive.ClientNo == 335)
+                        {
+                            <th>@Html.Recource(442)</th>
+                        }
+                        else
+                        {
+                            <th>@Html.Recource(72)</th>
+                        }
+                    }
+                    else
+                    {
+                        <th hidden>@Html.Recource(72)</th>
+                    }
+                    <th style="text-align: center !important;">@Html.Recource(1671)</th>
+                    <th style="text-align:center !important">@Html.Recource(215)</th>
+                    <th style="text-align:center !important" hidden>@Html.Recource(215)</th>
+                    @if (CActive.ClientNo == 239)
+                    {
+                        <th style="text-align: center !important;">@Html.Recource(70)</th>
+                    }
+                    else
+                    {
+                        <th>@Html.Recource(5667)</th>
+                    }
+                    <th>@Html.Recource(68)</th>
+                    <th hidden>@Html.Recource(68)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody style="text-align: center;" id="MRP_ConvertToPurchOrdTbody">
+                @foreach (OrdRequestDF OrdDF in Model.OrderBy(x => x.prefvendor))
+                {
+                    Ord_RequestHF HF = new MDB().Ord_RequestHF.Where(x => x.CompNo == company.comp_num && x.ReqYear == OrdDF.ReqYear && x.ReqNo == OrdDF.ReqNo).FirstOrDefault();
+                    User u = new MDB().Users.Where(x => x.UserID == HF.UserID).FirstOrDefault();
+                    BusunisUnit BUDESC = BU.Where(x => x.Id == HF.ReqBU.Value).FirstOrDefault();
+                    string OrderPriorityDeesc = "";
+                    double? TatalValue = 0;
+                    string UnitName = "";
+                    string ItemDesc = "";
+                    InvItemsMF M = new InvItemsMF();
+                    if (OrdDF.SubItemNo == "PKSTI00000002383")
+                    {
+                        List<InvItemsMF> Mf1 = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == "PKSTI00000002383").ToList();
+                         ItemDesc = Mf1.Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                        M = Mf1.FirstOrDefault();
+                    }
+                    else
+                    {
+                        M = Mf.Where(x => x.ItemNo == OrdDF.SubItemNo).FirstOrDefault();
+                         ItemDesc = Mf.Where(x => x.ItemNo == OrdDF.SubItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                    }
+                    Ord_LinkRquestDFAndPO Orddf = new MDB().Ord_LinkRquestDFAndPO.Where(x => x.CompNo == company.comp_num && x.ReqYear == OrdDF.ReqYear && x.ReqNo == OrdDF.ReqNo
+                                && x.ItemNo == OrdDF.SubItemNo).FirstOrDefault();
+                    double? Qty = Orddf == null ? 0 : new MDB().Ord_LinkRquestDFAndPO.Where(x => x.CompNo == company.comp_num && x.ReqYear == OrdDF.ReqYear && x.ReqNo == OrdDF.ReqNo
+                     && x.ItemNo == OrdDF.SubItemNo).Sum(o => o.Qty).Value;
+
+                    double? TotalQty = OrdDF.Qty - Qty;
+
+                    switch (OrdDF.SubUnitSerial)
+                    {
+                        case 1:
+                            UnitName = M.UnitC1;
+                            break;
+                        case 2:
+                            UnitName = M.UnitC2;
+                            break;
+                        case 3:
+                            UnitName = M.UnitC3;
+                            break;
+                        case 4:
+                            UnitName = M.UnitC4;
+                            break;
+
+                    }
+                    switch (HF.OrderPriority)
+                    {
+                        case 0:
+                            OrderPriorityDeesc = Html.Translate("عادي", "Normal").ToString();
+                            break;
+                        case 1:
+                            OrderPriorityDeesc = Html.Translate("متوسط", "Medium").ToString();
+                            break;
+                        case 2:
+                            OrderPriorityDeesc = Html.Translate("عاجل", "Urgently").ToString();
+                            break;
+                    }
+                    TatalValue = TotalQty * OrdDF.Price;
+                    PayCodes Currency = new MDB().Database.SqlQuery<PayCodes>(string.Format("select CurrType as Id ,CurrName as DescAr,isnull(CurrNameE,'No Desc.') as DescEn from CurrType where (CurrType = '{0}')", HF.CurrNo)).FirstOrDefault();
+                    PayCodes PrdType = new PayCodes();
+                    if (HF.OrderType == null)
+                    {
+                        PrdType = new MDB().Database.SqlQuery<PayCodes>(string.Format("select MinCode as sys_minor ,CodeDesc as DescAr,isnull(CodeDescEng,'No Desc.') as DescEn from InvCodes where (CompNo = '{0}') AND (MajCode = 'PrdType') AND  (MinCode = '1')", company.comp_num, HF.OrderType)).FirstOrDefault();
+                    }
+                    else
+                    {
+                        PrdType = new MDB().Database.SqlQuery<PayCodes>(string.Format("select MinCode as sys_minor ,CodeDesc as DescAr,isnull(CodeDescEng,'No Desc.') as DescEn from InvCodes where (CompNo = '{0}') AND (MajCode = 'PrdType') AND  (MinCode = '{1}')", company.comp_num, HF.OrderType)).FirstOrDefault();
+                    }
+                    <tr style="height: 25px;" itemNo="@OrdDF.SubItemNo">
+                        <td style="text-align: center !important" data-tooltip="sticky_@i">@HF.ReqNo</td>
+                        <td style="text-align: center !important">
+                            <input type="hidden" value="@HF.OrderType" id="OrdDF_OrderType" />
+                            @Html.Translate(PrdType.DescAr, PrdType.DescEn)
+                        </td>
+                        <td style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="OrdDF_RefNo">@HF.RefNo</td>
+                        <td style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="OrdDF_ItemNo">@OrdDF.SubItemNo</td>
+                        <td style="text-align: center !important;word-wrap: break-word;white-space: normal;" title="@ItemDesc">@ItemDesc</td>
+                        <td style="text-align: center !important">@OrdDF.ReqDeliveryDate.ToShortDateString()</td>
+                        <td style="text-align: center !important" SubUnitSerial="@OrdDF.SubUnitSerial">@UnitName</td>
+                         @if (ordCompMF.IsDivisionPurchaseOrder == true)
+                         {
+                            <td style="text-align: center !important">
+                                <input id="OrdDF_Qty_@i" value="@TotalQty.Value.ToString("n2")" type="text" style="width:75px !important" onblur="ChangeQty(this,@i)" />
+                            </td>
+                            <td hidden>
+                                <input id="OrdDF_Qtythold_@i" value="@TotalQty.Value" type="text" style="width:75px !important" hidden />
+                                <input id="OrdDF_Qtyth_@i" value="@TotalQty.Value" type="text" style="width:75px !important" hidden />
+                            </td>
+                         }
+                         else
+                         {
+                            <td style="text-align: center !important" id="OrdDF_Qty">@TotalQty.Value.ToString("n2")</td>
+                            <td style="text-align: center !important" id="OrdDF_Qtyth" hidden>@TotalQty.Value</td>
+                         }
+                        
+                        @if (compMF.UseQty2 == true)
+                        {
+                            <td style="text-align: center !important" id="OrdDF_Qty2">@OrdDF.Qty2</td>
+                        }
+                        else
+                        {
+                            <td style="text-align: center !important" id="OrdDF_Qty2" hidden>@OrdDF.Qty2</td>
+                        }
+                        <td style="text-align:center !important">@Html.Translate(Currency.DescAr, Currency.DescEn)</td>
+                        <td style="text-align: center !important" id="OrdDF_Price_@i">@OrdDF.Price.Value.ToString("n2")</td>
+                        <td style="text-align: center !important" id="OrdDF_Priceth_@i" hidden>@OrdDF.Price.Value</td>
+                        @if (CActive.ClientNo == 239)
+                        {
+                            <td style="text-align: center !important;word-wrap: break-word;white-space: normal;" title="@OrdDF.Note" id="OrdDF_Note">@OrdDF.Note</td>
+                        }
+                        else
+                        {
+                            <td style="text-align: center !important;word-wrap: break-word;white-space: normal;">
+                               @Html.Translate(BUDESC.DescAr, BUDESC.DescEn)
+                            </td>
+                        }
+                        <td style="text-align: center !important" id="OrdDF_TatalValue_@i">@TatalValue.Value.ToString("n2")</td>
+                        <td style="text-align: center !important" id="OrdDF_TatalValueth_@i" hidden>@TatalValue</td>
+                        <td style="text-align:center!important">
+                            <input id="MRP_ConvertToPurchOrd_Action" type="checkbox" onchange="SumTotal()">
+                            <button class="btn-de" onclick="Cancelling_PurchaseRequest('@OrdDF.ReqYear','@OrdDF.ReqNo','@OrdDF.SubItemNo')" title=@Html.Translate("إرجاع","Return")>
+                                <i class="fa fa-times-circle"></i>
+                            </button>
+                            <button class="btn btn-ed ex" onclick="Attach_PurchaseRequest('@OrdDF.ReqYear','@OrdDF.ReqNo')" title=@Html.Translate("إرجاع","Return")>
+                                <i class="fa fa-paperclip" aria-hidden="true"></i>
+                            </button>
+                            <input type="hidden" id="InputSerial" value="@(i++)" />
+                            <input type="hidden" id="OrdDF_ReqYear" value="@OrdDF.ReqYear" />
+                            <input type="hidden" id="OrdDF_SubUnitSerial" value="@OrdDF.SubUnitSerial" />
+                            <input type="hidden" id="OrdDF_ReqNo" value="@OrdDF.ReqNo" />
+                            <input type="hidden" id="OrdDF_ItemSrl" value="@OrdDF.ItemSr" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+<div id="mystickytooltip" class="stickytooltip">
+    <div style="padding:5px">
+        @{
+            i = 1;
+        }
+        @foreach (OrdRequestDF MRPC in Model)
+        {
+            <div id="sticky_@i" class="atip" style="width:350px;@Html.Translate("direction:rtl", "")">
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th style="text-align:center !important">@Html.Recource(44)</th>
+                            <th style="text-align:center !important">@Html.Recource(74)</th>
+                            <th style="text-align:center !important">@Html.Recource(49)</th>
+                    </thead>
+                    <tbody>
+                        @{
+                            int sr0 = 1;
+                            List<Ord_RequestDF> df = new MDB().Ord_RequestDF.Where(x => x.CompNo == company.comp_num && x.ReqYear == MRPC.ReqYear && x.ReqNo == MRPC.ReqNo).ToList();
+                            sr0 = 1;
+                            foreach (Ord_RequestDF item in df)
+                            {
+                                InvItemsMF M = Mf.Where(x => x.ItemNo == item.SubItemNo).FirstOrDefault();
+                                string ItemDesc = Mf.Where(x => x.ItemNo == item.SubItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                                <tr>
+                                    <td style="text-align:center !important">@sr0</td>
+                                    <td style="text-align:center !important;word-wrap: break-word; white-space: normal;">@item.SubItemNo</td>
+                                    <td style="text-align:center !important;word-wrap: break-word; white-space: normal;">@ItemDesc</td>
+                                    <td style="text-align:center !important">@item.Qty.Value.ToString("0.000")</td>
+                                </tr>
+                                sr0 += 1;
+                            }
+                        }
+                    </tbody>
+
+                </table>
+            </div>
+
+            i++;
+        }
+
+    </div>
+    <div class="stickystatus"></div>
+</div>
+
+<div class="modal-footer">
+    <br />
+    <div class="form-group">
+        <div class="col-md-12">
+            <div class="col-md-10">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(517) </label>
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <select class="MRP_ConvertToPurchOrd_PreferredVender" id="MRP_ConvertToPurchOrd_PreferredVender" required="true">
+                            @foreach (var v in Venders)
+                            {
+                                <option value="@v.VenderId">@Html.Translate(v.DescAr, v.DescEn)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(5667) </label>
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="ProdCost_ConvertToPurchOrd_save_CboReqBU" class="ProdCost_ConvertToPurchOrd_save_CboUnit">
+                            @Html.MyBusinessUnits()
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_ConvertToPurchOrd_save_Amount">@Html.Recource(68) </label>
+                    </div>
+                    <div class="col-md-2">
+                        <input required="false" style="width:117px !important;" type="text" id="MRP_ConvertToPurchOrd_save_Amount" value="0" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="col-md-12">
+                    <button style="height: 40px !important;float:left" class="btn btn-primary btn-block" onclick="CreatePurchOrder()" id="PurchOrder">
+                        <i class="fa fa-plus"></i>
+                        @Html.Recource(32)
+                    </button>
+                    <button id="AddPurchaseOrder" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                        @Html.Translate("امر شراء", "Purchase Order")
+                    </button>
+                    <input id="orderyear" style="display:none" />
+                    <input id="OrdNo" style="display:none" />
+                    <input id="Ordvendor" style="display:none" />
+                    <input id="TawreedNo" style="display:none" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $('#ConvertToPurchOrdTable').DataTable({
+        "scrollY": 'calc( 100vh - 355px)',
+        "paging": false,
+        "pageLength": 10,
+        "order": [[0, "desc"]],
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        },
+    });
+    $('.MRP_ConvertToPurchOrd_Vender').select2();
+    $('.ProdCost_ConvertToPurchOrd_save_CboUnit').select2();
+    $('.MRP_ConvertToPurchOrd_PreferredVender').select2();
+
+
+    var v = $('#ProdCost_ConvertToPurchOrd_save_CboReqBU').val()
+    $('#ProdCost_ConvertToPurchOrd_save_txtReqBU').val(v);
+    function PurchOrdBUChange() {
+        var v = $('#ProdCost_ConvertToPurchOrd_save_txtReqBU').val();
+        $('#ProdCost_ConvertToPurchOrd_save_CboReqBU').val(v)
+        if (document.getElementById('ProdCost_ConvertToPurchOrd_save_CboReqBU').value == '') {
+            ProdCost_ConvertToPurchOrd_save_txtReqBU.value = ''
+            document.getElementById('ProdCost_ConvertToPurchOrd_save_txtReqBU').focus();
+            return;
+        }
+    }
+    function myActionVendore(e, srial) {
+        var table = $('.MRP_ConvertToPurchOrd #MRP_ConvertToPurchOrdTbody tr');
+        var trs = table;
+        var vendor = $(trs).find('#MRP_ConvertToPurchOrd_Vender_' + srial)[0].value
+
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i]).closest('tr').find('.MRP_ConvertToPurchOrd_Vender')[0].value == vendor) {
+                if (e.checked == true) {
+                    $(trs[i]).closest('tr').find('#MRP_ConvertToPurchOrd_Action')[0].checked = true
+                }
+                else {
+                    $(trs[i]).closest('tr').find('#MRP_ConvertToPurchOrd_Action')[0].checked = false
+                }
+            }
+            else {
+                $(trs[i]).closest('tr').find('#MRP_ConvertToPurchOrd_Action')[0].checked = false
+            }
+        }
+    }
+    function myActionVendore_ByVenore(e, srial) {
+        var table = $('.MRP_ConvertToPurchOrd #MRP_ConvertToPurchOrdTbody tr');
+        var trs = table;
+        var vendor = $(trs).find('#MRP_ConvertToPurchOrd_Vender_' + srial)[0].value
+
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i]).closest('tr').find('.MRP_ConvertToPurchOrd_Vender')[0].value == vendor) {
+                if (e.checked == true) {
+                    $(trs[i]).closest('tr').find('#MRP_ConvertToPurchOrd_Action')[0].checked = true
+                }
+                else {
+                    $(trs[i]).closest('tr').find('#MRP_ConvertToPurchOrd_Action')[0].checked = false
+                }
+            }
+            else {
+                $(trs[i]).closest('tr').find('#MRP_ConvertToPurchOrd_Action')[0].checked = false
+            }
+        }
+    }
+    function ChangeQty(e,Id) {
+        if (Number(e.value) > Number($('#OrdDF_Qtythold_' +Id)[0].value)) {
+            alert("لا يجوز ان تكون كمية امر الشراء اكبر من كمية طلب الشراء");
+            $('#OrdDF_Qty_'+ Id)[0].value = $('#OrdDF_Qtythold_' + Id)[0].value;
+            return false;
+        }
+
+        
+        $('#OrdDF_Qtyth_' + Id)[0].value = e.value
+        var temp = parseFloat(validDigits(e.value));
+        var temp1 = addCommas(temp.toFixed(3))
+        $('#OrdDF_Qty_'+ Id)[0].value = temp1;
+
+        var Qtyth = parseFloat(validDigits($('#OrdDF_Qtyth_'+ Id)[0].value)) ;
+        var Price = parseFloat(validDigits( $('#OrdDF_Priceth_'+ Id)[0].innerHTML)) ;
+
+        var total = Number(Qtyth) *  Number(Price);
+        $('#OrdDF_TatalValueth_'+ Id)[0].innerHTML = total;
+        var temptotal = addCommas(total.toFixed(3))
+        $('#OrdDF_TatalValue_'+ Id)[0].innerHTML = temptotal;
+        SumTotal();
+    }
+    function SumTotal() {
+        var table = $('#MRP_ConvertToPurchOrdTbody tr');
+        var trs = table;
+        var Total = 0
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value
+            if ($(trs[i]).closest('tr').find('#MRP_ConvertToPurchOrd_Action')[0].checked == true) {
+                Total += Number($(trs[i]).closest('tr').find('#OrdDF_TatalValueth_' + InputSerial)[0].innerHTML);
+            }
+        }
+
+        var z = addCommas(Total.toFixed(3));
+        $('#MRP_ConvertToPurchOrd_save_Amount').val(z);
+    }
+    function validDigits(n, dec) {
+        n = n.replace(/[^\d\.]+/g, '');
+        var ax1 = n.indexOf('.'), ax2 = -1;
+        if (ax1 != -1) {
+            ++ax1;
+            ax2 = n.indexOf('.', ax1);
+            if (ax2 > ax1) n = n.substring(0, ax2);
+            if (typeof dec === 'number') n = n.substring(0, ax1 + dec);
+        }
+        return n;
+    }
+    function addCommas(n) {
+        var rx = /(\d+)(\d{3})/;
+        return String(n).replace(/^\d+/, function (w) {
+            while (rx.test(w)) {
+                w = w.replace(rx, '$1,$2');
+            }
+            return w;
+        });
+    }
+    function CheckValue(ID) {
+        if (document.getElementById(ID).getAttribute('required') == 'true') {
+            if (document.getElementById(ID).value == '') {
+                document.getElementById(ID).focus();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    function CreatePurchOrder() {
+        if (MRP_ConvertToPurchOrd_PreferredVender.value == "") {
+            MRP_ConvertToPurchOrd_PreferredVender.focus();
+            alert('@Html.Translate("يجب اختيار المورد", "Vender must be selected")');
+            return false;
+        }
+
+        if (ProdCost_ConvertToPurchOrd_save_CboReqBU.value == "") {
+            ProdCost_ConvertToPurchOrd_save_CboReqBU.focus();
+            alert('@Html.Translate("يجب اختيار وحدة العمل", "Work unit must be selected")');
+            return false;
+        }
+
+        var OrdReqDF = new Array();
+
+        $('.MRP_ConvertToPurchOrd #MRP_ConvertToPurchOrdTbody tr').each(function () {
+            var InputSerial = $(this).find('#InputSerial')[0].value;
+            if ($(this).find('#MRP_ConvertToPurchOrd_Action').is(':checked') == true) {
+                debugger
+                var Qty = 0;
+                if ('@DivisionPurchaseOrder' == 'True') {
+                    Qty = $(this).find('#OrdDF_Qtyth_' + InputSerial)[0].value;
+                }
+                else {
+                    Qty = $(this).find('#OrdDF_Qtyth').html();
+                }
+                OrdReqDF.push({
+                    ReqYear: $(this).find('#OrdDF_ReqYear')[0].value,
+                    ReqNo: $(this).find('#OrdDF_ReqNo')[0].value,
+                    OrderType: $(this).find('#OrdDF_OrderType')[0].value,
+                    prefvendor: MRP_ConvertToPurchOrd_PreferredVender.value,
+                    SubItemNo: $(this).find('#OrdDF_ItemNo').html(),
+                    ItemSr: $(this).find('#OrdDF_ItemSrl')[0].value,
+                    Qty: Qty,
+                    Qty2: $(this).find('#OrdDF_Qty2').html(),
+                    Price: $(this).find('#OrdDF_Priceth_'+ InputSerial).html(),
+                    TotalValue: $(this).find('#OrdDF_TatalValueth_'+ InputSerial).html(),
+                    SubUnitSerial: $(this).find('#OrdDF_SubUnitSerial')[0].value,
+                    Note: $(this).find('#OrdDF_Note').html(),
+                });
+            }
+        });
+        debugger
+        if (OrdReqDF.length == 0) {
+            MsgBox('@Resources.Resource.NoItemWasSelected', 'red');
+            return false
+        }
+
+        wait();
+        if (confirm('@Resources.Resource.ConfirmCreatePurchaseOrder')) {
+            burn({ BU: ProdCost_ConvertToPurchOrd_save_CboReqBU.value, OrdReqDF: OrdReqDF }, '../../../ConvertToPurchOrd/CreatePurchOrder', '', ReloadCreatePurchOrder, false);
+        }
+        else {
+            done();
+        }
+    }
+    function ReloadCreatePurchOrder(r) {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#Ordvendor').val(r.vendor);
+        $('#orderyear').val(r.OrdYear);
+        $('#OrdNo').val(r.OrdNo);
+        $('#TawreedNo').val(r.TawreedNo);
+        $('#AddPurchaseOrder').attr("href", '/ConvertToPurchOrd/AddPurchaseOrder?vendor=' + $('#Ordvendor').val() + '&OrdYear=' + $('#orderyear').val() + '&OrdNo=' + $('#OrdNo').val() + '&TawreedNo=' + $('#TawreedNo').val() + '')
+        $('#AddPurchaseOrder').click();
+        ConvertToPurchOrdSerach()
+    }
+
+
+</script>
+
+
+<div class="modal fade" id="Model_PO_RejectReason">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-3">
+                            <label class="unselectable" for="ProdCost_PurchaseReqHF_save_ReturnReason">@Html.Translate("سبب الارجاع", "Return Reason")</label>
+                        </div>
+                        <div class="col-md-4" style="margin-bottom: 5px;">
+                            <input required="false" style="width:410px !important;" type="text" id="ProdCost_PurchaseReqHF_save_ReturnReason" placeholder="@Html.Translate("سبب الارجاع", "Return Reason")" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteSaveProd_ReturnReason()" class="btn btn-danger">@Html.Translate("الغاء", "Reject")</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $('#Model_PO_RejectReason').draggable({
+        handle: ".modal-header",
+    });
+
+    var _ReqYear = 0;
+    var _ReqNo = 0;
+    var _ItemNo = 0;
+    function Cancelling_PurchaseRequest(ReqYear, ReqNo, ItemNo) {
+        _ReqYear = ReqYear;
+        _ReqNo = ReqNo;
+        _ItemNo = ItemNo;
+        if (confirm('@Resources.Resource.CancelPurchaseOrders')) {
+            ProdCost_PurchaseReqHF_save_ReturnReason.value = ''
+            $('#Model_PO_RejectReason').modal('show')
+        }
+    }
+    function ExcuteSaveProd_ReturnReason() {
+        if (ProdCost_PurchaseReqHF_save_ReturnReason.value == '') {
+            alert('@Html.Translate("يجب إدخال سبب الارجاع", "Return reason must be entered")');
+            return false;
+        }
+        wait();
+        burn({ ReqYear: _ReqYear, ReqNo: _ReqNo, ItemNo: _ItemNo, ReturnReason: $('#ProdCost_PurchaseReqHF_save_ReturnReason')[0].value }, '../../../ConvertToPurchOrd/Return_PurchaseRequest', '', ReloadReturnPurchaseRequest, false);
+    }
+    function ReloadReturnPurchaseRequest() {
+        done();
+        $('#Model_PO_RejectReason').modal('hide')
+        ConvertToPurchOrdSerach()
+    }
+</script>
+
+
+<div class="modal fade" id="Model_ConvertToPurchOrd_DocumentsArchive">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أرشفة الوثائق", "Archive Documents")</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto" id="ConvertToPurchOrd_DocumentsArchiveDiv">
+                        
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_ConvertToPurchOrd_DocumentsArchive').draggable({
+        handle: ".modal-header",
+    });
+    function Attach_PurchaseRequest(ReqYear,ReqNo) {
+        ConvertToPurchOrd_DocumentsArchiveDiv.innerHTML = "";
+        $('#ConvertToPurchOrd_DocumentsArchiveDiv').load('../../../ConvertToPurchOrd/AttachPurchaseRequest?ReqYear=' + ReqYear + '&ReqNo=' + ReqNo);
+        $('#Model_ConvertToPurchOrd_DocumentsArchive').modal('show');
+    }
+   
+    function DownloadFile(FileName, base64) {
+        var binaryString = window.atob(base64);
+        var binaryLen = binaryString.length;
+        var bytes = new Uint8Array(binaryLen);
+        for (var i = 0; i < binaryLen; i++) {
+            var ascii = binaryString.charCodeAt(i);
+            bytes[i] = ascii;
+        }
+        saveByteArray(FileName, bytes)
+    }
+    function saveByteArray(reportName, byte) {
+        var blob = new Blob([byte], { type: "application/pdf" });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        var fileName = reportName;
+        link.download = fileName;
+        link.click();
+    }
+    
+</script>
+
+
+

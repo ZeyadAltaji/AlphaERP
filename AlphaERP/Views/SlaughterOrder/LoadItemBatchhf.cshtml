@@ -1,0 +1,63 @@
+﻿@model IEnumerable<AlphaERP.Models.InvItemsMF>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    DataTable DtBatch = new DataTable();
+    string ItemNo = ViewBag.ItemNo;
+    int StoreNo = ViewBag.StoreNo;
+}
+
+
+<table class="table table-hover" id="SelectSlaughterOrderBatchTable">
+    <thead>
+        <tr>
+            <th>@Html.Recource(102)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="SelectSlaughterOrderBatchTbody">
+        @{
+            string batch = "";
+            using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+            {
+                DtBatch = new DataTable();
+                cn.Open();
+                using (SqlCommand cmd = new SqlCommand())
+                {
+                    cmd.Connection = cn;
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                    cmd.CommandText = "Invt_StoreBatches";
+                    cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                    cmd.Parameters.Add(new SqlParameter("@StoreNo", System.Data.SqlDbType.Int)).Value = StoreNo;
+                    cmd.Parameters.Add(new SqlParameter("@ItemNo", System.Data.SqlDbType.VarChar, 20)).Value = ItemNo;
+                    using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                    {
+                        DA.Fill(DtBatch);
+                    }
+                }
+            }
+        }
+        @foreach (DataRow row in DtBatch.Rows)
+        {
+            <tr onclick="SelectSlaughterOrder_BatchNo(this)" BatchNo="@row["BatchNo"].ToString()" style="direction:ltr;text-align:right;">
+                <td id="BatchNo">@row["BatchNo"].ToString()</td>
+                <td></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    $('#SelectSlaughterOrderBatchTable').DataTable({
+        "scrollY": 'calc( 100vh - 385px)',
+        "paging": true,
+        "pageLength": 25,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+</script>
+

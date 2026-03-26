@@ -1,0 +1,90 @@
+﻿@model IEnumerable<AlphaERP.Models.Prod_BomAdditionalRM>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    DataTable Dt = new DataTable();
+}
+
+<div class="form-group">
+    <div class="col-md-12">
+        <label class="unselectable">@Html.Recource(9313) :</label>
+        <button onclick="Edit_InvItemsMF(3)" type="button" class="btn btn-default">@Html.Recource(9313)</button>
+    </div>
+    <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+        <table class="table table-hover" id="eAdditiveItemsTable">
+            <thead>
+                <tr>
+                    <th style="width: 14%;">@Html.Recource(44)</th>
+                    <th style="width: 40%;">@Html.Recource(74)</th>
+                    <th style="width: 10%;text-align: center;">@Html.Recource(67)</th>
+                    <th style="width: 10%;text-align: center;">@Html.Recource(49)</th>
+                    <th style="width: 10%;text-align: center;">@Html.Recource(70)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="eAdditiveItemsTBody">
+                @foreach (var item in Model)
+                {
+                    InvItemsMF items = new MDB().InvItemsMFs.Where(x => x.CompNo == item.CompNo && x.ItemNo == item.RMCode).FirstOrDefault();
+                    <tr>
+                        <td style="width: 14%;" id="AdditiveItems_ItemNo">@item.RMCode</td>
+                        <td style="width: 40%;">@Html.Translate(items.ItemDesc, items.ItemDesc_Ara)</td>
+                        <td style="width: 10%;text-align: center;">
+                            <select style="width:100%" class="AdditiveItems_Unit">
+                                @{
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        Dt = new DataTable();
+                                        cn.Open();
+                                        using (SqlCommand cmd = new SqlCommand())
+                                        {
+                                            cmd.Connection = cn;
+                                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                            cmd.CommandText = "InvT_LoadItemUnits";
+                                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                            cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = item.RMCode;
+                                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                            {
+                                                DA.Fill(Dt);
+                                            }
+                                        }
+                                    }
+                                }
+                                @foreach (DataRow row in Dt.Rows)
+                                {
+                                    if (@row["UnitSerial"].ToString() == item.UnitSerial.ToString())
+                                    {
+                                        <option value="@row["UnitSerial"].ToString()" selected>
+                                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                        </option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@row["UnitSerial"].ToString()">
+                                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                        </option>
+                                    }
+                                }
+                            </select>
+                        </td>
+                        <td style="width: 10%;text-align: center;">
+                            <input id="AdditiveItems_Qty" value="@item.QTY" type="number" style="width:75px !important" />
+                        </td>
+                        <td style="width: 10%;text-align: center;">
+                            <textarea id="AdditiveItems_Notes">@item.Notes</textarea>
+                        </td>
+                        <td>
+                            <button class="btn-de" onclick="RemoveRow(this)"><i class="fa fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    $('#AdditiveItems_Unit').select2();
+</script>

@@ -1,0 +1,954 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    int OrdYear = ViewBag.OrdYear;
+    int OrderNo = ViewBag.OrderNo;
+    string TawreedNo = ViewBag.TawreedNo;
+    string InboundSer = ViewBag.InboundSer;
+    string srl = ViewBag.srl;
+    List<InvItemsMF> Mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+    DataTable Dt = new DataTable();
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+    int Srial = 1;
+    List<Vendor> Vend = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.IsHalt == false).ToList();
+    List<int> store = new MDB().InvStoreUsers.Where(x => x.CompNo == company.comp_num && x.UserID == me.UserID && x.AllPerm == true).Select(o => o.StoreNo).ToList();
+    List<InvStoresMF> lStores = new MDB().InvStoresMFs.Where(x => x.CompNo == company.comp_num && store.Contains(x.StoreNo)).ToList();
+    List<OrderDF> OrdDF = new MDB().OrderDFs.Where(x => x.CompNo == company.comp_num && x.OrdYear == OrdYear && x.OrderNo == OrderNo && x.TawreedNo == TawreedNo).ToList();
+    DataTable DtBatch = new DataTable();
+    double RemainingQty = 0;
+    double ReceivedQty = 0;
+}
+
+<style>
+
+    #OrdInboundsInfo_DIV table th, #OrdInboundsInfo_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+    .wrapperx {
+        padding:0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+
+    .sticky-col {
+        z-index:2;
+        position: sticky;
+        position: -webkit-sticky;
+        background-color: white;
+    }
+
+    .first-col {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        @Html.Translate("right: 0px;", "left: 0px;")
+    }
+
+    .second-col {
+        width: 80px;
+        min-width: 80px;
+        max-width: 80px;
+        @Html.Translate("right: 60px;", "left: 60px;")
+    }
+
+    .third-col {
+        width: 150px;
+        min-width: 150px;
+        max-width: 150px;
+        @Html.Translate("right: 125px;", "left: 125px;")
+    }
+
+    .four-col {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        @Html.Translate("right: 280px;", "left: 280px;")
+    }
+    .stickytooltip {
+        max-height: 80vh !important;
+        overflow: auto !important
+    }
+</style>
+
+<link href="~/Content/stickytooltip.css" rel="stylesheet" />
+<script src="~/Scripts/stickytooltip.js?s=15"></script>
+
+<style>
+    #OrdInboundsInfoDFTable span.badge {
+        border: none;
+        position: static;
+        z-index: 20 !important;
+        box-sizing: content-box;
+        visibility: visible;
+        z-index: 9999999999 !important;
+        padding: 1px;
+        font-family: Arial, verdana, tahoma;
+        font-size: 13px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        text-shadow: 1px 1px 1px rgba(0,0,0,.3);
+        background: #ff3019;
+        background: -webkit-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Chrome10+,Safari5.1+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff3019), color-stop(100%, #cf0404)); /* Chrome,Safari4+ */
+        background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* FF3.6+ */
+        background: -ms-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* IE10+ */
+        background: -o-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Opera 11.10+ */
+        background: linear-gradient(to bottom, #ff3019 0%, #cf0404 100%); /* W3C */
+        width: 18px;
+        height: 18px;
+        line-height: 20px;
+        border-radius: 50%;
+        filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff3019', endColorstr='#cf0404', GradientType=0)"; /* IE6-9 */
+        filter: "progid:DXImageTransform.Microsoft.Shadow(direction=135, strength=2, color=ff0000)"; /* IE10 text shadows */
+        box-shadow: 0 2px 5px rgba(0,0,0,.4);
+    }
+</style>
+
+<style>
+    .modal-title {
+        width: calc(100% - 120px) !important;
+        text-align: center;
+        position: absolute;
+        font-weight: bold;
+    }
+    .modal-body{
+        max-height: 78vh !important;
+    }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(100vh - 210px) !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_InboundsInfo_OrdYear">@Html.Recource(3196) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="text" id="Ord_InboundsInfo_OrdYear_@srl" value="@OrdYear" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_InboundsInfo_OrderNo">@Html.Recource(3197) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:90px !important;" type="text" id="Ord_InboundsInfo_OrderNo_@srl" value="@OrderNo" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_InboundsInfo_TawreedNo">@Html.Recource(3797) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="text" id="Ord_InboundsInfo_TawreedNo_@srl" value="@TawreedNo" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_InboundsInfo_InboundSer">@Html.Translate("رقم الواردة", "Inbound No.") </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 120px !important; direction: ltr; text-align: right;" type="text" id="Ord_InboundsInfo_InboundSer_@srl" value="@InboundSer" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_InboundsInfo_RecDate">@Html.Recource(206)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="date" id="Ord_InboundsInfo_RecDate_@srl" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_InboundsInfo_StoreNo">@Html.Recource(1)</label>
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <select style="width: 85%" id="Ord_InboundsInfo_CboStoreNo_@srl">
+                            @foreach (var v in lStores)
+                            {
+                                if (v.StoreNo == lStores.Select(o => o.StoreNo).FirstOrDefault())
+                                {
+                                    <option value="@v.StoreNo" selected>@Html.Translate(v.StoreName, v.StoreNameEng)</option>
+                                }
+                                else
+                                {
+                                    <option value="@v.StoreNo">@Html.Translate(v.StoreName, v.StoreNameEng)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_InboundsInfo_Notes">@Html.Recource(70)</label>
+                    </div>
+                    <div class="col-md-10">
+                        <textarea required="true" style="width: 96%; height: 25px !important; " id="Ord_InboundsInfo_Notes_@srl" />
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group" style="display: block; height: 125px;">
+                <div class="col-md-12 wrapperx" id="OrdInboundsInfo_DIV">
+                    <table class="table table-hover OrdInboundsInfoDF_Info" id="OrdInboundsInfoDFTable">
+                        @if (Session["language"].ToString() == "en")
+                        {
+                            <thead style="background-color: lightblue">
+                                <tr>
+                                    <th colspan="2" style="text-align: center; width: 350px; border-right: 1px solid;">@Html.Translate("المواد", "Items")</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th colspan="3" style="text-align: center; width: 350px; border-right: 1px solid;">@Html.Translate("امر الشراء", "Purchase Order")</th>
+                                    }
+                                    else
+                                    {
+                                        <th colspan="2" style="text-align: center; width: 350px; border-right: 1px solid;">@Html.Translate("امر الشراء", "Purchase Order")</th>
+                                    }
+                                    <th colspan="2" style="text-align: center; width: 350px; border-right: 1px solid;">@Html.Translate("الكميات", "Quantities")</th>
+                                    <th colspan="6" style="text-align: center; width: 350px;">@Html.Translate("المعلومات الوارده", "Inbounds Info")</th>
+                                </tr>
+                            </thead>
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center; width: 350px; word-wrap: break-word; white-space: normal;">@Html.Recource(44)</th>
+                                    <th style="text-align: center; width: 990px; word-wrap: break-word; white-space: normal; border-right: 1px solid;">@Html.Recource(74)</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(49)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(3200)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal; border-right: 1px solid;">@Html.Recource(72)</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(49)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;border-right: 1px solid;">@Html.Recource(3200)</th>
+                                         <th hidden style="width: 165px; word-wrap: break-word; white-space: normal; ">@Html.Recource(72)</th>
+                                    }
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(243)</th>
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal; border-right: 1px solid;">@Html.Recource(5533)</th>
+                                    <th style="width: 205px; text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(45)</th>
+                                    <th style="width: 205px; word-wrap: break-word; white-space: normal;">@Html.Recource(67)</th>
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(49)</th>
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(3200)</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(72)</th>
+                                    }
+                                    else
+                                    {
+                                        <th hidden>@Html.Recource(72)</th>
+                                    }
+                                    <th>@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tfoot>
+                                <tr>
+                                    <th style="text-align: center; border-right: 1px solid;" colspan="2">@Html.Translate("الاجمالي", "Total")</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="text-align:center;" id="TotalPOQty1_@srl">0</th>
+                                        <th style="text-align:center;" id="TotalPOBounsQty_@srl">0</th>
+                                        <th style="text-align: center; border-right: 1px solid;" id="TotalPOQty2_@srl">0</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="text-align: center;" id="TotalPOQty1_@srl">0</th>
+                                        <th style="text-align:center; border-right: 1px solid;" id="TotalPOBounsQty_@srl">0</th>
+                                        <th hidden id="TotalPOQty2_@srl">0</th>
+                                    }
+                                    <th style="text-align:center;" id="TotalRemainingQty_@srl">0</th>
+                                    <th style="text-align: center; border-right: 1px solid;" id="TotalReceivedQty_@srl">0</th>
+                                    <th></th>
+                                    <th></th>
+                                    <th style="text-align:center;" id="TotalPortQty1_@srl">0</th>
+                                    <th style="text-align:center;" id="TotalPortBounsQty_@srl">0</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="text-align:center;" id="TotalPortQty2_@srl">0</th>
+                                    }
+                                    else
+                                    {
+                                        <th hidden id="TotalPortQty2_@srl">0</th>
+                                    }
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                            <tbody style="text-align: center;" id="OrdInboundsInfoTBody_@srl">
+                                @foreach (OrderDF DF in OrdDF)
+                                {
+                                    RemainingQty = 0;
+                                    ReceivedQty = 0;
+                                    double Qty = 0;
+                                    double GRNQty = 0;
+
+                                    {
+                                        using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                        {
+                                            Dt = new DataTable();
+                                            cn.Open();
+                                            using (SqlCommand cmd = new SqlCommand())
+                                            {
+                                                cmd.Connection = cn;
+                                                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                                cmd.CommandText = "Ord_GetInvDaily";
+                                                cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                                cmd.Parameters.Add(new SqlParameter("@OrdYear", System.Data.SqlDbType.Int)).Value = DF.OrdYear;
+                                                cmd.Parameters.Add(new SqlParameter("@OrderNo", System.Data.SqlDbType.Int)).Value = DF.OrderNo;
+                                                cmd.Parameters.Add(new SqlParameter("@TawreedNo", System.Data.SqlDbType.VarChar, 20)).Value = DF.TawreedNo;
+                                                cmd.Parameters.Add(new SqlParameter("@ItemNo", System.Data.SqlDbType.VarChar, 20)).Value = DF.ItemNo;
+                                                using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                                {
+                                                    DA.Fill(Dt);
+                                                }
+                                            }
+                                        }
+                                        foreach (DataRow row in Dt.Rows)
+                                        {
+                                            ReceivedQty = Convert.ToDouble(row["ReceivedQty"]);
+                                            GRNQty = Convert.ToDouble(row["GRNQty"]);
+                                        }
+                                    }
+                                    Qty = Math.Abs(ReceivedQty - RemainingQty);
+                                    RemainingQty = Math.Abs((DF.Qty.Value - GRNQty));
+                                    string ItemDesc = Mf.Where(x => x.ItemNo == DF.ItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                                    string UnitSerial = DF.UnitSerial.Value.ToString();
+                                <tr style="height: 25px;" id="InboundsInfo_@Srial">
+                                    <td class="second-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="InboundsInfo_ItemNo_@Srial">@DF.ItemNo</td>
+                                    <td class="third-col" style="text-align: center !important; word-wrap: break-word; white-space: normal; border-right: 1px solid; " id="InboundsInfo_ItemDesc">@ItemDesc</td>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <td style="text-align:center !important">
+                                            <input id="InboundsInfo_POQty_@Srial" value="@DF.Qty" type="number" style="width: 75px !important; text-align: center !important" onblur="CheckValueQty(this,@srl)" disabled />
+                                        </td>
+                                        <td style="text-align:center !important">
+                                            <input id="InboundsInfo_POBonusQty_@Srial" value="@DF.Bonus" type="number" style="width: 75px !important; text-align: center !important" disabled />
+                                        </td>
+                                        <td style="text-align: center !important; border-right: 1px solid;">
+                                            <input id="InboundsInfo_POQty2_@Srial" value="@DF.Qty2" type="number" style="width: 75px !important; text-align: center !important" onblur="CheckValueQty2(this,@srl)" disabled />
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td style="text-align: center !important;">
+                                            <input id="InboundsInfo_POQty_@Srial" value="@DF.Qty" type="number" style="width: 75px !important; text-align: center !important" onblur="CheckValueQty(this,@srl)" disabled />
+                                        </td>
+                                        <td style="text-align:center !important;border-right: 1px solid;">
+                                            <input id="InboundsInfo_POBonusQty_@Srial" value="@DF.Bonus" type="number" style="width: 75px !important; text-align: center !important" onblur="CheckValueQty(this,@srl)" disabled />
+                                        </td>
+                                        <td style="text-align:center !important" hidden>
+                                            <input id="InboundsInfo_POQty2_@Srial" value="@DF.Qty2" type="number" style="width: 75px !important; text-align: center !important" onblur="CheckValueQty2(this,@srl)" disabled />
+                                        </td>
+                                    }
+                                    <td style="text-align:center !important">
+                                        <input id="InboundsInfo_RemainingQty_@Srial" value="@RemainingQty" type="number" style="width: 75px !important; text-align: center !important" onblur="CheckValueQty(this,@srl)" disabled />
+                                    </td>
+                                    <td style="text-align: center !important; border-right: 1px solid;">
+                                        <input id="InboundsInfo_ReceivedQty_@Srial" value="@GRNQty" type="number" style="width: 75px !important; text-align: center !important" onblur="CheckValueQty2(this,@srl)" disabled />
+                                    </td>
+                                    <td style="text-align: center; width: 10%;">
+                                        <input id="InboundsInfo_Batch_@Srial" value="" type="text" style="width: 115px !important" maxlength="16" />
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <select class="InboundsInfo_ItemNo_Unit">
+                                            @{
+                                                using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                                {
+                                                    Dt = new DataTable();
+                                                    cn.Open();
+                                                    using (SqlCommand cmd = new SqlCommand())
+                                                    {
+                                                        cmd.Connection = cn;
+                                                        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                                        cmd.CommandText = "InvT_LoadItemUnits";
+                                                        cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                                        cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = DF.ItemNo;
+                                                        using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                                        {
+                                                            DA.Fill(Dt);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            @foreach (DataRow row in Dt.Rows)
+                                            {
+                                                if (UnitSerial == row["UnitSerial"].ToString())
+                                                {
+                                                    <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()" selected>
+                                                        @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                    </option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()">
+                                                        @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                    </option>
+                                                }
+                                            }
+                                        </select>
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="InboundsInfo_Qty_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckValueQty(this,@srl)" />
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="InboundsInfo_BonusQty_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckValueBonusQty(this,@srl)" />
+                                    </td>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <td style="text-align:center !important">
+                                            <input id="InboundsInfo_Qty2_@Srial" value="@DF.Qty2" type="number" style="width:75px !important" onblur="CheckValueQty2(this,@srl)" />
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td style="text-align:center !important" hidden>
+                                            <input id="InboundsInfo_Qty2_@Srial" value="@DF.Qty2" type="number" style="width:75px !important" onblur="CheckValueQty2(this,@srl)" />
+                                        </td>
+                                    }
+                                    <td style="width: 45%;text-align: center;">
+                                        <input style="width: 115px !important;" type="date" id="InboundsInfo_ReqDeliveryDate_@Srial" value="@DF.ReqDeliveryDate.Value.ToString("yyyy-MM-dd")" />
+                                    </td>
+                                    <td>
+                                        <input type="hidden" id="InboundsInfo_ItemSrl" value="@Srial" />
+                                        <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                                    </td>
+                                </tr>
+                                }
+                            </tbody>
+                        }
+                        else
+                        {
+                            <thead style="background-color: lightblue">
+                                <tr>
+                                    <th colspan="2" style="text-align: center; width: 350px; border-left: 1px solid;">@Html.Translate("المواد", "Items")</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th colspan="3" style="text-align: center; width: 350px; border-left: 1px solid;">@Html.Translate("امر الشراء", "Purchase Order")</th>
+                                    }
+                                    else
+                                    {
+                                        <th colspan="2" style="text-align: center; width: 350px; border-left: 1px solid;">@Html.Translate("امر الشراء", "Purchase Order")</th>
+                                    }
+                                    <th colspan="2" style="text-align: center; width: 350px; border-left: 1px solid;">@Html.Translate("الكميات", "Quantities")</th>
+                                    <th colspan="6" style="text-align: center; width: 350px;">@Html.Translate("المعلومات الوارده", "Inbounds Info")</th>
+                                </tr>
+                            </thead>
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center; width: 350px; word-wrap: break-word; white-space: normal;">@Html.Recource(44)</th>
+                                    <th style="text-align: center; width: 990px; word-wrap: break-word; white-space: normal; border-left: 1px solid;">@Html.Recource(74)</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(49)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(3200)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal; border-left: 1px solid;">@Html.Recource(72)</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(49)</th>
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;border-left: 1px solid;">@Html.Recource(3200)</th>
+                                        <th hidden style="width: 165px; word-wrap: break-word; white-space: normal; ">@Html.Recource(72)</th>
+                                    }
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(243)</th>
+                                     <th style="width: 165px; word-wrap: break-word; white-space: normal; border-left: 1px solid;">@Html.Recource(5533)</th>
+                                    <th style="width: 205px; text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(45)</th>
+                                    <th style="width: 205px; word-wrap: break-word; white-space: normal;">@Html.Recource(67)</th>
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(49)</th>
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(3200)</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(72)</th>
+                                    }
+                                    else
+                                    {
+                                        <th hidden>@Html.Recource(72)</th>
+                                    }
+                                    <th>@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tfoot>
+                                <tr>
+                                    <th style="text-align: center; border-left: 1px solid;" colspan="2">@Html.Translate("الاجمالي", "Total")</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="text-align:center;" id="TotalPOQty1_@srl">0</th>
+                                        <th style="text-align:center;" id="TotalPOBounsQty_@srl">0</th>
+                                        <th style="text-align: center; border-left: 1px solid;" id="TotalPOQty2_@srl">0</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="text-align: center;" id="TotalPOQty1_@srl">0</th>
+                                        <th style="text-align:center;border-left: 1px solid;" id="TotalPOBounsQty_@srl">0</th>
+                                        <th hidden id="TotalPOQty2_@srl">0</th>
+                                    }
+                                    <th style="text-align:center;" id="TotalRemainingQty_@srl">0</th>
+                                    <th style="text-align: center; border-left: 1px solid;" id="TotalReceivedQty_@srl">0</th>
+                                    <th></th>
+                                    <th></th>
+                                    <th style="text-align:center;" id="TotalPortQty1_@srl">0</th>
+                                    <th style="text-align:center;" id="TotalPortBounsQty_@srl">0</th>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <th style="text-align:center;" id="TotalPortQty2_@srl">0</th>
+                                    }
+                                    else
+                                    {
+                                        <th hidden id="TotalPortQty2_@srl">0</th>
+                                    }
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                            <tbody style="text-align: center;" id="OrdInboundsInfoTBody_@srl">
+                                @foreach (OrderDF DF in OrdDF)
+                                {
+                                    RemainingQty = 0;
+                                    ReceivedQty = 0;
+                                    double Qty = 0;
+                                    double GRNQty = 0;
+                                    {
+                                        using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                        {
+                                            Dt = new DataTable();
+                                            cn.Open();
+                                            using (SqlCommand cmd = new SqlCommand())
+                                            {
+                                                cmd.Connection = cn;
+                                                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                                cmd.CommandText = "Ord_GetInvDaily";
+                                                cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                                cmd.Parameters.Add(new SqlParameter("@OrdYear", System.Data.SqlDbType.Int)).Value = DF.OrdYear;
+                                                cmd.Parameters.Add(new SqlParameter("@OrderNo", System.Data.SqlDbType.Int)).Value = DF.OrderNo;
+                                                cmd.Parameters.Add(new SqlParameter("@TawreedNo", System.Data.SqlDbType.VarChar, 20)).Value = DF.TawreedNo;
+                                                cmd.Parameters.Add(new SqlParameter("@ItemNo", System.Data.SqlDbType.VarChar, 20)).Value = DF.ItemNo;
+                                                using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                                {
+                                                    DA.Fill(Dt);
+                                                }
+                                            }
+                                        }
+                                        foreach (DataRow row in Dt.Rows)
+                                        {
+                                            ReceivedQty = Convert.ToDouble(row["ReceivedQty"]);
+                                            RemainingQty = Convert.ToDouble(row["RemainingQty"]);
+                                            GRNQty = Convert.ToDouble(row["GRNQty"]);
+                                        }
+                                    }
+                                    Qty = Math.Abs(ReceivedQty - RemainingQty);
+                                    RemainingQty =Math.Abs((DF.Qty.Value - GRNQty));
+                                    string ItemDesc = Mf.Where(x => x.ItemNo == DF.ItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                                    string UnitSerial = DF.UnitSerial.Value.ToString();
+                                <tr style="height: 25px;" id="InboundsInfo_@Srial">
+                                    <td class="second-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="InboundsInfo_ItemNo_@Srial">@DF.ItemNo</td>
+                                    <td class="third-col" style="text-align: center !important; word-wrap: break-word; white-space: normal; border-left: 1px solid; " id="InboundsInfo_ItemDesc">@ItemDesc</td>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <td style="text-align:center !important">
+                                            <input id="InboundsInfo_POQty_@Srial" value="@DF.Qty" type="number" style="width: 75px !important; text-align: center !important" onblur="CheckValueQty(this,@srl)" disabled />
+                                        </td>
+                                        <td style="text-align:center !important">
+                                            <input id="InboundsInfo_POBonusQty_@Srial" value="@DF.Bonus" type="number" style="width: 75px !important; text-align: center !important" onblur="CheckValueQty(this,@srl)" disabled />
+                                        </td>
+                                        <td style="text-align: center !important; border-left: 1px solid;">
+                                            <input id="InboundsInfo_POQty2_@Srial" value="@DF.Qty2" type="number" style="width: 75px !important; text-align: center !important" onblur="CheckValueQty2(this,@srl)" disabled />
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td style="text-align: center !important;">
+                                            <input id="InboundsInfo_POQty_@Srial" value="@DF.Qty" type="number" style="width: 75px !important; text-align: center !important" onblur="CheckValueQty(this,@srl)" disabled />
+                                        </td>
+                                        <td style="text-align:center !important;border-left: 1px solid;">
+                                            <input id="InboundsInfo_POBonusQty_@Srial" value="@DF.Bonus" type="number" style="width: 75px !important; text-align: center !important" disabled />
+                                        </td>
+                                        <td style="text-align:center !important" hidden>
+                                            <input id="InboundsInfo_POQty2_@Srial" value="@DF.Qty2" type="number" style="width: 75px !important; text-align: center !important" onblur="CheckValueQty2(this,@srl)" disabled />
+                                        </td>
+                                    }
+                                    <td style="text-align:center !important">
+                                        <input id="InboundsInfo_RemainingQty_@Srial" value="@RemainingQty" type="number" style="width: 75px !important; text-align: center !important" onblur="CheckValueQty(this,@srl)" disabled />
+                                    </td>
+                                    <td style="text-align: center !important; border-left: 1px solid;">
+                                        <input id="InboundsInfo_ReceivedQty_@Srial" value="@GRNQty" type="number" style="width: 75px !important; text-align: center !important" onblur="CheckValueQty2(this,@srl)" disabled />
+                                    </td>
+                                    <td style="text-align: center; width: 10%;">
+                                        <input id="InboundsInfo_Batch_@Srial" value="" type="text" style="width: 115px !important" maxlength="16" />
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <select class="InboundsInfo_ItemNo_Unit">
+                                            @{
+                                                using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                                {
+                                                    Dt = new DataTable();
+                                                    cn.Open();
+                                                    using (SqlCommand cmd = new SqlCommand())
+                                                    {
+                                                        cmd.Connection = cn;
+                                                        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                                        cmd.CommandText = "InvT_LoadItemUnits";
+                                                        cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                                        cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = DF.ItemNo;
+                                                        using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                                        {
+                                                            DA.Fill(Dt);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            @foreach (DataRow row in Dt.Rows)
+                                            {
+                                                if (UnitSerial == row["UnitSerial"].ToString())
+                                                {
+                                                    <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()" selected>
+                                                        @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                    </option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()">
+                                                        @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                    </option>
+                                                }
+                                            }
+                                        </select>
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="InboundsInfo_Qty_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckValueQty(this,@srl)" />
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="InboundsInfo_BonusQty_@Srial" value="0" type="number" style="width: 75px !important; text-align: center !important" onblur="CheckValueBonusQty(this,@srl)" />
+                                    </td>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <td style="text-align:center !important">
+                                            <input id="InboundsInfo_Qty2_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckValueQty2(this,@srl)" />
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td style="text-align:center !important" hidden>
+                                            <input id="InboundsInfo_Qty2_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckValueQty2(this,@srl)" />
+                                        </td>
+                                    }
+                                    <td style="width: 45%;text-align: center;">
+                                        <input style="width: 115px !important;" type="date" id="InboundsInfo_ReqDeliveryDate_@Srial" value="@DF.ReqDeliveryDate.Value.ToString("yyyy-MM-dd")" />
+                                    </td>
+                                    <td>
+                                        <input type="hidden" id="InboundsInfo_ItemSrl" value="@Srial" />
+                                        <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                                    </td>
+                                </tr>
+                                }
+                            </tbody>
+                        }
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="ExcuteSave_OrdInboundsInfo(@srl)" class="btn btn-primary">@Resources.Resource.Save</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_InboundsInfo_Batch">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(45)</label>
+            </div>
+            <div class="box-body box-profile">
+                <div class="modal-body row">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <table class="table table-hover" id="SelectInboundsInfoBatchTable_@srl">
+                                <thead>
+                                    <tr>
+                                        <th>@Html.Recource(102)</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="SelectInboundsInfoBatchTbody_@srl">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="SelectingInboundsInfoBatch(@srl)" class="btn btn-primary">@Html.Recource(4599)</button>
+                    <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+    $('#Ord_InboundsInfo_CboStoreNo_' + @srl).select2();
+    function CheckValueQty(e,srl) {
+         if (e.value < 0) {
+             e.value = 0;
+             e.focus();
+             alert('@Html.Translate("يجب أن تكون الكمية أكبر من صفر", "The Qty Must be Greater Than Zero")');
+        }
+         if (e.value == "") {
+             e.value = 0;
+        }
+        SumTotalQty(srl)
+    }
+    function CheckValueBonusQty(e,srl) {
+        if (e.value < 0) {
+            e.value = 0;
+            e.focus();
+            alert('@Html.Translate("يجب أن تكون الكمية الاضافية أكبر من صفر", "The Bouns Qty Must be Greater Than Zero")');
+        }
+        if (e.value == "") {
+            e.value = 0;
+        }
+        SumTotalQty(srl)
+    }
+    function CheckValueQty2(e, srl) {
+        if (e.value < 0) {
+            e.value = 0;
+            e.focus();
+             alert('@Html.Translate("يجب أن تكون الكمية 2 أكبر من صفر", "The Qty 2 Must be Greater Than Zero")');
+        }
+        if (e.value == "") {
+            e.value = 0;
+        }
+        SumTotalQty(srl)
+    }
+    SumTotalQty(@srl)
+    function SumTotalQty(id) {
+        var table = $("#OrdInboundsInfoTBody_" + id);
+        var trs = table.find('tr');
+        var TotalPOQty1 = 0
+        var TotalPOBounsQty = 0
+        var TotalPOQty2 = 0
+
+        var TotalRemainingQty = 0
+        var TotalReceivedQty = 0
+
+        var TotalPortQty1 = 0
+        var TotalPortBounsQty = 0
+        var TotalPortQty2 = 0
+
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value
+            TotalPOQty1 += Number($(trs[i]).closest('tr').find('#InboundsInfo_POQty_' + InputSerial)[0].value);
+            TotalPOBounsQty += Number($(trs[i]).closest('tr').find('#InboundsInfo_POBonusQty_' + InputSerial)[0].value);
+            TotalPOQty2 += Number($(trs[i]).closest('tr').find('#InboundsInfo_POQty2_' + InputSerial)[0].value);
+
+            TotalRemainingQty += Number($(trs[i]).closest('tr').find('#InboundsInfo_RemainingQty_' + InputSerial)[0].value);
+            TotalReceivedQty += Number($(trs[i]).closest('tr').find('#InboundsInfo_ReceivedQty_' + InputSerial)[0].value);
+
+            TotalPortQty1 += Number($(trs[i]).closest('tr').find('#InboundsInfo_Qty_' + InputSerial)[0].value);
+            TotalPortBounsQty += Number($(trs[i]).closest('tr').find('#InboundsInfo_BonusQty_' + InputSerial)[0].value);
+            TotalPortQty2 += Number($(trs[i]).closest('tr').find('#InboundsInfo_Qty2_' + InputSerial)[0].value);
+        }
+
+        $('#TotalPOQty1_' + id).html(Number(TotalPOQty1));
+        $('#TotalPOBounsQty_' + id).html(Number(TotalPOBounsQty));
+        $('#TotalPOQty2_' + id).html(Number(TotalPOQty2));
+
+        $('#TotalRemainingQty_' + id).html(Number(TotalRemainingQty));
+        $('#TotalReceivedQty_' + id).html(Number(TotalReceivedQty));
+
+        $('#TotalPortQty1_' + id).html(Number(TotalPortQty1));
+        $('#TotalPortBounsQty_' + id).html(Number(TotalPortBounsQty));
+        $('#TotalPortQty2_' + id).html(Number(TotalPortQty2));
+    }
+
+    $('#SelectInboundsInfoBatchTable_' + @srl).DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+    var srlId = 0;
+    function AddBatchNo(e, srl, Id) {
+        srlId = Id;
+        thisValue = srl;
+        var table = $("#OrdInboundsInfoTBody_" + Id);
+        var trs = table.find('#InboundsInfo_' + srl);
+
+        $('#SelectInboundsInfoBatchTable_' + Id).find('tr').removeClass("selected");
+        $('#SelectInboundsInfoBatchTbody_' + Id).empty();
+        $('#SelectInboundsInfoBatchTbody_' + Id).load('../../../InboundsInfo/LoadItemBatch?ItemNo=' + trs.find('#InboundsInfo_ItemNo_' + srl)[0].innerHTML + '&storeNo=' + $('#Ord_InboundsInfo_CboStoreNo_' + Id).val());
+        $('#Model_InboundsInfo_Batch').draggable({
+            handle: ".modal-header",
+        });
+        $('#Model_InboundsInfo_Batch').modal('show');
+    }
+    function SelectInboundsInfo_BatchNo(e) {
+        var trs = $('#SelectInboundsInfoBatchTable_' + srlId).find('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function SelectingInboundsInfoBatch(id) {
+        var table = $("#SelectInboundsInfoBatchTable_" + id);
+        var trs = table.find('tr[name=selected]');
+
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار حزمة", "Select one Batch")');
+            return;
+        }
+
+
+        var table = $("#OrdInboundsInfoTBody_" + id);
+        var tr = table.find('#InboundsInfo_' + thisValue);
+
+        tr.find('#InboundsInfo_Batch_' + thisValue)[0].value = trs[0].getAttribute('BatchNo');
+
+        $('#Model_InboundsInfo_Batch').modal('hide');
+    }
+    function CheckValueGrid(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt == 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+        else {
+            if (Amt == '' || Amt == null) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function ExcuteSave_OrdInboundsInfo(id) {
+
+
+        var table = $("#OrdInboundsInfoTBody_" + id);
+        var trs = table.find('tr');
+
+
+        var InboundsInfoHF = {
+            CompNo: '@company.comp_num',
+            OrderYear: $('#Ord_InboundsInfo_OrdYear_' + id).val(),
+            OrderNo: $('#Ord_InboundsInfo_OrderNo_' + id).val(),
+            TawreedNo: $('#Ord_InboundsInfo_TawreedNo_' + id).val(),
+            InboundSer: $('#Ord_InboundsInfo_InboundSer_' + id).val(),
+            InboundDate: $('#Ord_InboundsInfo_RecDate_' + id).val(),
+            InboundStoreNo: $('#Ord_InboundsInfo_CboStoreNo_' + id).val(),
+            InboundNotes: $('#Ord_InboundsInfo_Notes_' + id).val(),
+            IsApproval:0
+        }
+
+        var InboundsInfoDF = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value;
+            if (Number($(trs[i]).closest('tr').find('#InboundsInfo_Qty_' + InputSerial)[0].value) > Number($(trs[i]).closest('tr').find('#InboundsInfo_RemainingQty_' + InputSerial)[0].value)) {
+                if (confirm('@Resources.Resource.ConfirmPurchaseOrderQty')) {
+                    if ($(trs[i]).closest('tr').find('#InboundsInfo_Qty_' + InputSerial)[0].value > 0) {
+                        InboundsInfoDF.push({
+                            CompNo: '@company.comp_num',
+                            InboundSer: $('#Ord_InboundsInfo_InboundSer_' + id).val(),
+                            ItemSrl: $(trs[i]).closest('tr').find('#InboundsInfo_ItemSrl')[0].value,
+                            ItemNo: $(trs[i]).closest('tr').find('#InboundsInfo_ItemNo_' + InputSerial)[0].innerHTML,
+                            batchNo: $(trs[i]).closest('tr').find('#InboundsInfo_Batch_' + InputSerial)[0].value.trim(),
+                            Qty: $(trs[i]).closest('tr').find('#InboundsInfo_Qty_' + InputSerial)[0].value,
+                            BounsQty :$(trs[i]).closest('tr').find('#InboundsInfo_BonusQty_' + InputSerial)[0].value,
+                            TUnit: $(trs[i]).closest('tr').find('.InboundsInfo_ItemNo_Unit option:Selected')[0].getAttribute('unitCode'),
+                            UnitSerial: $(trs[i]).closest('tr').find('.InboundsInfo_ItemNo_Unit')[0].value,
+                            Qty2: $(trs[i]).closest('tr').find('#InboundsInfo_Qty2_' + InputSerial)[0].value,
+                            ReqDeliveryDate: $(trs[i]).closest('tr').find('#InboundsInfo_ReqDeliveryDate_' + InputSerial)[0].value
+                        })
+                    }
+                }
+                else {
+                    return false;
+                }
+            }
+            else {
+                if (Number($(trs[i]).closest('tr').find('#InboundsInfo_Qty_' + InputSerial)[0].value) > 0) {
+                    InboundsInfoDF.push({
+                        CompNo: '@company.comp_num',
+                        InboundSer: $('#Ord_InboundsInfo_InboundSer_' + id).val(),
+                        ItemSrl: $(trs[i]).closest('tr').find('#InboundsInfo_ItemSrl')[0].value,
+                        ItemNo: $(trs[i]).closest('tr').find('#InboundsInfo_ItemNo_' + InputSerial)[0].innerHTML,
+                        batchNo: $(trs[i]).closest('tr').find('#InboundsInfo_Batch_' + InputSerial)[0].value.trim(),
+                        Qty: $(trs[i]).closest('tr').find('#InboundsInfo_Qty_' + InputSerial)[0].value,
+                        BounsQty :$(trs[i]).closest('tr').find('#InboundsInfo_BonusQty_' + InputSerial)[0].value,
+                        TUnit: $(trs[i]).closest('tr').find('.InboundsInfo_ItemNo_Unit option:Selected')[0].getAttribute('unitCode'),
+                        UnitSerial: $(trs[i]).closest('tr').find('.InboundsInfo_ItemNo_Unit')[0].value,
+                        Qty2: $(trs[i]).closest('tr').find('#InboundsInfo_Qty2_' + InputSerial)[0].value,
+                        ReqDeliveryDate: $(trs[i]).closest('tr').find('#InboundsInfo_ReqDeliveryDate_' + InputSerial)[0].value
+                    })
+                }
+            }
+        }
+
+        if (InboundsInfoDF.length == 0) {
+            alert('@Html.Translate("يجب إدخال الكميات", "Quantities must be entered")');
+            return false;
+        }
+
+        wait();
+        burn({ InboundsInfoHF: InboundsInfoHF, InboundsInfoDF: InboundsInfoDF }, '../../../InboundsInfo/Save_InboundsInfo', '', ReloadOrdInboundsInfo, false);
+    }
+    function ReloadOrdInboundsInfo(r) {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        var TawreedNo = r.TawreedNo;
+        CloseWindow('/InboundsInfo/AddInboundsInfo?OrdYear=' + r.OrdYear + '&OrderNo=' + r.OrdNo + '&TawreedNo=' + TawreedNo + '');
+
+        var table = $("#InboundsInfoTable tbody");
+        var trs = table.find('tr');
+
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i])[0].getAttribute('OrdYear') == r.OrdYear && $(trs[i])[0].getAttribute('OrderNo') == r.OrdNo && $(trs[i])[0].getAttribute('TawreedNo') == TawreedNo) {
+                var nTr = $(trs[i])[0];
+                wait();
+                $(this).attr("opened", "details_close");
+                var OrdYear = $(trs[i])[0].getAttribute('OrdYear');
+                var OrderNo = $(trs[i])[0].getAttribute('OrderNo');
+                var TawreedNo = $(trs[i])[0].getAttribute('TawreedNo');
+
+                $.get("../../../../InboundsInfo/DetailsInboundsInfo?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo, function (data) {
+                    InboundsInfoTable.fnOpen(nTr, data, 'details');
+                    done();
+                });
+            }
+        }
+    }
+</script>

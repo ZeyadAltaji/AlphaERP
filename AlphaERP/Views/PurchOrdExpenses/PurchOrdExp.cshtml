@@ -1,0 +1,187 @@
+﻿@model IEnumerable<AlphaERP.Models.ExpCodes>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    DataTable Dt = new DataTable();
+    int Srial = 0;
+    if (ViewBag.Serial != 0)
+    {
+        Srial = ViewBag.Serial + 1;
+    }
+    else
+    {
+        Srial = 1;
+    }
+    
+
+}
+
+
+@foreach (ExpCodes item in Model)
+{
+    <tr style="height: 25px;" itemNo="@item.ExpID" id="POExpenses_Serial_@Srial">
+        <td class="first-col" style="text-align: center !important" id="POExpenses_OrdYear">@item.OrdYear</td>
+        <td class="first-col" style="text-align: center !important" id="POExpenses_OrderNo">@item.OrderNo</td>
+        <td class="first-col" style="text-align: center !important" id="POExpenses_TawreedNo">@item.TawreedNo</td>
+        <td class="second-col" style="text-align: center !important" id="POExpenses_ExpID">@item.ExpID</td>
+        <td class="third-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="POExpenses_ExpDesc">@item.ExpArDesc</td>
+        <td>
+            <input id="PODF_Amount_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckAmunt(@Srial)" />
+        </td>
+        <td>
+            <input id="PODF_FrAmount_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckFrAmunt(@Srial)" />
+        </td>
+
+        <td>
+            <input id="PODF_SalesTaxAmount_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckSalesTaxAmount(@Srial)" />
+        </td>
+        <td>
+            <input id="PODF_SalesTaxAmountFr_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckSalesTaxAmountFr(@Srial)" />
+        </td>
+
+        <td>
+            <input id="PODF_IncomeTaxAmount_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckIncomeTaxAmount(@Srial)" />
+        </td>
+        <td>
+            <input id="PODF_IncomeTaxAmountFr_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckIncomeTaxAmountFr(@Srial)" />
+        </td>
+
+        <td>
+            <input id="PODF_CustomtaxAmount_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckCustomtaxAmount(@Srial)" />
+        </td>
+        <td>
+            <input id="PODF_CustomtaxAmountFr_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckCustomtaxAmountFr(@Srial)" />
+        </td>
+
+        <td>
+            <button class="btn-de" onclick="RemoveRow(this)"><i class="fa fa-trash-alt"></i></button>
+            <input type="hidden" id="InputSerial" value="@(Srial++)" />
+        </td>
+    </tr>
+}
+
+<script>
+    function CheckAmunt(Serial) {
+        if ($('#PODF_Amount_' + Serial)[0].value < 0) {
+            $('#PODF_Amount_' + Serial)[0].value = 0;
+            $('#PODF_Amount_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن تكون القيمة بالمحلي أكبر من صفر", "The Amount Must be Greater Than Zero")');
+        }
+        if ($('#PODF_Amount_' + Serial)[0].value == "") {
+            $('#PODF_Amount_' + Serial)[0].value = 0;
+        }
+
+        var TotalFrAmount = (Number($('#PODF_Amount_' + Serial)[0].value) / Number(Ord_PurchaseOrderExpenses_ConvertRate.value));
+        $('#PODF_FrAmount_' + Serial).val(Number(TotalFrAmount).toFixed(3));
+        sumTotalAll();
+    }
+    function CheckFrAmunt(Serial) {
+        if ($('#PODF_FrAmount_' + Serial)[0].value < 0) {
+            $('#PODF_FrAmount_' + Serial)[0].value = 0;
+            $('#PODF_FrAmount_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن تكون القيمة بالأجنبي أكبر من صفر", "The Fr Amount Must be Greater Than Zero")');
+        }
+        if ($('#PODF_FrAmount_' + Serial)[0].value == "") {
+            $('#PODF_FrAmount_' + Serial)[0].value = 0;
+        }
+        if (e != Number($('#PODF_FrAmount_' + Serial)[0].value).toFixed(3)) {
+            var TotalAmount = (Number($('#PODF_FrAmount_' + Serial)[0].value) * Number(Ord_PurchaseOrderExpenses_ConvertRate.value));
+            $('#PODF_Amount_' + Serial).val(Number(TotalAmount).toFixed(3));
+        }
+        sumTotalAll();
+    }
+
+    function CheckSalesTaxAmount(Serial) {
+        if ($('#PODF_SalesTaxAmount_' + Serial)[0].value < 0) {
+            $('#PODF_SalesTaxAmount_' + Serial)[0].value = 0;
+            $('#PODF_SalesTaxAmount_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن تكون القيمة بالمحلي أكبر من صفر", "The Amount Must be Greater Than Zero")');
+        }
+        if ($('#PODF_SalesTaxAmount_' + Serial)[0].value == "") {
+            $('#PODF_SalesTaxAmount_' + Serial)[0].value = 0;
+        }
+
+        var TotalFrAmount = (Number($('#PODF_SalesTaxAmount_' + Serial)[0].value) / Number(Ord_PurchaseOrderExpenses_ConvertRate.value));
+        $('#PODF_SalesTaxAmountFr_' + Serial).val(Number(TotalFrAmount).toFixed(3));
+        sumTotalAll();
+    }
+    function CheckSalesTaxAmountFr(Serial) {
+        if ($('#PODF_SalesTaxAmountFr_' + Serial)[0].value < 0) {
+            $('#PODF_SalesTaxAmountFr_' + Serial)[0].value = 0;
+            $('#PODF_SalesTaxAmountFr_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن تكون القيمة بالأجنبي أكبر من صفر", "The Fr Amount Must be Greater Than Zero")');
+        }
+        if ($('#PODF_SalesTaxAmountFr_' + Serial)[0].value == "") {
+            $('#PODF_SalesTaxAmountFr_' + Serial)[0].value = 0;
+        }
+        if (e != Number($('#PODF_SalesTaxAmountFr_' + Serial)[0].value).toFixed(3)) {
+            var TotalAmount = (Number($('#PODF_SalesTaxAmountFr_' + Serial)[0].value) * Number(Ord_PurchaseOrderExpenses_ConvertRate.value));
+            $('#PODF_SalesTaxAmount_' + Serial).val(Number(TotalAmount).toFixed(3));
+        }
+        sumTotalAll();
+    }
+
+    function CheckIncomeTaxAmount(Serial) {
+        if ($('#PODF_IncomeTaxAmount_' + Serial)[0].value < 0) {
+            $('#PODF_IncomeTaxAmount_' + Serial)[0].value = 0;
+            $('#PODF_IncomeTaxAmount_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن تكون القيمة بالمحلي أكبر من صفر", "The Amount Must be Greater Than Zero")');
+        }
+        if ($('#PODF_IncomeTaxAmount_' + Serial)[0].value == "") {
+            $('#PODF_IncomeTaxAmount_' + Serial)[0].value = 0;
+        }
+
+        var TotalFrAmount = (Number($('#PODF_IncomeTaxAmount_' + Serial)[0].value) / Number(Ord_PurchaseOrderExpenses_ConvertRate.value));
+        $('#PODF_IncomeTaxAmountFr_' + Serial).val(Number(TotalFrAmount).toFixed(3));
+        sumTotalAll();
+    }
+    function CheckIncomeTaxAmountFr(Serial) {
+        if ($('#PODF_IncomeTaxAmountFr_' + Serial)[0].value < 0) {
+            $('#PODF_IncomeTaxAmountFr_' + Serial)[0].value = 0;
+            $('#PODF_IncomeTaxAmountFr_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن تكون القيمة بالأجنبي أكبر من صفر", "The Fr Amount Must be Greater Than Zero")');
+        }
+        if ($('#PODF_IncomeTaxAmountFr_' + Serial)[0].value == "") {
+            $('#PODF_IncomeTaxAmountFr_' + Serial)[0].value = 0;
+        }
+        if (e != Number($('#PODF_IncomeTaxAmountFr_' + Serial)[0].value).toFixed(3)) {
+            var TotalAmount = (Number($('#PODF_IncomeTaxAmountFr_' + Serial)[0].value) * Number(Ord_PurchaseOrderExpenses_ConvertRate.value));
+            $('#PODF_IncomeTaxAmount_' + Serial).val(Number(TotalAmount).toFixed(3));
+        }
+        sumTotalAll();
+    }
+
+    function CheckCustomtaxAmount(Serial) {
+        if ($('#PODF_CustomtaxAmount_' + Serial)[0].value < 0) {
+            $('#PODF_CustomtaxAmount_' + Serial)[0].value = 0;
+            $('#PODF_CustomtaxAmount_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن تكون القيمة بالمحلي أكبر من صفر", "The Amount Must be Greater Than Zero")');
+        }
+        if ($('#PODF_CustomtaxAmount_' + Serial)[0].value == "") {
+            $('#PODF_CustomtaxAmount_' + Serial)[0].value = 0;
+        }
+
+        var TotalFrAmount = (Number($('#PODF_CustomtaxAmount_' + Serial)[0].value) / Number(Ord_PurchaseOrderExpenses_ConvertRate.value));
+        $('#PODF_CustomtaxAmountFr_' + Serial).val(Number(TotalFrAmount).toFixed(3));
+        sumTotalAll();
+    }
+    function CheckCustomtaxAmountFr(Serial) {
+        if ($('#PODF_CustomtaxAmountFr_' + Serial)[0].value < 0) {
+            $('#PODF_CustomtaxAmountFr_' + Serial)[0].value = 0;
+            $('#PODF_CustomtaxAmountFr_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن تكون القيمة بالأجنبي أكبر من صفر", "The Fr Amount Must be Greater Than Zero")');
+        }
+        if ($('#PODF_CustomtaxAmountFr_' + Serial)[0].value == "") {
+            $('#PODF_CustomtaxAmountFr_' + Serial)[0].value = 0;
+        }
+        if (e != Number($('#PODF_CustomtaxAmountFr_' + Serial)[0].value).toFixed(3)) {
+            var TotalAmount = (Number($('#PODF_CustomtaxAmountFr_' + Serial)[0].value) * Number(Ord_PurchaseOrderExpenses_ConvertRate.value));
+            $('#PODF_CustomtaxAmount_' + Serial).val(Number(TotalAmount).toFixed(3));
+        }
+        sumTotalAll();
+    }
+</script>

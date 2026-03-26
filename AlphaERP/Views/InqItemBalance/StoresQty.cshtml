@@ -1,0 +1,86 @@
+﻿@model IEnumerable<AlphaERP.Models.AllStores>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+}
+
+
+
+<table class="table table-hover" id="SelectStoresQtyTable">
+    <thead>
+        <tr>
+            <th style="text-align: center !important;">@Html.Recource(1)</th>
+            <th style="text-align: center !important;">@Html.Recource(31)</th>
+            <th style="text-align: center !important; ">@Html.Recource(91)</th>
+            <th style="text-align: center !important; ">@Html.Recource(49)</th>
+            <th style="text-align: center !important; ">@Html.Recource(67)</th>
+        </tr>
+    </thead>
+    <tbody id="SelectStoresQtyTbody">
+        @foreach (AllStores item in Model)
+            {
+            <tr>
+                <td style="text-align: center;" id="StoreNo">@item.StoreNo</td>
+                <td style="text-align: center;" id="StoreName">@item.StoreName</td>
+                <td style="text-align: center;" id="StoresQty_StoreQty">@item.StoreQty</td>
+                <td style="text-align: center;" id="StoresQty_TotQtyRes">@item.TotQtyRes</td>
+                <td style="text-align: center !important;" id="UnitC4">@item.UnitC4</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="modal-footer">
+    <div class="form-group">
+        <div class="col-md-12">
+            <div class="col-md-2">
+                <label class="unselectable" for="Invt_InqItemBalance_TotalQuantities">@Html.Recource(92) </label>
+            </div>
+            <div class="col-md-2" style="margin-bottom: 5px;">
+                <input required="true" style="width: 125px !important;" type="text" id="Invt_InqItemBalance_TotalQuantities" value="0" readonly />
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="Invt_InqItemBalance_StoreTotalQtyReserved">@Html.Recource(5548) </label>
+            </div>
+            <div class="col-md-2" style="margin-bottom: 5px;">
+                <input required="true" style="width: 125px !important;" type="text" id="Invt_InqItemBalance_StoreTotalQtyReserved" value="0" readonly />
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="Invt_InqItemBalance_StoreTotalQty">@Html.Recource(4706)</label>
+            </div>
+            <div class="col-md-2" style="margin-bottom: 5px;">
+                <input required="true" style="width: 125px !important;" type="text" id="Invt_InqItemBalance_StoreTotalQty" value="0" readonly />
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#SelectStoresQtyTable').DataTable({
+        "scrollY": 'calc( 100vh - 385px)',
+        "paging": false,
+        "pageLength": 25,
+        "searching": false,
+        "ordering": false
+    });
+
+    sumTotal();
+    function sumTotal() {
+        var table = $('#SelectStoresQtyTbody tr');
+        var trs = table;
+        var StoresQty = 0;
+        var StoresResQty = 0;
+        var Total = 0;
+        for (var i = 0; i < trs.length; i++) {
+            StoresQty += Number($(trs[i]).closest('tr').find('#StoresQty_StoreQty')[0].innerHTML);
+            StoresResQty += Number($(trs[i]).closest('tr').find('#StoresQty_TotQtyRes')[0].innerHTML);
+        }
+        Total = Number(StoresQty).toFixed(3) - Number(StoresResQty).toFixed(3);
+        $('#Invt_InqItemBalance_TotalQuantities').val(Number(StoresQty));
+        $('#Invt_InqItemBalance_StoreTotalQtyReserved').val(Number(StoresResQty));
+        $('#Invt_InqItemBalance_StoreTotalQty').val(Number(Total));
+    }
+</script>

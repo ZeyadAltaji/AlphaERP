@@ -1,0 +1,43 @@
+﻿@model IEnumerable<AlphaERP.Models.ExpCodes>
+@{
+    int Id = ViewBag.Id;
+}
+    <div class="form-group">
+        <div class="col-md-12">
+            <table class="table table-hover" id="eOrdPOExpenses_ExpCodesTable_@Id">
+                <thead>
+                    <tr>
+                        <th style="text-align: center;width: 20%;">@Html.Recource(3196)</th>
+                        <th style="text-align: center;width: 55%;">@Html.Recource(3197)</th>
+                        <th style="text-align: center;width: 10%;">@Html.Recource(3797)</th>
+                        <th style="text-align: center;width: 10%;">@Html.Recource(1689)</th>
+                        <th style="text-align: center;">@Html.Recource(1877)</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="eOrdPO_ExpCodesExpensesTbody_@Id">
+                    @foreach (var item in Model)
+                    {
+                        <tr onclick="$(this).toggleClass('selected');" ondblclick="Select_ExpCodes(this)" OrdYear="@item.OrdYear" OrderNo="@item.OrderNo" TawreedNo="@item.TawreedNo" ExpID="@item.ExpID" ExpDesc="@Html.Translate(item.ExpArDesc,item.ExpEDesc)">
+                            <td style="text-align: center;width: 20%;" id="ePOExpCodes_OrdYear">@item.OrdYear</td>
+                            <td style="text-align: center;width: 20%;" id="ePOExpCodes_OrderNo">@item.OrderNo</td>
+                            <td style="text-align: center;width: 20%;" id="ePOExpCodes_TawreedNo">@item.TawreedNo</td>
+                            <td style="text-align: center;width: 20%;" id="ePOExpCodes_ExpID">@item.ExpID</td>
+                            <td style="text-align: center;width: 55%;" id="ePOExpCodes_ExpDesc">@Html.Translate(item.ExpArDesc, item.ExpEDesc).ToString()</td>
+                            <td></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+<script>
+    var ExpCodesTable = $('#eOrdPOExpenses_ExpCodesTable_' + @Id).DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+</script>

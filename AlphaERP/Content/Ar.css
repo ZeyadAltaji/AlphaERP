@@ -1,0 +1,37 @@
+﻿
+.float{
+    float:right;
+}
+.textalign {
+    text-align: left !important
+}
+li > a {
+    text-align: right
+}
+
+.dropdown-menu {
+    right: 100%
+}
+
+tr td:last-child {
+    text-align: left !important
+}
+
+.menu-options {
+    text-align: right;
+    padding-right: 10px;
+    direction: rtl;
+}
+
+.swal2-popup .swal2-title {
+    direction: rtl;
+}
+
+.select2-container--default .select2-selection--single,
+.introjs-tooltip {
+    direction: rtl;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field {
+    direction: rtl;
+}

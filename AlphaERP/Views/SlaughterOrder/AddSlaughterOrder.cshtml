@@ -1,0 +1,720 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+
+    int Srial = 1;
+    List<InvKit> Mf = new MDB().InvKits.Where(x => x.CompNo == company.comp_num).ToList();
+    var litem = Mf.GroupBy(x => x.Kit_ItemNo).ToList();
+    DataTable Dt = new DataTable();
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+    List<int> store = new MDB().InvStoreUsers.Where(x => x.CompNo == company.comp_num && x.UserID == me.UserID && x.AllPerm == true).Select(o => o.StoreNo).ToList();
+    List<InvStoresMF> lStores = new MDB().InvStoresMFs.Where(x => x.CompNo == company.comp_num && store.Contains(x.StoreNo)).ToList();
+    List<PayCodes> Exp = new MDB().Database.SqlQuery<PayCodes>(string.Format("select MinCode as sys_minor ,CodeDesc as DescAr,isnull(CodeDescEng,'No Desc.') as DescEn from InvCodes where (CompNo = '{0}') AND (MajCode='DocEsp') AND (AllowEdit = 1) AND (MinCode <> 0) ", company.comp_num)).ToList();
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+}
+
+<style>
+    .modal-title {
+        width: calc(100% - 120px) !important;
+        text-align: center;
+        position: absolute;
+        font-weight: bold;
+    }
+    .modal-body{
+        max-height: 78vh !important;
+    }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(100vh - 210px) !important;">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item active">
+                    <a class="nav-link active" data-toggle="tab" href="#SlaughterOrderInfo" role="tab">
+                        @Html.Translate("المدخلات و المخرجات", "In and Out")
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#ExpensesDetails" role="tab">
+                        @Html.Recource(6514)
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content" style="height:300px;padding:10px">
+                <div class="tab-pane active" id="SlaughterOrderInfo" role="tabpanel">
+                    <div class="form-group">
+                        <div class="col-md-12" style="background-color: lightblue;">
+                            <label style="font-size: 15px;" class="unselectable">@Html.Translate("المدخلات", "Input")</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="Invt_SlaughterOrder_Date">@Html.Recource(206)</label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input required="false" style="width:120px !important;" type="date" id="Invt_SlaughterOrder_Date" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="Invt_SlaughterOrder_SlaughterOrder">@Html.Translate("رقم أمر الذبح", "SlaughterOrder No.")</label>
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input required="false" style="width:120px !important;" type="text" id="Invt_SlaughterOrder_SlaughterOrder" value="0" disabled />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="Invt_SlaughterOrder_StoreNo">@Html.Recource(1)</label>
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select style="width: 85%" id="Invt_SlaughterOrder_CboStoreNo" onchange="changeStoreNo(this.value)">
+                                    @foreach (var v in lStores)
+                                    {
+                                        if (v.StoreNo == lStores.Select(o => o.StoreNo).FirstOrDefault())
+                                        {
+                                            <option value="@v.StoreNo" selected>@Html.Translate(v.StoreName, v.StoreNameEng)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.StoreNo">@Html.Translate(v.StoreName, v.StoreNameEng)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable" for="Invt_SlaughterOrder_ItemNo">@Html.Recource(42)</label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input required="false" type="text" id="Invt_SlaughterOrder_ItemNo" value="" disabled />
+                            </div>
+                            <div class="col-md-6" style="margin-bottom: 5px;">
+                                <input required="false" style="width: 100% !important;" type="text" id="Invt_SlaughterOrder_ItemDesc" value="" disabled />
+                            </div>
+                            <div class="col-md-2">
+                                <button onclick="Add_InvItemsMF()" type="button" class="btn btn-default">@Html.Recource(4756)</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="Invt_SlaughterOrder_BatchNo">@Html.Recource(45)</label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;" id="BatchNo">
+                                <input required="false" type="text" id="Invt_SlaughterOrder_BatchNo" style=" direction: ltr;text-align: right;" value="" disabled />
+                            </div>
+                            <div class="col-md-1">
+                                <button onclick="Add_BatchNo()" type="button" class="btn btn-default">@Html.Recource(45)</button>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="Invt_SlaughterOrder_Unit">@Html.Recource(67)</label>
+                            </div>
+                            <div class="col-md-2" id="Invt_SlaughterOrder_Unit">
+                                <select style="width:100%" class="Invt_SlaughterOrder_CboSubUnit">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                @if (CActive.ClientNo == 335)
+                                {
+                                    <label class="unselectable">@Html.Recource(5693)</label>
+                                }
+                                else
+                                {
+                                    <label class="unselectable">@Html.Recource(49)</label>
+                                }
+                            </div>
+                            <div class="col-md-3" style="margin-bottom: 5px;">
+                                <input id="Invt_SlaughterOrderQty" value="0" type="number" onblur="GetValueqty(this)" />
+                            </div>
+                            @if (compMF.UseQty2 == true)
+                            {
+                        <div class="col-md-2">
+                            @if (CActive.ClientNo == 335)
+                            {
+                                <label class="unselectable">@Html.Recource(442)</label>
+                            }
+                            else
+                            {
+                                <label class="unselectable">@Html.Recource(72)</label>
+                            }
+                        </div>
+                                <div class="col-md-2" style="margin-bottom: 5px;">
+                                    <input id="Invt_SlaughterOrderQty2" value="0" type="number" onblur="GetValueqty2(this)" />
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="col-md-4" style="margin-bottom: 5px;" hidden>
+                                    <input id="Invt_SlaughterOrderQty2" value="0" type="number" hidden />
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="Invt_SlaughterOrder_Notes">@Html.Recource(70)</label>
+                            </div>
+                            <div class="col-md-10">
+                                <textarea required="true" style="width: 100%;" id="Invt_SlaughterOrder_Notes" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12" style="background-color: lightblue;">
+                            <label style="font-size: 15px;" class="unselectable">@Html.Translate("المخرجات", "output")</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable">@Html.Recource(1)</label>
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select style="width: 85%" id="Invt_SlaughterOrder_CboOutStoreNo">
+                                    @foreach (var v in lStores)
+                                    {
+                                        if (v.StoreNo == lStores.Select(o => o.StoreNo).FirstOrDefault())
+                                        {
+                                            <option value="@v.StoreNo" selected>@Html.Translate(v.StoreName, v.StoreNameEng)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.StoreNo">@Html.Translate(v.StoreName, v.StoreNameEng)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="form-group" style="display: block; height: 225px;">
+                        <div class="col-md-12 wrapperx" id="SlaughterOrderDF_DIV">
+                            <table class="table table-hover SlaughterOrderDF_Info" id="SlaughterOrderDFTable">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: center !important; width: 350px; word-wrap: break-word; white-space: normal;">@Html.Recource(44)</th>
+                                        <th style="text-align: center !important; width: 990px; word-wrap: break-word; white-space: normal;">@Html.Recource(74)</th>
+                                        <th style="width: 205px; text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(45)</th>
+                                        <th style="width: 205px !important; text-align: center !important; word-wrap: break-word; white-space: normal; ">@Html.Recource(67)</th>
+                                        @if (CActive.ClientNo == 335)
+                                        {
+                                            <th style="width: 165px !important; text-align: center !important; word-wrap: break-word; white-space: normal; ">@Html.Recource(442)</th>
+                                        }
+                                        else
+                                        {
+                                            <th style="width: 165px !important; text-align: center !important; word-wrap: break-word; white-space: normal; ">@Html.Recource(49)</th>
+                                        }
+                                        @if (compMF.UseQty2 == true)
+                                        {
+                                            if (CActive.ClientNo == 335)
+                                            {
+                                                <th style="width: 165px; text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(5693)</th>
+                                            }
+                                            else
+                                            {
+                                                <th style="width: 165px; text-align: center !important; word-wrap: break-word; white-space: normal;">@Html.Recource(72)</th>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <th hidden>@Html.Recource(72)</th>
+                                        }
+                                        <th style="width: 165px !important; text-align: center !important; word-wrap: break-word; white-space: normal; ">@Html.Recource(4397)</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody style="text-align: center;" id="SlaughterOrderDFTBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="Invt_SlaughterOrder_TotalCostPercent">@Html.Recource(7041) </label>
+                            </div>
+                            <div class="col-md-4">
+                                <input required="false" style="width:117px !important;" type="text" id="Invt_SlaughterOrder_TotalCostPercent" value="0" disabled />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="ExpensesDetails" role="tabpanel">
+                    <div class="form-group" style="display: block; height: 225px;">
+                        <div class="col-md-12 wrapperx" id="ExpensesDetails_DIV">
+                            <table class="table table-hover ExpensesDetails_Info" id="ExpensesDetailsTable">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: center !important; width: 350px; word-wrap: break-word; white-space: normal;">@Html.Recource(5064)</th>
+                                        <th style="text-align: center !important; width: 120px; word-wrap: break-word; white-space: normal;">@Html.Recource(972)</th>
+                                        <th></th>
+                                    </tr>
+
+                                </thead>
+                                <tbody style="text-align: center;" id="ExpensesDetailsTBody">
+                                    @foreach (PayCodes item in Exp)
+                                    {
+                                    <tr>
+                                        <td style="text-align: center !important; width: 350px; word-wrap: break-word; white-space: normal;" Itemcode="@item.sys_minor" id="ExpensesDetailsItemNo">@Html.Translate(item.DescAr, item.DescEn)</td>
+                                        <td style="text-align: center !important; width: 120px;">
+                                            <input id="ExpensesDetails_Amount" value="0" type="number" style="text-align: center; width: 120px !important " onblur="CheckValueAmount(this)" />
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteSave_SlaughterOrder()" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </div>
+</div>
+
+
+<div class="modal fade" id="Model_SlaughterOrder_InvItemsMF">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4756)</label>
+            </div>
+            <div class="box-body box-profile">
+                <div class="modal-body row">
+                    <div class="form-group">
+                        <div class="col-md-12" id="SlaughterOrder_ItemsMF">
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="SelectingSlaughterOrder_InvItemsMF()" class="btn btn-primary">@Html.Recource(4599)</button>
+                    <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_SlaughterOrderDF_Batch">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(45)</label>
+            </div>
+            <div class="box-body box-profile">
+                <div class="modal-body row">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <table class="table table-hover" id="SelectSlaughterOrderDFBatchTable">
+                                <thead>
+                                    <tr>
+                                        <th>@Html.Recource(102)</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="SelectSlaughterOrderDFBatchTbody">
+                                   
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="SelectingSlaughterOrderDFBatch()" class="btn btn-primary">@Html.Recource(4599)</button>
+                    <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_SlaughterOrder_Batch">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(45)</label>
+            </div>
+            <div class="box-body box-profile">
+                <div class="modal-body row">
+                    <div class="form-group">
+                        <div class="col-md-12" id="SlaughterOrderBatch">
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="SelectingSlaughterOrderBatch()" class="btn btn-primary">@Html.Recource(4599)</button>
+                    <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $('.nav-tabs a[href="#SlaughterOrderInfo"]').tab('show')
+    $('.Invt_SlaughterOrder_CboSubUnit').select2();
+    $('#Invt_SlaughterOrder_CboStoreNo').select2();
+    $('#Invt_SlaughterOrder_CboOutStoreNo').select2();
+
+
+    $('#SelectSlaughterOrderDFBatchTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+
+    $('#Model_SlaughterOrder_InvItemsMF').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_SlaughterOrderDF_Batch').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_SlaughterOrder_Batch').draggable({
+        handle: ".modal-header",
+    });
+
+    function changeStoreNo(e) {
+        Invt_SlaughterOrder_ItemNo.value = "";
+        Invt_SlaughterOrder_ItemDesc.value = "";
+        Invt_SlaughterOrder_BatchNo.value = "";
+        $(".Invt_SlaughterOrder_CboSubUnit").empty().trigger("change");
+        $('#SlaughterOrderDFTBody').empty();
+    }
+    function Add_InvItemsMF() {
+        $('#SlaughterOrder_ItemsMF').empty();
+        $('#SelectSlaughterOrderItemTable tr').removeClass("selected");
+        $('#SlaughterOrder_ItemsMF').load('../../../SlaughterOrder/SlaughterOrderItemsList?StoreNo=' + Invt_SlaughterOrder_CboStoreNo.value);
+        $('#Model_SlaughterOrder_InvItemsMF').modal('show');
+    }
+    function SelectSlaughterOrder_InvItems(e) {
+        var trs = $('#SelectSlaughterOrderItemTable tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function GetItemNo(e) {
+        var trs = $('#SelectSlaughterOrderItemTable tr[name=selected]');
+        Invt_SlaughterOrder_ItemNo.value = trs[0].getAttribute('ItemNo');
+        Invt_SlaughterOrder_ItemDesc.value = trs[0].getAttribute('ItemDesc');
+
+        burn({ ItemNo: trs[0].getAttribute('ItemNo'), storeNo: Invt_SlaughterOrder_CboStoreNo.value }, '../../../SlaughterOrder/LoadUnitItem', '', LoadBatchAndUnitItem, true);
+    }
+    function SelectingSlaughterOrder_InvItemsMF() {
+        var trs = $('#SelectSlaughterOrderItemTable tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة", "Select one Item")');
+            return;
+        }
+        Invt_SlaughterOrder_ItemNo.value = trs[0].getAttribute('ItemNo');
+        Invt_SlaughterOrder_ItemDesc.value = trs[0].getAttribute('ItemDesc');
+
+        burn({ ItemNo: trs[0].getAttribute('ItemNo'), storeNo: Invt_SlaughterOrder_CboStoreNo.value }, '../../../SlaughterOrder/LoadUnitItem', '', LoadBatchAndUnitItem, true);
+
+
+    }
+    function LoadBatchAndUnitItem(r) {
+        $(".Invt_SlaughterOrder_CboSubUnit").empty().trigger("change");
+        for (var i = 0; i < r.unit.length; i++) {
+            var newOption = new Option(r.unit[i].UnitName, r.unit[i].VSUnitCode, false, false);
+            newOption.setAttribute("unitCode", r.unit[i].UnitCode)
+            $(".Invt_SlaughterOrder_CboSubUnit").append(newOption).trigger('change');
+        }
+
+        Invt_SlaughterOrder_BatchNo.value = r.Batch
+
+        burn({ ItemNo: Invt_SlaughterOrder_ItemNo.value, storeNo: Invt_SlaughterOrder_CboOutStoreNo.value, Batch: Invt_SlaughterOrder_BatchNo.value }, '../../../SlaughterOrder/LoadItemKits', '', LoadItemKits, true);
+
+        $('#Model_SlaughterOrder_InvItemsMF').modal('hide')
+    }
+    function LoadItemKits(r) {
+        $('#SlaughterOrderDFTBody').empty();
+        $('#SlaughterOrderDFTBody').append(r);
+        $('#Model_SlaughterOrder_InvItemsMF').modal('hide');
+        SumTotal();
+    }
+    function SumTotalCostPercent(e) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان نسبة الكلفة اقل من 0", "The value of the Cost Percent may not be less than 0")');
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+        SumTotal()
+    }
+    function SumTotal(){
+        var table = $('#SlaughterOrderDFTBody tr');
+        var trs = table;
+        var TotalCostPercent = 0;
+
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value
+            if ($(trs[i]).closest('tr').find('#SlaughterOrderDF_Qty_' + InputSerial)[0].value > 0) {
+                TotalCostPercent += Number($(trs[i]).closest('tr').find('#SlaughterOrderDF_CostPercent_' + InputSerial)[0].value);
+            }
+        }
+        $('#Invt_SlaughterOrder_TotalCostPercent').val(Number(TotalCostPercent));
+    }
+    var thisValue = 0;
+    function AddBatchNo(e, srl) {
+        thisValue = srl;
+        var trs = $('#SlaughterOrderDFTBody #SlaughterOrderDF_' + srl);
+
+        $('#SelectSlaughterOrderDFBatchTable tr').removeClass("selected");
+        $('#SelectSlaughterOrderDFBatchTbody').empty();
+        $('#SelectSlaughterOrderDFBatchTbody').load('../../../SlaughterOrder/LoadItemBatch?ItemNo=' + trs.find('#SlaughterOrderDFItemNo_' + srl)[0].innerHTML +'&storeNo=' + Invt_SlaughterOrder_CboOutStoreNo.value);
+        $('#Model_SlaughterOrderDF_Batch').modal('show');
+    }
+    function SelectSlaughterOrderDF_BatchNo(e) {
+        var trs = $('#SelectSlaughterOrderDFBatchTable tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function SelectingSlaughterOrderDFBatch() {
+        var trs = $('#SelectSlaughterOrderDFBatchTable tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار حزمة", "Select one Batch")');
+            return;
+        }
+
+        var tr = $("#SlaughterOrderDFTBody #SlaughterOrderDF_" + thisValue + "");
+        tr.find('#SlaughterOrderDF_Batch_' + thisValue)[0].value = trs[0].getAttribute('BatchNo');
+
+        $('#Model_SlaughterOrderDF_Batch').modal('hide')
+    }
+
+    function Add_BatchNo() {
+        if (Invt_SlaughterOrder_ItemNo.value != "") {
+            $('#SelectSlaughterOrderBatchTable tr').removeClass("selected");
+            $('#SlaughterOrderBatch').empty();
+            $('#SlaughterOrderBatch').load('../../../SlaughterOrder/LoadItemBatchhf?ItemNo=' + Invt_SlaughterOrder_ItemNo.value + '&storeNo=' + Invt_SlaughterOrder_CboStoreNo.value);
+            $('#Model_SlaughterOrder_Batch').modal('show');
+        }
+    }
+    function SelectSlaughterOrder_BatchNo(e) {
+        var trs = $('#SelectSlaughterOrderBatchTable tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function SelectingSlaughterOrderBatch() {
+        var trs = $('#SelectSlaughterOrderBatchTable tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار حزمة", "Select one Batch")');
+            return;
+        }
+
+        Invt_SlaughterOrder_BatchNo.value = trs[0].getAttribute('BatchNo');
+
+        var table = $('#SlaughterOrderDFTBody tr');
+        var trs = table;
+
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value;
+            $(trs[i]).closest('tr').find('#SlaughterOrderDF_Batch_' + InputSerial)[0].value = Invt_SlaughterOrder_BatchNo.value;
+        }
+        $('#Model_SlaughterOrder_Batch').modal('hide')
+    }
+     function GetValueqty(e) {
+        if (e.value < 0) {
+            if (@CActive.ClientNo == 335) {
+                alert('@Html.Translate("يجب أن تكون العدد أكبر من صفر", "The Number Must be Greater Than Zero")');
+            }
+            else {
+                alert('@Html.Translate("يجب أن تكون الكمية أكبر من صفر", "The Qty Must be Greater Than Zero")');
+            }
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+    }
+    function GetValueqty2(e) {
+        if (e.value < 0) {
+            if (@CActive.ClientNo == 335) {
+                alert('@Html.Translate("يجب أن تكون الوزن أكبر من صفر", "The Weight Must be Greater Than Zero")');
+            }
+            else {
+                alert('@Html.Translate("يجب أن تكون الكمية 2 أكبر من صفر", "The Qty 2 Must be Greater Than Zero")');
+            }
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+    }
+    function CheckValueAmount(e) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون القيمة اقل من 0", "The value of the Amount may not be less than 0")');
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+    }
+
+    function ExcuteSave_SlaughterOrder() {
+        if (Invt_SlaughterOrder_ItemNo.value == "") {
+            alert('@Html.Translate("يجب إدخال المادة", "You Must Enter Item")');
+            return;
+        }
+        if (Invt_SlaughterOrder_BatchNo.value == "") {
+            alert('@Html.Translate("يجب إدخال الحزمة", "You Must Enter Batch")');
+            return;
+        }
+        if (Invt_SlaughterOrderQty.value == "" || Invt_SlaughterOrderQty.value <= 0) {
+            Invt_SlaughterOrderQty.focus();
+            if (@CActive.ClientNo == 335) {
+                alert('@Html.Translate("يجب إدخال العدد", "You Must Enter Number")');
+            }
+            else {
+                alert('@Html.Translate("يجب إدخال الكمية", "You Must Enter Qty")');
+            }
+            return;
+        }
+
+        var table = $('#SlaughterOrderDFTBody tr');
+        var trs = table;
+
+        if (trs.length == 0) {
+            alert('@Html.Translate("يجب إدخال المواد", "Raw Items must be entered")');
+            return false;
+        }
+
+        var SlaughterOrder = {
+            CompNo: '@company.comp_num',
+            SlaughterOrderNo: 0,
+            SlaughterOrderDate: Invt_SlaughterOrder_Date.value,
+            StoreNo: Invt_SlaughterOrder_CboStoreNo.value,
+            ItemNo: Invt_SlaughterOrder_ItemNo.value,
+            Batch: Invt_SlaughterOrder_BatchNo.value,
+            Qty: Invt_SlaughterOrderQty.value,
+            TUnit: $('.Invt_SlaughterOrder_CboSubUnit option:Selected')[0].getAttribute('unitCode'),
+            UnitSerial: $('.Invt_SlaughterOrder_CboSubUnit')[0].value,
+            Qty2: Invt_SlaughterOrderQty2.value,
+            Notes: Invt_SlaughterOrder_Notes.value
+        };
+
+        var CountQty = 0
+        var TotalCostPercent = 0
+
+        var SlaughterOrderF = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value;
+            if ($(trs[i]).closest('tr').find('#SlaughterOrderDF_Qty_' + InputSerial)[0].value > 0) {
+                if (Number($(trs[i]).closest('tr').find('#SlaughterOrderDF_CostPercent_' + InputSerial)[0].value) <= 0) {
+                    alert('@Html.Translate("يجب إدخال نسبة الكلفة", "You Must Enter Cost Percentage")');
+                    return false;
+                }
+                CountQty = CountQty + 1;
+                TotalCostPercent = Number(TotalCostPercent) +  Number($(trs[i]).closest('tr').find('#SlaughterOrderDF_CostPercent_' + InputSerial)[0].value);
+            }
+            SlaughterOrderF.push({
+                CompNo: '@company.comp_num',
+                SlaughterOrderNo: 0,
+                StoreNo: Invt_SlaughterOrder_CboOutStoreNo.value,
+                ItemNo: $(trs[i]).closest('tr').find('#SlaughterOrderDFItemNo_' + InputSerial)[0].innerHTML,
+                Batch: $(trs[i]).closest('tr').find('#SlaughterOrderDF_Batch_' + InputSerial)[0].value,
+                Qty: $(trs[i]).closest('tr').find('#SlaughterOrderDF_Qty_' + InputSerial)[0].value,
+                TUnit: $(trs[i]).closest('tr').find('.SlaughterOrderDFItems_Unit option:Selected')[0].getAttribute('unitCode'),
+                UnitSerial: $(trs[i]).closest('tr').find('.SlaughterOrderDFItems_Unit')[0].value,
+                Qty2: $(trs[i]).closest('tr').find('#SlaughterOrderDF_Qty2_' + InputSerial)[0].value,
+                CostPercent: $(trs[i]).closest('tr').find('#SlaughterOrderDF_CostPercent_' + InputSerial)[0].value
+            })
+        }
+        if (CountQty == 0) {
+            alert('@Html.Translate("يجب إدخال كميات للمخرجات", "You Must Enter Qty Output")');
+            return false;
+        }
+
+        if (TotalCostPercent != 100) {
+            alert('@Html.Translate("يجب ان يكون مجموع نسبة الكلفة يساوي 100 %", "The total cost percentage must be equal to 100%.")');
+            return false;
+        }
+
+        var CountAmount = 0;
+        var ExpensesDetailstable = $('#ExpensesDetailsTBody tr');
+        var trsExpensesDetails = ExpensesDetailstable;
+        var OutlaySlaugh = new Array();
+        for (var i = 0; i < trsExpensesDetails.length; i++) {
+            if ($(trsExpensesDetails[i]).closest('tr').find('#ExpensesDetails_Amount')[0].value > 0) {
+                CountAmount = CountAmount + 1;
+            }
+            OutlaySlaugh.push({
+                CompNo: '@company.comp_num',
+                SlaughterOrderNo: 0,
+                DocEspCode: $(trsExpensesDetails[i]).closest('tr').find('#ExpensesDetailsItemNo')[0].getAttribute("itemcode"),
+                DocEspVal: $(trsExpensesDetails[i]).closest('tr').find('#ExpensesDetails_Amount')[0].value
+            })
+        }
+        @*if (CountAmount == 0) {
+            alert('@Html.Translate("يجب إدخال القيم للمصاريف", "You Must Enter Amount Expenses")');
+            $('.nav-tabs a[href="#ExpensesDetails"]').tab('show')
+            return false;
+        }*@
+        wait();
+
+        burn({ SlaughterOrderHF: SlaughterOrder, SlaughterOrderDF: SlaughterOrderF, OutlaySlaughter: OutlaySlaugh }, '../../../SlaughterOrder/Save_SlaughterOrder', '', ReloadSlaughterOrderInfo, false);
+    }
+    function ReloadSlaughterOrderInfo() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        Invt_SlaughterOrderListDiv.innerHTML = "";
+        CloseWindow('/SlaughterOrder/AddSlaughterOrder')
+        serachlaughterOrder();
+    }
+</script>
+

@@ -1,0 +1,119 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@{
+    Company company = (Company)Session["company"];
+}
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-6">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="MRP_PurchaseOrderInfo_OrdYear">@Resources.Resource.Year </label>
+            </div>
+            <div class="col-md-2">
+                <input onblur="Checkyear()" type="number" id="MRP_PurchaseOrderInfo_OrdYear" value="@DateTime.Now.Year" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" />
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-success btn-block" onclick="SerachPurchaseOrderInfo()">
+                    @Resources.Resource.Search
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="MRP_PurchaseOrderInfoDiv">
+        @Html.Partial("~/Views/ShipmentsInfo/PurchaseOrderInfoList.cshtml")
+    </div>
+</div>
+
+@*<div class="modal fade" id="Model_PurchaseOrderInfo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="PurchaseOrderInfoDiv">
+
+            </div>
+        </form>
+    </div>
+</div>*@
+
+
+
+
+
+
+<script>
+    $('#Model_PurchaseOrderInfo').draggable({
+        handle: ".modal-header",
+    });
+
+    function Checkyear() {
+        if (MRP_PurchaseOrderInfo_OrdYear.value < 2000) {
+            MRP_PurchaseOrderInfo_OrdYear.value = "@DateTime.Now.Year"
+            MRP_PurchaseOrderInfo_OrdYear.focus();
+        }
+    }
+
+    function SerachPurchaseOrderInfo() {
+        MRP_PurchaseOrderInfoDiv.innerHTML = "";
+        $('#MRP_PurchaseOrderInfoDiv').load('../../../ShipmentsInfo/PurchaseOrderInfoList?OrdYear=' + MRP_PurchaseOrderInfo_OrdYear.value );
+    }
+
+    var _OrdYear = 0;
+    var _OrderNo = 0;
+    var _TawreedNo = 0;
+    var _ShipSer = 0;
+
+    function DeleteShipmentsInfo(OrdYear, OrderNo, TawreedNo, ShipSer) {
+        if (confirm('@Resources.Resource.ConfirmDeleteDialog')) {
+            _OrdYear = OrdYear;
+            _OrderNo = OrderNo;
+            _TawreedNo = TawreedNo;
+            _ShipSer = ShipSer;
+
+            burn({ OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo, ShipSer: ShipSer }, '../../../ShipmentsInfo/Del_ShipmentsInfo', '', ReloadDelOrdShipmentsInfo, false);
+        }
+    }
+    function ReloadDelOrdShipmentsInfo() {
+        MsgBox('@Html.Recource(2598)', 'red');
+
+        var table = $("#PurchaseOrderInfoTable tbody");
+        var trs = table.find('tr');
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i])[0].getAttribute('OrdYear') == _OrdYear && $(trs[i])[0].getAttribute('OrderNo') == _OrderNo && $(trs[i])[0].getAttribute('TawreedNo') == _TawreedNo) {
+                var nTr = $(trs[i])[0];
+                wait();
+                $(this).attr("opened", "details_close");
+                var OrdYear = $(trs[i])[0].getAttribute('OrdYear');
+                var OrderNo = $(trs[i])[0].getAttribute('OrderNo');
+                var TawreedNo = $(trs[i])[0].getAttribute('TawreedNo');
+
+                $.get("../../../../ShipmentsInfo/DetailsShipmentsInfo?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo, function (data) {
+                    PurchOrdTable.fnOpen(nTr, data, 'details');
+                    done();
+                });
+            }
+        }
+    }
+
+    //function SelectionShipmentsInfo(OrdYear, OrderNo, TawreedNo) {
+    //    wait();
+    //    burn({ OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo }, '../../../ShipmentsInfo/ChooseShipmentsInfo', '', LoadChooseShipmentsInfo, true);
+    //}
+    //function LoadChooseShipmentsInfo(r) {
+    //    MRP_PurchaseOrderInfoDiv.innerHTML = "";
+    //    $('#MRP_PurchaseOrderInfoDiv').html(r);
+    //    $('#Model_PurchaseOrderInfo').modal('hide');
+    //    done();
+    //}
+
+</script>

@@ -1,0 +1,488 @@
+﻿@model IEnumerable<AlphaERP.Models.MRP_Calculation>
+@using System.Data.SqlClient;
+@using AlphaERP.Models
+@{
+    MRP_Calculation MRPCalu = Model.FirstOrDefault();
+    Company company = (Company)Session["company"];
+    List<BusunisUnit> Venders = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("select VendorNo as VenderId ,name as DescAr,Eng_Name as DescEn from Vendors where (comp = '{0}') AND (IsHalt = 0)", company.comp_num)).ToList();
+}
+<style>
+
+    #MRP_CO_DIV table th, #MRP_CO_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+    .wrapperx {
+        padding:0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+
+    .sticky-col {
+        z-index:2;
+        position: sticky;
+        position: -webkit-sticky;
+        background-color: white;
+    }
+
+    .first-col {
+        width: 100px;
+        min-width: 100px;
+        max-width: 100px;
+        @Html.Translate("right: 0px;", "left: 0px;")
+    }
+
+    .second-col {
+        width: 150px;
+        min-width: 150px;
+        max-width: 150px;
+     @Html.Translate("right: 100px;", "left: 100px;")
+    }
+
+    .third-col {
+        width: 40px;
+        min-width: 40px;
+        max-width: 40px;
+        @Html.Translate("right: 250px;", "left: 250px;")
+    }
+    .stickytooltip {
+        max-height: 80vh !important;
+        overflow: auto !important
+    }
+</style>
+
+<link href="~/Content/stickytooltip.css" rel="stylesheet" />
+<script src="~/Scripts/stickytooltip.js?s=15"></script>
+
+<style>
+    #MRP_CalcAnnualPlanTable span.badge {
+        border: none;
+        position: static;
+        z-index: 20 !important;
+        box-sizing: content-box;
+        visibility: visible;
+        z-index: 9999999999 !important;
+        padding: 1px;
+        font-family: Arial, verdana, tahoma;
+        font-size: 13px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        text-shadow: 1px 1px 1px rgba(0,0,0,.3);
+        background: #ff3019;
+        background: -webkit-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Chrome10+,Safari5.1+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff3019), color-stop(100%, #cf0404)); /* Chrome,Safari4+ */
+        background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* FF3.6+ */
+        background: -ms-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* IE10+ */
+        background: -o-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Opera 11.10+ */
+        background: linear-gradient(to bottom, #ff3019 0%, #cf0404 100%); /* W3C */
+        width: 18px;
+        height: 18px;
+        line-height: 20px;
+        border-radius: 50%;
+        filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff3019', endColorstr='#cf0404', GradientType=0)"; /* IE6-9 */
+        filter: "progid:DXImageTransform.Microsoft.Shadow(direction=135, strength=2, color=ff0000)"; /* IE10 text shadows */
+        box-shadow: 0 2px 5px rgba(0,0,0,.4);
+    }
+</style>
+@{
+    int i = 1;
+}
+<div class="modal-body row">
+    <div class="form-group viewx" style="display:block;height:350px;">
+        <div class="col-md-12 wrapperx" id="MRP_CO_DIV">
+            <table class="table table-hover MRP_CalculationAnnualPlan" id="MRP_CalcAnnualPlanTable">
+                <thead>
+                    <tr>
+                        <th class="sticky-col first-col">@Resources.Resource.ItemNo</thclass="headcol">
+                        <th class="sticky-col second-col">@Resources.Resource.ItemName</th>
+                        <th class="sticky-col third-col"></th>
+                        <th>@Resources.Resource.MainUnit</th>
+                        <th>@Html.Recource(9608)</th>
+                        <th>@Resources.Resource.QuantityAva</th>
+                        <th>@Resources.Resource.CoverDays</th>
+                        <th>@Resources.Resource.OrderQuantity</th>
+                        <th>@Html.Translate("تاريخ وصول الطلبية", "Order date of arrival")</th>
+                        <th>@Resources.Resource.CoverDays</th>
+                        <th>@Html.Translate("العجر", "Gap")</th>
+
+                        <th>@Html.Translate("وضع المخزون", "Inventory mode")</th>
+
+                        <th>@Resources.Resource.CoverDays</th>
+                        <th>@Resources.Resource.OrderStat</th>
+                        <th>@Resources.Resource.Shoratge</th>
+                        <th>@Resources.Resource.QuantityToOrder</th>
+                        <th>@Resources.Resource.Supplier</th>
+                        <th>
+                            <input id="MRP_CalcAnnualPlan_Actionchecked" type="checkbox" onchange="SelectAll(this)" checked>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody style="text-align: center;"  id="MRP_CalcAnnualPlanTbody">
+
+                    @foreach (MRP_Calculation MRPC in Model)
+                    {
+                        if (MRPC.OrderStat == true)
+                        {
+                            <tr style="height: 25px;" class="OrderStat">
+                                <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important">@MRPC.ItemNo</td>
+                                <td class="sticky-col second-col" data-tooltip="sticky_@i" style="text-align: center !important">@MRPC.ItemDesc</td>
+                                <td class="sticky-col third-col">
+                                    @if (MRPC.NoOforders > 0)
+                                    {
+                                        <span data-tooltip="badge_@i" class="badge badge-5">@Convert.ToInt32(MRPC.NoOforders)</span>
+                                    }
+                                </td>
+
+
+                                <td style="text-align: center !important">@MRPC.UnitDesc</td>
+                                <td style="text-align: center !important">@MRPC.TotalReqQty</td>
+                                <td style="text-align: center !important">@MRPC.QtyOH</td>
+                                <td style="text-align: center !important">@MRPC.QtyOHCDays</td>
+                                <td style="text-align: center !important">@MRPC.QtyInOrder</td>
+
+                                @if (MRPC.OrderArivDate != null)
+                                {
+                                    string b = MRPC.OrderArivDate.Value.ToString("yyyy/MM/dd");
+                                    int p = (MRPC.OrderArivDate.Value - DateTime.Now).Days;
+                                    <td data-tooltip="ya_Date_@i">
+                                        @b
+                                        <sup>
+                                            @p
+                                        </sup>
+
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td></td>
+                                }
+
+                                <td style="text-align: center !important">@MRPC.QtyInOrderCDays</td>
+                                <td style="text-align: center !important">@MRPC.GapStat</td>
+                                <td style="text-align: center !important">@MRPC.TotalAvialbeQty</td>
+                                <td style="text-align: center !important">@MRPC.StockCDays</td>
+
+                                <td style="text-align:center!important">
+                                    @if (MRPC.OrderStat == true)
+                                    {
+                                        <i class="fa fa-check"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa fa-times"></i>
+                                    }
+                                </td>
+                                <td style="text-align: center !important">@MRPC.QtyShoratge</td>
+                                <td style="text-align: center !important">
+                                    <input onblur="CheckValue(this)" type="number" style="width: 90px;text-align: center;" id="MRP_CalcAnnualPlan_QtyToOrder" required="true" value="@MRPC.QtyToOrder" />
+                                </td>
+                                <td style="text-align: center !important">
+                                    <select style="width:75px !important;" class="MRP_CalcAnnualPlan_Vender" required="true">
+                                        @foreach (var v in Venders)
+                                        {
+                                            if (MRPC.Prefvendor == v.VenderId)
+                                            {
+                                                <option value="@v.VenderId" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@v.VenderId">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                            }
+
+                                        }
+                                    </select>
+                                </td>
+                                <td style="        text-align: center !important">
+                                    <input id="MRP_CalcAnnualPlan_Action" type="checkbox" checked>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr style="height: 25px;" itemNo="@MRPC.ItemNo">
+                                <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important">@MRPC.ItemNo</td>
+                                <td class="sticky-col second-col" data-tooltip="sticky_@i" style="text-align: center !important">@MRPC.ItemDesc</td>
+                                <td class="sticky-col third-col">
+                                    @if (MRPC.NoOforders > 0)
+                                    {
+                                        <span data-tooltip="badge_@i" class="badge badge-5">@Convert.ToInt32(MRPC.NoOforders)</span>
+                                    }
+                                </td>
+
+                                <td style="text-align: center !important">@MRPC.UnitDesc</td>
+                                <td style="text-align: center !important">@MRPC.TotalReqQty</td>
+                                <td style="text-align: center !important">@MRPC.QtyOH</td>
+                                <td style="text-align: center !important">@MRPC.QtyOHCDays</td>
+                                <td style="text-align: center !important">@MRPC.QtyInOrder</td>
+
+                                @if (MRPC.OrderArivDate != null)
+                                {
+                                    string b = MRPC.OrderArivDate.Value.ToString("yyyy/MM/dd");
+                                    int p = (MRPC.OrderArivDate.Value - DateTime.Now).Days;
+                                    <td data-tooltip="ya_Date_@i">
+                                        @b
+                                        <sup>
+                                            @p
+                                        </sup>
+
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td></td>
+                                }
+
+                                <td style="text-align: center !important">@MRPC.QtyInOrderCDays</td>
+                                <td style="text-align: center !important">@MRPC.GapStat</td>
+                                <td style="text-align: center !important">@MRPC.TotalAvialbeQty</td>
+
+                                <td style="text-align: center !important">@MRPC.StockCDays</td>
+                                <td style="text-align:center!important">
+                                    @if (MRPC.OrderStat == true)
+                                    {
+                                        <i class="fa fa-check"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa fa-times"></i>
+                                    }
+                                </td>
+                                <td style="text-align: center !important">@MRPC.QtyShoratge</td>
+
+                                <td style="text-align: center !important">
+                                    <input onblur="CheckValue(this)" type="number" style="width: 90px;text-align: center;" id="MRP_CalcAnnualPlan_QtyToOrder" required="true" value="@MRPC.QtyToOrder" />
+                                </td>
+                                <td style="text-align: center !important">
+                                    <select style="width:75px !important;" class="MRP_CalcAnnualPlan_Vender" required="true">
+                                        @foreach (var v in Venders)
+                                        {
+                                            if (MRPC.Prefvendor == v.VenderId)
+                                            {
+                                                <option value="@v.VenderId" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@v.VenderId">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                            }
+
+                                        }
+                                    </select>
+                                </td>
+                                <td style="text-align:center!important">
+                                    <input id="MRP_CalcAnnualPlan_Action" type="checkbox" checked>
+                                </td>
+                            </tr>
+                        }
+                        i++;
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+    <div id="mystickytooltip" class="stickytooltip">
+        <div style="padding:5px">
+            @{
+                i = 1;
+            }
+            @foreach (MRP_Calculation MRPC in Model)
+            {
+
+                <div id="ya_Date_@i" class="atip" style="width:auto;@Html.Translate("direction:rtl", "")">
+                    <table>
+                        <tr>
+                            <td></td>
+                            <td>@Html.Recource(205)</td>
+                            <td>@Html.Recource(517)</td>
+                            <td>@Html.Recource(6681)</td>
+                            <td>@Html.Translate("بالايام", "In days")</td>
+                            <td>المجموع</td>
+                        </tr>
+                        @{
+                            int sr0 = 1;
+                            int Comp_num = company.comp_num;
+                            string query = string.Format("exec MRP_MrpCalcToolTipInfo {0},1,'{1}'", Comp_num, MRPC.ItemNo);
+                            using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                            {
+                                SqlCommand cmd = new SqlCommand(query, cn);
+                                cn.Open();
+                                SqlDataReader rdr = cmd.ExecuteReader();
+                                if (rdr.HasRows)
+                                {
+                                    sr0 = 1;
+                                    while (rdr.Read())
+                                    {
+                                        <tr>
+                                            <td style="text-align:center !important">@sr0</td>
+                                            <td style="text-align:center !important">@rdr["OrderNo"]</td>
+                                            <td style="text-align:center !important">@rdr["Name"]</td>
+                                            <td style="text-align:center !important">@Convert.ToDateTime(rdr["ETA"].ToString()).ToString("yyyy/MM/dd")</td>
+                                            <td style="text-align:center !important">@rdr["DueDays"]</td>
+                                            <td style="text-align:center !important">@rdr["TotalQty"]</td>
+                                        </tr>
+                                        sr0 += 1;
+                                    }
+                                }
+                            }
+                        }
+                    </table>
+                </div>
+
+                <div id="badge_@i" class="atip" style="width:300px;@Html.Translate("direction:rtl", "")">
+                    <table>
+
+                        <tr>
+                            <td></td>
+                            <td>@Html.Recource(205)</td>
+                            <td>@Html.Recource(5667)</td>
+                            <td>@Html.Recource(206)</td>
+                            <td style="text-align:center">المجموع</td>
+                        </tr>
+                        @{
+                            int sr = 1;
+                            query = string.Format("exec MRP_MrpCalcToolTipInfo {0},2,'{1}'", Comp_num, MRPC.ItemNo);
+                            using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                            {
+                                SqlCommand cmd = new SqlCommand(query, cn);
+                                cn.Open();
+                                SqlDataReader rdr = cmd.ExecuteReader();
+                                if (rdr.HasRows)
+                                {
+                                    sr = 1;
+                                    while (rdr.Read())
+                                    {
+                                        <tr>
+                                            <td>@sr</td>
+                                            <td>@rdr["OrderNo"]</td>
+                                            <td>@rdr["BusUnitDescAr"]</td>
+                                            <td>@Convert.ToDateTime(rdr["OrderDate"].ToString()).ToString("yyyy/MM/dd")</td>
+                                            <td style="text-align:center">@rdr["TotalQty"]</td>
+                                        </tr>
+                                        sr += 1;
+                                    }
+                                }
+                            }
+                        }
+                    </table>
+                </div>
+
+                <div id="sticky_@i" class="atip" style="width:262px;@Html.Translate("direction:rtl","")">
+
+                    @Html.Translate("هدف التغطية بالايام", "Coverage target") : @MRPC.StockCoverage
+                    <br />
+                    @Html.Translate("مدة التسليم", "Lead time") : @MRPC.LeadTime
+                    <br />
+                    @Html.Translate("نقطة اعادة الطلب", "Reorder point") : @MRPC.ReOrderPoint
+                    <br />
+                    @Html.Translate("الحد الادنى للطلب", "MOQ") : @MRPC.MOQ
+                    <br />
+                    @Html.Translate("مضاعف الطلب", "Order multiple") : @MRPC.OrderMulti
+                </div>
+
+                i++;
+            }
+
+        </div>
+        <div class="stickystatus"></div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-md-2">
+            <label class="unselectable" for="MRPCalcAnnualPlan_GroupItemBySupplier">
+                <input id="MRPCalcAnnualPlan_GroupItemBySupplier" type="radio" name="MRP_CalcAnnualPlanRadio" checked>
+                @Resources.Resource.GroupItemBySupplier
+            </label>
+        </div>
+        <div class="col-md-2">
+            <label class="unselectable" for="MRPCalcAnnualPlan_PurchaseOrderForEachItem">
+                <input name="MRP_CalcAnnualPlanRadio" type="radio" id="MRPCalcAnnualPlan_PurchaseOrderForEachItem" />
+                @Resources.Resource.PurchaseOrderForEachItem
+            </label>
+        </div>
+        <div class="col-md-2" style="left: 20px;">
+            <label class="unselectable" for="MRPCalcAnnualPlan_OnePurchaseOrderForAllItems">
+                <input name="MRP_CalcAnnualPlanRadio" type="radio" id="MRPCalcAnnualPlan_OnePurchaseOrderForAllItems" />
+                @Resources.Resource.OnePurchaseOrderForAllItems
+            </label>
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-3">
+            <button class="btn btn-primary btn-block" onclick="CreatePurchOrdAnnualPlan()">
+                @Resources.Resource.CreatePurchaseOrders
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $('.MRP_CalcAnnualPlan_Vender').select2();
+    function SelectAll(e) {
+        var table = $('.MRP_CalculationAnnualPlan #MRP_CalcAnnualPlanTbody tr');
+        var trs = table;
+        for (var i = 0; i < trs.length; i++) {
+            $(trs[i]).closest('tr').find('#MRP_CalcAnnualPlan_Action')[0].checked = e.checked
+        }
+    }
+    function CheckValue(e) {
+        if (e.value < 0) {
+            e.focus();
+        }
+    }
+    function CreatePurchOrdAnnualPlan() {
+        var table = $('.MRP_CalculationAnnualPlan #MRP_CalcAnnualPlanTbody tr');
+        var trs = table;
+
+        var MRPPlanPRNo = new Array();
+
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i]).closest('tr').find('#MRP_CalcAnnualPlan_Action')[0].checked == true) {
+                    MRPPlanPRNo.push({
+                        date: MRP_CalcuQtyAnnualPlan_Date.value,
+                        ItemNo: trs[i].getAttribute('itemNo'),
+                        QtyToOrder: $(trs[i]).closest('tr').find('#MRP_CalcAnnualPlan_QtyToOrder')[0].value,
+                        venderNo: $(trs[i]).closest('tr').find('.MRP_CalcAnnualPlan_Vender')[0].value,
+                        GroupItemBySupplier: MRPCalcAnnualPlan_GroupItemBySupplier.checked,
+                        PurchaseOrderForEachItem: MRPCalcAnnualPlan_PurchaseOrderForEachItem.checked,
+                        OnePurchaseOrderForAllItems: MRPCalcAnnualPlan_OnePurchaseOrderForAllItems.checked
+                    });
+            }
+        }
+
+        if (MRPPlanPRNo.length == 0) {
+            MsgBox('@Resources.Resource.NoItemWasSelected', 'red');
+            return false
+        }
+
+
+        if (confirm('@Resources.Resource.ConfirmCreatePurchaseOrders')) {
+            wait();
+            burn({ lPlanPRNo: MRPPlanPRNo }, '../../../CalcuQtyAnnualPlan/CreatePurchOrdAnnualPlan', '', SavedPurchaseOrdersAnnualPlan, true);
+        }
+    }
+
+    function SavedPurchaseOrdersAnnualPlan(data) {
+
+        var table = $('.MRP_CalculationAnnualPlan #MRP_CalcAnnualPlanTbody tr');
+        var trs = table;
+
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i]).closest('tr').find('#MRP_CalcAnnualPlan_Action')[0].checked == true) {
+                $.each(data.lPlanPRNo, function (ik, item) {
+                    if (item.ItemNo == trs[i].getAttribute('itemNo')) {
+                        $(trs[i]).closest('tr').find('#MRP_CalcAnnualPlan_QtyToOrder')[0].parentElement.innerHTML ='<input style="textalign:center" type="text" disabled value="PO#' + item.PRNo + '" />';
+                    }
+                });
+            }
+        }
+
+        MsgBox('@Resources.Resource.PurchaseOrderNoIssued', 'green');
+        done();
+    }
+</script>
+
+
+
+

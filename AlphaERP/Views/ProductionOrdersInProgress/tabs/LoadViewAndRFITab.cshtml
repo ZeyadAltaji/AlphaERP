@@ -1,0 +1,230 @@
+﻿@using AlphaERP.Models;
+@model List<AlphaERP.Models.ViewRawMateria>
+@{ 
+    int OrderYear = ViewBag.OrderYear;
+    int OrderNo = ViewBag.OrderNo;
+    string FormCode= ViewBag.FormCode;
+
+    List<AlphaERP.Models.InvStoresMFView> lInvStoresMF = ViewBag.lInvStoresMF;
+    Company company = (Company)Session["company"];
+
+}
+<div class="form-group">
+    <div class="col-md-12">
+        <table id="LoadViewRawMateriaTB" class="LoadViewRawMateriaTB table dataTable table table-hover">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>@Html.Translate("رمز المادة", "ItemNo")</th>
+                    <th>@Html.Translate("وصف المادة", "ItemDesc")</th>
+                    <th>@Html.Translate("الوحدة", "UnitName")</th>
+                    <th>@Html.Translate("اخر كلفة", "LastissuedCost")</th>
+                    <th>@Html.Translate("الكمية المصروفة", "issuedQty")</th>
+                    <th>@Html.Translate("الكمية المعياريه", "StdQty")</th>
+                    <th>@Html.Translate("الكمية المتباينة", "QtyVar")</th>
+                    <th>@Html.Translate("كلفة الصرف", "IssueCost")</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (ViewRawMateria Dr in Model)
+            {
+                    <tr>
+                        <td></td>
+                        <td>@Dr.ItemNo</td>
+                        <td>@Html.Translate(Dr.ItemDesc_Ara, Dr.ItemDesc)</td>
+                        <td>@Dr.UnitName</td>
+                        <td>@Dr.lastreccost</td>
+                        <td>@Dr.issuedQty</td>
+                        <td>@Dr.stdqty</td>
+                        <td>@Dr.qtyvar</td>
+                        <td>@Dr.IssueCost</td>
+                        <td></td>
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+    </div>
+    <hr />
+    <div class="col-md-12" style="overflow-y:scroll;height: 20vh;max-height: 30vh;">
+        <div>
+            <div class="col-md-10" style="visibility:hidden">
+
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary btn-block" onclick="addIssueOrders()">
+                    <i class="fa fa-plus"></i> @Resources.Resource.Add
+                </button>
+            </div>
+        </div>
+        <table class="table table-hover" id="tableRFI"  >
+            <thead>
+                <tr style="text-align:center !important;">
+                    <th style="display:none;"></th>
+                    <th style="text-align:center !important;">@Html.Translate("رقم الأمر", "Order No ")</th>
+                    <th style="text-align:center !important;">@Html.Translate("تاريخ الأمر", "Order Date")</th>
+                    <th style="text-align:center !important;">@Html.Translate("الموافقة ", "Is Approved")</th>
+                 </tr>
+            </thead>
+            <tbody id="tableRFIBody">
+                @foreach (var item in lInvStoresMF)
+                {
+                    <tr style="height: 26px; text-align:center !important;" onclick="OrderSelect(this)" ondblclick="DoubleOrderSelect(this)"  >
+
+                        <td id="OrdYear" style="display:none; text-align:center !important;">@item.OrdYear</td>
+                        <td style="text-align:center !important;" id="OrdNo">@item.OrdNo</td>
+                        <td style="text-align:center !important;">@item.OrdDate.ToString("yyyy-MM-dd")</td>
+                        <td style="text-align:center !important;">
+                            @if (item.IsApproved == true)
+                            {
+                                <span style="background-color: #0b9f0b !important;" class="badge badge-success">@Html.Translate("موافق عليه", "Approved")</span>
+
+                            }
+                            else
+                            {
+                                <span class="badge badge-danger">@Html.Translate("غير موافق", "Non Approved")</span>
+                            }
+                        </td>
+                     </tr>
+                }
+
+
+            </tbody>
+
+        </table>
+    </div>
+</div>
+
+<script>
+
+    //var tableRFI = $('#tableRFI').dataTable({
+    //    "scrollY": '18vh',
+    //    "paging": true,
+    //    "pageLength": 100,
+    //    "searching": false,
+    //    "bLengthChange" : false
+
+    //});
+    var LoadViewRawMateriaTB = $('#LoadViewRawMateriaTB').DataTable({
+        "scrollY": '18vh',
+        "paging": false,
+        "searching": false,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    var issuedQtyElements = $("#LoadViewRawMateriaTB tbody td:nth-child(6)");
+    var stdQtyElements = $("#LoadViewRawMateriaTB tbody td:nth-child(7)");
+    var qtyVarElements = $("#LoadViewRawMateriaTB tbody td:nth-child(8)");
+    var issueCostElements = $("#LoadViewRawMateriaTB tbody td:nth-child(9)");
+
+    var totalIssuedQty = 0;
+    var totalStdQty = 0;
+    var totalQtyVar = 0;
+    var totalIssueCost = 0;
+
+    function OrderSelect(row) {
+        var rows = document.querySelectorAll('tr');
+        rows.forEach(function (row) {
+            row.classList.remove('selected');
+        });
+
+        row.classList.add('selected');
+    }
+    function SelectingOrder() {
+        var selectedRow = document.querySelector('#tableRFI tr.selected');
+
+        if (selectedRow) {
+            var OrdYear = selectedRow.querySelector('#OrdYear').innerHTML.trim();
+            var OrdNo = selectedRow.querySelector('#OrdNo').innerHTML.trim();
+            var CompNo =@company.comp_num;
+            var FormCode = '@FormCode';
+            var OrderYear =@OrderYear
+            var OrderNo =@OrderNo;
+            var IsApproved = selectedRow.querySelector('.badge-success') ? true : false;
+           
+            var LoadIssueOrderMBody = document.getElementById("LoadIssueOrderMBody");
+            LoadIssueOrderMBody.innerHTML = "";
+            var queryString = "FormCode=" + FormCode + "&CompNo=" + CompNo + "&OrderYear=" + OrderYear + "&OrderNo=" + OrderNo + "&OrdYear=" + OrdYear + "&OrdNo=" + OrdNo;
+            if (IsApproved) {
+                queryString += "&IsApproved=true";
+            }
+            $('#LoadIssueOrderMBody').load("../../../ProductionOrdersInProgress/LoadModalRFI?" + queryString);
+            $('#ModalLoadIssueOrder').modal('show');
+            //$('#LoadIssueOrderMBody').load("../../../ProductionOrdersInProgress/LoadModalRFI?FormCode="+FormCode+"&CompNo="+CompNo+"&OrderYear="+OrderYear+"&OrderNo="+OrderNo+"&OrdYear="+OrdYear+"&OrdNo="+OrdNo);
+            $('#ModalLoadIssueOrder').modal('show');
+
+
+        }
+        else{
+            alert('@Html.Translate("يرجى أختيار أمر صرف واحد ", "Please select one exchange order !")')
+        }
+
+    }
+   function addIssueOrders(){
+        var CompNo =@company.comp_num;
+        var FormCode = '@FormCode';
+        var OrderYear =@OrderYear
+        var OrderNo =@OrderNo;
+        var OrdYear =0;
+        var OrdNo =0;
+        $('#LoadIssueOrderMBody').load("../../../ProductionOrdersInProgress/LoadModalRFI?FormCode="+FormCode+"&CompNo="+CompNo+"&OrderYear="+OrderYear+"&OrderNo="+OrderNo+"&OrdYear="+OrdYear+"&OrdNo="+OrdNo);
+        $('#ModalLoadIssueOrder').modal('show');
+
+    }
+    issuedQtyElements.each(function () {
+        totalIssuedQty += parseFloat($(this).text());
+    });
+
+    stdQtyElements.each(function () {
+        totalStdQty += parseFloat($(this).text());
+    });
+
+    qtyVarElements.each(function () {
+        totalQtyVar += parseFloat($(this).text());
+    });
+
+    issueCostElements.each(function () {
+        totalIssueCost += parseFloat($(this).text());
+    });
+
+    $("#issuedQtyVal").text(totalIssuedQty.toFixed(2));
+    $("#StdQtyVal").text(totalStdQty.toFixed(2));
+    $("#QtyVarVal").text(totalQtyVar.toFixed(2));
+    $("#IssueCostVal").text(totalIssueCost.toFixed(2));
+
+    function DoubleOrderSelect(r){
+ 
+        var selectedRow = r;
+
+             var OrdYear = selectedRow.querySelector('#OrdYear').innerHTML.trim();
+            var OrdNo = selectedRow.querySelector('#OrdNo').innerHTML.trim();
+            var CompNo =@company.comp_num;
+            var FormCode = '@FormCode';
+            var OrderYear =@OrderYear
+            var OrderNo =@OrderNo;
+            var IsApproved = selectedRow.querySelector('.badge-success') ? true : false;
+            if(IsApproved === true){
+                $("#btnLoadIssueOrder").css("display", "none");
+
+                $("#btnCloseIssueOrder").removeClass("btn-default").addClass("btn-primary").text("@Html.Translate("أغلاق", "Close")");;
+
+            }  else if(IsApproved === null || IsClosed === false ){
+                $("#btnLoadIssueOrder").css("display", "inline-block");
+                $("#btnCloseIssueOrder").removeClass("btn-primary").addClass("btn-default").text("@Html.Recource(15)");;
+            }
+            var LoadIssueOrderMBody = document.getElementById("LoadIssueOrderMBody");
+            LoadIssueOrderMBody.innerHTML = "";
+            var queryString = "FormCode=" + FormCode + "&CompNo=" + CompNo + "&OrderYear=" + OrderYear + "&OrderNo=" + OrderNo + "&OrdYear=" + OrdYear + "&OrdNo=" + OrdNo;
+            if (IsApproved) {
+                queryString += "&IsApproved=true";
+            }
+            $('#LoadIssueOrderMBody').load("../../../ProductionOrdersInProgress/LoadModalRFI?" + queryString);
+            $('#ModalLoadIssueOrder').modal('show');
+            r.classList.add('selected');
+
+
+    }
+</script>

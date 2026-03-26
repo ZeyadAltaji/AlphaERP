@@ -1,0 +1,36 @@
+﻿@model int
+@{
+    IEnumerable<string> files = Directory.EnumerateFiles(Server.MapPath("~/Uploads/Tickets/" + Model + "/"));
+    string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+
+}
+
+@foreach (var fullPath in files)
+{
+    var fileName = Path.GetFileName(fullPath);
+    var hrf = "../../Uploads/Tickets/" + Model + "/" + fileName;
+    double len = new FileInfo(fullPath).Length;
+    int order = 0;
+    while (len >= 1024 && order < sizes.Length - 1)
+    {
+        order++;
+        len = len / 1024;
+    }
+    string MyImage = "../../Uploads/logo/unknown.gif";
+    string extension = new FileInfo(fullPath).Extension.Replace(".", "").ToLower();
+    if (File.Exists(Server.MapPath("~/Uploads/logo/" + extension + ".gif")))
+    {
+        MyImage = "../../Uploads/logo/" + extension + ".gif";
+    }
+
+    string result = String.Format("{0:0.##} {1}", len, sizes[order]);
+
+    <fieldset>
+        <img src="@MyImage" border="0" alt="@extension" original-title="">
+        &nbsp;&nbsp;
+        <a class="attachembed" href="@hrf" target="_blank" original-title="04-03-19, 07:16 PM">
+            @fileName
+        </a>
+        (@Resources.Resource.Size : @result)
+    </fieldset>
+}

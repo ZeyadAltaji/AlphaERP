@@ -1,0 +1,93 @@
+﻿<title>Preview @ViewBag.MRT</title>
+<script>
+    window.history.pushState(null, null, '/');
+</script>
+@{
+    TempData["CompNo"] = ViewBag.CompNo;
+    TempData["PlanYear"] = ViewBag.PlanYear;
+    TempData["PlanNo"] = ViewBag.PlanNo;
+    TempData["MRT"] = ViewBag.MRT;
+}
+@using Stimulsoft.Report.Mvc
+@Html.Stimulsoft().StiMvcViewer(new StiMvcViewerOptions()
+{
+    Theme = Stimulsoft.Report.Web.StiViewerTheme.Office2013WhiteBlue,
+    Actions =
+{
+    GetReport = "GetReport",
+    PrintReport = "PrintReport",
+    ViewerEvent = "ViewerEvent",
+    EmailReport = "EmailContract",
+    ExportReport = "ExportReport",
+
+},
+
+    Toolbar =
+    {
+        MenuAnimation = true,
+        ShowFullScreenButton = true,
+        PrintDestination=Stimulsoft.Report.Web.StiPrintDestination.Direct,
+        ViewMode=Stimulsoft.Report.Web.StiWebViewMode.Continuous,
+        ShowAboutButton = false,
+        ShowSaveButton = true,
+        ShowSendEmailButton = false,
+        ShowOpenButton = false
+    },
+    Server =
+    {
+        ShowServerErrorPage = false
+    },
+    Email =
+    {
+        DefaultEmailAddress = "",
+        DefaultEmailMessage = "Please take a look at the attached file \n يرجى الاطلاع على الملف المرفق" ,
+        DefaultEmailSubject = "RNR Escape Report",
+        ShowEmailDialog = false
+
+    },
+    Appearance =
+    {
+        FullScreenMode = true,
+        ScrollbarsMode = true,
+        ShowTooltips = false,
+        ShowTooltipsHelp = false,
+        RightToLeft = false
+    },
+    Exports =
+    {
+        ShowExportToImageMetafile  = false,
+        ShowExportToImageTiff  = false,
+        ShowExportToImagePng  = true,
+        ShowExportToImagePcx  = false,
+        ShowExportToImageJpeg  = false,
+        ShowExportToImageGif  = false,
+        ShowExportToImageBmp  = false,
+        ShowExportToSylk  = false,
+        ShowExportToDif  = false,
+        ShowExportToXml  = false,
+        ShowExportToDbf  = false,
+        ShowExportToCsv  = false,
+        ShowExportToOpenDocumentCalc  = false,
+        ShowExportToExcel2007  = true,
+        ShowExportToImageSvg  = false,
+        ShowExportToExcelXml  = false,
+        ShowExportToOpenDocumentWriter  = false,
+        ShowExportToWord2007  = true,
+        ShowExportToRtf  = false,
+        ShowExportToText  = false,
+        ShowExportToMht  = false,
+        ShowExportToHtml5  = false,
+        ShowExportToHtml  = false,
+        ShowExportToPowerPoint  = false,
+        ShowExportToXps  = false,
+        ShowExportToPdf  = true,
+        ShowExportToDocument  = false,
+        ShowExportDialog  = false,
+        StoreExportSettings  = false,
+        ShowExportToExcel  = false,
+        ShowExportToImageSvgz  = false,
+
+ }
+})
+
+

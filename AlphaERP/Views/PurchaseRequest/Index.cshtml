@@ -1,0 +1,50 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@{
+    Company company = (Company)Session["company"];
+}
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2" style="padding:0">
+                <select  id="ProdCost_PurchaseReqHF_OrderPriority" onchange="changeOrderPriorityTable(this.value)">
+                    <option value="99">@Html.Translate("الكل", "All")</option>
+                    <option value="0" selected>@Html.Translate("معلق", "Pending")</option>
+                    <option value="1">@Html.Translate("موافق عليها", "Approved")</option>
+                    <option value="5">@Html.Translate("طلب تعديل", "Edit request")</option>
+                    <option value="2">@Html.Translate("ملغاه", "Canceled")</option>
+                    <option value="-1">@Html.Translate("مرفوض", "Reject")</option>
+                    <option value="3">@Html.Translate("طلب الغاء", "Cancellation request")</option>
+                    <option value="6">@Html.Translate("طلب إرجاع من المشتريات", "Return request from purchases")</option>
+                    <option value="4">@Html.Translate("الإنتهاء من الطلب", "completed purchase order")</option>
+                    <option value="7">@Html.Translate("الإنتهاء من طلب مع ارجاع مواد", "completed purchase order with return of Items")</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="Prod_PurchaseRequestListDiv">
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        wait();
+        $('#ProdCost_PurchaseReqHF_OrderPriority').select2();
+        Prod_PurchaseRequestListDiv.innerHTML = "";
+        $('#Prod_PurchaseRequestListDiv').load('../../../PurchaseRequest/PurchaseRequestList?ReqStatus=0');
+        done();
+    });
+    
+    function changeOrderPriorityTable(e) {
+        $('#ProdCost_PurchaseReqHF_OrderPriority').val(e);
+        Prod_PurchaseRequestListDiv.innerHTML = "";
+        $('#Prod_PurchaseRequestListDiv').load('../../../PurchaseRequest/PurchaseRequestList?ReqStatus=' + e);
+    }
+</script>

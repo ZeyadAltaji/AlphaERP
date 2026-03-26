@@ -1,0 +1,361 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+
+    int TransYear = ViewBag.TransYear;
+    int TransNo = ViewBag.TransNo;
+
+    Ord_PurchOrdExpensesHF PurchOrdExpensesHF = new MDB().Ord_PurchOrdExpensesHF.Where(x => x.CompNo == company.comp_num && x.TransYear == TransYear && x.TransNo == TransNo).FirstOrDefault();
+
+    List<Ord_PurchOrdExpensesDF> PurchOrdExpensesDF = new MDB().Ord_PurchOrdExpensesDF.Where(x => x.CompNo == company.comp_num && x.TransYear == TransYear && x.TransNo == TransNo).ToList();
+
+    List<int> Deptid = new List<int>();
+    List<GLN_UsersDept> UsersDept = new MDB().GLN_UsersDept.Where(x => x.CompNo == company.comp_num && x.UserID == me.UserID && x.Permission == true).ToList();
+    Deptid = UsersDept.Select(o => o.DeptID).ToList();
+    List<GLDEPMF> GLDEPMFs = new MDB().GLDEPMFs.Where(x => x.DEP_COMP == company.comp_num && Deptid.Contains(x.DEP_NUM)).ToList();
+    int Srial = 1;
+
+    GLDEPMF GLDEPMF = new MDB().GLDEPMFs.Where(x => x.DEP_COMP == company.comp_num && x.DEP_NUM == PurchOrdExpensesHF.DeptNo).FirstOrDefault();
+    glactmf glac = new MDB().glactmfs.Where(x => x.acc_comp == company.comp_num && x.acc_num == PurchOrdExpensesHF.AccNo).FirstOrDefault();
+    List<PayCodes> Currency = new MDB().Database.SqlQuery<PayCodes>("select CurrType as Id ,CurrName as DescAr,isnull(CurrNameE,'No Desc.') as DescEn from CurrType").ToList();
+}
+
+
+<link href="~/Content/stickytooltip.css" rel="stylesheet" />
+<script src="~/Scripts/stickytooltip.js?s=15"></script>
+
+<style>
+    #vOrd_PurchaseOrdExpensesTable span.badge {
+        border: none;
+        position: static;
+        z-index: 20 !important;
+        box-sizing: content-box;
+        visibility: visible;
+        z-index: 9999999999 !important;
+        padding: 1px;
+        font-family: Arial, verdana, tahoma;
+        font-size: 13px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        text-shadow: 1px 1px 1px rgba(0,0,0,.3);
+        background: #ff3019;
+        background: -webkit-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Chrome10+,Safari5.1+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff3019), color-stop(100%, #cf0404)); /* Chrome,Safari4+ */
+        background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* FF3.6+ */
+        background: -ms-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* IE10+ */
+        background: -o-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Opera 11.10+ */
+        background: linear-gradient(to bottom, #ff3019 0%, #cf0404 100%); /* W3C */
+        width: 18px;
+        height: 18px;
+        line-height: 20px;
+        border-radius: 50%;
+        filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff3019', endColorstr='#cf0404', GradientType=0)"; /* IE6-9 */
+        filter: "progid:DXImageTransform.Microsoft.Shadow(direction=135, strength=2, color=ff0000)"; /* IE10 text shadows */
+        box-shadow: 0 2px 5px rgba(0,0,0,.4);
+    }
+</style>
+
+<style>
+    #vOrd_PurchaseOrderExpenses_DIV table th, #vOrd_PurchaseOrderExpenses_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+
+    .wrapperx {
+        padding: 0;
+        position: relative;
+        white-space: nowrap;
+    }
+
+    .wrapperxOld {
+        padding: 0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+</style>
+
+<style>
+    .modal-body{
+        max-height: 78vh !important;
+    }
+    .modal-title {
+        width: calc(100% - 120px) !important;
+        text-align: center;
+        position: absolute;
+        font-weight: bold;
+    }
+    .form-group{
+        margin-bottom: 1px !important;
+    }
+    .col-md-12{
+        margin-bottom: 3px !important;
+    }
+    hr {
+        margin-top: 3px !important;
+        margin-bottom: 5px !important;
+    }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(100vh - 210px) !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable">@Html.Recource(3259)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input type="number" id="vOrd_PurchaseOrderExpenses_TransYear_@TransNo"  value="@PurchOrdExpensesHF.TransYear" maxlength="4" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="vOrd_PurchaseOrderExpenses_TransNo_@TransNo">@Html.Recource(1871)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 125px !important;" type="text" id="vOrd_PurchaseOrderExpenses_TransNo_@TransNo" value="@PurchOrdExpensesHF.TransNo" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="vOrd_PurchaseOrderExpenses_TransDate_@TransNo">@Html.Recource(718) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important;" type="date" id="vOrd_PurchaseOrderExpenses_TransDate_@TransNo" value="@PurchOrdExpensesHF.TransDate.Value.ToString("yyyy-MM-dd")" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="vOrd_PurchaseOrderExpenses_DeptNo_@TransNo">@Html.Recource(220)</label>
+                    </div>
+                    <div class="col-md-6" style="margin-bottom: 5px;">
+                        <input required="true" style="width: 125px !important;" type="text" id="vOrd_PurchaseOrderExpenses_DeptNo_@TransNo" value="@PurchOrdExpensesHF.DeptNo.Value" disabled />
+                        <input required="false" style="width: 390px !important;" type="text" id="vOrd_PurchaseOrderExpenses_DeptName_@TransNo" value="@Html.Translate(GLDEPMF.DEP_NAME,GLDEPMF.DEP_ENAME)" disabled />
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(1671) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="vOrd_PurchaseOrderExpenses_CboCurrCode_@TransNo" disabled >
+                            @foreach (var v in Currency)
+                            {
+                                if (PurchOrdExpensesHF.CurrCode.Value == v.Id)
+                                {
+                                    <option value="@v.Id" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                                else
+                                {
+                                    <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="vOrd_PurchaseOrderExpenses_AccNo_@TransNo">@Html.Recource(524)</label>
+                    </div>
+                    <div class="col-md-6" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 125px !important;" type="text" id="vOrd_PurchaseOrderExpenses_AccNo_@TransNo" value="@PurchOrdExpensesHF.AccNo" disabled />
+                        <input required="false" style="width: 390px !important;" type="text" id="vOrd_PurchaseOrderExpenses_AccName_@TransNo" value="@Html.Translate(glac.acc_desc,glac.acc_edesc)" disabled />
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="vOrd_PurchaseOrderExpenses_ConvertRate_@TransNo">@Html.Recource(1600)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 185px !important;" type="text" id="vOrd_PurchaseOrderExpenses_ConvertRate_@TransNo" value="@PurchOrdExpensesHF.ExRate" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(773) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:88%" type="number" id="vOrd_PurchaseOrderExpenses_TotalAmount_@TransNo" value="@PurchOrdExpensesHF.TotalAmount.Value.ToString("0.000")" disabled />
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="vOrd_PurchaseOrderExpenses_TotalFrAmount_@TransNo">@Html.Recource(3807)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:88%" type="number" id="vOrd_PurchaseOrderExpenses_TotalFrAmount_@TransNo" value="@PurchOrdExpensesHF.FrAmount.Value.ToString("0.000")" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="vOrd_PurchaseOrderExpenses_Notes_@TransNo">@Html.Recource(70)</label>
+                    </div>
+                    <div class="col-md-10">
+                        <textarea required="true" style="width: 100%;height:58px !important;" id="vOrd_PurchaseOrderExpenses_Notes_@TransNo">@PurchOrdExpensesHF.Note</textarea>
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group" style="display: block; height:calc(100vh - 516px) !important;overflow-x: scroll;">
+                <div class="col-md-12 wrapperx" id="vOrd_PurchaseOrderExpenses_DIV">
+                    <table class="table table-hover vOrd_PurchaseOrdExpenses" id="vOrd_PurchaseOrderExpensesTable">
+                        <thead>
+                            <tr>
+                                <th class="first-col">@Html.Recource(3196)</th>
+                                <th class="second-col">@Html.Recource(3197)</th>
+                                <th class="third-col">@Html.Recource(5680)</th>
+                                <th class="four-col">@Html.Recource(1689)</th>
+                                <th class="four-col">@Html.Recource(1877)</th>
+                                <th>@Html.Recource(3806)</th>
+                                <th>@Html.Recource(3807)</th>
+                                <th>@Html.Recource(432)</th>
+                                <th>@Html.Recource(3807)</th>
+                                <th>@Html.Recource(7121)</th>
+                                <th>@Html.Recource(3807)</th>
+                                <th>@Html.Recource(8520)</th>
+                                <th>@Html.Recource(3807)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody style="text-align: center;" id="vOrd_PurchOrdExpensesTBody_@TransNo">
+                            @foreach (Ord_PurchOrdExpensesDF PurchOrdDF in PurchOrdExpensesDF)
+                            {
+                                Ord_LcExpCodes ExpCodes = new MDB().Ord_LcExpCodes.Where(x => x.CompNo == company.comp_num && x.ExpID == PurchOrdDF.ExpID).FirstOrDefault();
+                                <tr style="height: 25px;" TransNo="@PurchOrdDF.TransNo" id="vPOExpenses_Serial_@Srial">
+                                    <td class="first-col" style="text-align: center !important" id="vPOExpenses_OrdYear">@PurchOrdDF.OrderYear</td>
+                                    <td class="first-col" style="text-align: center !important" id="vPOExpenses_OrderNo">@PurchOrdDF.OrderNo</td>
+                                    <td class="first-col" style="text-align: center !important" id="vPOExpenses_TawreedNo">@PurchOrdDF.TawreedNo</td>
+                                    <td class="second-col" style="text-align: center !important" id="vPOExpenses_ExpID">@PurchOrdDF.ExpID</td>
+                                    <td class="third-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="vPOExpenses_ExpDesc">@Html.Translate(ExpCodes.ExpArDesc, ExpCodes.ExpEDesc)</td>
+                                    <td>
+                                        <input id="vPODF_Amount_@Srial" value="@PurchOrdDF.Amount.Value.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                    <td>
+                                        <input id="vPODF_FrAmount_@Srial" value="@PurchOrdDF.FrAmount.Value.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                    <td>
+                                        <input id="vPODF_SalesTaxAmount_@Srial" value="@PurchOrdDF.SalesTaxAmount.Value.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                    <td>
+                                        <input id="vPODF_SalesTaxAmountFr_@Srial" value="@PurchOrdDF.SalesTaxAmountFr.Value.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                    </td>
+
+                                    <td>
+                                        <input id="vPODF_IncomeTaxAmount_@Srial" value="@PurchOrdDF.IncomeTaxAmount.Value.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                    <td>
+                                        <input id="vPODF_IncomeTaxAmountFr_@Srial" value="@PurchOrdDF.IncomeTaxAmountFr.Value.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                    </td>
+
+                                    <td>
+                                        <input id="vPODF_CustomtaxAmount_@Srial" value="@PurchOrdDF.CustomtaxAmount.Value.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                    <td>
+                                        <input id="vPODF_CustomtaxAmountFr_@Srial" value="@PurchOrdDF.CustomtaxAmountFr.Value.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                    <td>
+                                        <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="vOrd_PurchaseOrderExpenses_TotalExpenses_@TransNo">@Html.Recource(4220) </label>
+                    </div>
+                    <div class="col-md-4">
+                        <input required="false" style="width:117px !important;" type="text" id="vOrd_PurchaseOrderExpenses_TotalExpenses_@TransNo" value="0" disabled />
+                        <input required="false" style="width:117px !important;" type="text" id="vOrd_PurchaseOrderExpenses_TotalExpensesFr_@TransNo" value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="vOrd_PurchaseOrderExpenses_SalesTaxAmount_@TransNo">@Html.Recource(432) </label>
+                    </div>
+                    <div class="col-md-4">
+                        <input required="false" style="width:117px !important;" type="text" id="vOrd_PurchaseOrderExpenses_SalesTaxAmount_@TransNo" value="0" disabled />
+                        <input required="false" style="width:117px !important;" type="text" id="vOrd_PurchaseOrderExpenses_SalesTaxAmountFr_@TransNo" value="0" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="vOrd_PurchaseOrderExpenses_IncomeTaxAmount_@TransNo">@Html.Recource(7121) </label>
+                    </div>
+                    <div class="col-md-4">
+                        <input required="false" style="width:117px !important;" type="text" id="vOrd_PurchaseOrderExpenses_IncomeTaxAmount_@TransNo" value="0" disabled />
+                        <input required="false" style="width:117px !important;" type="text" id="vOrd_PurchaseOrderExpenses_IncomeTaxAmountFr_@TransNo" value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="vOrd_PurchaseOrderExpenses_CustomtaxAmount_@TransNo">@Html.Recource(8520) </label>
+                    </div>
+                    <div class="col-md-4">
+                        <input required="false" style="width:117px !important;" type="text" id="vOrd_PurchaseOrderExpenses_CustomtaxAmount_@TransNo" value="0" disabled />
+                        <input required="false" style="width:117px !important;" type="text" id="vOrd_PurchaseOrderExpenses_CustomtaxAmountFr_@TransNo" value="0" disabled />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $('#vOrd_PurchaseOrderExpenses_CboCurrCode_' + @TransNo).select2();
+
+    sumTotalAll(@TransNo);
+    function sumTotalAll(Id) {
+        var table = $("#vOrd_PurchOrdExpensesTBody_" + Id);
+        var trs = table.find('tr');
+        var TotalAmount = 0;
+        var TotalAmountFr = 0;
+        var SalesTaxAmount = 0;
+        var SalesTaxAmountFr = 0;
+        var IncomeTaxAmount = 0;
+        var IncomeTaxAmountFr = 0;
+        var CustomtaxAmount = 0;
+        var CustomtaxAmountFr = 0;
+
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value
+            TotalAmount += Number($(trs[i]).closest('tr').find('#vPODF_Amount_' + InputSerial)[0].value);
+            TotalAmountFr += Number($(trs[i]).closest('tr').find('#vPODF_FrAmount_' + InputSerial)[0].value);
+            SalesTaxAmount += Number($(trs[i]).closest('tr').find('#vPODF_SalesTaxAmount_' + InputSerial)[0].value);
+            SalesTaxAmountFr += Number($(trs[i]).closest('tr').find('#vPODF_SalesTaxAmountFr_' + InputSerial)[0].value);
+            IncomeTaxAmount += Number($(trs[i]).closest('tr').find('#vPODF_IncomeTaxAmount_' + InputSerial)[0].value);
+            IncomeTaxAmountFr += Number($(trs[i]).closest('tr').find('#vPODF_IncomeTaxAmountFr_' + InputSerial)[0].value);
+            CustomtaxAmount += Number($(trs[i]).closest('tr').find('#vPODF_CustomtaxAmount_' + InputSerial)[0].value);
+            CustomtaxAmountFr += Number($(trs[i]).closest('tr').find('#vPODF_CustomtaxAmountFr_' + InputSerial)[0].value);
+        }
+
+        $('#vOrd_PurchaseOrderExpenses_TotalExpenses_' + Id).val(Number(TotalAmount).toFixed(3));
+        $('#vOrd_PurchaseOrderExpenses_TotalExpensesFr_' + Id).val(Number(TotalAmountFr).toFixed(3));
+        $('#vOrd_PurchaseOrderExpenses_SalesTaxAmount_' + Id).val(Number(SalesTaxAmount).toFixed(3));
+        $('#vOrd_PurchaseOrderExpenses_SalesTaxAmountFr_' + Id).val(Number(SalesTaxAmountFr).toFixed(3));
+        $('#vOrd_PurchaseOrderExpenses_IncomeTaxAmount_' + Id).val(Number(IncomeTaxAmount).toFixed(3));
+        $('#vOrd_PurchaseOrderExpenses_IncomeTaxAmountFr_' + Id).val(Number(IncomeTaxAmountFr).toFixed(3));
+        $('#vOrd_PurchaseOrderExpenses_CustomtaxAmount_' + Id).val(Number(CustomtaxAmount).toFixed(3));
+        $('#vOrd_PurchaseOrderExpenses_CustomtaxAmountFr_' + Id).val(Number(CustomtaxAmountFr).toFixed(3));
+    }
+</script>

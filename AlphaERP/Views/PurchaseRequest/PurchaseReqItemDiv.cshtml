@@ -1,0 +1,77 @@
+﻿@using AlphaERP.Models;
+@{ 
+    Company company = (Company)Session["company"];
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+}
+
+<div class="col-md-12">
+    <label class="unselectable">@Html.Recource(4756) :</label>
+    <button onclick="Add_InvItemsMF(1)" type="button" class="btn btn-default">@Html.Recource(4756)</button>
+</div>
+<div class="col-md-12" style="height:calc(100vh - 480px) !important;overflow-y:auto">
+    <table class="table table-hover" id="PurchaseReqItemTable">
+        <thead>
+            <tr>
+                <th style="width: 10%; text-align: center !important;">@Html.Recource(44)</th>
+                <th style="width: 35%; text-align: center !important;">@Html.Recource(74)</th>
+                <th style="text-align: center !important;">@Html.Recource(67)</th>
+                <th style="width: 90px !important; text-align: center !important;">@Html.Recource(3773)</th>
+                <th style="width: 90px !important; text-align: center !important;">@Html.Recource(5432)</th>
+                <th style="width: 90px !important; text-align: center !important;">@Html.Recource(3273)</th>
+                @if (CActive.ClientNo == 335)
+                {
+                    <th style="text-align: center !important;">@Html.Recource(5693)</th>
+                }
+                else
+                {
+                    <th style="text-align: center !important;">@Html.Recource(49)</th>
+                }
+                @if (compMF.UseQty2 == true)
+                {
+                    if (CActive.ClientNo == 335)
+                    {
+                        <th style="text-align: center !important;">@Html.Recource(442)</th>
+                    }
+                    else
+                    {
+                        <th style="text-align: center !important;">@Html.Recource(72)</th>
+                    }
+                }
+                else
+                {
+                    <th hidden>@Html.Recource(72)</th>
+                }
+                <th style="text-align: center !important;">@Html.Translate("السعر المبدئي", "Budgetary Price")</th>
+                <th style="text-align: center !important;">@Html.Recource(68)</th>
+                <th style="text-align: center !important;">@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</th>
+                <th style="text-align: center !important;">@Html.Recource(70)</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tfoot>
+            <tr>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+                @if (compMF.UseQty2 == true)
+                {
+                    <th style="text-align: center !important;"></th>
+                }
+                else
+                {
+                    <th hidden></th>
+                }
+                <th style="text-align: center !important;">Total</th>
+                <th style="text-align: center !important;" id="TotalAll">0</th>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+            </tr>
+        </tfoot>
+        <tbody id="PurchaseReqItemKasihTBody"></tbody>
+    </table>
+</div>

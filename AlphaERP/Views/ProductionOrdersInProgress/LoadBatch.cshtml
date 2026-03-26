@@ -1,0 +1,53 @@
+﻿@using AlphaERP.Models;
+@using System.Data
+@model System.Data.DataSet
+<style>
+    #Batchtable .batch-row .td{
+        height:37px
+    }
+</style>
+<div class="form-group">
+    <div class="col-md-12">
+        <table class="table table-hover" id="Batchtable">
+            <thead>
+                <tr>
+                    <th style="text-align:center;">@Html.Translate("رمز الحزمة", "Batch No")</th>
+                    <th style="text-align:center;">@Html.Translate("تاريخ الصنع", "Man Date")</th>
+                    <th style="text-align:center;">@Html.Translate("انتهاء الصلاحية", "Exp Date")</th>
+                    <th style="text-align:center;">@Html.Translate("كمية متوفرة", "QtyOH")</th> 
+                    <th style="text-align:center;">@Html.Translate("كلفة الوحدة", "Unit Cost")</th>
+                    <th style="text-align:center;">@Html.Translate("المرجع", "refno")</th>                    
+                    <th style="text-align:center;">@Html.Translate("موقوف", "ishalt")</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (DataRow Datarow in Model.Tables["LoadBatch"].Rows)
+                {
+
+
+                    <tr class="batch-row" onclick="SelectBatch(this)" ondblclick="SelectingSelectBatch(this)" BatchNo="@Datarow["BatchNo"]">
+                        <td style="text-align:center;">@Datarow["BatchNo"]</td>
+                        <td style="text-align:center;">@Datarow["ManDate"]</td>
+                        <td style="text-align:center;">@Datarow["ExpDate"]</td>
+                        <td style="text-align:center;">@Datarow["QtyOH"]</td>
+                        <td style="text-align:center;">@Datarow["unitcost"]</td>
+                        <td style="text-align:center;">@Datarow["refno"]</td>
+                        <td style="text-align:center;">@Datarow["ishalt"]</td>
+                        <td></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    var Batchtable = $('#Batchtable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+</script>

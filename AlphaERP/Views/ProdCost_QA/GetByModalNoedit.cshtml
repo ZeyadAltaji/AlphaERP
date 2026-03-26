@@ -1,0 +1,453 @@
+﻿
+@using AlphaERP.Models
+@{
+    User me = (User)Session["me"];
+}
+
+
+<div class="modal-dialog">
+    <form class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+            <label class="modal-title">@Html.Translate("التعديل", "Edit")</label>
+        </div>
+        <div class="modal-body row">
+              
+            <table class="table " style="width:100%">
+                <thead>
+                    <tr>
+                        <th>@Html.Translate("تسلسل", "Ser")</th>
+                        <th>@Html.Translate("عنصر", "Item")</th>
+                        <th>@Html.Translate("صانع", "Maker") </th>
+                        <th>@Html.Translate("قراءة القيمة", "Value Reading") </th>
+                        <th></th>
+                        <th> @Html.Translate("المدقق", "Checker")</th>
+                        <th>@Html.Translate("قراءة القيمة", "Value Reading") </th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="EevetBodyEdit"></tbody>
+            </table>
+
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary btn-Save-edit">@Html.Translate("حفظ", "Save")</button>
+        </div>
+    </form>
+</div>
+<style>
+    .PostMaker {
+        color: black;
+    }
+
+    .PostChecker {
+        color: black;
+    }
+
+    #addValueDiv {
+        text-align: end;
+    }
+</style>
+<script>
+
+    // Modal Event Function /////////////////
+    function ShowEditListEvent(dataevent, reqNo, qaProcNo, eventSerial, AddMoodEdit, eventSerial) {
+
+        // Function to handle AJAX request for saving changes
+
+        var eventBody = $("#EevetBodyEdit");
+        eventBody.empty();
+
+        $.each(dataevent, function (index, item) {
+            var mPostStatIsNull = item.MPostStat === null;
+            var CPostStatIsNull = item.CPostStat === null;
+
+
+
+            if ((item.MakerValue === 1 || item.MakerValue === 0) || (item.CheckerValue === 1 || item.CheckerValue === 0)||
+                (item.MakerValue === null || item.MakerValue === null) || (item.CheckerValue === null || item.CheckerValue === null)) {
+                var row = $("<tr>");
+                row.attr('data-qa-procno', item.Proc_SubNo);
+                row.attr('data-qa-eventserial', item.Eventserial);
+                row.attr('data-qa-procnoo', item.QA_ProcNo);
+
+                row.append($("<td>").text(item.Proc_SubNo));
+                row.append($("<td>").text(item.Description));
+                var QAProcNo = item.QA_ProcNo;
+                // Select Maker
+                var select1 = $("<select name='MakerValue'>")
+                    .append($("<option>").text("Select").prop("disabled", true).prop("selected", item.MakerValue === null))
+                    .append($("<option>").text("Yes").prop("selected", item.MakerValue === 1))
+                    .append($("<option>").text("No").prop("selected", item.MakerValue === 0));
+            
+                row.append($("<td>").append(select1));
+                var MakerReadValue = item.MakerReadValue !== null ? item.MakerReadValue : "";
+
+                var MakerRead = $("<input  type='text' id='MakerRead'   value='" + MakerReadValue + "'/>");
+                row.append($("<td>").append(MakerRead));
+                if (!mPostStatIsNull) {
+                    select1.prop("disabled", true);
+                    MakerRead.prop("disabled", true);
+                }
+                // Btn Maker
+                var btnMaker = $("<button type='button' class='btn btn-dark PostMaker' value='" + item.Proc_SubNo + "'>Post</button>");
+
+                btnMaker.click(function () {
+                    var procSubNo = $(this).val();
+                    var makerValue = select1.val();
+                    var makerReadValue = MakerRead.val();
+                    if (makerValue !== null) {
+
+                        var postData = {
+                            MakerValue: makerValue === 'Yes' ? 1 : 0,
+                            MPostStat: makerValue,
+                            Proc_SubNo: item.Proc_SubNo,
+                            MainReqNo: reqNo,
+                            Eventserial: eventSerial,
+                            Proc_MainNo: item.QA_ProcNo,
+                            makerReadValue:makerReadValue
+                        };
+
+                         $.ajax({
+                            url: "/ProdCost_QA/editMaker",
+                            type: "POST",
+                            data: postData,
+                            dataType: "json",
+                            success: function (response) {
+                                 setInterval(function () {
+                                    $.ajax({
+                                        url: "/ProdCost_QA/GetByMainReqNoandProcSubNo",
+                                        type: "GET",
+                                        dataType: "json",
+                                        data: {
+
+                                            MainReqNo: reqNo,
+                                            Proc_SubNo: item.Proc_SubNo,
+                                            Eventserial: eventSerial
+                                        }, success: function (data) {
+                                            select1.val(data[0].MakerValue === 1 ? 'Yes' : 'No');
+                                            btnMaker.val(data[0].Proc_SubNo);
+                                            MakerRead.val(data[0].MakerReadValue);
+                                            btnMaker.prop("disabled", true);
+                                            select1.prop("disabled", true);
+                                            MakerRead.prop("disabled", true);
+
+                                        }
+                                    });
+                                }, 50);
+
+                             }
+
+
+                        });
+                    } else {
+
+                    }
+
+                });
+                row.append($("<td>").append(btnMaker));
+
+                // Select Checker
+                var select2 = $("<select name='CheckerValue'>")
+                    .append($("<option>").text("Select").attr("disabled", "disabled").attr("selected", item.CheckerValue === null))
+                    .append($("<option>").text("Yes").attr("selected", item.CheckerValue === 1))
+                    .append($("<option>").text("No").attr("selected", item.CheckerValue === 0));
+
+                row.append($("<td>").append(select2));
+                var CheckerReadValue = item.CheckerReadValue !== null ? item.CheckerReadValue : "";
+                var CheckerRead = $("<input type='text' id='CheckerRead'  value='" + CheckerReadValue + "'/>");
+                row.append($("<td>").append(CheckerRead));
+                // Btn Checker
+                var btnChecker = $("<button type='button' class='btn btn-dark PostChecker' value='" + item.Proc_SubNo + "'>Post</button>");
+                 // Check if MakerValue contains only 0 and 1 values, then enable select Checker
+
+
+                if (item.MakerValue !== null) {
+
+                    if (item.MakerValue === 1 || item.MakerValue === 0) {
+                        // Maker contains only 'Yes' or 'No', so disable Maker and enable Checker
+                        btnMaker.prop("disabled", false);
+                        select1.prop("disabled", false);
+                        MakerRead.prop("disabled", false);
+                        select2.prop("disabled", false);
+                        btnChecker.prop("disabled", false);
+                        CheckerRead.prop("disabled", false);
+
+
+                        // Check if the current user is the one who entered MakerValue
+                        if (item.MUser === '@(me.UserID)' && (item.MakerValue === 1 || item.MakerValue === 0)) {
+                            select2.prop("disabled", true); // Disable Checker for other users
+                            btnChecker.prop("disabled", true);
+                            CheckerRead.prop("disabled", true);
+
+                        } else {
+                            select2.prop("disabled", false); // Enable Checker for other users
+                            btnChecker.prop("disabled", false);
+                            CheckerRead.prop("disabled", false);
+                        }
+                    } else {
+                        // MakerValue is not 0 or 1, disable the Checker
+                        btnChecker.prop("disabled", true);
+                        select2.prop("disabled", true);
+                        CheckerRead.prop("disabled", true);
+
+                    }
+                } else {
+                    // MakerValue is null, enable Maker and disable Checker
+                    btnMaker.prop("disabled", false);
+                    select1.prop("disabled", false);
+                    MakerRead.prop("disabled", false);
+                    btnChecker.prop("disabled", true);
+                    select2.prop("disabled", true);
+                    CheckerRead.prop("disabled", true);
+
+                }
+
+                // Disable Checker if both Maker and Checker are either "Yes" or "No"
+                if (item.MPostStat === true || item.MPostStat == false) {
+
+                        if (
+                          (item.MakerValue === 1 || item.MakerValue === 0) &&
+                           (item.CPostStat === true || item.CPostStat === false)
+
+                        ) {
+                        select1.prop("disabled", true);
+                        btnMaker.prop("disabled", true);
+                        MakerRead.prop("disabled", true);
+                        select2.prop("disabled", true);
+                        btnChecker.prop("disabled", true);
+                        CheckerRead.prop("disabled", true);
+
+                    }
+                    if (item.MPostStat !== null) {
+                        select1.prop("disabled", true);
+                        btnMaker.prop("disabled", true);
+                        MakerRead.prop("disabled", true);
+
+                    } else {
+                        select2.prop("disabled", false);
+                        btnChecker.prop("disabled", false);
+                        CheckerRead.prop("disabled", false);
+
+                    }
+                } else if (item.MPostStat === null) {
+                    select2.prop("disabled", true);
+                    CheckerRead.prop("disabled", true);
+
+                } else {
+
+                }
+
+
+                btnChecker.click(function () {
+                     var procSubNo = $(this).val();
+                     var checkerValue = select2.val(); // Get the selected CheckerValue (1 for Yes, 0 for No)
+                     var CheckerReadValue = CheckerRead.val();
+
+                     if (checkerValue !== null) {
+
+                         var postData = {
+                             CheckerValue: checkerValue === 'Yes' ? 1 : 0,
+                             MainReqNo: reqNo,
+                             Proc_SubNo: item.Proc_SubNo,
+                             Eventserial: eventSerial,
+                             Proc_MainNo: item.QA_ProcNo,
+                             CheckerReadValue:CheckerReadValue
+                         };
+                         $.ajax({
+                             url: "/ProdCost_QA/insertChecker",
+                             type: "POST",
+                             data: postData,
+                             dataType: "json",
+                             success: function (response) {
+                                      $.ajax({
+                                         url: "/ProdCost_QA/GetByMainReqNoandProcSubNo",
+                                         type: "GET",
+                                         dataType: "json",
+                                         data: {
+
+                                             MainReqNo: reqNo,
+                                             Proc_SubNo: item.Proc_SubNo,
+                                             Eventserial: eventSerial
+                                         }, success: function (data) {
+                                             select2.val(data[0].CheckerValue === 1 ? 'Yes' : 'No');
+                                             btnChecker.val(data[0].Proc_SubNo);
+                                             CheckerRead.val(data[0].CheckerReadValue);
+                                             btnChecker.prop("disabled", true);
+                                             select2.prop("disabled", true);
+                                             CheckerRead.prop("disabled", true);
+                                         }
+                                     });
+
+                              }
+
+                         });
+                     } else {
+
+                     }
+                 });
+
+                row.append($("<td>").append(btnChecker));
+                row.append($("<td>"));
+                eventBody.append(row);
+            }
+        });
+        $(".btn-Save-edit").off("click");
+        $(".btn-Save-edit").click(function () {
+            debugger;
+            var that = this;
+            var postDataList = [];
+            var allValuesNotNull = true;
+
+            // Loop through all rows in the table
+            $("#EevetBodyEdit tr").each(function () {
+                debugger;
+
+                 var rowData = {};
+                var rowChanged = false;
+
+                rowData.Proc_SubNo = $(this).data("qa-procno");
+                //rowData.Eventserial = $(this).data("qa-eventserial");
+                rowData.QA_ProcNo = $(this).data("qa-procnoo");
+
+                Eventserial = eventSerial;
+                Proc_SubNo = rowData.Proc_SubNo;
+                QA_ProcNo = rowData.QA_ProcNo;
+                MainReqNo = rowData.MainReqNo;
+
+                // Get MakerReadValue and CheckerReadValue
+                var makerReadValue = $(this).find("#MakerRead").val();
+                var checkerReadValue = $(this).find("#CheckerRead").val();
+                // Check if both MakerReadValue and CheckerReadValue are not empty before adding them to rowData
+
+                if (makerReadValue !== null && makerReadValue !== "" && checkerReadValue !== null && checkerReadValue !== "") {
+                    rowData.MakerReadValue = makerReadValue;
+                    rowData.CheckerReadValue = checkerReadValue;
+                } else if (makerReadValue !== null && makerReadValue !== "") {
+                    rowData.MakerReadValue = makerReadValue;
+                } else if (checkerReadValue !== null && checkerReadValue !== "") {
+                    rowData.CheckerReadValue = checkerReadValue;
+                }
+                // Get Maker value
+                var makerValue = $(this).find("select[name='MakerValue']").val();
+                var originalMakerValue = dataevent.find(item => item.Proc_SubNo === rowData.Proc_SubNo).MakerValue;
+                if (makerValue !== originalMakerValue) {
+                    rowChanged = true;
+                    if (makerValue === "Yes") {
+                        rowData.MakerValue = 1;
+                    } else if (makerValue === "No") {
+                        rowData.MakerValue = 0;
+                    } else {
+                        rowData.MakerValue = null;
+                    }
+                }
+                // Get Checker value
+                var checkerValue = $(this).find("select[name='CheckerValue']").val();
+                var originalCheckerValue = dataevent.find(item => item.Proc_SubNo === rowData.Proc_SubNo).CheckerValue;
+                if (checkerValue !== originalCheckerValue) {
+                    rowChanged = true;
+                    if (checkerValue === "Yes") {
+                        rowData.CheckerValue = 1;
+                    } else if (checkerValue === "No") {
+                        rowData.CheckerValue = 0;
+                    } else {
+                        rowData.CheckerValue = null;
+                    }
+                }
+                if (rowChanged) {
+                    if (rowData.MakerValue !== null || rowData.CheckerValue !== null || (rowData.MakerReadValue !== null && rowData.MakerReadValue !== "") || (rowData.CheckerReadValue !== null && rowData.CheckerReadValue !== "")) {
+
+                        postDataList.push(rowData);
+                    }
+                }
+                var mPostStat = dataevent.find(item => item.Proc_SubNo === rowData.Proc_SubNo).MPostStat;
+                var CPostStat = dataevent.find(item => item.Proc_SubNo === rowData.Proc_SubNo).CPostStat;
+                if (mPostStat === null || CPostStat === null) {
+                    allValuesNotNull = false;
+                }
+
+            });
+           if (allValuesNotNull) {
+                if (postDataList.length > 0) {
+                    $.ajax({
+                        url: "/ProdCost_QA/SaveChangesedit",
+                        type: "POST",
+                        dataType: "json",
+                        contentType: "application/json",
+                        data: JSON.stringify({
+                            eventDataList: postDataList,
+                            MainReqNo: reqNo,
+                            Eventserial: eventSerial,
+                            Proc_SubNo: Proc_SubNo,
+                            Proc_MainNo: QA_ProcNo
+
+                        }),
+                        success: function (response) {
+                            if (response.success) {
+                                $('#table').load("../../../ProdCost_QA/LoadListEventsummary?reqNo=" + reqNo + "&QA_ProcNo=" + QA_ProcNo);
+
+                            } else {
+                                console.error("Error edit event data: " + response.message);
+                            }
+                        }
+                    });
+                } else {
+                    console.log("No changes to save.");
+                }
+
+            } else {
+                if (postDataList.length > 0) {
+
+                    saveChanges(postDataList, eventSerial, Proc_SubNo, QA_ProcNo);
+                } else {
+                    console.log("No changes to save.");
+                }
+            }
+            $(that).off("click");
+        });
+         function saveChanges(postDataList, Eventserial, Proc_SubNo, QA_ProcNo) {
+            if (postDataList.length > 0) {
+                //Ajax 1
+                $.ajax({
+                    url: "/ProdCost_QA/SaveChangesedit",
+                    type: "POST",
+                    dataType: "json",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        eventDataList: postDataList,
+                        MainReqNo: reqNo,
+                        Eventserial: eventSerial,
+                        Proc_SubNo: Proc_SubNo,
+                        Proc_MainNo: QA_ProcNo
+
+                    }),
+                    success: function (response) {
+                        if (response.success) {
+                            $('#table').load("../../../ProdCost_QA/LoadListEventsummary?reqNo=" + reqNo + "&QA_ProcNo=" + QA_ProcNo);
+                            MsgBox('@Html.Recource(475)', 'green');
+                            $('#ProdCost_QAEventEditModal').modal('hide');
+
+                        }
+                    }
+                });
+            } else {
+                console.log("No data to save as both MakerValue and CheckerValue are null.");
+            }
+
+        }
+        function callControllerAction(reqNo, QA_ProcNo) {
+            debugger;
+            $.ajax({
+                url: "/ProdCost_QA/LoadListEventsummary",
+                type: "GET",
+                dataType: "json",
+                data: { reqNo: reqNo, QA_ProcNo: QA_ProcNo },
+                success: function (response) {
+                 }
+            });
+        }
+    }
+
+</script>

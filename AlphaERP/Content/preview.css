@@ -1,0 +1,16 @@
+
+	*{
+	background-color:#fff !important;
+	background:#fff !important;
+	}
+	*{
+	font-family:sans-serif !important;
+	}
+	td{
+		text-align:center;
+	}
+table > tbody > tr:first-child > td {
+    vertical-align: middle;
+	padding:5px;
+	font-weight:bold;
+}

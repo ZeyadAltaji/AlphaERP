@@ -1,0 +1,44 @@
+﻿
+@model List<AlphaERP.Models.ViewRawMateria>
+
+<table id="LoadViewRawMateriaTB" class="LoadViewRawMateriaTB table dataTable table table-hover">
+    <thead>
+        <tr>
+            <th></th>
+            <th>@Html.Translate("رمز المادة", "ItemNo")</th>
+            <th>@Html.Translate("وصف المادة", "ItemDesc")</th>
+            <th>@Html.Translate("الوحدة", "UnitName")</th>
+            <th>@Html.Translate("اخر كلفة", "LastRecCost")</th>
+            <th>@Html.Translate("الكمية المصروفة", "issuedQty")</th>
+            <th>@Html.Translate("الكمية المعياريه", "StdQty")</th>
+            <th>@Html.Translate("الكمية المتباينة", "QtyVar")</th>
+            <th>@Html.Translate("كلفة الصرف", "IssueCost")</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var Dr in Model)
+            {
+            <tr>
+                <td></td>
+                <td>@Dr.ItemNo</td>
+                <td>@Html.Translate(Dr.ItemDesc_Ara, Dr.ItemDesc)</td>
+                <td>@Dr.UnitName</td>
+                <td>@Dr.lastreccost</td>
+                <td>@Dr.issuedQty</td>
+                <td>@Dr.stdqty</td>
+                <td>@Dr.qtyvar</td>
+                <td>@Dr.IssueCost</td>
+                <td></td>
+            </tr>
+        }
+
+    </tbody>
+
+</table>
+<script>
+    
+ 
+   
+
+</script>

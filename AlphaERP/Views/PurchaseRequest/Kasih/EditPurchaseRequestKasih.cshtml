@@ -1,0 +1,769 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    string ReqNo = ViewBag.ReqNo;
+    int ReqYear = ViewBag.ReqYear;
+    Company company = (Company)Session["company"];
+    List<BusunisUnit> BU = ViewBag.BusunisUnit;
+    Ord_RequestHF OrdRequestHF = new MDB().Ord_RequestHF.Where(x => x.CompNo == company.comp_num && x.ReqYear == ReqYear && x.ReqNo == ReqNo).FirstOrDefault();
+    List<Ord_RequestDF> OrdRequestDF = new MDB().Ord_RequestDF.Where(x => x.CompNo == company.comp_num && x.ReqYear == ReqYear && x.ReqNo == ReqNo).ToList();
+    string RBBDesc = BU.Where(x => x.Id == OrdRequestHF.ReqBU).Select(O => Html.Translate(O.DescAr, O.DescEn)).FirstOrDefault().ToString();
+    string ABBDesc = BU.Where(x => x.Id == OrdRequestHF.AuthBU).Select(O => Html.Translate(O.DescAr, O.DescEn)).FirstOrDefault().ToString();
+    List<InvItemsMF> Mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+
+    List<PayCodes> Currency = ViewBag.Currency;
+    List<PayCodes> PrdType = ViewBag.PrdType;
+    List<PayCodes> Purpose = ViewBag.Purpose;
+
+    DataTable Dt = new DataTable();
+    int Srial = 1;
+    double LastRecCost = 0;
+    double QtyOH = 0;
+    double ResQty = 0;
+    double QtyInOrder = 0;
+    var Count = 1;
+
+    DataTable DtAttachment = new DataTable();
+    DtAttachment = ViewBag.Arch;
+
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+}
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(100vh - 210px) !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="ProdCost_PurchaseReqHF_Edit_ReqDate">@Html.Recource(58) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 125px !important;" type="date" id="ProdCost_PurchaseReqHF_Edit_ReqDate" value="@OrdRequestHF.ReqDate.Value.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="ProdCost_PurchaseReqHF_Edit_ReqDeliveryDate">@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 125px !important;" type="date" id="ProdCost_PurchaseReqHF_Edit_ReqDeliveryDate" value="@OrdRequestHF.ReqDeliveryDate.Value.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="ProdCost_PurchaseReqHF_Edit_RefNo">@Html.Recource(96) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important; " type="text" id="ProdCost_PurchaseReqHF_Edit_RefNo" value="@OrdRequestHF.RefNo" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(9700) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="ProdCost_PurchaseReqHF_Edit_CboReqBU">
+                            @Html.MyBusinessUnits()
+                        </select>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(9701) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="ProdCost_PurchaseReqHF_Edit_CboAuthBU">
+                            @Html.MyBusinessUnits()
+                        </select>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3242) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="ProdCost_PurchaseReqHF_Edit_CboPurpose">
+                            @foreach (var v in Purpose)
+                            {
+                                if (v.Id == OrdRequestHF.Purpose.Value)
+                                {
+                                    <option value="@v.Id" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                                else
+                                {
+                                    <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(9704) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="ProdCost_PurchaseReqHF_Edit_CboOrderPriority">
+                            @if (OrdRequestHF.OrderPriority == 0)
+                            {
+                                <option value="0" selected>@Html.Translate("عادي", "Normal")</option>
+                            }
+                            else
+                            {
+                                <option value="0">@Html.Translate("عادي", "Normal")</option>
+                            }
+                            @if (OrdRequestHF.OrderPriority == 1)
+                            {
+                                <option value="1" selected>@Html.Translate("متوسط", "Medium")</option>
+                            }
+                            else
+                            {
+                                <option value="1">@Html.Translate("متوسط", "Medium")</option>
+                            }
+                            @if (OrdRequestHF.OrderPriority == 2)
+                            {
+                                <option value="2" selected>@Html.Translate("عاجل", "Urgently")</option>
+                            }
+                            else
+                            {
+                                <option value="2">@Html.Translate("عاجل", "Urgently")</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(1671) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="ProdCost_PurchaseReqHF_Edit_CboCurrCode">
+                            @foreach (var v in Currency)
+                            {
+                                if (v.Id == OrdRequestHF.CurrNo.Value)
+                                {
+                                    <option value="@v.Id" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                                else
+                                {
+                                    <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3265) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="ProdCost_PurchaseReqHF_Edit_CboOrderType" disabled>
+                            @foreach (var v in PrdType)
+                            {
+                                if (v.sys_minor == OrdRequestHF.OrderType.Value.ToString())
+                                {
+                                    <option value="@v.sys_minor" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                                else
+                                {
+                                    <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="ProdCost_PurchaseReqHF_Edit_ReqNotes">@Html.Recource(70)</label>
+                    </div>
+                    <div class="col-md-8">
+                        <textarea required="true" style="width: 100%;height:75px !important;" id="ProdCost_PurchaseReqHF_Edit_ReqNotes">@OrdRequestHF.Note</textarea>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary btn-block" onclick="Edit_OrdPRDocuments()">
+                            @Html.Recource(7744)
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    @if (OrdRequestHF.OrderType.Value == 1)
+                    {
+                        @Html.Partial("~/Views/PurchaseRequest/ePurchaseReqItemDiv.cshtml", OrdRequestDF);
+                    }
+                    else
+                    {
+                        @Html.Partial("~/Views/PurchaseRequest/Kasih/ePurchaseReqItemDivKasih.cshtml", OrdRequestDF);
+                    }
+                </div>
+                
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="ExcuteEditProd_PurchaseRequest()" class="btn btn-primary">@Resources.Resource.Save</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade wide" id="Model_eInvItemsMF">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4756)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="eSelectPurchaseReqItemTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(44)</th>
+                                    <th style="width: 55%;">@Html.Recource(74)</th>
+                                    <th style="width: 10%;">@Html.Recource(96)</th>
+                                    <th style="text-align: center;">@Html.Recource(312)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    int Comp_num = company.comp_num;
+                                    string query = string.Format("exec SP_Search {0},'WHERE (CompNo = {0}) AND (IsHalt = 0)',7", Comp_num);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                string ItemDesc = rdr["ItemDesc"].ToString();
+                                                string ItemDescEn = rdr["ItemDesc_Ara"].ToString();
+                                                string Desc = Html.Translate(ItemDesc, ItemDescEn).ToString();
+                                                <tr onclick="$(this).toggleClass('selected');" ondblclick="eGetItemNo($(this).toggleClass('selected'))">
+                                                    <td style="width: 20%;" id="ItemNo">@rdr["ItemNo"]</td>
+                                                    <td style="width: 55%;" id="ItemDesca" title="@Html.Translate(ItemDesc, ItemDescEn)">@Html.Translate(ItemDesc, ItemDescEn)</td>
+                                                    <td style="width: 10%;text-align: center;">@rdr["RefrenceNo"]</td>
+                                                    <td style="text-align: center !important;">@rdr["BarCode"]</td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="eSelectingItemMaterial_InvItemsMF()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+@*-----------------------------Model Documents-------------------------------------*@
+<div class="modal fade" id="Model_ePR_DocumentsArchive">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أرشفة الوثائق", "Archive Documents")</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <button onclick="ePR_DocumentsArchive()" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="ePR_DocumentArchiveTable">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(66)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5628)</th>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(5629)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5630)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5631)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5632)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5633)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="eOrdPR_DocumentArchiveTbody" style="border-top: 1px solid #ddd;">
+                                @foreach (DataRow row in DtAttachment.Rows)
+                                {
+                                    DateTime date = Convert.ToDateTime(row["DataUpload"].ToString());
+                                    <tr id="EditOrdPRDocumentArchive_@Count">
+                                        <td>
+                                            <input id="OrdPR_EditDocumentArchive_FileId" type="hidden" value="@Count" />
+                                        </td>
+                                        <td>
+                                            <input type="text" style="width: 115px !important; text-align: center !important" id="OrdPR_EditDocumentArchive_Description_@Count" value="@row["Description"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <div class="image-upload"><label for="file-input"><span class="glyphicon glyphicon-upload" onclick="OpenFileUpload(this)"></span></label><input type="file" name="uploadFile_7" style="display:none" id="OrdPR_EditDocumentArchive_File_@Count" onchange="uploadFile(this,@Count)" /></div>
+                                        </td>
+                                        <td></td>
+                                        <td>
+                                            <a id="OrdPR_AddDownloadFile_@Count" onclick="DownloadFile('@row["FileName"].ToString()','@Convert.ToBase64String((byte[])row["ArchiveData"])')"><span class="glyphicon glyphicon-download"></span></a>
+                                        </td>
+                                        <td>
+                                            <input id="OrdPR_EditAttachmentFiles_FileName_@Count" type="text" style="text-align: center !important" value="@row["FileName"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="OrdPR_EditDocumentArchive_UploadDate_@Count" type="text" style="width: 95px; text-align: center !important" value="@date.ToShortDateString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="OrdPR_EditDocumentArchive_FileSize_@Count" type="text" style="width: 70px; text-align: center !important" value="@row["FileSize"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="OrdPR_EditDocumentArchive_FileType_@Count" type="text" style="width: 55px; text-align: center !important" value="@row["ContentType"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <button class="btn-de" onclick="RemoveRowUpload(this,@Count)" type="button"><i class="fa fa-trash-alt"></i></button>
+                                            <input type="hidden" id="InputSerial" value="@(Count++)" />
+                                        </td>
+                                    </tr>
+                                }
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="EditOrdPRDocumentArchive()" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    function Edit_OrdPRDocuments() {
+        $('#Model_ePR_DocumentsArchive').draggable({
+            handle: ".modal-header",
+        });
+        $('#Model_ePR_DocumentsArchive').modal('show');
+
+        var table = $("#eOrdPR_DocumentArchiveTbody");
+        var trs = table.find('tr');
+        Count = trs.length;
+    }
+    function ePR_DocumentsArchive() {
+        var table = $("#eOrdPR_DocumentArchiveTbody");
+        Count++;
+        var newarray = [];
+        newarray.push('<input id="OrdPR_EditDocumentArchive_FileId" type="hidden" value="' + Count + '" />')
+        newarray.push('<input id="OrdPR_EditDocumentArchive_Description_' + Count + '" type="text" style="width: 115px !important;text-align: center !important" />')
+        newarray.push('<div class="image-upload"><label for="file-input"><span class="glyphicon glyphicon-upload" onclick="OpenFileUpload(this)"></span></label><input type="file" name="uploadFile_7" style="display:none" id="OrdPR_EditDocumentArchive_File_' + Count + '" onchange="uploadFile(this,' + Count + ')" /></div>')
+        newarray.push('')
+        newarray.push('<a id="OrdPR_AddDownloadFile_' + Count + '" onclick="DownloadFile()"><span class="glyphicon glyphicon-download"></span></a>')
+        newarray.push('<input id="OrdPR_EditAttachmentFiles_FileName_' + Count + '" type="text" style="text-align: center !important" disabled />')
+        newarray.push('<input id="OrdPR_EditDocumentArchive_UploadDate_' + Count + '" type="text" style="width: 95px;text-align: center !important" disabled />')
+        newarray.push('<input id="OrdPR_EditDocumentArchive_FileSize_' + Count + '" type="text" style="width: 70px;text-align: center !important" disabled />')
+        newarray.push('<input id="OrdPR_EditDocumentArchive_FileType_' + Count + '" type="text" style="width: 55px;text-align: center !important" disabled />')
+        newarray.push('<button class="btn-de" onclick="RemoveRowUpload(this,' + Count + ')" type="button"><i class= "fa fa-trash-alt"></i ></button>')
+        $(table).append(
+            GenRowDocumentArchive(newarray, 'EditOrdPRDocumentArchive_' + Count)
+        );
+    }
+    function GenRowDocumentArchive(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function OpenFileUpload(ID) {
+        var $td = $(ID).closest("td");
+        $($td).find("input[type=file]").click();
+    }
+    function uploadFile(Elem, Count) {
+        var uploadDate = new Date($.now());
+        var shortDate = moment(uploadDate).format('DD/MM/YYYY');
+        var InputID = $(Elem).attr("id");
+        var file_size = $(Elem)[0].files[0].size;
+
+        var table = $("#eOrdPR_DocumentArchiveTbody");
+        var tr = table.find('#EditOrdPRDocumentArchive_' + Count);
+
+        var fileName = tr.find("#OrdPR_EditDocumentArchive_File_" + Count).val().replace(/C:\\fakepath\\/i, '');
+        var filetype = fileName.split('.').pop();
+
+        tr.find('#OrdPR_EditAttachmentFiles_FileName_' + Count)[0].value = fileName;
+        tr.find('#OrdPR_EditDocumentArchive_UploadDate_' + Count)[0].value = shortDate;
+        tr.find('#OrdPR_EditDocumentArchive_FileSize_' + Count)[0].value = file_size;
+        tr.find('#OrdPR_EditDocumentArchive_FileType_' + Count)[0].value = "." + filetype;
+
+        var $file = document.getElementById(InputID);
+        $formData = new FormData();
+        if ($file.files.length > 0) {
+            for (var i = 0; i < $file.files.length; i++) {
+                $formData.append('file-' + i, $file.files[i]);
+            }
+
+            var OrderYear = '@ReqYear';
+            var OrderNo = '@ReqNo';
+
+            $formData.append('Id', Count);
+            $formData.append('OrderYear', OrderYear);
+            $formData.append('OrderNo', OrderNo);
+        }
+
+        $.ajax({
+            url: '@Url.Action("InsertFile", "PurchaseRequest")',
+            type: 'POST',
+            data: $formData,
+            contentType: false,
+            processData: false,
+            success: function (r) {
+                var table = $("#eOrdPR_DocumentArchiveTbody");
+                var tr = table.find('#EditOrdPRDocumentArchive_' + Count);
+                tr.find('#OrdPR_AddDownloadFile_' + Count)[0].setAttribute('onclick', 'DownloadFile("' + fileName + '","' + r + '")')
+            },
+            error: function (error) {
+            }
+        });
+    }
+    function RemoveRowUpload(e, Count, srl) {
+        if (confirm('@Resources.Resource.DeleteConfirm')) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+             var OrderYear = '@ReqYear';
+            var OrderNo = '@ReqNo';
+
+            $.ajax({
+                type: "POST",
+                url:'@Url.Action("RemoveFile", "OrdReceipt")',
+                data: { Id: Count, OrderYear: OrderYear, OrderNo: OrderNo },
+                success: function (response) {
+
+                },
+            });
+
+            return true;
+        }
+        return false;
+    }
+    function DownloadFile(FileName, base64) {
+        var binaryString = window.atob(base64);
+        var binaryLen = binaryString.length;
+        var bytes = new Uint8Array(binaryLen);
+        for (var i = 0; i < binaryLen; i++) {
+            var ascii = binaryString.charCodeAt(i);
+            bytes[i] = ascii;
+        }
+        saveByteArray(FileName, bytes)
+    }
+    function saveByteArray(reportName, byte) {
+        var blob = new Blob([byte], { type: "application/pdf" });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        var fileName = reportName;
+        link.download = fileName;
+        link.click();
+    }
+    function EditOrdPRDocumentArchive() {
+        $('#Model_ePR_DocumentsArchive').modal('hide')
+    }
+</script>
+@*--------------------------------END Model Documents -----------------------------*@
+
+<script>
+    $('.ePurchaseRequest_Item_Unit').select2();
+    $('#ProdCost_PurchaseReqHF_Edit_CboOrderPriority').select2();
+    $('#ProdCost_PurchaseReqHF_Edit_CboCurrCode').select2();
+    $('#ProdCost_PurchaseReqHF_Edit_CboOrderType').select2();
+    $('#ProdCost_PurchaseReqHF_Edit_CboPurpose').select2();
+
+    $('#ProdCost_PurchaseReqHF_Edit_CboReqBU').val(@OrdRequestHF.ReqBU);
+    $('#ProdCost_PurchaseReqHF_Edit_CboAuthBU').val(@OrdRequestHF.AuthBU);
+    $('#ProdCost_PurchaseReqHF_Edit_CboReqBU').select2();
+    $('#ProdCost_PurchaseReqHF_Edit_CboAuthBU').select2();
+
+
+    $('#Model_eInvItemsMF').draggable({
+        handle: ".modal-header",
+    });
+
+    var RawMaterial = $('#eSelectPurchaseReqItemTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+
+    function Edit_InvItemsMF(type) {
+        itemType = type;
+        frmSatus = 1;
+        $('#eSelectPurchaseReqItemTable tr').removeClass("selected");
+        $('#Model_eInvItemsMF').modal('show');
+    }
+    function eSelectingItemMaterial_InvItemsMF() {
+        var data = RawMaterial.rows('.selected').data();
+        if (data.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة واحدة على الاقل", "Select one item at least")');
+            return;
+        }
+        if (frmSatus == 1) {
+            if (itemType == 1) {
+                var table_ = $("#ePurchaseReqItemTBody");
+                var item = new Array();
+                for (var i = 0; i < data.length; i++) {
+                    var Added = false;
+                    if (table_.find("tr").length != 0) {
+                        table_.find("tr").each(function () {
+                            var ItemNo_ = $(this).find("td #ePurchaseRequest_ItemNo")[0].value;
+                            if (ItemNo_ == data[i][0]) {
+                                Added = true;
+                                return false;
+                            }
+                            else {
+                                Added = false;
+                            }
+                        });
+                        if (!Added) {
+                            item.push({
+                                ItemNo: data[i][0],
+                                ItemDesc: data[i][1]
+                            });
+                        }
+                    }
+                    else {
+                        item.push({
+                            ItemNo: data[i][0],
+                            ItemDesc: data[i][1]
+                        });
+                    }
+                }
+                if (item.length != 0) {
+                    burn({ items: item, srl: table_.find("tr").length }, '../../../PurchaseRequest/ePurchaseRequestItems', '', LoadItemRawMaterial, true);
+                }
+                else {
+                    $('#Model_eInvItemsMF').modal('hide')
+                }
+            }
+        }
+    }
+    function LoadItemRawMaterial(r) {
+        if (frmSatus == 1) {
+            $('#ePurchaseReqItemTBody').append(r);
+        }
+        else {
+            $('#ePurchaseReqItemTBody').append(r);
+        }
+        $('#Model_eInvItemsMF').modal('hide')
+    }
+    function eGetItemNo(e) {
+       var data = RawMaterial.rows('.selected').data();
+        if (data.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة واحدة على الاقل", "Select one item at least")');
+            return;
+        }
+        if (frmSatus == 1) {
+            if (itemType == 1) {
+                var table_ = $("#ePurchaseReqItemTBody");
+                var item = new Array();
+                for (var i = 0; i < data.length; i++) {
+                    var Added = false;
+                    if (table_.find("tr").length != 0) {
+                        table_.find("tr").each(function () {
+                            var ItemNo_ = $(this).find("td:first-child").text();
+                            if (ItemNo_ == data[i][0]) {
+                                Added = true;
+                                return false;
+                            }
+                            else {
+                                Added = false;
+                            }
+                        });
+                        if (!Added) {
+                            item.push({
+                                ItemNo: data[i][0],
+                                ItemDesc: data[i][1]
+                            });
+                        }
+                    }
+                    else {
+                        item.push({
+                            ItemNo: data[i][0],
+                            ItemDesc: data[i][1]
+                        });
+                    }
+                }
+                if (item.length != 0) {
+                    burn({ items: item, srl: table_.find("tr").length }, '../../../PurchaseRequest/ePurchaseRequestItems', '', LoadItemRawMaterial, true);
+                }
+                else {
+                    $('#Model_InvItemsMF').modal('hide')
+                }
+            }
+        }
+    }
+
+    function eGetchangeCost(item, e, srl) {
+
+        burn({ itemNo: item, Unitserial: e, srl: srl }, '../../../PurchaseRequest/LoadUnitCost', '', LoadCost, true);
+    }
+
+    function LoadCost(r) {
+        var tr = $('#ePurchaseReqItemTBody #ePurchaseRequest_Serial_' + r.srl);
+        tr.find('#ePurchaseRequest_QtyOH_' + r.srl)[0].value = r.QtyOH;
+        tr.find('#ePurchaseRequest_ResQty_' + r.srl)[0].value = r.ResQty;
+    }
+
+     function CheckValueGrid(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt == 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+        else {
+            if (Amt == '' || Amt == null) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function ExcuteEditProd_PurchaseRequest() {
+
+        var table = $('#ePurchaseReqItemTBody tr');
+        var trs = table;
+        if (trs.length == 0) {
+            alert('@Html.Translate("يجب إدخال المواد", "Raw Items must be entered")');
+            return false;
+        }
+
+        var OrdReqHF = {
+            CompNo: '@company.comp_num',
+            ReqYear: '@ReqYear',
+            ReqNo: '@ReqNo',
+            ReqDate: ProdCost_PurchaseReqHF_Edit_ReqDate.value,
+            ReqDeliveryDate: ProdCost_PurchaseReqHF_Edit_ReqDeliveryDate.value,
+            ReqBU: ProdCost_PurchaseReqHF_Edit_CboReqBU.value,
+            AuthBU: ProdCost_PurchaseReqHF_Edit_CboAuthBU.value,
+            Note: ProdCost_PurchaseReqHF_Edit_ReqNotes.value,
+            OrderPriority: ProdCost_PurchaseReqHF_Edit_CboOrderPriority.value,
+            CurrNo: ProdCost_PurchaseReqHF_Edit_CboCurrCode.value,
+            RefNo: ProdCost_PurchaseReqHF_Edit_RefNo.value,
+            OrderType: ProdCost_PurchaseReqHF_Edit_CboOrderType.value,
+            Purpose: ProdCost_PurchaseReqHF_Edit_CboPurpose.value
+        };
+        var OrdReqDF = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#eInputSerial')[0].value
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#ePurchaseRequest_Qty_' + InputSerial)[0].value)) {
+                $(trs[i]).closest('tr').find('#ePurchaseRequest_Qty_' + InputSerial)[0].focus();
+                alert('@Html.Translate("يجب إدخال الكمية", "You Must Enter Qty")');
+                return;
+            }
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#ePurchaseRequest_Price_' + InputSerial)[0].value)) {
+                $(trs[i]).closest('tr').find('#ePurchaseRequest_Price_' + InputSerial)[0].focus();
+                alert('@Html.Translate("يجب إدخال السعر", "ou Must Enter Price")');
+                return;
+            }
+
+            if (ProdCost_PurchaseReqHF_Edit_CboOrderType.value == 1) {
+                OrdReqDF.push({
+                    CompNo: '@company.comp_num',
+                    ItemNo: $(trs[i]).closest('tr').find('#ePurchaseRequest_ItemNo')[0].value,
+                    TUnit: $(trs[i]).closest('tr').find('.ePurchaseRequest_Item_Unit option:Selected')[0].getAttribute('unitCode'),
+                    Qty: $(trs[i]).closest('tr').find('#ePurchaseRequest_Qtyth_' + InputSerial)[0].value,
+                    Qty2: $(trs[i]).closest('tr').find('#ePurchaseRequest_Qty2_' + InputSerial)[0].value,
+                    Price: $(trs[i]).closest('tr').find('#ePurchaseRequest_Priceth_' + InputSerial)[0].value,
+                    TotalValue: $(trs[i]).closest('tr').find('#ePurchaseReques_Totalth_' + InputSerial)[0].value,
+                    Note: $(trs[i]).closest('tr').find('#ePurchaseReques_Notes_' + InputSerial)[0].value,
+                    UnitSerial: $(trs[i]).closest('tr').find('.ePurchaseRequest_Item_Unit')[0].value,
+                    ReqDeliveryDate: $(trs[i]).closest('tr').find('#ePurchaseRequest_RequestedDeliveryDate_' + InputSerial)[0].value,
+                    QtyStock: $(trs[i]).closest('tr').find('#ePurchaseRequest_QtyOH_' + InputSerial)[0].value,
+                });
+            }
+            else {
+                OrdReqDF.push({
+                    CompNo: '@company.comp_num',
+                    ItemNo: $(trs[i]).closest('tr').find('#ePurchaseRequest_ItemNo')[0].value,
+                    TUnit: 'Meter',
+                    Qty: $(trs[i]).closest('tr').find('#ePurchaseRequest_Qty_' + InputSerial)[0].value,
+                    Qty2: 0,
+                    Price: $(trs[i]).closest('tr').find('#ePurchaseRequest_Price_' + InputSerial)[0].value,
+                    TotalValue: $(trs[i]).closest('tr').find('#ePurchaseReques_Total_' + InputSerial)[0].value,
+                    Note: $(trs[i]).closest('tr').find('#ePurchaseReques_Notes_' + InputSerial)[0].value,
+                    UnitSerial: 4,
+                    ReqDeliveryDate: $(trs[i]).closest('tr').find('#ePurchaseRequest_RequestedDeliveryDate_' + InputSerial)[0].value,
+                    QtyStock: 0,
+                });
+            }
+            
+        }
+
+        var DocumentArchivetable = $("#eOrdPR_DocumentArchiveTbody");
+        var trsDocumentArchive = DocumentArchivetable.find('tr');
+
+        var DocumentArchive = new Array();
+
+        for (var i = 0; i < trsDocumentArchive.length; i++) {
+            var InputSerial = $(trsDocumentArchive[i]).closest('tr').find('#OrdPR_EditDocumentArchive_FileId')[0].value;
+            DocumentArchive.push({
+                ReqYear: '@ReqYear',
+            ReqNo: '@ReqNo',
+                FileId: InputSerial,
+                Description: $(trsDocumentArchive[i]).closest('tr').find('#OrdPR_EditDocumentArchive_Description_' + InputSerial)[0].value,
+                DateUploded: $(trsDocumentArchive[i]).closest('tr').find('#OrdPR_EditDocumentArchive_UploadDate_' + InputSerial)[0].value,
+                ContentType: $(trsDocumentArchive[i]).closest('tr').find('#OrdPR_EditDocumentArchive_FileType_' + InputSerial)[0].value
+            })
+        }
+
+        wait();
+        if (confirm('@Resources.Resource.ConfirmEditPurchaseOrders')) {
+            burn({ OrdReqHF: OrdReqHF, OrdReqDF: OrdReqDF, FileArchive: DocumentArchive }, '../../../PurchaseRequest/Edit_PurchaseRequest', '', ReloadPurchaseRequest, false);
+        }
+        else {
+            done();
+        }
+    }
+    function ReloadPurchaseRequest(r) {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        if(@CActive.ClientNo == 239){
+            CloseWindow('/PurchaseRequest/EditPurchaseRequestKasih?ReqYear=' + r.ReqYear + '&ReqNo=' + r.ReqNo + '');
+        }
+        else{
+            CloseWindow('/PurchaseRequest/EditPurchaseRequest?ReqYear=' + r.ReqYear + '&ReqNo=' + r.ReqNo + '');
+        }
+        $('#Prod_PurchaseRequestListDiv').load('../../../PurchaseRequest/PurchaseRequestList?ReqStatus=0');
+    }
+</script>

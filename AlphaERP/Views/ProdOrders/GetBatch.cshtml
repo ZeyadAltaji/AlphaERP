@@ -1,0 +1,61 @@
+﻿@model IEnumerable<AlphaERP.Controllers.ProdOrdersController.BatchOrder>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    string itemno = ViewBag.ItemNo;
+    string defaultBatchNo = null;
+    DataTable dt = new DataTable();
+
+    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+    {
+        cn.Open();
+        using (SqlCommand cmdDefault = new SqlCommand())
+        {
+            cmdDefault.Connection = cn;
+            cmdDefault.CommandType = System.Data.CommandType.Text;
+            cmdDefault.CommandText = "SELECT TOP (1) BatchNo FROM InvBatchsMF WHERE CompNo = @CompNo AND ItemNo = @ItemNo AND IsHalt = 0";
+            cmdDefault.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+            cmdDefault.Parameters.Add(new SqlParameter("@ItemNo", System.Data.SqlDbType.VarChar, 20)).Value = itemno;
+            using (SqlDataReader reader = cmdDefault.ExecuteReader())
+            {
+                if (reader.Read())
+                {
+                    defaultBatchNo = reader["BatchNo"].ToString();
+                }
+            }
+        }
+
+        // Query for all batch numbers
+        using (SqlCommand cmd = new SqlCommand())
+        {
+            cmd.Connection = cn;
+            cmd.CommandType = System.Data.CommandType.Text;
+            cmd.CommandText = "SELECT * FROM InvBatchsMF WHERE CompNo = @CompNo AND ItemNo = @ItemNo AND IsHalt = 0";
+            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+            cmd.Parameters.Add(new SqlParameter("@ItemNo", System.Data.SqlDbType.VarChar, 20)).Value = itemno;
+            using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+            {
+                da.Fill(dt);
+            }
+        }
+    }
+}
+
+@foreach (DataRow row in dt.Rows)
+            {
+                if (row["BatchNo"].ToString() == defaultBatchNo)
+                {
+        <option value="@row["BatchNo"].ToString()" selected>
+            @Html.Translate(row["BatchNo"].ToString(), row["BatchNo"].ToString())
+        </option>
+    }
+    else
+    {
+        <option value="@row["BatchNo"].ToString()">
+            @Html.Translate(row["BatchNo"].ToString(), row["BatchNo"].ToString())
+        </option>
+    }
+}

@@ -1,0 +1,29 @@
+﻿@model IEnumerable<AlphaERP.Controllers.ProdOrdersController.ItemStages>
+
+@{
+    int i = 1;
+}
+
+@foreach (var item in Model)
+{
+    <tr id="ItemStage_@i">
+        <td style="width: 50px;text-align:center;" id="Stages_StageCode">@item.Stage_code</td>
+        <td style="width: 215px;text-align:center;" id="Stages_StageDesc">@item.stage_desc</td>
+        <td style="width: 50px;">
+            <button onclick="EditStageCode(@i,@item.staus)" type="button" class="btn btn-primary">@Html.Recource(5527)</button>
+        </td>
+        <td style="width: 130px;text-align: center;">
+            <input id="Stages_StartDate" value="@item.StartDate.ToString("yyyy-MM-dd")" type="date" />
+        </td>
+        <td style="width: 130px;text-align: center;">
+            <input id="Stages_EndDate" value="@item.EndDate.ToString("yyyy-MM-dd")" type="date">
+        </td>
+        <td>
+            <input style="width: 75px;text-align:center;" id="Stages_CalcTime" value="@item.CalcTime.ToString("0.000")" type="number">
+        </td>
+        <td>
+            <button class="btn-de" onclick="RemoveRowOrderProdStages(this)" type="button"><i class="fa fa-trash-alt"></i></button>
+        </td>
+    </tr>
+    i++;
+}

@@ -1,0 +1,771 @@
+﻿@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+
+}
+<style>
+       .Overlay {
+            opacity: 0.5;
+        }
+</style>
+<div class="opacity">
+    <div class="box box-primary">
+        <div class="box-body box-profile slim">
+            <div>
+                <div class="col-md-11" style="padding:0">
+                    <label style="margin:0" class="profile-username text-center">
+                        <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                        MyTilTle
+                    </label>
+                </div>
+                <div class="col-md-1">
+                    <button style="width:100%" class="btn btn-default btn-block" onclick="$('#ProductionOrdersInProgressListTableDiv').load('../../ProductionOrdersInProgress/List')">
+                        <i class="fa fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="box-body box-profile" id="ProductionOrdersInProgressListTableDiv">
+            @Html.Partial("~/Views/ProductionOrdersInProgress/List.cshtml")
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade wide" id="Mrp_YearPlanDetlsD_save_Mrp_YearPlanDetlsD">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(9247)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <label class="unselectable" for="Mrp_YearPlanDetlsD_save_TxtYear">@Html.Recource(59) </label>
+                    </div>
+                    <div class="col-md-3" style="margin-bottom: 5px;">
+                        <input style="width:100%" disabled style="width:100%" required="false" type="text" id="Mrp_YearPlanDetlsD_save_TxtYear" placeholder="@Html.Recource(59)" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="unselectable" for="Mrp_YearPlanDetlsD_save_TxtOrderNo">@Html.Recource(8610) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:100%" disabled style="width:100%" required="false" type="text" id="Mrp_YearPlanDetlsD_save_TxtOrderNo" placeholder="@Html.Recource(8610)" />
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <label class="unselectable" for="Mrp_YearPlanDetlsD_save_LblFormDesc">@Html.Recource(4286) </label>
+                    </div>
+                    <div class="col-md-9" style="margin-bottom: 5px;">
+                        <input style="width:100%" disabled required="false" type="text" id="Mrp_YearPlanDetlsD_save_LblFormDesc" placeholder="@Html.Recource(4286)" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <label class="unselectable" for="Mrp_YearPlanDetlsD_save_LblFinItem">@Html.Recource(306) </label>
+                    </div>
+                    <div class="col-md-9" style="margin-bottom: 5px;">
+                        <input style="width:100%" disabled required="false" type="text" id="Mrp_YearPlanDetlsD_save_LblFinItem" placeholder="@Html.Recource(306)" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <label class="unselectable" for="Mrp_YearPlanDetlsD_save_TxtStageDesc">@Html.Recource(4482) </label>
+                    </div>
+                    <div class="col-md-9" style="margin-bottom: 5px;">
+                        <input style="width:100%" disabled required="false" type="text" id="Mrp_YearPlanDetlsD_save_TxtStageDesc" placeholder="@Html.Recource(4482)" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <label class="unselectable" for="Mrp_YearPlanDetlsD_save_TxtStageStat">@Html.Recource(1627) </label>
+                    </div>
+                    <div class="col-md-9" style="margin-bottom: 5px;">
+                        <input style="width:100%" disabled required="false" type="text" id="Mrp_YearPlanDetlsD_save_TxtStageStat" placeholder="@Html.Recource(1627)" />
+                    </div>
+                </div>
+                <div class="form-group" id="ProductionOrdersInProgressOPN">
+
+                    <div class="form-group">
+                        <div class="col-md-3">
+                            <label class="unselectable" for="Mrp_YearPlanDetlsD_save_TxtDate">@Html.Recource(58) </label>
+                        </div>
+                        <div class="col-md-7" style="margin-bottom: 5px;">
+                            <input style="width:100%;text-align:@Html.Translate("right","left")" type="datetime-local" id="Mrp_YearPlanDetlsD_save_TxtDate" />
+                        </div>
+                        <div class="col-md-2">
+                            <button style="width:100%" type="button" onclick="ProductionOrdersInProgressDoStage(1)" class="btn btn-primary">@Html.Recource(9248)</button>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" id="ProductionOrdersInProgressCLS">
+                    <div class="col-md-3">
+                        <label class="unselectable" for="Mrp_YearPlanDetlsD_save_txtTotalHrs">@Html.Translate("مدة التشغيل", "Duration of operation") </label>
+                        <input style="margin:0;width:100px;font-weight:bold;text-align:center" class="time" required="false" type="text" id="Mrp_YearPlanDetlsD_save_txtTotalHrs" />
+
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="unselectable" for="Mrp_YearPlanDetlsD_save_txtTotalSetUP">@Html.Translate("مدة التجهيز", "Processing period") </label>
+                        <input style="margin:0;width:100px;font-weight:bold;text-align:center" class="time" required="false" type="text" id="Mrp_YearPlanDetlsD_save_txtTotalSetUP" />
+
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="unselectable" for="Mrp_YearPlanDetlsD_save_TxtTotalStopage">@Html.Translate("مدة التوقف", "Duration of stopping") </label>
+                        <input style="margin:0;width:100px;font-weight:bold;text-align:center" class="time" required="false" type="text" id="Mrp_YearPlanDetlsD_save_TxtTotalStopage" />
+
+                    </div>
+                    <div class="col-md-2">
+                        <button style="width:100%" type="button" onclick="ProductionOrdersInProgressDoStage(2)" class="btn btn-danger">@Html.Recource(9249)</button>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Prod_Liststage_Model" style="left: 123px !important; top:121px !important; width:91.4% !important; overflow-x:auto;">
+    <div class="modal-dialog" style="width:135rem !important;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" onclick="Pbtnclosemodal()">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("اوامر الانتاج", "Production Orders")</label>
+            </div>
+            <div class="modal-body dataListStage row" style="height:67vh!important;max-height: 68vh  !important;">
+                <ul class="nav nav-tabs" role="tablist" id="mySpecificTabs">
+                    <li class="nav-item active">
+                        <a class="nav-link active" data-toggle="tab" href="#ListStageTab" role="tab">
+                            @Html.Translate("قائمة المراحل", "List Stage")
+                        </a>
+                    </li>
+                    <li class="nav-item" id="rowMatNavItem">
+                        <a class="nav-link" data-toggle="tab" href="#RowMatTab" role="tab">
+                            @Html.Translate("المواد الخام", "Row Material")
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#ProductionTab" role="tab">
+                            @Html.Translate("الانتاج", "Production")
+                        </a>
+                    </li>
+
+                </ul>
+                <div class="tab-content" style="height:300px;padding:10px">
+                    <div class="tab-pane active" id="ListStageTab" role="tabpanel">
+                    </div>
+                    <div class="tab-pane" id="RowMatTab" role="tabpanel">
+                    </div>
+                    <div class="tab-pane" id="ProductionTab" role="tabpanel">
+                    </div>
+                </div> 
+            </div>
+            <div class="modal-footer">
+                <label style="display: none" class="unselectable" id="IssuedQtylbl">@Html.Translate("الكمية المصروفة", "Issued Qty"): </label>
+                <label style="display: none; margin: 0px 45px 0px 45px;" id="issuedQtyVal" class="unselectable">0.00</label>
+                <label style="display: none" class="unselectable" id="StdQtylbl">@Html.Translate("الكمية المعياريه", "Std Qty"): </label>
+                <label style="display: none; margin: 0px 45px 0px 45px;" id="StdQtyVal" class="unselectable">0.00</label>
+                <label style="display: none" class="unselectable" id="QtyVarlbl">@Html.Translate("", "Qty Var"): </label>
+                <label style="display: none; margin: 0px 45px 0px 45px;" id="QtyVarVal" class="unselectable">0.00</label>
+                <label style="display: none" class="unselectable" id="IssueCostlbl">@Html.Translate("كلفة الصرف", "Issue Cost"): </label>
+                <label style="display: none; margin: 0px 45px 0px 45px;" id="IssueCostVal" class="unselectable">0.00</label>
+                <button class="btn btn-primary pull-left" onclick="Pbtnclosemodal()">@Html.Translate("أغلاق", "Close")</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="Model_CloseStage" style="left: 24.7rem;top: 6rem;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" onclick="Cbtnclosemodal()">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أغلاق المرحلة", "Close the Stage")</label>
+            </div>
+            <div class="modal-body row" id="CloseStageBody">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="Model_OpenStage" style="left: 24.7rem;top: 6rem;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" onclick="Obtnclosemodal()">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("فتح المرحلة", "Open the Stage")</label>
+            </div>
+            <div class="modal-body row" id="OpenStageBody">
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade wideBom" id="QAEventShowModalInProgress" style="left: 20.5rem;top: 11.4rem;">
+    @Html.Partial("~/Views/ProductionOrdersInProgress/ViewQAEventData.cshtml")
+
+
+</div>
+
+
+<div class="modal fade wideBom" id="ViewQCResultModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("نتيجة مراقبة الجودة", "Quality Control Result")</label>
+            </div>
+            <div class="modal-body row" id="ViewQCResult">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary pull-left" data-dismiss="modal">@Html.Translate("أغلاق", "Close")</button>
+            </div>
+        </div>
+    </div>
+</div>
+ 
+<div class="modal fade wide" id="DLaborModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("ساعات عمل العمال على أوامر التجهيز", "Workers' working hours on processing orders")</label>
+            </div>
+            <div class="modal-body row" id="EDLaborBody">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="Save_WorkHrs()">@Html.Translate("حفظ", "Save")</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_add_emp_toStage" style="left: 47.7rem;top: 25rem;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("اضافة موظف", "Add Emp")</label>
+            </div>
+            <div class="modal-body row" id="ProdCost_add_emp_toStage">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="selectbtnaddEmp" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade wide" id="ModalLoadViewRawMateria" style="left: 47.7rem;top: 25rem;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("المواد الخام", "View Raw Material")</label>
+            </div>
+            <div class="modal-body row" id="LoadViewRawMateriaMBody">
+            </div>
+            <div class="modal-footer">
+                <label class="unselectable">@Html.Translate("الكمية المصروفة", "Issued Qty") : </label>
+                <label id="issuedQty" class="unselectable" style="margin: 0px 45px 0px 45px;">0.00</label>
+                <label class="unselectable">@Html.Translate("الكمية المعياريه", "Std Qty") : </label>
+                <label id="StdQty" class="unselectable" style="margin: 0px 45px 0px 45px;">0.00</label>
+                <label class="unselectable">@Html.Translate("", "Qty Var") : </label>
+                <label id="QtyVar" class="unselectable" style="margin: 0px 45px 0px 45px;">0.00</label>
+                <label class="unselectable">@Html.Translate("كلفة الصرف", "Issue Cost") : </label>
+                <label id="IssueCost" class="unselectable" style="margin: 0px 45px 0px 45px;">0.00</label>
+                <button type="button" data-dismiss="modal" class="btn btn-primary">@Html.Translate("أغلاق", "Close")</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade wide" id="ModalDailyProdListView" style="left: 47.7rem;top: 25rem;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("كشف الأنتاج", "View Production")</label>
+            </div>
+            <div class="modal-body row" id="ModalDailyProdListViewMBody">
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="selectbtnaddEmp" data-dismiss="modal" class="btn btn-primary">@Html.Translate("أغلاق", "Close")</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade wide" id="ModalSelectIssueOrder" style="left: 27.7rem;top: 25rem;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أوامر الصرف", " Issue Orders")</label>
+            </div>
+            <div class="modal-body row" id="LoadSelectIssueOrderBody">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="SelectingOrder()">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade wide" id="ModalListAllDailyProduction" style="left: 27.7rem;top: 25rem;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("قائمة كشوفات الانتاج", " List Daily Production")</label>
+            </div>
+            <div class="modal-body row" id="ListAllDailyProductionBody">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="SelectingDailyProduction()">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="ModalLoadIssueOrder" style="left:12.5rem;top:20rem; width:91.4% !important; overflow-x:auto;">
+    <div class="modal-dialog" style="width:123rem !important;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"  onclick="CancelRFI()">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("طلب أمر الصرف", "View Request for issue materials")</label>
+            </div>
+            <div class="modal-body row" id="LoadIssueOrderMBody">
+                @*<div class="row">
+                    <div class="col-md-8">
+
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="unselectable" for="SelectIssueOrder">@Html.Translate("أوامر الصرف", " Issue Orders")</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <button class="btn btn-success"  type="button" id="SelectIssueOrder" name="SelectIssueOrder" onclick="handleSelectIssueOrder()">Select Issue Order</button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <button disabled onclick="Add_Emp_stage()" type="button" class="btn btn-primary"><i class="fa fa-plus"></i>@Resources.Resource.Add </button>
+                            </div>
+                        </div>
+                    </div>
+                 
+
+                </div>
+                <hr />
+
+                <div id="LoaddataIssueOrder">
+
+                </div>*@
+            </div>
+            <div class="modal-footer">
+
+                <button class="btn btn-primary" id="btnLoadIssueOrder" onclick="SaveRFI()">@Html.Translate("حفظ", "Save")</button>
+                <button class="btn btn-default pull-left" id="btnCloseIssueOrder" onclick="CancelRFI()" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade wideBom" id="ModalProductionReceiving" style="left: 27.7rem;top: 25rem;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("الصرف", "Receiving")</label>
+            </div>
+            <div class="modal-body row" id="LoadProductionReceivingBody">
+            </div>
+            <div class="modal-footer">
+                <label class="unselectable">@Html.Recource(9240)  : </label>
+                <label id="eqty_prepareRec" class="unselectable" style="margin: 0px 45px 0px 45px;">0.00</label>
+                <label class="unselectable">@Html.Recource(9595) : </label>
+                <label id="eProdQtyRec" class="unselectable" style="margin: 0px 45px 0px 45px;">0.00</label>
+                <button class="btn btn-primary" id="btnProductionReceiving" onclick="SaveProductionReceiving()">@Html.Translate("حفظ", "Save")</button>
+                <button class="btn btn-default pull-left" id="btnCloseProductionReceiving" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_Warehouse">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4286)</label>
+            </div>
+            <div class="modal-body row" id="WarehouseBody">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingStore()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal fade wide" id="ModelFormula">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4286)</label>
+            </div>
+            <div class="modal-body row" id="FormulaBody">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingFormula()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal fade wide" id="ModelLoadBatch">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4286)</label>
+            </div>
+            <div class="modal-body row" id="LoadBatchBody">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingBatch()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+
+
+
+    var openedRow = null;
+
+
+    $('#Mrp_YearPlanDetlsD_save_Mrp_YearPlanDetlsD').draggable({
+        handle: '.modal-header'
+    });
+    $('#ModalListAllDailyProduction').draggable({
+        handle: '.modal-header'
+    });
+    $('#ModalDailyProdListView').draggable({
+        handle: '.modal-header'
+    });
+    $('#Mrp_YearPlanDetlsD_save_Mrp_YearPlanDetlsD').on('shown.bs.modal', function () {
+        $('#Mrp_YearPlanDetlsD_save_TxtYear').focus();
+        $('#Mrp_YearPlanDetlsD_save_TxtYear').select();
+    });
+    $(document).ready(function() {
+        var rowMatNavItem = $("#rowMatNavItem");
+        var IssuedQtylbl = $("#IssuedQtylbl");
+        var issuedQtyVal = $("#issuedQtyVal");
+
+        var StdQtylbl = $("#StdQtylbl");
+        var StdQtyVal = $("#StdQtyVal");
+
+        var QtyVarlbl = $("#QtyVarlbl");
+        var QtyVarVal = $("#QtyVarVal");
+        var IssueCostlbl = $("#IssueCostlbl");
+        var IssueCostVal = $("#IssueCostVal");
+
+        // Add a click event handler to rowMatNavItem
+        rowMatNavItem.click(function() {
+            // Check if rowMatNavItem is active
+            if (rowMatNavItem.hasClass("active")) {
+                IssuedQtylbl.show();
+                issuedQtyVal.show();
+
+                StdQtylbl.show();
+                StdQtyVal.show();
+
+                QtyVarlbl.show();
+                QtyVarVal.show();
+
+                IssueCostlbl.show();
+                IssueCostVal.show();
+            } else {
+                IssuedQtylbl.hide();
+                issuedQtyVal.hide();
+
+                StdQtylbl.hide();
+                StdQtyVal.hide();
+
+                QtyVarlbl.hide();
+                QtyVarVal.hide();
+
+                IssueCostlbl.hide();
+                IssueCostVal.hide();
+            }
+        });
+    });
+
+    function CancelRFI(){
+     
+    }
+    function ProductionOrdersInProgressQCQA_ReTest( OrderYear, OrderNo, StageCode, StageSer, ReOption)
+    {
+         var CompNo =@company.comp_num;
+        burn({
+            CompNo:CompNo,
+            OrderYear: OrderYear,
+            OrderNo: OrderNo,
+            StageCode: StageCode,
+            StageSer: StageSer,
+            ReOption: ReOption
+        }, '../../../ProductionOrdersInProgress/qcreq', '', ProductionOrdersInProgressUpdated, false)
+    }
+
+    function ProductionOrdersInProgressDoStage(OpID) {
+
+        if (OpID == 1) {
+            $('#Mrp_YearPlanDetlsD_save_txtTotalHrs').val('00:00')
+            $('#Mrp_YearPlanDetlsD_save_txtTotalSetUP').val('00:00')
+            $('#Mrp_YearPlanDetlsD_save_TxtTotalStopage').val('00:00')
+        } else {
+            if ($('#Mrp_YearPlanDetlsD_save_txtTotalHrs').val() == '') {
+                $('#Mrp_YearPlanDetlsD_save_txtTotalHrs').focus();
+                return;
+            }
+            if ($('#Mrp_YearPlanDetlsD_save_txtTotalSetUP').val() == '') {
+                $('#Mrp_YearPlanDetlsD_save_txtTotalSetUP').focus();
+                return;
+            }
+            if ($('#Mrp_YearPlanDetlsD_save_TxtTotalStopage').val() == '') {
+                $('#Mrp_YearPlanDetlsD_save_TxtTotalStopage').focus();
+                return;
+            }
+        }
+
+        burn({
+            OpID: OpID,
+            FormCode: $('#Mrp_YearPlanDetlsD_save_TxtOrderNo').attr('formula_code'),
+            year: $('#Mrp_YearPlanDetlsD_save_TxtYear').val(),
+            OrderNo: $('#Mrp_YearPlanDetlsD_save_TxtOrderNo').val(),
+            StageCode: $('#Mrp_YearPlanDetlsD_save_TxtOrderNo').attr('code'),
+            StageSer: $('#Mrp_YearPlanDetlsD_save_TxtOrderNo').attr('ser'),
+            date: $('#Mrp_YearPlanDetlsD_save_TxtDate').val(),
+            hrs: $('#Mrp_YearPlanDetlsD_save_txtTotalHrs').val(),
+            setuphrs: $('#Mrp_YearPlanDetlsD_save_txtTotalSetUP').val(),
+            stophrs: $('#Mrp_YearPlanDetlsD_save_TxtTotalStopage').val()
+        }, '../../../ProductionOrdersInProgress/UpdateStage', '', ProductionOrdersInProgressUpdated, false)
+
+    }
+    function ProductionOrdersInProgressUpdated(r) {
+        MsgBox(r.ok, 'green');
+        debugger
+        $('#Mrp_YearPlanDetlsD_save_Mrp_YearPlanDetlsD').modal('hide')
+        $.get("../../../../ProductionOrdersInProgress/LoadOrderStages?OrderYear=" + OrderYear__ + '&OrderNo=' + OrderNo__ + '&FormCode=' + FormCode__ + '&ItemDesc=' + ItemDesc__, function (data) {
+            $('#' + gu__).parent().html( data);
+        });
+    }
+
+    $(function () {
+        $.mask.definitions['H'] = "[0-9]";
+        $.mask.definitions['M'] = "[0-5]";
+        $(".time").mask("HH:MH", { autoclear: false });
+        $(".time").blur(function () {
+            $(this).val($(this).val().replace(/_/g, "0"))
+        });
+    });
+
+    var gu__ = '';
+    var OrderYear__ = '';
+    var OrderNo__ = '';
+    var FormCode__ = '';
+    var ItemDesc__ = '';
+
+
+    function OrderSatgesGrdView(__gu, __OrderYear, __OrderNo, formula_code, _sser, _year, _code, _FormDesc, _FinItem, _stage_code, stage_desc, _stat, _date) {
+        gu__ = __gu;
+        OrderYear__ = __OrderYear;
+        OrderNo__ = __OrderNo;
+        FormCode__ = formula_code;
+        ItemDesc__ = _FinItem;
+
+        document.getElementById('Mrp_YearPlanDetlsD_save_TxtYear').value = _year;
+        document.getElementById('Mrp_YearPlanDetlsD_save_TxtOrderNo').value = _code;
+        document.getElementById('Mrp_YearPlanDetlsD_save_LblFormDesc').value = _FormDesc;
+        document.getElementById('Mrp_YearPlanDetlsD_save_LblFinItem').value = _FinItem;
+        document.getElementById('Mrp_YearPlanDetlsD_save_TxtStageDesc').value = _stage_code + "  >> " + stage_desc;
+        document.getElementById('Mrp_YearPlanDetlsD_save_TxtOrderNo').setAttribute('code', _stage_code)
+        document.getElementById('Mrp_YearPlanDetlsD_save_TxtOrderNo').setAttribute('ser', _sser)
+        document.getElementById('Mrp_YearPlanDetlsD_save_TxtOrderNo').setAttribute('formula_code', formula_code)
+
+        document.getElementById('Mrp_YearPlanDetlsD_save_TxtStageStat').value = _stat;
+        document.getElementById('Mrp_YearPlanDetlsD_save_TxtDate').value = _date;
+        document.getElementById('Mrp_YearPlanDetlsD_save_txtTotalHrs').value = '';
+        document.getElementById('Mrp_YearPlanDetlsD_save_txtTotalSetUP').value = '';
+        document.getElementById('Mrp_YearPlanDetlsD_save_TxtTotalStopage').value = '';
+        if (_stat == 'In Process') {
+            $('#ProductionOrdersInProgressOPN').hide();
+            $('#ProductionOrdersInProgressCLS').show();
+        }
+        if (_stat == 'Not Started') {
+            $('#ProductionOrdersInProgressCLS').hide();
+            $('#ProductionOrdersInProgressOPN').show();
+        }
+        if (_stat == 'Closed') {
+            $('#ProductionOrdersInProgressCLS').hide();
+            $('#ProductionOrdersInProgressOPN').hide();
+        }
+        $('#Mrp_YearPlanDetlsD_save_Mrp_YearPlanDetlsD').modal('show')
+    }
+    function ExcuteMrp_YearPlanDetlsD_save_Mrp_YearPlanDetlsD() {
+        if (document.getElementById('Mrp_YearPlanDetlsD_save_TxtYear').value == '') { document.getElementById('Mrp_YearPlanDetlsD_save_TxtYear').focus(); return; }
+        if (document.getElementById('Mrp_YearPlanDetlsD_save_TxtOrderNo').value == '') { document.getElementById('Mrp_YearPlanDetlsD_save_TxtOrderNo').focus(); return; }
+        if (document.getElementById('Mrp_YearPlanDetlsD_save_LblFormDesc').value == '') { document.getElementById('Mrp_YearPlanDetlsD_save_LblFormDesc').focus(); return; }
+        if (document.getElementById('Mrp_YearPlanDetlsD_save_LblFinItem').value == '') { document.getElementById('Mrp_YearPlanDetlsD_save_LblFinItem').focus(); return; }
+        if (document.getElementById('Mrp_YearPlanDetlsD_save_TxtStageDesc').value == '') { document.getElementById('Mrp_YearPlanDetlsD_save_TxtStageDesc').focus(); return; }
+        if (document.getElementById('Mrp_YearPlanDetlsD_save_TxtStageStat').value == '') { document.getElementById('Mrp_YearPlanDetlsD_save_TxtStageStat').focus(); return; }
+        if (document.getElementById('Mrp_YearPlanDetlsD_save_TxtDate').value == '') { document.getElementById('Mrp_YearPlanDetlsD_save_TxtDate').focus(); return; }
+        if (document.getElementById('Mrp_YearPlanDetlsD_save_txtTime').value == '') { document.getElementById('Mrp_YearPlanDetlsD_save_txtTime').focus(); return; }
+        if (document.getElementById('Mrp_YearPlanDetlsD_save_txtTotalHrs').value == '') { document.getElementById('Mrp_YearPlanDetlsD_save_txtTotalHrs').focus(); return; }
+        if (document.getElementById('Mrp_YearPlanDetlsD_save_txtTotalSetUP').value == '') { document.getElementById('Mrp_YearPlanDetlsD_save_txtTotalSetUP').focus(); return; }
+        if (document.getElementById('Mrp_YearPlanDetlsD_save_TxtTotalStopage').value == '') { document.getElementById('Mrp_YearPlanDetlsD_save_TxtTotalStopage').focus(); return; }
+
+        var Mrp_YearPlanDetlsD = {
+            TxtYear: document.getElementById('Mrp_YearPlanDetlsD_save_TxtYear').value,
+            TxtOrderNo: document.getElementById('Mrp_YearPlanDetlsD_save_TxtOrderNo').value,
+            LblFormDesc: document.getElementById('Mrp_YearPlanDetlsD_save_LblFormDesc').value,
+            LblFinItem: document.getElementById('Mrp_YearPlanDetlsD_save_LblFinItem').value,
+            TxtStageDesc: document.getElementById('Mrp_YearPlanDetlsD_save_TxtStageDesc').value,
+            TxtStageStat: document.getElementById('Mrp_YearPlanDetlsD_save_TxtStageStat').value,
+            TxtDate: document.getElementById('Mrp_YearPlanDetlsD_save_TxtDate').value,
+            txtTime: document.getElementById('Mrp_YearPlanDetlsD_save_txtTime').value,
+            txtTotalHrs: document.getElementById('Mrp_YearPlanDetlsD_save_txtTotalHrs').value,
+            txtTotalSetUP: document.getElementById('Mrp_YearPlanDetlsD_save_txtTotalSetUP').value,
+            TxtTotalStopage: document.getElementById('Mrp_YearPlanDetlsD_save_TxtTotalStopage').value
+        };
+        burn({ Mrp_YearPlanDetlsD: Mrp_YearPlanDetlsD }, '../../../Mrp_YearPlanDetlsD/Action', '', LoadMrp_YearPlanDetlsD, false)
+    }
+    function LoadMrp_YearPlanDetlsD() {
+
+        $('#Mrp_YearPlanDetlsD_save_Mrp_YearPlanDetlsD').modal('hide')
+    }
+    function EditMrp_YearPlanDetlsD(CID, e) {
+        burn({ Id: CID }, '../../../Mrp_YearPlanDetlsD/GetMrp_YearPlanDetlsD', '', EditingMrp_YearPlanDetlsD, true)
+    }
+
+    function EditingMrp_YearPlanDetlsD(response) {
+        // Mrp_YearPlanDetlsDID = response.d.Id;
+        document.getElementById('Mrp_YearPlanDetlsD_save_TxtYear').value = response.d.TxtYear;
+        document.getElementById('Mrp_YearPlanDetlsD_save_TxtOrderNo').value = response.d.TxtOrderNo;
+        document.getElementById('Mrp_YearPlanDetlsD_save_LblFormDesc').value = response.d.LblFormDesc;
+        document.getElementById('Mrp_YearPlanDetlsD_save_LblFinItem').value = response.d.LblFinItem;
+        document.getElementById('Mrp_YearPlanDetlsD_save_TxtStageDesc').value = response.d.TxtStageDesc;
+        document.getElementById('Mrp_YearPlanDetlsD_save_TxtStageStat').value = response.d.TxtStageStat;
+        document.getElementById('Mrp_YearPlanDetlsD_save_TxtDate').value = response.d.TxtDate;
+        document.getElementById('Mrp_YearPlanDetlsD_save_txtTime').value = response.d.txtTime;
+        document.getElementById('Mrp_YearPlanDetlsD_save_txtTotalHrs').value = response.d.txtTotalHrs;
+        document.getElementById('Mrp_YearPlanDetlsD_save_txtTotalSetUP').value = response.d.txtTotalSetUP;
+        document.getElementById('Mrp_YearPlanDetlsD_save_TxtTotalStopage').value = response.d.TxtTotalStopage;
+        $('#Mrp_YearPlanDetlsD_save_Mrp_YearPlanDetlsD').modal('show')
+    }
+
+    function DeleteMrp_YearPlanDetlsD(CID, e) {
+        if (RemoveRow(e)) {
+            burn({ Id: CID }, '../../../Mrp_YearPlanDetlsD/DeleteMrp_YearPlanDetlsD', '', '', false)
+        }
+    }
+    $('#ProductionOrdersInProgressDataTable tbody tr').click(function () {
+        var clickedRow = this;
+
+        if (openedRow !== null) {
+            ProductionOrdersInProgressTable.fnClose(openedRow);
+            $(openedRow).removeClass('highlighted-row');
+            $(openedRow).removeClass('opened-row');
+ 
+
+        }
+        if (openedRow !== clickedRow) {
+            wait();
+            debugger;
+            $(clickedRow).attr("opened", "details_close");
+            var OrderYear = $(clickedRow).attr("OrderYear");
+            var OrderNo = $(clickedRow).attr("OrderNo");
+            var FormCode = $(clickedRow).attr("FormCode");
+            var ItemDesc = $(clickedRow).attr("ItemDesc");
+            var CompNo ='@company.comp_num';
+            //$.get("../../../../ProductionOrdersInProgress/LoadProductionOrder?OrderYear=" + OrderYear + '&OrderNo=' + OrderNo + '&FormCode=' + FormCode + '&ItemDesc=' + ItemDesc, function (data) {
+            //    var modalContent = $('<div>').html(data);
+            //    $('.dataListStage').html(modalContent);
+            //    $('#Prod_Liststage_Model').modal('show');
+            //    $(clickedRow).addClass('highlighted-row');
+            //    $(clickedRow).addClass('opened-row');
+            //    done();
+
+            //});
+            ProductionTab.innerHTML = "";
+            RowMatTab.innerHTML = "";
+            ListStageTab.innerHTML = "";
+            $('#ProductionTab').load('../../../ProductionOrdersInProgress/DailyProdListANDAllDailyProduction?CompNo='+CompNo+'&OrderYear=' + OrderYear + '&OrderNo=' + OrderNo + '&FormCode=' + FormCode);
+            $('#RowMatTab').load('../../../ProductionOrdersInProgress/LoadViewAndRFITab?CompNo='+CompNo+'&OrderYear=' + OrderYear + '&OrderNo=' + OrderNo + '&FormCode=' + FormCode);
+            $('#ListStageTab').load('../../../ProductionOrdersInProgress/LoadProductionOrder?CompNo='+CompNo+'&OrderYear=' + OrderYear + '&OrderNo=' + OrderNo + '&FormCode=' + FormCode, function() {
+                $('.nav-tabs a[href="#ListStageTab"]').tab('show')
+                 $('#Prod_Liststage_Model').modal('show');
+                done();
+            });
+
+        }
+        $(".opacity").addClass('Overlay');
+
+    });
+
+</script>

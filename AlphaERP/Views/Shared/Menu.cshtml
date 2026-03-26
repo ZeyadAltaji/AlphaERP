@@ -1,0 +1,406 @@
+﻿@using AlphaERP.Models
+
+@{
+    Company company = (Company)Session["company"];
+    User Me = (User)Session["me"];
+    List<UserPermission> permissions = new MDB().UserPermissions.Where(x => x.UserID == Me.UserID && x.CompNo == company.comp_num && x.ProgAccess == true).ToList();
+
+    List<Menu> mm = permissions.Where(x => x.Menu != null).Select(x => x.Menu).ToList();
+    List<Menu> mm2 = new List<Menu>();
+    List<Menu> mm3 = new List<Menu>();
+    List<Menu> mm4 = new List<Menu>();
+    List<Menu> mm5 = new List<Menu>();
+    List<Menu> mm6 = new List<Menu>();
+
+    foreach (var m in mm)
+    {
+        if (m._parent != null)
+        {
+            AddToMenu(m._parent, mm2);
+        }
+    }
+
+
+    foreach (var m in mm2)
+    {
+        if (m._parent != null)
+        {
+            AddToMenu(m._parent, mm3);
+        }
+    }
+
+
+
+    foreach (var m in mm3)
+    {
+        if (m._parent != null)
+        {
+            AddToMenu(m._parent, mm4);
+        }
+    }
+
+    foreach (var m in mm4)
+    {
+        if (m._parent != null)
+        {
+            AddToMenu(m._parent, mm5);
+        }
+    }
+
+    foreach (var m in mm5)
+    {
+        if (m._parent != null)
+        {
+            AddToMenu(m._parent, mm6);
+        }
+    }
+
+    mm.AddRange(mm2);
+
+    mm.AddRange(mm3);
+
+    mm.AddRange(mm4);
+
+    mm.AddRange(mm5);
+
+    mm.AddRange(mm6);
+
+    mm = mm.GroupBy(x => x.ProgID).Select(x => x.FirstOrDefault()).ToList();
+
+    mm = mm.OrderBy(x => x.sort).ToList();
+
+
+
+    Session["menu"] = mm;
+    Session["permissions"] = permissions;
+}
+@functions{
+    int Childs(int? ProgID, List<Menu> ListMenu)
+    {
+        int count = ListMenu.Where(x => x.ParentID == ProgID).Count();
+        return count;
+    }
+
+    string Ex(int ProgId, List<Menu> mm)
+    {
+        if (mm.Where(x => x.ProgID == ProgId).FirstOrDefault() == null)
+        {
+            return "hidden";
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    void AddToMenu(Menu m, List<Menu> mm)
+    {
+
+        Menu ex = mm.Where(x => x.ProgID == m.ProgID).FirstOrDefault();
+        if (ex == null)
+        {
+
+            if (m.ProgID == 200100)
+            {
+
+            }
+
+            mm.Add(m);
+        }
+    }
+
+    bool Drow(Menu m, List<Menu> mm, List<UserPermission> permissions)
+    {
+        if (m.SourceForm != "1")
+        {
+            UserPermission ex = permissions.Where(x => x.Menu.ProgID == m.ProgID).FirstOrDefault();
+            if (ex == null)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+
+
+
+        return true;
+    }
+}
+<style>
+    #mmenu li a:not([href='#']) {
+        font-size: smaller;
+    }
+    #mmenu li a[href='#'] {
+        filter: contrast(0.5);
+    }
+    #mmenu li a:not([href='#']):hover {
+        color:red !important
+    }
+
+</style>
+
+<div method="get" class="sidebar-form" id="sidebar-form" style="margin: 5px 10px !important;">
+    <div class="input-group">
+        <input style="border:0;height:24px;@Html.Translate("direction: rtl;","")" type="text" name="q" class="form-control" placeholder="@Html.Recource(975) ..." id="search-input">
+        <span class="input-group-btn">
+            <button style="border:0;height:24px" type="submit" name="search" id="search-btn" class="btn btn-flat">
+                <i class="fa fa-search"></i>
+            </button>
+        </span>
+    </div>
+</div>
+<script>
+    $('#search-input').keyup(function () {
+        if (this.value.length > 0) {
+            debugger
+            $("#mmenu li").hide().filter(function () {
+                return $(this).attr('prog').toLowerCase().indexOf($("#search-input").val().toLowerCase()) != -1 || $(this).text().toLowerCase().indexOf($("#search-input").val().toLowerCase()) != -1;
+            }).show();
+
+
+            if (Number($("#search-input").val()) > 0) {
+                $("#mmenu li").filter(function () {
+                    if (Number($(this).attr('prog')) == Number($("#search-input").val())) {
+                        if ($(this).parent().is("li")) {
+                            $(this).parent().show()
+                        }
+                        if ($(this).parent().parent().is("li")) {
+                            $(this).parent().parent().show()
+                        }
+                        if ($(this).parent().parent().parent().is("li")) {
+                            $(this).parent().parent().parent().show()
+                        }
+                        if ($(this).parent().parent().parent().parent().is("li")) {
+                            $(this).parent().parent().parent().parent().show()
+                        }
+                        return true
+                    } else {
+                        return false
+                    }
+                }).show();
+            }
+
+
+
+
+        }
+        else {
+            $("#mmenu li").show();
+        }
+    });
+    function GtTitle(e) {
+
+    }
+</script>
+<ul class="sidebar-menu" data-widget="tree" id="mmenu">
+    @foreach (var item in mm.Where(x => x.ParentID == 0 && x.SourceForm == "1"))
+    {
+        if (Childs(item.ProgID, mm) > 0)
+        {
+            <script>menus.push('menu-@item.ProgID')</script>
+            <li prog="@item.ProgID" class="treeview" id="menu-@item.ProgID">
+                <a href="#">
+                    <i class="fa @item.Icon"></i>
+                    <span>@Html.Translate(item.ProgArName, item.ProgEnName)</span>
+                    <span class="pull-@Html.Translate("left","right")-container">
+                        <i class="fa fa-angle-@Html.Translate("left","right") pull-@Html.Translate("left","right")"></i>
+                    </span>
+                </a>
+                <ul class="treeview-menu">
+                    @foreach (var item2 in mm.Where(x => x.ParentID == item.ProgID))
+                    {
+                        if (item2.SourceForm != "1")
+                        {
+                            <li prog="@item2.ProgID" @Ex(item2.ProgID, mm)>
+                                <a class="badgeP" title="@item2.ProgID" href="~/@item2.SourceForm" onclick="LinkRequested(this)">
+                                    <i class="fa @item2.Icon"></i>
+                                    @Html.Translate(item2.ProgArName, item2.ProgEnName)
+                                    <label id="badge-@item2.ProgID" class="my-badge badge-0"></label>
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            if (Childs(item2.ProgID, mm) > 0)
+                            {
+                                <script>menus.push('menu-@item2.ProgID')</script>
+                                <li prog="@item2.ProgID" class="treeview menu2" id="menu-@item2.ProgID">
+                                    <a href="#">
+                                        <i class="fa @item2.Icon"></i>
+                                        <span>
+                                            @Html.Translate(item2.ProgArName, item2.ProgEnName)
+                                        </span>
+                                        <span class="pull-@Html.Translate("left","right")-container">
+                                            <i class="fa fa-angle-left pull-@Html.Translate("left","right")"></i>
+                                        </span>
+                                    </a>
+                                    <ul class="treeview-menu">
+                                        @foreach (var item3 in mm.Where(x => x.ParentID == item2.ProgID))
+                                        {
+                                            if (item3.SourceForm != "1")
+                                            {
+                                                <li prog="@item3.ProgID" @Ex(item3.ProgID, mm)>
+                                                    <a title="@item3.ProgID" href="~/@item3.SourceForm" onclick="LinkRequested(this)">
+                                                        <i class="fa @item3.Icon"></i>
+                                                        @Html.Translate(item3.ProgArName, item3.ProgEnName)
+                                                        <label id="badge-@item3.ProgID" class="my-badge badge-0"></label>
+                                                    </a>
+                                                </li>
+                                            }
+                                            else
+                                            {
+                                                if (Childs(item3.ProgID, mm) > 0)
+                                                {
+                                                    <script>menus.push('menu-@item3.ProgID')</script>
+                                                    <li prog="@item3.ProgID" class="treeview menu2" id="menu-@item3.ProgID">
+                                                        <a href="#">
+                                                            <i class="fa @item3.Icon"></i>
+                                                            <span>
+                                                                @Html.Translate(item3.ProgArName, item3.ProgEnName)
+                                                            </span>
+                                                            <span class="pull-@Html.Translate("left","right")-container">
+                                                                <i class="fa fa-angle-left pull-@Html.Translate("left","right")"></i>
+                                                            </span>
+                                                        </a>
+                                                        <ul class="treeview-menu">
+                                                            @foreach (var item4 in mm.Where(x => x.ParentID == item3.ProgID))
+                                                            {
+                                                                if (item4.SourceForm != "1")
+                                                                {
+                                                                    <li prog="@item4.ProgID" @Ex(item4.ProgID, mm)>
+                                                                        <a title="@item4.ProgID" href="~/@item4.SourceForm" onclick="LinkRequested(this)">
+                                                                            <i class="fa @item4.Icon"></i>
+                                                                            @Html.Translate(item4.ProgArName, item4.ProgEnName)
+                                                                            <label id="badge-@item4.ProgID" class="my-badge badge-0"></label>
+                                                                        </a>
+                                                                    </li>
+                                                                }
+                                                                else
+                                                                {
+                                                                    if (Childs(item4.ProgID, mm) > 0)
+                                                                    {
+                                                                        <script>menus.push('menu-@item4.ProgID')</script>
+                                                                        <li prog="@item4.ProgID" class="treeview menu2" id="menu-@item4.ProgID">
+                                                                            <a href="#">
+                                                                                <i class="fa @item4.Icon"></i>
+                                                                                <span>@Html.Translate(item4.ProgArName, item4.ProgEnName)</span>
+                                                                                <span class="pull-@Html.Translate("left","right")-container">
+                                                                                    <i class="fa fa-angle-left pull-@Html.Translate("left","right")"></i>
+                                                                                </span>
+                                                                            </a>
+                                                                            <ul class="treeview-menu">
+                                                                                @foreach (var item5 in mm.Where(x => x.ParentID == item4.ProgID))
+                                                                                {
+                                                                                    <li prog="@item5.ProgID" @Ex(item5.ProgID, mm)>
+                                                                                        <a title="@item5.ProgID" href="~/@item5.SourceForm" onclick="LinkRequested(this)">
+                                                                                            <i class="fa @item5.Icon"></i>
+                                                                                            @Html.Translate(item5.ProgArName, item5.ProgEnName)
+                                                                                            <label id="badge-@item5.ProgID" class="my-badge badge-0"></label>
+                                                                                        </a>
+                                                                                    </li>
+                                                                                }
+                                                                            </ul>
+                                                                        </li>
+                                                                    }
+                                                                }
+                                                            }
+                                                        </ul>
+                                                    </li>
+                                                }
+                                            }
+                                        }
+                                    </ul>
+                                </li>
+                            }
+                        }
+                    }
+                </ul>
+            </li>
+        }
+    }
+    @foreach (var item in mm.Where(x => x.ParentID == 0 && x.SourceForm != "1"))
+    {
+        <li prog="@item.ProgID" @Ex(item.ProgID, mm)>
+            <a title="@item.ProgID" href="~/@item.SourceForm" onclick="LinkRequested(this)">
+                <i class="fa @item.Icon"></i>
+                <span>
+                    @Html.Translate(item.ProgArName, item.ProgEnName)
+                    <label id="badge-@item.ProgID" class="my-badge badge-0"></label>
+                </span>
+            </a>
+        </li>
+    }
+</ul>
+<script>
+    //setInterval(GetBadges, 3000);
+    $("#mmenu li a").bind('contextmenu', function (e) {
+        if ($(this).attr('href') != "#") {
+            var ar_ = 'هل تريد اضافة " ' + $(this).text().trim() + ' " الى القائمة المفضلة ؟';
+            var en_ = 'Do you want to add " ' + $(this).text().trim() + ' " to the fav menu ?';
+            if (confirm(ar(ar_, en_))) {
+
+            }
+        }
+
+        return false;
+
+    });
+GetBadges()
+
+function LinkRequested(e) {
+    debugger
+	$("title").html('@Resources.Resource.title - ' + e.text);
+	var lisx = document.getElementById("mmenu").getElementsByTagName("li");
+	for (var i = 0; i < lisx.length; i++) {
+		lisx[i].children[0].className = '';
+	}
+	e.className = "active"
+	var lis = document.getElementById("MainUL").getElementsByTagName("li");
+	for (var i = 0; i < lis.length; i++) {
+		if ('/' + lis[i].getAttribute('orginal') == e.getAttribute('href')) {
+			lis[i].children[0].click();
+		}
+	}
+}
+
+function GeneralSearch(e) {
+	//$('#GeneralUL').empty();
+	$('#SearchResults').fadeIn(500, function () {});
+	burn({
+		s: e.value
+	}, 'Home/GeneralSearch', '', GeneralSearchResult, true);
+}
+
+function GeneralSearchResult(F) {
+	var ul = document.getElementById("GeneralUL");
+	$(ul).empty();
+	for (var i = 0; i < F.F.length; i++) {
+		var li = document.createElement("li");
+		var a = document.createElement("a");
+		a.href = '#/' + F.F[i].Link;
+		a.text = F.F[i].Caption;
+		li.appendChild(a);
+		ul.appendChild(li);
+	}
+}
+
+function GetBadges() {
+	$.getJSON('../../../Home/Badges', function (response) {
+		if (response != null) {
+			$.each(response, function (i, item) {
+				if (item.count == 0) {
+					$('#badge-' + item.prog).addClass("badge-0");
+				} else {
+					$('#badge-' + item.prog).text(item.count);
+					$('#badge-' + item.prog).removeClass("badge-0");
+				}
+			});
+		}
+	});
+}
+
+</script>

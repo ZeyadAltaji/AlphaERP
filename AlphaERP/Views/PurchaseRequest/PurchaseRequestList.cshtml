@@ -1,0 +1,202 @@
+﻿@model IEnumerable<AlphaERP.Models.OrdRequest>
+@using AlphaERP.Models;
+@{ 
+    Company company = (Company)Session["company"];
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+}
+
+@if (Session["language"].ToString() == "en")
+{
+    <style>
+        .dataTables_wrapper .dataTables_filter {
+            text-align: center !important;
+            direction: rtl;
+        }
+    </style>
+}
+
+
+<table id="PurchaseRequestTable" class="table table-hover">
+    <thead>
+        <tr>
+            <th hidden></th>
+            <th style="text-align:center !important">@Html.Recource(3197)</th>
+            <th style="text-align:center !important">@Html.Recource(206)</th>
+            <th style="text-align: center !important;">@Html.Recource(9704)</th>
+            <th style="text-align: center !important;">@Html.Recource(737)</th>
+            <th style="text-align: center !important;">@Html.Recource(96)</th>
+            <th style="text-align:center !important">@Html.Recource(9700)</th>
+            <th style="text-align:center !important">@Html.Recource(3265)</th>
+            <th style="width:15% !important; text-align:center !important">@Html.Recource(1627)</th>
+            <th style="text-align: center !important;">@Html.Translate("المستوى الموافقات", "Level Approvals")</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td style="text-align: center !important" hidden>@item.ReqStatus</td>
+                <td style="text-align:center !important" id="PurchaseRequest_ReqNo" ReqStatus="@item.ReqStatus">@item.ReqNo</td>
+                <td style="text-align:center !important">@item.ReqDate.ToShortDateString()</td>
+                <td style="text-align: center !important">@Html.Translate(item.OrderPriorityDescAr, item.OrderPriorityDescEn)</td>
+                <td style="text-align: center !important">@item.UserName</td>
+                <td style="text-align: center !important">@item.RefNo</td>
+                <td style="text-align:center !important">@Html.Translate(item.BusUnitDescAr, item.BusUnitDescEng)</td>
+                <td style="text-align:center !important">@Html.Translate(item.CodeDesc, item.CodeDescEng)</td>
+                <td style="word-wrap: break-word; white-space: normal; text-align: center !important; background-color: @item.colorName; ">@Html.Translate(item.ReqStatusDescAr, item.ReqStatusDescEn)</td>
+                <td style="text-align:center !important">@item.LevelApprv</td>
+                <td>
+                    @if (item.ReqStatus == 0 || item.ReqStatus == 1 || item.ReqStatus == 5 || item.ReqStatus == 6)
+                    {
+                        <button onclick="EditPurchaseRequest('@item.ReqYear', '@item.ReqNo')" type="button" class="btn btn-ed ex" title="@Html.Translate("تعديل طلب شراء", "Edit Purchase Request")">
+                            <i class="fa fa-pencil-alt"></i>
+                        </button>
+                        <button id="ePurchaseRequest" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                            @Html.Translate("تعديل طلب شراء", "Edit Purchase Request")
+                        </button>
+                        <button class="btn-de" onclick="Cancelling_PurchaseRequest('@item.ReqYear','@item.ReqNo')">
+                            <i class="fa fa-times-circle"></i>
+                        </button>
+                    }
+                    <button class="btn btn-default ex" title="@Html.Translate("عرض", "View")" href="/PurchaseRequest/ViewPurchaseRequest?ReqNo=@item.ReqNo&ReqYear=@item.ReqYear" target="_blank">
+                        <i style="font-weight:100" class="fa fa-folder"></i>
+                        @item.ReqNo
+                    </button>
+                    <button class="btn btn-info" id="btnReport" onclick="GetPrintReport(@item.ReqYear,'@item.ReqNo')" formenctype="multipart/form-data" formtarget="_blank">
+                        <i class="fa fa-print"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<br />
+<div class="form-group">
+    <div class="col-md-12">
+        <div class="col-md-4">
+            @*@if (CActive.ClientNo == 239)
+            {
+                <button style="width: 35%; height: 40px !important;" class="btn btn-primary btn-block" href="/PurchaseRequest/AddPurchaseRequestKasih" target="_blank">
+                    <i class="fa fa-plus"></i>
+                    @Html.Recource(32)
+                </button>
+            }
+            else
+            {*@
+                <button style="width: 35%; height: 40px !important;" class="btn btn-primary btn-block" href="/PurchaseRequest/AddPurchaseRequest" target="_blank">
+                    <i class="fa fa-plus"></i>
+                    @Html.Recource(32)
+                </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_PurchaseRequest_RejectReason">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-3">
+                            <label class="unselectable" for="ProdCost_PurchaseReqHF_save_RejectReason">@Html.Translate("سبب الإلغاء", "Reject Reason")</label>
+                        </div>
+                        <div class="col-md-4" style="margin-bottom: 5px;">
+                            <input required="false" style="width:410px !important;" type="text" id="ProdCost_PurchaseReqHF_save_RejectReason" placeholder="@Html.Translate("سبب الإلغاء", "Reject Reason")" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteSaveProd_RejectReason()" class="btn btn-danger">@Html.Translate("الغاء", "Reject")</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $('#PurchaseRequestTable').DataTable({
+        "scrollY": 'calc( 100vh - 338px)',
+        "paging": true,
+        "pageLength": 10,
+        "order": [[1, "desc"]],
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+
+    function EditPurchaseRequest(ReqYear, ReqNo) {
+        if(@CActive.ClientNo == 239){
+            $('#ePurchaseRequest').attr("href", '/PurchaseRequest/EditPurchaseRequestKasih?ReqYear=' + ReqYear + '&ReqNo=' + ReqNo +  '')
+            $('#ePurchaseRequest').click();
+        }
+        else{
+            $('#ePurchaseRequest').attr("href", '/PurchaseRequest/EditPurchaseRequest?ReqYear=' + ReqYear + '&ReqNo=' + ReqNo +  '')
+            $('#ePurchaseRequest').click();
+        }
+       
+    }
+
+    $('#Model_PurchaseRequest_RejectReason').draggable({
+        handle: ".modal-header",
+    });
+     function Cancelling_PurchaseRequest(ReqYear, ReqNo) {
+        _ReqYear = ReqYear;
+        _ReqNo = ReqNo;
+        if (confirm('@Resources.Resource.CancelPurchaseOrders')) {
+            ProdCost_PurchaseReqHF_save_RejectReason.value = ''
+            $('#Model_PurchaseRequest_RejectReason').modal('show')
+        }
+    }
+    function ExcuteSaveProd_RejectReason(ReqYear, ReqNo) {
+        wait();
+        burn({ ReqYear: _ReqYear, ReqNo: _ReqNo, RejectReason: $('#ProdCost_PurchaseReqHF_save_RejectReason')[0].value }, '../../../PurchaseRequest/Cancel_PurchaseRequest', '', ReloadCancelPurchaseRequest, false);
+    }
+    function ReloadCancelPurchaseRequest() {
+        done();
+        $('#Model_PurchaseRequest_RejectReason').modal('hide')
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#PurchaseReqItemTBody').empty();
+        $('#Prod_PurchaseRequestListDiv').load('../../../PurchaseRequest/PurchaseRequestList?ReqStatus=0');
+    }
+
+    var _ReqYear = 0;
+    var _ReqNo = 0;
+    function GetPrintReport(ReqYear, ReqNo) {
+        _ReqYear = ReqYear;
+        _ReqNo = ReqNo;
+        ReportManger.LoadReport();
+    }
+    var ReportManger = {
+
+        LoadReport: function () {
+            var jsonParam = "";
+            var ServiceUrl = "../PurchaseRequest/ReportPurchaseRequest?ReqYear=" + _ReqYear + "&ReqNo=" + _ReqNo;
+            ReportManger.GetReport(ServiceUrl, jsonParam, onFailed);
+            function onFailed(error) {
+                alert("Error");
+            }
+        },
+
+        GetReport: function (serviceUrl, jsonParams, errorCallback) {
+            jQuery.ajax({
+                url: serviceUrl,
+                async: false,
+                type: "POST",
+                data: "{" + jsonParams + "}",
+                contentType: "application/json; charset=utf-8",
+                success: function () {
+                    window.open('../Reports/CrystalViewer/ReportViewer.aspx', '_newtab');
+                },
+                error: errorCallback
+            });
+        }
+    }
+</script>

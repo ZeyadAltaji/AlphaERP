@@ -1,0 +1,236 @@
+﻿@using AlphaERP.Models
+@{
+    LicensedModule licensed = new MDB().LicensedModules.Where(x => x.ModuleID == 10).FirstOrDefault();
+    if (licensed == null)
+    {
+        licensed = new LicensedModule();
+    }
+    List<User> users = new MDB().Users.ToList();
+    List<Menu> menus = new MDB().Menus.Where(x => x.ModuleID == 10 && x.SourceForm != "1" && x.ParentID != 0).ToList();
+    Company company = (Company)Session["company"];
+}
+<style>
+    .tbl-label {
+        padding: 0;
+        margin: 0
+    }
+</style>
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-10" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle / @Html.Translate(licensed.ModuleName, licensed.ModuleNameEng)
+                </label>
+            </div>
+            <div class="col-md-2" style="padding:0">
+                <button class="btn btn-primary btn-block" onclick="SetUserPerms()">
+                    <i class="fa fa-save"></i> @Html.Recource(475)
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" style="height:calc( 100vh - 165px)">
+        <div>
+            <div class="col-md-4">
+                <table class="table table-hover" style="width:100%" id="PermUsers">
+                    <thead>
+                        <tr>
+                            <th>
+                                ID
+                            </th>
+                            <th>
+                                @Html.Recource(30)
+                            </th>
+                            <th>
+                                @Html.Recource(48)
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in users)
+                        {
+                            <tr onclick="GetUserPerms('@user.UserID')">
+                                <td>
+                                    @user.UserID
+                                </td>
+                                <td>
+                                    @user.UserName
+                                </td>
+                                <td>
+                                    @if (user.StoppedUser == true)
+                                    {
+                                        <i class="fa fa-check"></i>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-8">
+                <table style="width:100%;" class="table table-hover" id="PermMMenus">
+                    <thead>
+                        <tr>
+                            <th>
+                                @Html.Recource(2493)
+                            </th>
+                            <th>
+                                <label class="tbl-label">
+                                    <input type="checkbox" onclick="SelectUnSelect(this,2)" />
+                                    @Html.Recource(787)
+                                </label>
+                            </th>
+                            <th>
+                                <label class="tbl-label">
+                                    <input type="checkbox" onclick="SelectUnSelect(this,3)" />
+                                    @Html.Recource(32)
+                                </label>
+                            </th>
+                            <th>
+                                <label class="tbl-label">
+                                    <input type="checkbox" onclick="SelectUnSelect(this,4)" />
+                                    @Html.Recource(12)
+                                </label>
+                            </th>
+                            <th>
+                                <label class="tbl-label">
+                                    <input type="checkbox" onclick="SelectUnSelect(this,5)" />
+                                    @Html.Recource(13)
+                                </label>
+                            </th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="PermMMenusBD">
+                        @foreach (var menu in menus.OrderBy(x => x.sort))
+                        {
+                            <tr>
+                                <td>
+                                    <i progid="@menu.ProgID" class="@menu.Icon"></i>  @Html.Translate(menu.ProgArName, menu.ProgEnName)
+                                </td>
+                                <td>
+                                    <input onclick="if (this.checked == false) { $('.@menu.ProgID').prop('checked', false); }" type="checkbox" />
+                                </td>
+                                <td>
+                                    <input @viewOp(menu.addButton) class="@menu.ProgID" type="checkbox" />
+                                </td>
+                                <td>
+                                    <input @viewOp(menu.updateButton) class="@menu.ProgID" type="checkbox" />
+                                </td>
+                                <td>
+                                    <input @viewOp(menu.deleteButton) class="@menu.ProgID" type="checkbox" />
+                                </td>
+                                <td></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    $('#PermUsers').DataTable({
+        "order": [[1, "asc"], [0, "asc"]],
+        "scrollY": TableHeight(),
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+
+    $('#PermMMenus').DataTable({
+        "scrollY": TableHeight(),
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false,
+        "orderable": false,
+        "order": []
+    });
+
+    var UserID_ = "";
+
+    function GetUserPerms(UserID) {
+        UserID_ = UserID;
+        burn({ UserID: UserID }, '../../../Permissions/GetPermissions', '', PermGeted, false)
+    }
+
+    function SelectUnSelect(e,No) {
+        var table_ = $("#PermMMenusBD");
+        table_.find("tr").each(function () {
+            $(this).find("td:nth-child(" + No + ")").children(0).prop("checked", e.checked);
+        });
+    }
+
+    function PermGeted(r) {
+        var table_ = $("#PermMMenusBD");
+        table_.find("tr").each(function () {
+            $(this).find("td:nth-child(2)").children(0).prop("checked", false);
+            $(this).find("td:nth-child(3)").children(0).prop("checked", false);
+            $(this).find("td:nth-child(4)").children(0).prop("checked", false);
+            $(this).find("td:nth-child(5)").children(0).prop("checked", false);
+        });
+        $.each(r.permissions, function (i, menu) {
+            table_.find("tr").each(function () {
+                var _progid = $(this).find("td:nth-child(1)").children(0).attr("progid");
+                if (_progid == menu.ProgID) {
+                    $(this).find("td:nth-child(2)").children(0).prop("checked", menu.ProgAccess);
+                    $(this).find("td:nth-child(3)").children(0).prop("checked", menu.ProgAdd);
+                    $(this).find("td:nth-child(4)").children(0).prop("checked", menu.ProgMod);
+                    $(this).find("td:nth-child(5)").children(0).prop("checked", menu.ProgDel);
+                }
+            });
+        });
+    }
+
+    function SetUserPerms() {
+        if (UserID_ == "") {
+            alert("@Html.Translate("يرجى اختيار مستخدم","Select user please")");
+            return;
+        }
+        var trs = document.getElementById('PermMMenusBD').getElementsByTagName("tr");
+        var permissions = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            permissions.push
+                ({
+                    CompNo :"@company.comp_num",
+                    ModuleID :10,
+                    UserID: UserID_,
+                    ProgID: trs[i].cells[0].children[0].getAttribute("progid"),
+                    ProgAccess: trs[i].cells[1].children[0].checked,
+                    ProgAdd : trs[i].cells[2].children[0].checked,
+                    ProgMod : trs[i].cells[3].children[0].checked,
+                    ProgDel: trs[i].cells[4].children[0].checked
+                });
+        }
+        burn({ UserID: UserID_, permissions: permissions }, '../../../Permissions/SetPermissions', '', PermSeted, false)
+
+
+    }
+
+    function PermSeted(r) {
+        alert('Saved')
+    }
+
+</script>
+
+
+@functions{
+    string viewOp(bool x)
+    {
+        if (x)
+        {
+            return "";
+        }
+        else
+        {
+            return "hidden";
+        }
+    }
+}

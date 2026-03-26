@@ -1,0 +1,29 @@
+﻿@using AlphaERP.Models
+@{
+    
+User me = (User)Session["me"];
+    string fff = Context.Request.Headers["X-Requested-With"];
+    if (fff == "XMLHttpRequest")
+    {
+        Context.Request.Headers["Location"] = Context.Request.RawUrl;
+        Context.Request.Headers["Cache-Control"] = "no-store";
+    }
+    else
+    {
+        if (me != null)
+        {
+            if (me.UserID == "admin" || me.UserID == "Saif.sc")
+            {
+                Layout = "~/Views/Shared/_Layout.cshtml";
+            }
+            else
+            {
+                Layout = "~/Views/Shared/_LayoutClient.cshtml";
+            }
+        }
+        else
+        {
+            Layout = "~/Views/Shared/_Layout.cshtml";
+        }
+    }
+}

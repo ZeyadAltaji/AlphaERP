@@ -1,0 +1,306 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@{
+    Company company = (Company)Session["company"];
+}
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="Serach_TransferDailyProd_Year">@Resources.Resource.Year </label>
+                <input style="width:165px !important;" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" required="true" type="number" id="Prod_TransferDailyProd_Year" value="@DateTime.Now.Year" onblur="Checkyear()" maxLength="4" />
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable"></label>
+                <button class="btn btn-success btn-block" onclick="Serach_TransferDailyProd()">
+                    @Html.Recource(975)
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="Prod_TransferDailyProdDiv">
+
+    </div>
+</div>
+
+<div class="modal fade" id="Model_TransferDailyProd_Store">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4286)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectTransferDailyProd_StoreTable">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:center;">@Html.Recource(41)</th>
+                                    <th style="text-align:center;">@Html.Recource(31)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    string query = string.Format("exec SP_Search {0},'WHERE (InvStoresMF.CompNo = {0})',1", company.comp_num);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                string StoreName = Html.Translate(rdr["StoreName"].ToString(), rdr["StoreNameEng"].ToString()).ToString();
+
+                                                <tr onclick="SelectStore(this)" StoreNo="@rdr["StoreNo"]" StoreName="@StoreName">
+                                                    <td style="text-align:center;">@rdr["StoreNo"]</td>
+                                                    <td style="text-align:center;" title="@StoreName">@StoreName</td>
+                                                    <td></td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingTransferDailyProd_Store()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $('#Model_TransferDailyProd_Store').draggable({
+        handle: ".modal-header",
+    });
+    var StoreTableTable = $('#SelectTransferDailyProd_StoreTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+    function Checkyear() {
+        if (Prod_TransferDailyProd_Year.value < 2000) {
+            Prod_TransferDailyProd_Year.value = "@DateTime.Now.Year"
+            Prod_TransferDailyProd_Year.focus();
+        }
+    }
+    function CheckValue(ID) {
+        if (document.getElementById(ID).getAttribute('required') == 'true') {
+            if (document.getElementById(ID).value == '') {
+                document.getElementById(ID).focus();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    function SearchTransferDailyProd_StoreNo() {
+        $('#SelectTransferDailyProd_StoreTable tr').removeClass("selected");
+        $('#Model_TransferDailyProd_Store').modal('show')
+    }
+    function SelectStore(e) {
+        var table = $('#SelectTransferDailyProd_StoreTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function SelectingTransferDailyProd_Store() {
+        var table = $('#SelectTransferDailyProd_StoreTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مستودع واحدة على الاقل", "Select one Store at least")');
+            return;
+        }
+
+        SAVE_TransferDailyProd_StoreNo.value = trs[0].getAttribute('StoreNo');
+        SAVE_TransferDailyProd_StoreDesc.value = trs[0].getAttribute('StoreName');
+        $('#Model_TransferDailyProd_Store').modal('hide')
+    }
+    function Serach_TransferDailyProd() {
+        if (CheckValue('Prod_TransferDailyProd_Year')) { Prod_TransferDailyProd_Year.focus(); return; }
+        wait();
+        $('#Prod_TransferDailyProdDiv').load('../../../TransferDailyProd/TransDailyProd?year=' + Prod_TransferDailyProd_Year.value, function () {
+            done();
+        });
+    }
+    function CheckValueConsQty(val,Nval, id) {
+        var trs = $('#TransferDailyProdTbody #TransferDailyProd_' + id + '');
+        if (Nval < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون كمية المراد تحويلها اقل من 0", "The Qty Converted of the Rejected may not be less than 0")');
+            $(trs[0]).find('#TransferDailyProd_ConsQty')[0].value = val;
+            $(trs[0]).find('#TransferDailyProd_ConsQty')[0].focus();
+            return false;
+        }
+        var total = Number($(trs[0]).find('#TransferDailyProd_ProdQty')[0].innerHTML) + Number($(trs[0]).find('#TransferDailyProd_TotPreviousQty')[0].innerHTML);
+        if (Number(total) < Nval) {
+            alert('@Html.Translate("لا يجوز ان تكون كمية المراد تحويلها اكبر من كمية الانتاج", "The quantity to be transferred may not be greater than the production amount")');
+            $(trs[0]).find('#TransferDailyProd_ConsQty')[0].value = val;
+            $(trs[0]).find('#TransferDailyProd_ConsQty')[0].focus();
+            return false;
+        }
+
+        var count = 0;
+        var total1 = 0;
+        var table = $('#TransferDailyProdTbody tr');
+        var trs = table;
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i]).closest('tr').find('#TransferDailyProd_Action')[0].checked == true) {
+                total1 = Number(total1) + Number($(trs[i]).closest('tr').find('#TransferDailyProd_ConsQty')[0].value);
+                count++;
+            }
+        }
+        if (count == 0) {
+            TransferDailyProd_QtyTransfers.innerHTML = 0;
+            TransferDailyProd_PalletNumber.innerHTML = 0;
+        }
+        else {
+            TransferDailyProd_QtyTransfers.innerHTML = Number(total1);
+            TransferDailyProd_PalletNumber.innerHTML = count;
+        }
+    }
+    function CheckValueGrid(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt == 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+        else {
+            if (Amt == '' || Amt == null) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function ExecDailyProdcon(TransByOrder,showstore) {
+        if (showstore == "True") {
+            if (CheckValueGrid(1, SAVE_TransferDailyProd_StoreNo.value)) {
+                alert('@Html.Translate("يجب ادخال المستودع ", "You Must Enter Store")');
+                return;
+            }
+        }
+        var table = $('#TransferDailyProdTbody tr');
+        var trs = table;
+        var DailyProd = new Array();
+        var toStore = "";
+        if (TransByOrder == "False") {
+            for (var i = 0; i < trs.length; i++) {
+                if (showstore == "False") {
+                    toStore = trs[i].getAttribute('ToStoreNo');
+                }
+                else {
+                    toStore = SAVE_TransferDailyProd_StoreNo.value;
+                }
+                if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#TransferDailyProd_ConsQty')[0].value)) {
+                    alert('@Html.Translate("يجب ادخال كمية المادة ", "You Must Enter Qty Item")');
+                    return;
+                }
+                if ($(trs[i]).closest('tr').find('#TransferDailyProd_Action')[0].checked == true) {
+                    DailyProd.push({
+                        TransDate: SAVE_TransferDailyProd_TransferDate.value,
+                        Note: SAVE_TransferDailyProd_Notes.value,
+                        ProdPrepYear: trs[i].getAttribute('ProdPrepYear'),
+                        ProdPrepNo: trs[i].getAttribute('ProdPrepNo'),
+                        ItemSer: trs[i].getAttribute('itemser'),
+                        FromStoreNo: trs[i].getAttribute('FromStoreNo'),
+                        ToStoreNo: toStore,
+                        FinCode: trs[i].getAttribute('FinCode'),
+                        ExpDate: trs[i].getAttribute('ExpDate'),
+                        ManDate: trs[i].getAttribute('ManDate'),
+                        PostFlag: trs[i].getAttribute('PostFlag'),
+                        ConsVouYear: trs[i].getAttribute('ConsVouYear'),
+                        ProdRecYear: trs[i].getAttribute('ProdRecYear'),
+                        ProdRecNo: trs[i].getAttribute('ProdRecNo'),
+                        ConsVouNo: trs[i].getAttribute('ConsVouNo'),
+                        Batch: $(trs[i]).closest('tr').find('#TransferDailyProd_Batch')[0].innerHTML,
+                        UnitSerial: trs[i].getAttribute('UnitSerial'),
+                        ConsQty: $(trs[i]).closest('tr').find('#TransferDailyProd_ConsQty')[0].value,
+                        Notes: $(trs[i]).closest('tr').find('#TransferDailyProd_Note')[0].value
+                    });
+                }
+            }
+        }
+
+        if (TransByOrder == "True") {
+            if (CheckValueGrid(1, SAVE_TransferDailyProd_StoreNo.value)) {
+                alert('@Html.Translate("يجب ادخال المستودع ", "You Must Enter Store")');
+                return;
+            }
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#TransferDailyProd_ConsQty')[0].value)) {
+                alert('@Html.Translate("يجب ادخال كمية المادة ", "You Must Enter Qty Item")');
+                return;
+            }
+            for (var i = 0; i < trs.length; i++) {
+                if ($(trs[i]).closest('tr').find('#TransferDailyProd_Action')[0].checked == true) {
+                    DailyProd.push({
+                        TransDate: SAVE_TransferDailyProd_TransferDate.value,
+                        Note: SAVE_TransferDailyProd_Notes.value,
+                        ToStoreNo: SAVE_TransferDailyProd_StoreNo.value,
+                        ProdPrepYear: trs[i].getAttribute('ProdPrepYear'),
+                        ProdPrepNo: trs[i].getAttribute('ProdPrepNo'),
+                        FinCode: $(trs[i]).closest('tr').find('#TransferDailyProd_FinCode')[0].innerHTML,
+                        FromStoreNo: trs[i].getAttribute('FromStoreNo'),
+                        FinCode: trs[i].getAttribute('FinCode'),
+                        ExpDate: trs[i].getAttribute('ExpDate'),
+                        ManDate: trs[i].getAttribute('ManDate'),
+                        PostFlag: trs[i].getAttribute('PostFlag'),
+                        ConsVouYear: trs[i].getAttribute('ConsVouYear'),
+                        ProdRecYear: trs[i].getAttribute('ProdRecYear'),
+                        ProdRecNo: trs[i].getAttribute('ProdRecNo'),
+                        ConsVouNo: trs[i].getAttribute('ConsVouNo'),
+                        Batch: $(trs[i]).closest('tr').find('#TransferDailyProd_Batch')[0].innerHTML,
+                        UnitSerial: trs[i].getAttribute('UnitSerial'),
+                        ConsQty: $(trs[i]).closest('tr').find('#TransferDailyProd_ConsQty')[0].value,
+                        Notes: $(trs[i]).closest('tr').find('#TransferDailyProd_Note')[0].value
+                    });
+                }
+            }
+        }
+
+        if (DailyProd.length == 0) {
+            MsgBox('@Resources.Resource.NoItemWasSelected', 'red');
+            return false
+        }
+
+
+        wait();
+
+        burn({ lTransfDailyProd: DailyProd }, '../../../TransferDailyProd/TransferDailyProd', '', LoadTransferDailyProd, true);
+    }
+    function LoadTransferDailyProd() {
+        $('#Prod_TransferDailyProdDiv').load('../../../TransferDailyProd/TransDailyProd?year=' + Prod_TransferDailyProd_Year.value, function () {
+            done();
+            MsgBox('@Html.Recource(475)', 'green');
+        });
+    }
+</script>

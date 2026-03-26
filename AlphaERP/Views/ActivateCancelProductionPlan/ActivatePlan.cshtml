@@ -1,0 +1,88 @@
+﻿@model AlphaERP.Models.MRP_ProductionPlain
+@using AlphaERP.Models
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    List<BusunisUnit> BU = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("SELECT  Alpha_BusinessUnitDef.BusUnitID as Id, BusUnitDescAr as DescAr,BusUnitDescEng as DescEn  " +
+    "from Alpha_BusinessUnitDef INNER Join Alpha_BusinessUnitUsers ON Alpha_BusinessUnitDef.CompNo = Alpha_BusinessUnitUsers.CompNo AND Alpha_BusinessUnitDef.BusUnitID = Alpha_BusinessUnitUsers.BusUnitID " +
+    "where Alpha_BusinessUnitUsers.CompNo = '{0}' AND Alpha_BusinessUnitUsers.UserID = '{1}' AND Permission = 1 AND (Alpha_BusinessUnitUsers.BusUnitID In " +
+    "(Select distinct BU from Alpha_WorkFlowSetUP where Alpha_WorkFlowSetUP.CompNo = '{0}' AND Alpha_WorkFlowSetUP.FID = 50))", company.comp_num, me.UserID)).ToList();
+    string date = DateTime.Now.ToString("yyyy-MM-dd");
+}
+
+<div class="modal-body row">
+    <div class="form-group">
+        <div class="col-md-2">
+            <label class="unselectable" for="ActivatePlan_save_OrderDate">@Resources.Resource.OrderDate </label>
+        </div>
+        <div class="col-md-4" style="margin-bottom: 5px;">
+            <input required="true" type="date" id="ActivatePlan_save_OrderDate" style="width: 100%;" value="@date" />
+        </div>
+        <div class="col-md-2">
+            <label class="unselectable" for="ActivatePlan_save_BU">@Resources.Resource.BusinessUnit</label>
+        </div>
+        <div class="col-md-4" style="margin-bottom: 5px;">
+            <select style="width:100%" id="ActivatePlan_save_BU" required="true">
+                @foreach (var item in BU)
+                {
+                    <option value="@item.Id">@Html.Translate(item.DescAr, item.DescEn) </option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-2">
+            <label class="unselectable" for="ActivatePlan_save_PlanYear">@Resources.Resource.PlanYear</label>
+        </div>
+        <div class="col-md-4" style="margin-bottom: 5px;">
+            <input style="width:100%" type="text" id="ActivatePlan_save_PlanYear" value="@Model.PlanYear" disabled />
+        </div>
+        <div class="col-md-2">
+            <label class="unselectable" for="ActivatePlan_save_PlanNo">@Resources.Resource.PlanNo</label>
+        </div>
+        <div class="col-md-4" style="margin-bottom: 5px;">
+            <input style="width:100%" type="text" id="ActivatePlan_save_PlanNo" value="@Model.PlanNo" disabled />
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-2">
+            <label class="unselectable" for="ActivatePlan_save_StartDatePlan">@Resources.Resource.StartDatePlan </label>
+        </div>
+        <div class="col-md-4" style="margin-bottom: 5px;">
+            <input style="width:100%" type="text" id="ActivatePlan_save_StartDatePlan" value="@Model.StartDate.ToString("yyyy-MM-dd")" disabled />
+        </div>
+        <div class="col-md-2">
+            <label class="unselectable" for="ActivatePlan_save_EndDatePlan">@Resources.Resource.EndDatePlan</label>
+        </div>
+        <div class="col-md-4" style="margin-bottom: 5px;">
+            <input type="text" id="ActivatePlan_save_EndDatePlan" style="width: 100%;" value="@Model.EndDate.ToString("yyyy-MM-dd")" disabled />
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-2">
+            <label class="unselectable" for="ActivatePlan_save_PlanNote">@Resources.Resource.PlanNote</label>
+        </div>
+        <div class="col-md-10" style="margin-bottom: 5px;">
+            <textarea style="width: 100%;height:55px !important;" id="ActivatePlan_save_PlanNote" disabled>@Model.PlanNotes</textarea>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-2">
+            <label class="unselectable" for="ActivatePlan_save_OrderNote">@Resources.Resource.Notes</label>
+        </div>
+        <div class="col-md-10" style="margin-bottom: 5px;">
+            <textarea required="true" style="width: 100%;height:75px !important;" id="ActivatePlan_save_OrderNote" placeholder="@Html.Recource(973)" />
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" onclick="ExcuteSave_ActivatePlan()" class="btn btn-primary">@Resources.Resource.Send</button>
+    <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+</div>
+
+
+<script>
+    $('#ActivatePlan_save_BU').select2();
+</script>
+
+

@@ -1,0 +1,291 @@
+﻿@model IEnumerable<AlphaERP.Models.TransferDailyProd>
+@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+    int year = 0;
+    bool? TranByOrder = false;
+    string TransOorder = "";
+    if (Model.Count() != 0)
+    {
+        year = Model.FirstOrDefault().Transyear;
+        TranByOrder = Model.FirstOrDefault().TranByOrder;
+        TransOorder = Model.FirstOrDefault().TranByOrder.Value.ToString();
+    }
+
+    bool? showHideStore = new MDB().ProdCost_CompPara.Where(x => x.CompNo == company.comp_num).FirstOrDefault().ShowHideStoreDailyProd.Value;
+    string storeshowhide = showHideStore.Value.ToString();
+    List<TransferDailyProd> Tran_DailyProd = Model.Where(x => x.ProdPrepYear == year).ToList();
+    int i = 1;
+}
+
+<style>
+    #TransferDailyProdTable thead tr th {
+        padding: 8px 15px !important;
+        text-align: center !important;
+    }
+
+    #TransferDailyProdTable thead tr th, td {
+        /**/
+        white-space: nowrap;
+    }
+
+    #TransferDailyProdTable thead tr td:last-child {
+        text-align: right !important
+    }
+
+    .GroupTitle {
+        font-size: 14px;
+        font-weight: bold;
+        text-align: right;
+        background-color: lightblue;
+    }
+</style>
+
+@if (showHideStore == true)
+{
+    <style>
+        .FormGroub {
+            display: block;
+            height: 221px;
+        }
+    </style>
+}
+else
+{
+    <style>
+        .FormGroub {
+            display: block;
+            height: 251px;
+        }
+    </style>
+}
+<div class="modal-body row">
+    @if (showHideStore == true)
+    {
+        <div class="form-group" id="StoreDisable">
+            <div class="col-md-2">
+                <label class="unselectable" for="SAVE_TransferDailyProd_StoreNo">@Html.Recource(1) </label>
+            </div>
+            <div class="col-md-2">
+                <input required="true" type="text" id="SAVE_TransferDailyProd_StoreNo" placeholder="@Html.Recource(41)" disabled />
+            </div>
+            <div class="col-md-7">
+                <input style="width: 99%;margin: 0px 30px 0px 30px;" required="true" type="text" id="SAVE_TransferDailyProd_StoreDesc" placeholder="@Html.Recource(31)" disabled />
+            </div>
+            <div class="col-md-1">
+                <button style="width:68px;" type="button" class="btn btn-success btn-block" onclick="SearchTransferDailyProd_StoreNo()">
+                    @Html.Recource(975)
+                </button>
+            </div>
+        </div>
+    }
+    else if (showHideStore == false && TranByOrder == true)
+    {
+        <div class="form-group" id="StoreDisable">
+            <div class="col-md-2">
+                <label class="unselectable" for="SAVE_TransferDailyProd_StoreNo">@Html.Recource(1) </label>
+            </div>
+            <div class="col-md-2">
+                <input required="true" type="text" id="SAVE_TransferDailyProd_StoreNo" placeholder="@Html.Recource(41)" disabled />
+            </div>
+            <div class="col-md-7">
+                <input style="width: 99%;margin: 0px 30px 0px 30px;" required="true" type="text" id="SAVE_TransferDailyProd_StoreDesc" placeholder="@Html.Recource(31)" disabled />
+            </div>
+            <div class="col-md-1">
+                <button style="width:68px;" type="button" class="btn btn-success btn-block" onclick="SearchTransferDailyProd_StoreNo()">
+                    @Html.Recource(975)
+                </button>
+            </div>
+        </div>
+    }
+
+    <div class="form-group">
+        <div class="col-md-2">
+            <label class="unselectable" for="SAVE_TransferDailyProd_TransferDate">@Html.Recource(9596) </label>
+        </div>
+        <div class="col-md-2" style="margin-bottom: 5px;">
+            <input value="@DateTime.Now.ToString("yyyy-MM-dd")" required="true" type="date" id="SAVE_TransferDailyProd_TransferDate" />
+        </div>
+        <div class="col-md-2">
+            <label class="unselectable" for="SAVE_TransferDailyProd_Notes"> @Html.Recource(70)</label>
+        </div>
+        <div class="col-md-6">
+            <textarea style="width: 100%;height:55px !important;" id="SAVE_TransferDailyProd_Notes" placeholder="@Html.Recource(70)"></textarea>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-12 GroupTitle">
+            @Html.Recource(6795)
+        </div>
+    </div>
+    <div class="form-group FormGroub">
+        <div class="col-md-12" style="overflow-x:auto;display:block;bottom: 5px;">
+            @if (TranByOrder == false)
+            {
+                <table class="table table-hover" id="TransferDailyProdTable">
+                    <thead>
+                        <tr>
+                            <th style="text-align: center !important">@Html.Recource(42)</th>
+                            <th style="text-align: center !important">@Html.Recource(45)</th>
+                            <th style="text-align: center !important">@Html.Recource(9597)</th>
+                            <th style="text-align: center !important">@Html.Recource(9595)</th>
+                            <th style="text-align: center !important">@Html.Recource(9598)</th>
+                            <th style="text-align: center !important">@Html.Recource(9599)</th>
+                            @if (showHideStore == false)
+                            {
+                                <th style="text-align: center !important">@Html.Recource(9600)</th>
+                            }
+                            <th style="text-align: center !important">@Html.Recource(9601)</th>
+                            <th style="text-align: center !important">@Html.Recource(70)</th>
+                            <th style="text-align: center !important">
+                                <input id="TransferDailyProd_TransferFlag" type="checkbox" onchange="SelectAll(this)" />
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody style="text-align: center !important;" id="TransferDailyProdTbody">
+                        @foreach (TransferDailyProd MRPC in Tran_DailyProd)
+                        {
+                            string post = MRPC.PostFlag.ToString();
+                            <tr id="TransferDailyProd_@i" itemser="@MRPC.ItemSer" ProdPrepYear="@MRPC.ProdPrepYear" ProdPrepNo="@MRPC.ProdPrepNo" FromStoreNo="@MRPC.FromStoreNo" FinCode="@MRPC.FinCode" UnitSerial="@MRPC.UnitSerial"
+                                ToStoreNo="@MRPC.ToStoreNo" ExpDate="@MRPC.ExpDate.ToString("yyyy-MM-dd")" ManDate="@MRPC.ManDate.ToString("yyyy-MM-dd")" ConsVouYear="@MRPC.ConsVouYear" ConsVouNo="@MRPC.ConsVouNo" PostFlag="@post"
+                                ProdRecYear="@MRPC.ProdRecYear" ProdRecNo="@MRPC.ProdRecNo">
+                                <td style="text-align: center !important" title="@MRPC.ItemDesc">@Html.Trim(MRPC.ItemDesc, 30)</td>
+                                <td style="text-align: center !important" id="TransferDailyProd_Batch">@MRPC.Batch</td>
+                                <td style="text-align: center !important">@MRPC.ProdYrNo</td>
+                                <td style="text-align: center !important" id="TransferDailyProd_ProdQty">@MRPC.Prod_Qty</td>
+                                <td style="text-align: center !important" id="TransferDailyProd_TotPreviousQty">@MRPC.TotPreviousQty</td>
+                                <td style="text-align: center !important">
+                                    <input type="number" id="TransferDailyProd_ConsQty" value="@MRPC.ConsQty" style="width:75px;text-align:center;" onblur="CheckValueConsQty('@MRPC.ConsQty',this.value,@i)" />
+                                </td>
+                                @if (showHideStore == false)
+                                {
+                                    <td style="text-align: center !important" title="@MRPC.ToStoreDesc">@Html.Trim(MRPC.ToStoreDesc, 20)</td>
+                                }
+                                <td style="text-align: center !important" title="@MRPC.FromStoreDesc">@Html.Trim(MRPC.FromStoreDesc, 20)</td>
+                                <td style="text-align: center !important">
+                                    <textarea id="TransferDailyProd_Note"></textarea>
+                                </td>
+                                <td style="text-align:center!important">
+                                    <input id="TransferDailyProd_Action" type="checkbox" onchange="GetDataChange()">
+                                </td>
+                            </tr>
+                            i++;
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <table class="table table-hover" id="TransferDailyProdTable">
+                    <thead>
+                        <tr>
+                            <th style="text-align: center !important">@Html.Recource(9603)</th>
+                            <th style="text-align: center !important">@Html.Recource(8610)</th>
+                            <th style="text-align: center !important">@Html.Recource(463)</th>
+                            <th style="text-align: center !important">@Html.Recource(74)</th>
+                            <th style="text-align: center !important">@Html.Recource(4388)</th>
+                            <th style="text-align: center !important">@Html.Recource(9598)</th>
+                            <th style="text-align: center !important">@Html.Recource(9599)</th>
+                            <th style="text-align: center !important">@Html.Recource(9601)</th>
+                            <th style="text-align: center !important">
+                                <input id="TransferDailyProd_TransferFlag" type="checkbox" onchange="SelectAll(this)">
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody style="text-align: center !important;" id="TransferDailyProdTbody">
+                        @foreach (TransferDailyProd MRPC in Tran_DailyProd)
+                        {
+                            <tr UnitSerial="@MRPC.UnitSerial" FromStoreNo="@MRPC.FromStoreNo">
+                                <td style="text-align: center !important">@MRPC.ProdPrepYear</td>
+                                <td style="text-align: center !important">@MRPC.ProdPrepNo</td>
+                                <td style="text-align: center !important" id="TransferDailyProd_FinCode">@MRPC.FinCode</td>
+                                <td style="text-align: center !important">@MRPC.ItemDesc</td>
+                                <td style="text-align: center !important" id="TransferDailyProd_TotReciptQty">@MRPC.TotReciptQty</td>
+                                <td style="text-align: center !important" id="TransferDailyProd_TotpreviosConsQty">@MRPC.TotpreviosConsQty</td>
+                                <td style="text-align: center !important">
+                                    <input type="number" id="TransferDailyProd_ConsQty" value="@MRPC.ConsQty" style="width:75px;text-align:center;" onblur="CheckValueConsQty('@MRPC.ConsQty',this.value,@i)" />
+                                </td>
+                                <td style="text-align: center !important">@MRPC.FromStoreDesc</td>
+                                <td style="text-align:center!important">
+                                    <input id="TransferDailyProd_Action" type="checkbox" onchange="GetDataChange()">
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <div class="col-md-2">
+        <label class="unselectable">
+            @Html.Recource(9604) :
+        </label>
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" id="TransferDailyProd_QtyTransfers">
+            0
+        </label>
+    </div>
+    <div class="col-md-2" style="left: 20px;">
+        <label class="unselectable">
+            @Html.Recource(9606) :
+        </label>
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" id="TransferDailyProd_PalletNumber">
+            0
+        </label>
+    </div>
+    <div class="col-md-4">
+        <button class="btn btn-primary btn-block" onclick="ExecDailyProdcon('@TransOorder','@storeshowhide')">
+            @Html.Recource(14)
+        </button>
+    </div>
+</div>
+
+<script>
+    function SelectAll(e) {
+        var count = 0;
+        var total = 0;
+        var table = $('#TransferDailyProdTbody tr');
+        var trs = table;
+        for (var i = 0; i < trs.length; i++) {
+            $(trs[i]).closest('tr').find('#TransferDailyProd_Action')[0].checked = e.checked
+            if (e.checked == true) {
+                total = Number(total) + Number($(trs[i]).closest('tr').find('#TransferDailyProd_ConsQty')[0].value);
+                count++;
+            }
+        }
+        if (count == 0) {
+            TransferDailyProd_QtyTransfers.innerHTML = 0;
+            TransferDailyProd_PalletNumber.innerHTML = 0;
+        }
+        else {
+            TransferDailyProd_QtyTransfers.innerHTML = Number(total);
+            TransferDailyProd_PalletNumber.innerHTML = count;
+        }
+    }
+    function GetDataChange() {
+        var count = 0;
+        var total = 0;
+        var table = $('#TransferDailyProdTbody tr');
+        var trs = table;
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i]).closest('tr').find('#TransferDailyProd_Action')[0].checked == true) {
+                total = Number(total) + Number($(trs[i]).closest('tr').find('#TransferDailyProd_ConsQty')[0].value);
+                count++;
+            }
+        }
+        if (count == 0) {
+            TransferDailyProd_QtyTransfers.innerHTML = 0;
+            TransferDailyProd_PalletNumber.innerHTML = 0;
+        }
+        else {
+            TransferDailyProd_QtyTransfers.innerHTML = Number(total);
+            TransferDailyProd_PalletNumber.innerHTML = count;
+        }
+    }
+</script>

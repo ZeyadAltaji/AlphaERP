@@ -1,0 +1,1284 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    long VendorNo = ViewBag.VendorNo;
+    User me = (User)Session["me"];
+    string language = (string)HttpContext.Current.Session["language"];
+    Company company = (Company)Session["company"];
+
+    Vendor Vend = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.VendorNo == VendorNo).FirstOrDefault();
+
+
+    List<PayCodes> SurTitle = new MDB().Database.SqlQuery<PayCodes>("select SYS_MINOR as SYS_MINORId ,SYS_DESC as DescAr,isnull(SYS_EDESC,'No Desc.') as DescEn from SYSTEM WHERE (SYS_MAJOR = 1000)").ToList();
+    List<BusunisUnit> PaymentM = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("select MCode as Id ,[Desc] as DescAr,isnull([EngDesc],'No Desc.') as DescEn from PayMethods where (Comp = '{0}')", company.comp_num)).ToList();
+    List<PayCodes> Currency = new MDB().Database.SqlQuery<PayCodes>("select CurrType as Id ,CurrName as DescAr,isnull(CurrNameE,'No Desc.') as DescEn from CurrType").ToList();
+    List<PayCodes> Groups = new MDB().Database.SqlQuery<PayCodes>(string.Format("select GroupNo as SYS_MINORId ,GroupName as DescAr,isnull(GroupName,'No Desc.') as DescEn from Ven_Groups  where (CompNo = '{0}')", company.comp_num)).ToList();
+    List<PayCodes> Country = new MDB().Database.SqlQuery<PayCodes>("select Country as SYS_MINORId ,[Desc] as DescAr,isnull(EngDesc,'No Desc.') as DescEn from Countries").ToList();
+    List<PayCodes> Areas = new MDB().Database.SqlQuery<PayCodes>(string.Format("select Area as Id ,[Desc] as DescAr,isnull(EngDesc,'No Desc.') as DescEn from Areas WHERE (Country = {0})", Vend.Country)).ToList();
+    List<PayCodes> SAreas = new MDB().Database.SqlQuery<PayCodes>(string.Format("select SArea as Id ,[Desc] as DescAr,isnull(EngDesc,'No Desc.') as DescEn from SAreas WHERE (Country = {0}) AND (Area = {1})", Vend.Country, Vend.Area)).ToList();
+    List<PayCodes> Street = new MDB().Database.SqlQuery<PayCodes>(string.Format("select Street_No as Id ,St_Desc as DescAr,isnull(EngDesc,'No Desc.') as DescEn from StreetMF WHERE (Country = {0}) AND (Area = {1}) AND (SArea = {2})", Vend.Country, Vend.Area, Vend.SArea)).ToList();
+    List<Vendor> Vendors = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.IsHalt == false).ToList();
+    List<Ven_Contact> VenContact = new MDB().Ven_Contact.Where(x => x.CompNo == company.comp_num && x.VendorNo == Vend.VendorNo).ToList();
+    List<Ven_bankInfo> VenbankInfo = new MDB().Ven_bankInfo.Where(x => x.CompNo == company.comp_num && x.VendorNo == Vend.VendorNo).ToList();
+    Vendor TransporterVendor = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.VendorNo == Vend.TransporterNo).FirstOrDefault();
+    string TransporterVendorName = "";
+    if(TransporterVendor == null)
+    {
+        TransporterVendorName = "";
+    }
+    else
+    {
+        TransporterVendorName = Html.Translate(TransporterVendor.Name, TransporterVendor.Eng_Name).ToString();
+    }
+
+    var CountContact = 1;
+    var CountbankInfo = 1;
+    DataTable DtAttachment = new DataTable();
+    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+    {
+        DtAttachment = new DataTable();
+        cn.Open();
+        using (SqlCommand cmd = new SqlCommand())
+        {
+            cmd.Connection = cn;
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+            cmd.CommandText = "Ord_GetVendArchiveInfo";
+            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+            cmd.Parameters.Add(new SqlParameter("@AccNo", SqlDbType.BigInt)).Value = VendorNo;
+            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+            {
+                DA.Fill(DtAttachment);
+            }
+        }
+    }
+    var Count = 1;
+    var id = 0;
+}
+
+<style>
+    .modal-title {
+        width: calc(100% - 120px) !important;
+        text-align: center;
+        position: absolute;
+        font-weight: bold;
+    }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(100vh - 210px) !important;">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item active">
+                    <a class="nav-link active" data-toggle="tab" href="#VendorExistAcount_Edit_MainInfo_@VendorNo" role="tab">
+                        @Html.Recource(450)
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#VendorExistAcount_Edit_VendorAddress_@VendorNo" role="tab">
+                        @Html.Recource(3204)
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content" style="height:390px;padding:10px">
+                <div class="tab-pane active" id="VendorExistAcount_Edit_MainInfo_@VendorNo" role="tabpanel">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_VendorNo_@VendorNo">@Html.Recource(3087)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <input required="true" type="number" id="VendorExistAcount_Edit_VendorNo_@VendorNo" value="@Vend.VendorNo" disabled />
+                            </div>
+                            <div class="col-md-1">
+                                <label class="unselectable" for="VendorExistAcount_Edit_SurName">@Html.Recource(1165)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <select style="width: 62%" id="VendorExistAcount_Edit_CboSurTitle_@VendorNo">
+                                    @foreach (var v in SurTitle)
+                                    {
+                                        string Desc = Html.Translate(v.DescAr, v.DescEn).ToString();
+                                        if (Vend.Title == Desc)
+                                        {
+                                            <option value="@Html.Translate(v.DescAr, v.DescEn)" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@Html.Translate(v.DescAr, v.DescEn)">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_VendorName_@VendorNo">@Html.Recource(2114)</label>
+                            </div>
+                            <div class="col-md-6">
+                                <input required="true" type="text" id="VendorExistAcount_Edit_VendorName_@VendorNo" value="@Vend.Name" style="width:100%" onblur="changeExistAcountVendorName(@VendorNo)" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_VendorEngName_@VendorNo">@Html.Recource(2115)</label>
+                            </div>
+                            <div class="col-md-6">
+                                <input required="true" type="text" id="VendorExistAcount_Edit_VendorEngName_@VendorNo" value="@Vend.Eng_Name" style="width:100%" />
+                            </div>
+                            <div class="col-md-2"></div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_SubjectToTax_@VendorNo">
+                                    @if (Vend.Taxable == true)
+                                    {
+                                        <input name="VendorExistAcount_Edit_VendorTax" type="checkbox" id="VendorExistAcount_Edit_SubjectToTax_@VendorNo" checked />
+                                    }
+                                    else
+                                    {
+                                        <input name="VendorExistAcount_Edit_VendorTax" type="checkbox" id="VendorExistAcount_Edit_SubjectToTax_@VendorNo" />
+                                    }
+                                    @Html.Recource(1000)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable">@Html.Recource(5203)</label>
+                            </div>
+                            @if (Vend.IsHalt == true)
+                            {
+                                <div class="col-md-2">
+                                    <label class="unselectable" for="VendorExistAcount_Edit_Active_@VendorNo">
+                                        <input id="VendorExistAcount_Edit_Active_@VendorNo" type="radio" name="VendorExistAcount_Edit_VendorStatus_@VendorNo">
+                                        @Html.Recource(1153)
+                                    </label>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="unselectable" for="VendorExistAcount_Edit_Halt_@VendorNo">
+                                        <input name="VendorExistAcount_Edit_VendorStatus_@VendorNo" type="radio" id="VendorExistAcount_Edit_Halt_@VendorNo" checked />
+                                        @Html.Recource(48)
+                                    </label>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="col-md-2">
+                                    <label class="unselectable" for="VendorExistAcount_Edit_Active_@VendorNo">
+                                        <input id="VendorExistAcount_Edit_Active_@VendorNo" type="radio" name="VendorExistAcount_Edit_VendorStatus_@VendorNo" checked>
+                                        @Html.Recource(1153)
+                                    </label>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="unselectable" for="VendorExistAcount_Edit_Halt_@VendorNo">
+                                        <input name="VendorExistAcount_Edit_VendorStatus_@VendorNo" type="radio" id="VendorExistAcount_Edit_Halt_@VendorNo" />
+                                        @Html.Recource(48)
+                                    </label>
+                                </div>
+                            }
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-block" onclick="EditDocuments(@VendorNo)" style="width:100px !important;">
+                                    @Html.Recource(7744)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_PaymentType_@VendorNo">@Html.Recource(1874)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <select style="width: 62%" id="VendorExistAcount_Edit_CboPaymentType_@VendorNo">
+                                    @foreach (var v in PaymentM)
+                                    {
+                                        if (Vend.Pmethod == v.Id)
+                                        {
+                                            <option value="@v.Id" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_CurrCode_@VendorNo">@Html.Recource(1671)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <select style="width: 62%" id="VendorExistAcount_Edit_CboCurrCode_@VendorNo">
+                                    @foreach (var v in Currency)
+                                    {
+                                        if (Vend.Curr == v.Id)
+                                        {
+                                            <option value="@v.Id" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_Evaluated_@VendorNo">
+                                    @if (Vend.Evaluated == true)
+                                    {
+                                        <input name="VendorExistAcount_Edit_VendorEvaluated_@VendorNo" type="checkbox" id="VendorExistAcount_Edit_Evaluated_@VendorNo" checked />
+                                    }
+                                    else
+                                    {
+                                        <input name="VendorExistAcount_Edit_VendorEvaluated_@VendorNo" type="checkbox" id="VendorExistAcount_Edit_Evaluated_@VendorNo" />
+                                    }
+                                    @Html.Recource(5205)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_Group_@VendorNo">@Html.Recource(1734)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <select style="width: 62%" id="VendorExistAcount_Edit_CboGroup_@VendorNo">
+                                    @foreach (var v in Groups)
+                                    {
+                                        if (Vend.GroupNo == v.SYS_MINORId)
+                                        {
+                                            <option value="@v.SYS_MINORId" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.SYS_MINORId">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_DueDays_@VendorNo">@Html.Recource(7737)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" type="number" id="VendorExistAcount_Edit_DueDays_@VendorNo" value="@Vend.DelayDays" style="width:100%" />
+                            </div>
+                            <div class="col-md-1">
+                                <label class="unselectable" for="VendorExistAcount_Edit_Discount_@VendorNo">@Html.Recource(2124)</label>
+                            </div>
+                            <div class="col-md-1">
+                                <input required="true" type="number" id="VendorExistAcount_Edit_Discount_@VendorNo" value="@Vend.Disc" style="width:100%" />
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_Notes_@VendorNo">@Html.Recource(70) </label>
+                            </div>
+                            <div class="col-md-10" style="margin-bottom: 5px;">
+                                <textarea required="true" style="width: 103%;" id="VendorExistAcount_Edit_Notes_@VendorNo">@Vend.Notes</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="VendorExistAcount_Edit_VendorAddress_@VendorNo" role="tabpanel">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_Address_@VendorNo">@Html.Recource(1042) </label>
+                            </div>
+                            <div class="col-md-10" style="margin-bottom: 5px;">
+                                <textarea required="true" style="width: 100%;" id="VendorExistAcount_Edit_Address_@VendorNo">@Vend.Address</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_Country_@VendorNo">@Html.Recource(1143)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <select onchange="EditValueCountry(@VendorNo)" style="width: 100%" id="VendorExistAcount_Edit_CboCountry_@VendorNo">
+                                    @foreach (var v in Country)
+                                    {
+                                        if (Vend.Country == v.SYS_MINORId)
+                                        {
+                                            <option value="@v.SYS_MINORId" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.SYS_MINORId">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_Area_@VendorNo">@Html.Recource(1144)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <select onchange="EditValueArea(@VendorNo)" style="width: 100%" id="VendorExistAcount_Edit_CboArea_@VendorNo">
+                                    @foreach (var v in Areas)
+                                    {
+                                        if (Vend.Area == v.Id)
+                                        {
+                                            <option value="@v.Id" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_SubArea_@VendorNo">@Html.Recource(1145)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <select onchange="EditValueSubArea(@VendorNo)" style="width: 100%" id="VendorExistAcount_Edit_CboSubArea_@VendorNo">
+                                    @foreach (var v in SAreas)
+                                    {
+                                        if (Vend.SArea == v.Id)
+                                        {
+                                            <option value="@v.Id" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_Street_@VendorNo">@Html.Recource(2133)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <select onchange="EditValueStreet(@VendorNo)" style="width: 62%" id="VendorExistAcount_Edit_CboStreet_@VendorNo">
+                                    @foreach (var v in Street)
+                                    {
+                                        if (Vend.Street_No == v.Id)
+                                        {
+                                            <option value="@v.Id" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_Location_@VendorNo">@Html.Translate("الموقع", "Location")</label>
+                            </div>
+                            <div class="col-md-6">
+                                <input required="true" style="width: 100%;" type="text" id="VendorExistAcount_Edit_Location_@VendorNo" value="@Vend.Location" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_ContactPerson_@VendorNo">@Html.Recource(1166)</label>
+                            </div>
+                            <div class="col-md-4">
+                                <input required="true" style="width: 100%;" type="text" id="VendorExistAcount_Edit_ContactPerson_@VendorNo" value="@Vend.Resp_Person" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_Beneficiary_@VendorNo">@Html.Recource(3821)</label>
+                            </div>
+                            <div class="col-md-4">
+                                <input required="true" style="width: 100%;" type="text" id="VendorExistAcount_Edit_Beneficiary_@VendorNo" value="@Vend.Penf" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_Tel1_@VendorNo">@Html.Recource(1029)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="number" id="VendorExistAcount_Edit_Tel1_@VendorNo" value="@Vend.Tel1" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_Tel2_@VendorNo">@Html.Recource(1031)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="number" id="VendorExistAcount_Edit_Tel2_@VendorNo" value="@Vend.Tel2" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_Mobile_@VendorNo">@Html.Recource(1123)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="number" id="VendorExistAcount_Edit_Mobile_@VendorNo" value="@Vend.Mobile_No" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_Fax_@VendorNo">@Html.Recource(165)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="text" id="VendorExistAcount_Edit_Fax_@VendorNo" value="@Vend.Fax" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_Telex_@VendorNo">@Html.Recource(166)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="text" id="VendorExistAcount_Edit_Telex_@VendorNo" value="@Vend.Telex" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_PostalCode_@VendorNo">@Html.Recource(2139)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="text" id="VendorExistAcount_Edit_PostalCode_@VendorNo" value="@Vend.Postal_Code" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_POBox_@VendorNo">@Html.Recource(2138)</label>
+                            </div>
+                            <div class="col-md-4">
+                                <input required="true" style="width: 100%;" type="text" id="VendorExistAcount_Edit_POBox_@VendorNo" value="@Vend.POBox" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_Email_@VendorNo">@Html.Recource(1124)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 219%;" type="email" id="VendorExistAcount_Edit_Email_@VendorNo" value="@Vend.EMail" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_Edit_VendorInfo_@VendorNo">@Html.Recource(5207) </label>
+                            </div>
+                            <div class="col-md-10" style="margin-bottom: 5px;">
+                                <textarea required="true" style="width: 100%;" id="VendorExistAcount_Edit_VendorInfo_@VendorNo">@Vend.GenCondition</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable">@Html.Recource(8983) </label>
+                            </div>
+                            <div class="col-md-1" style="min-width: 5% !important;">
+                                <input style="width: 87px;" type="text" id="VendorExistAcount_Edit_TransporterVendor_@VendorNo" value="@Vend.TransporterNo" disabled />
+                            </div>
+                            <div class="col-md-3" style="min-width: 5% !important;">
+                                <input type="text" id="VendorExistAcount_Edit_TransporterVendorName_@VendorNo" value="@TransporterVendorName" disabled />
+                            </div>
+                            <div class="col-md-2" style="min-width: 5% !important;">
+                                <button class="btn btn-primary btn-block" onclick="EditTransporter(@VendorNo)">
+                                    @Html.Recource(8983)
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-block" onclick="EditContactPersons(@VendorNo)">
+                                    @Html.Recource(5197)
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-block" onclick="EditBankInfo(@VendorNo)">
+                                    @Html.Recource(5200)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="ExcuteEdit_VendorExistAcount(@VendorNo)" class="btn btn-primary">@Resources.Resource.Save</button>
+        </div>
+    </div>
+</div>
+
+@*--------------------------------Model Edit Transporter -------------------------------------------*@
+<div class="modal fade" id="Model_VendorExistAcount_Transporter_@VendorNo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="VendorExistAcount_Edit_TransporterDiv">
+                <table class="table" id="SelectVendorExistAcount_TransporterTable_@VendorNo">
+                    <thead>
+                        <tr>
+                            <th>@Html.Recource(318)</th>
+                            <th>@Html.Recource(321)</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="VendorExistAcount_VendorTransporterTbody">
+                        @foreach (Vendor v in Vendors)
+                        {
+                            <tr onclick="Select_VendorExistAcountTransporter(this,@VendorNo)" VendorNo="@v.VendorNo" VendorName="@Html.Translate(v.Name, v.Eng_Name)">
+                                <td id="VendorNo">@v.VendorNo</td>
+                                <td>@Html.Translate(v.Name, v.Eng_Name)</td>
+                                <td></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selection_VendorExistAcount_VendorTransporterDiv(@VendorNo)" class="btn btn-primary">@Resources.Resource.Choose</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var table = $('#SelectVendorExistAcount_TransporterTable_' + @VendorNo).DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    function EditTransporter(srl) {
+        $("#SelectVendorExistAcount_TransporterTable_" + srl).find('tr').removeClass("selected");
+
+        $('#Model_VendorExistAcount_Transporter_' + srl).draggable({
+            handle: ".modal-header",
+        });
+
+        $('#Model_VendorExistAcount_Transporter_' + srl).modal('show')
+    }
+    function Select_VendorExistAcountTransporter(e,srl) {
+        var table = $('#SelectVendorExistAcount_TransporterTable_' + srl);
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Selection_VendorExistAcount_VendorTransporterDiv(srl) {
+        var table = $('#SelectVendorExistAcount_TransporterTable_' + srl);
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مورد واحدة على الاقل", "Select one Vendor at least")');
+            return;
+        }
+
+        $('#VendorExistAcount_Edit_TransporterVendor_' + srl).val(trs[0].getAttribute('VendorNo'));
+        $('#VendorExistAcount_Edit_TransporterVendorName_' + srl).val(trs[0].getAttribute('VendorName'));
+
+        $('#Model_VendorExistAcount_Transporter_' + srl).modal('hide');
+    }
+</script>
+@*--------------------------------END Model Edit Transporter -------------------------------------------*@
+
+@*--------------------------------Model  Edit ContactPersons -------------------------------------------*@
+<div class="modal fade" id="Model_VendorExistAcount_Edit_ContactPersons_@VendorNo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="VendorExistAcount_Edit_ContactPersonsDiv_@VendorNo">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2">
+                            <button onclick="EditContactPersonsModel(@VendorNo)" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="width:535px !important ;overflow-y:auto">
+                        <table class="table table-hover" id="VendorExistAcount_Edit_ContactPersonsTable_@VendorNo">
+                            <thead>
+                                <tr>
+                                    <th style="width: 90px !important; text-align:center; ">@Html.Recource(2429)</th>
+                                    <th style="width: 295% !important; text-align: center; ">@Html.Recource(5206)</th>
+                                    <th style="text-align:center;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="VendorExistAcount_Edit_ContactPersonsTbody" style="border-top: 1px solid #ddd;">
+                                @foreach (Ven_Contact v in VenContact)
+                                {
+                                    <tr id="EditContactPersons_@CountContact">
+                                        <td>
+                                            <input id="VendorExistAcount_EditContactPersons_SupervisorNo" onblur="CheckEditValueSupervisorNo(@CountContact,@VendorNo)" type="number" style="width: 90px !important;" value="@v.ContactNo" />
+                                        </td>
+                                        <td>
+                                            <input id="VendorExistAcount_EditContactPersons_SupervisorName" type="text" style="width: 95%  !important;" value="@v.ContactName" />
+                                        </td>
+                                        <td>
+                                            <button class="btn-de" onclick="RemoveRowContactPersons(this,@VendorNo)" type="button"><i class="fa fa-trash-alt"></i></button>
+                                            <input type="hidden" id="VendorExistAcount_EditContactPersons_InputSerial" value="@(CountContact++)" />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Edit_VendorExistAcount_ContactPersons(@VendorNo)" class="btn btn-primary">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var CountContactPersons = 0;
+
+    function EditContactPersons(srl) {
+        $('#Model_VendorExistAcount_Edit_ContactPersons_' + srl).draggable({
+            handle: ".modal-header",
+        });
+        $('#Model_VendorExistAcount_Edit_ContactPersons_' + srl).modal('show');
+
+        var table = $("#VendorExistAcount_Edit_ContactPersonsTable_" + srl);
+        var trs = table.find('Tbody tr');
+        CountContactPersons = trs.length;
+    }
+    function EditContactPersonsModel(srl) {
+        var table = $("#VendorExistAcount_Edit_ContactPersonsTable_" + srl).find('Tbody');
+        CountContactPersons++;
+        ststaus = 1;
+        var newarray = [];
+        newarray.push('<input id="VendorExistAcount_EditContactPersons_SupervisorNo" onblur="CheckEditValueSupervisorNo(' + CountContactPersons + ',' + srl +' )" type="number" style="width: 90px !important;" />')
+        newarray.push('<input id="VendorExistAcount_EditContactPersons_SupervisorName" type="text" style="width: 95%  !important;" />')
+        newarray.push('<button class="btn-de" onclick="RemoveRowContactPersons(this,' + srl +')" type="button"><i class= "fa fa-trash-alt"></i ></button> <input id="VendorExistAcount_EditContactPersons_InputSerial" type="hidden" value="' + CountContactPersons + '"  />')
+        $(table).append(
+            GenRowMas(newarray, 'EditContactPersons_' + CountContactPersons)
+        );
+    }
+    function GenRowMas(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function CheckEditValueSupervisorNo(val, srl) {
+        var table = $("#VendorExistAcount_Edit_ContactPersonsTable_" + srl).find('Tbody');
+        var tr = $(table).find("#EditContactPersons_" + val + "");
+        if (tr.find('#VendorExistAcount_EditContactPersons_SupervisorNo')[0].value != '') {
+            if (tr.find('#VendorExistAcount_EditContactPersons_SupervisorNo')[0].value < 0) {
+                MsgBox('@Html.Translate("لا يجوز ان يكون رقم المسؤول بالسالب", "The Supervisor number should not be negative")', 'red');
+                tr.find('#VendorExistAcount_EditContactPersons_SupervisorNo')[0].focus();
+                return false;
+            }
+        }
+        if (tr.find('#VendorExistAcount_EditContactPersons_SupervisorNo')[0].value == '') {
+            MsgBox('@Html.Translate("لا يجوز ان يكون رقم المسؤول فارغ", "The Supervisor number should not be Empty")', 'red');
+            tr.find('#VendorExistAcount_EditContactPersons_SupervisorNo')[0].focus();
+            return false;
+        }
+        var ContactPersons = $("#VendorExistAcount_Edit_ContactPersonsTable_" + srl).find('Tbody tr');
+        var trsContactPersons = ContactPersons;
+        for (var i = 0; i < trsContactPersons.length; i++) {
+            if ($(trsContactPersons[i]).closest('tr').find('#VendorExistAcount_EditContactPersons_InputSerial')[0].value != tr.find('#VendorExistAcount_EditContactPersons_InputSerial')[0].value) {
+                if ($(trsContactPersons[i]).closest('tr').find('#VendorExistAcount_EditContactPersons_SupervisorNo')[0].value == tr.find('#VendorExistAcount_EditContactPersons_SupervisorNo')[0].value) {
+                    alert('@Html.Translate("رقم المسؤول مكرر", "Duplicate Supervisor number")');
+                    tr.find('#VendorExistAcount_EditContactPersons_SupervisorNo')[0].value = ""
+                    tr.find('#VendorExistAcount_EditContactPersons_SupervisorNo')[0].focus();
+                    return false;
+                }
+            }
+        }
+    }
+    function RemoveRowContactPersons(e,srl) {
+        if (confirm('@Resources.Resource.DeleteConfirm')) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+            return true;
+            CountContactPersons++;
+        }
+        return false;
+    }
+    function Edit_VendorExistAcount_ContactPersons(srl) {
+        $('#Model_VendorExistAcount_Edit_ContactPersons_' + srl).modal('hide');
+    }
+</script>
+@*--------------------------------END Model EditContactPersons -------------------------------------------*@
+
+@*--------------------------------Model EditBankInfo -------------------------------------------*@
+<div class="modal fade wide" id="Model_VendorExistAcount_EditBankInfo_@VendorNo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="VendorExistAcount_EditBankInfoDiv_@VendorNo">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2">
+                            <button onclick="EditBankInfoModel(@VendorNo)" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="VendorExistAcount_EditBankInfoTable_@VendorNo">
+                            <thead>
+                                <tr>
+                                    <th style="width:60px;text-align:center;">@Html.Recource(1222)</th>
+                                    <th style="width:225px;text-align:center;">@Html.Recource(1015)</th>
+                                    <th style="width:190px;text-align:center;">@Html.Recource(1023)</th>
+                                    <th style="width:285px;text-align:center;">IBAN</th>
+                                    <th style="text-align:center;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="VendorExistAcount_EditBankInfoTbody" style="border-top: 1px solid #ddd;">
+                                @foreach (Ven_bankInfo v in VenbankInfo)
+                                {
+                                    <tr id="EditBankInfo_@CountbankInfo">
+                                        <td>
+                                            <input id="VendorExistAcount_EditBankInfo_Number" value="@v.ID" onblur="CheckEditValueBankInfoNo(@CountbankInfo,@VendorNo)" type="text" style="width: 60px !important;" />
+                                        </td>
+                                        <td>
+                                            <input id="VendorExistAcount_EditBankInfo_BankName" value="@v.BankName" type="text" style="width:225px !important;" />
+                                        </td>
+                                        <td>
+                                            <input id="VendorExistAcount_EditBankInfo_BankAccount" value="@v.AccNo" type="number" style="width:190px !important;" />
+                                        </td>
+                                        <td>
+                                            <input id="VendorExistAcount_EditBankInfo_BankIban" value="@v.Iban" type="text" style="width:285px !important;" />
+                                        </td>
+                                        <td>
+                                            <button class="btn-de" onclick="RemoveRowBankInfo(this,@VendorNo)" type="button"><i class="fa fa-trash-alt"></i></button>
+                                            <input type="hidden" id="VendorExistAcount_EditBankInfo_InputSerialBankInfo" value="@(CountbankInfo++)" />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Edit_VendorExistAcount_BankInfo(@VendorNo)" class="btn btn-primary">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var Count = 0;
+    function EditBankInfo(srl) {
+        $('#Model_VendorExistAcount_EditBankInfo_' + srl).draggable({
+            handle: ".modal-header",
+        });
+
+        $('#Model_VendorExistAcount_EditBankInfo_' + srl).modal('show');
+
+        var table = $("#VendorExistAcount_EditBankInfoTable_" + srl);
+        var trs = table.find('Tbody tr');
+        Count = trs.length;
+    }
+    function EditBankInfoModel(srl) {
+        var table = $("#VendorExistAcount_EditBankInfoTable_" + srl).find('Tbody');
+
+        ststaus = 1;
+        Count++;
+        var newarray = [];
+        newarray.push('<input id="VendorExistAcount_EditBankInfo_Number" onblur="CheckEditValueBankInfoNo(' + Count + ',' + srl + ' )" type="text" style="width: 60px !important;" />')
+        newarray.push('<input id="VendorExistAcount_EditBankInfo_BankName" type="text" style="width:225px !important;" />')
+        newarray.push('<input id="VendorExistAcount_EditBankInfo_BankAccount" type="number" style="width:190px !important;" />')
+        newarray.push('<input id="VendorExistAcount_EditBankInfo_BankIban" type="text" style="width:285px !important;" />')
+        newarray.push('<button class="btn-de" onclick="RemoveRowBankInfo(this,' + srl + ')" type="button"><i class= "fa fa-trash-alt"></i ></button> <input id="VendorExistAcount_EditBankInfo_InputSerialBankInfo" type="hidden" value="' + Count + '"  />')
+        $(table).append(
+            GenRowMas(newarray, 'EditBankInfo_' + Count)
+        );
+    }
+    function RemoveRowBankInfo(e, srl) {
+        if (confirm('@Resources.Resource.DeleteConfirm')) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+            return true;
+            Count++;
+        }
+        return false;
+    }
+    function GenRowMas(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function CheckEditValueBankInfoNo(val,srl) {
+        var table = $("#VendorExistAcount_EditBankInfoTable_" + srl).find('Tbody');
+        var tr = $(table).find("#EditBankInfo_" + val + "");
+        if (tr.find('#VendorExistAcount_EditBankInfo_Number')[0].value == '') {
+            MsgBox('@Html.Translate("لا يجوز ان يكون رقم فارغ", "The number should not be empty")', 'red');
+            tr.find('#VendorExistAcount_EditBankInfo_Number')[0].focus();
+            return false;
+        }
+
+        var BankInfo = $("#VendorExistAcount_EditBankInfoTable_" + srl).find('Tbody tr');
+        var trsBankInfo = BankInfo;
+        for (var i = 0; i < trsBankInfo.length; i++) {
+            if ($(trsBankInfo[i]).closest('tr').find('#VendorExistAcount_EditBankInfo_InputSerialBankInfo')[0].value != tr.find('#VendorExistAcount_EditBankInfo_InputSerialBankInfo')[0].value) {
+                if ($(trsBankInfo[i]).closest('tr').find('#VendorExistAcount_EditBankInfo_Number')[0].value == tr.find('#VendorExistAcount_EditBankInfo_Number')[0].value) {
+                    alert('@Html.Translate("رقم البنك مكرر", "Duplicate Bank number")');
+                    tr.find('#VendorExistAcount_EditBankInfo_Number')[0].value = ""
+                    tr.find('#VendorExistAcount_EditBankInfo_Number')[0].focus();
+                    return false;
+                }
+            }
+        }
+    }
+    function Edit_VendorExistAcount_BankInfo(srl) {
+        $("#Model_VendorExistAcount_EditBankInfo_" + srl).modal('hide');
+    }
+</script>
+@*--------------------------------END Model BankInfo -------------------------------------------*@
+
+@*-----------------------------Model Documents-------------------------------------*@
+<div class="modal fade" id="Model_VendorExistAcount_EditDocumentsArchive_@VendorNo">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أرشفة الوثائق", "Archive Documents")</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <button onclick="EditDocumentArchive(@VendorNo)" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                    </div>
+                </div>
+                <div class="form-group" style=" display: block; height: 125px;">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="VendorExistAcountDocumentArchiveTable_@VendorNo">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(66)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5628)</th>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(5629)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5630)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5631)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5632)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5633)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="VendorExistAcount_EditDocumentArchiveTbody_@VendorNo" style="border-top: 1px solid #ddd;">
+                                @foreach (DataRow row in DtAttachment.Rows)
+                                {
+                                    DateTime date = Convert.ToDateTime(row["DataUpload"].ToString());
+                                    <tr id="EditDocumentArchive_@Count">
+                                        <td>
+                                            <input id="VendorExistAcount_EditDocumentArchive_FileId" type="hidden" value="@Count" />
+                                        </td>
+                                        <td>
+                                            <input type="text" style="width: 115px !important; text-align: center !important" id="VendorExistAcount_EditDocumentArchive_Description_@Count" value="@row["Description"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <div class="image-upload"><label for="file-input"><span class="glyphicon glyphicon-upload" onclick="OpenFileUpload(this)"></span></label><input type="file" name="uploadFile_7" style="display:none" id="VendorExistAcount_EditDocumentArchive_File_@Count" onchange="uploadFile(this,@Count,@VendorNo)" /></div>
+                                        </td>
+                                        <td></td>
+                                        <td>
+                                            <a id="AddDownloadFile_@Count" onclick="DownloadFile('@row["FileName"].ToString()','@Convert.ToBase64String((byte[])row["ArchiveData"])')"><span class="glyphicon glyphicon-download"></span></a>
+                                        </td>
+                                        <td>
+                                            <input id="VendorExistAcount_EditAttachmentFiles_FileName_@Count" type="text" style="text-align: center !important" value="@row["FileName"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="VendorExistAcount_EditDocumentArchive_UploadDate_@Count" type="text" style="width: 95px; text-align: center !important" value="@date.ToShortDateString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="VendorExistAcount_EditDocumentArchive_FileSize_@Count" type="text" style="width: 70px; text-align: center !important" value="@row["FileSize"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="VendorExistAcount_EditDocumentArchive_FileType_@Count" type="text" style="width: 55px; text-align: center !important" value="@row["ContentType"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <button class="btn-de" onclick="RemoveRowUpload(this,@Count,@VendorNo)" type="button"><i class="fa fa-trash-alt"></i></button>
+                                            <input type="hidden" id="InputSerial" value="@(Count++)" />
+                                        </td>
+                                    </tr>
+                                }
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="CloseDocumentArchive(@VendorNo)" class="btn btn-primary">@Resources.Resource.Close</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var DocumentsArchiveValue = 0;
+
+    function EditDocuments(srl) {
+        $('#Model_VendorExistAcount_EditDocumentsArchive_' + srl).draggable({
+            handle: ".modal-header",
+        });
+
+        $('#Model_VendorExistAcount_EditDocumentsArchive_' + srl).modal('show');
+        var table = $("#VendorExistAcount_EditDocumentArchiveTbody_" + srl);
+        var trs = table.find('tr');
+        Count = trs.length;
+    }
+    function EditDocumentArchive(srl) {
+        var table = $("#VendorExistAcount_EditDocumentArchiveTbody_" + srl);
+
+        Count++;
+        var newarray = [];
+        newarray.push('<input id="VendorExistAcount_EditDocumentArchive_FileId" type="hidden" value="' + Count + '" />')
+        newarray.push('<input id="VendorExistAcount_EditDocumentArchive_Description_' + Count + '" type="text" style="width: 115px !important;text-align: center !important" />')
+        newarray.push('<div class="image-upload"><label for="file-input"><span class="glyphicon glyphicon-upload" onclick="OpenFileUpload(this)"></span></label><input type="file" name="uploadFile_7" style="display:none" id="VendorExistAcount_EditDocumentArchive_File_' + Count + '" onchange="uploadFile(this,' + Count + ',' + srl + ')" /></div>')
+        newarray.push('')
+        newarray.push('<a id="AddDownloadFile_' + Count +'" onclick="DownloadFile()"><span class="glyphicon glyphicon-download"></span></a>')
+        newarray.push('<input id="VendorExistAcount_EditAttachmentFiles_FileName_' + Count + '" type="text" style="text-align: center !important" disabled />')
+        newarray.push('<input id="VendorExistAcount_EditDocumentArchive_UploadDate_' + Count + '" type="text" style="width: 95px;text-align: center !important" disabled />')
+        newarray.push('<input id="VendorExistAcount_EditDocumentArchive_FileSize_' + Count + '" type="text" style="width: 70px;text-align: center !important" disabled />')
+        newarray.push('<input id="VendorExistAcount_EditDocumentArchive_FileType_' + Count + '" type="text" style="width: 55px;text-align: center !important" disabled />')
+        newarray.push('<button class="btn-de" onclick="RemoveRowUpload(this,' + Count + ',' + srl + ')" type="button"><i class= "fa fa-trash-alt"></i ></button>')
+        $(table).append(
+            GenRowDocumentArchive(newarray, 'EditDocumentArchive_' + Count)
+        );
+    }
+    function GenRowDocumentArchive(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function OpenFileUpload(ID) {
+        var $td = $(ID).closest("td");
+        $($td).find("input[type=file]").click();
+    }
+    function uploadFile(Elem, Count, srl) {
+        var uploadDate = new Date($.now());
+        var shortDate = moment(uploadDate).format('DD/MM/YYYY');
+        var InputID = $(Elem).attr("id");
+        var file_size = $(Elem)[0].files[0].size;
+
+        var table = $("#VendorExistAcount_EditDocumentArchiveTbody_" + srl);
+        var tr = table.find('#EditDocumentArchive_' + Count);
+
+
+        var fileName = tr.find("#VendorExistAcount_EditDocumentArchive_File_" + Count).val().replace(/C:\\fakepath\\/i, '');
+        var filetype = fileName.split('.').pop();
+
+        tr.find('#VendorExistAcount_EditAttachmentFiles_FileName_' + Count)[0].value = fileName;
+        tr.find('#VendorExistAcount_EditDocumentArchive_UploadDate_' + Count)[0].value = shortDate;
+        tr.find('#VendorExistAcount_EditDocumentArchive_FileSize_' + Count)[0].value = file_size;
+        tr.find('#VendorExistAcount_EditDocumentArchive_FileType_' + Count)[0].value = "." + filetype;
+
+        var $file = document.getElementById(InputID);
+        $formData = new FormData();
+        if ($file.files.length > 0) {
+            for (var i = 0; i < $file.files.length; i++) {
+                $formData.append('file-' + i, $file.files[i]);
+            }
+
+            var VendorNo = $('#VendorExistAcount_Edit_VendorNo_' + srl).val();
+
+            $formData.append('Id', Count);
+            $formData.append('VendorNo', VendorNo);
+        }
+
+        $.ajax({
+            url: '@Url.Action("InsertFile", "VendorsInfo")',
+            type: 'POST',
+            data: $formData,
+            contentType: false,
+            processData: false,
+            success: function (r) {
+                var table = $("#VendorExistAcount_EditDocumentArchiveTbody_" + srl);
+                var tr = table.find('#EditDocumentArchive_' + Count);
+                tr.find('#AddDownloadFile_' + Count)[0].setAttribute('onclick', 'DownloadFile("' + fileName + '","' + r +'")')
+            },
+            error: function (error) {
+            }
+        });
+    }
+    function RemoveRowUpload(e, Count, srl) {
+        if (confirm('@Resources.Resource.DeleteConfirm')) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+            var Vendor = $('#VendorExistAcount_Edit_VendorNo_' + srl).val();
+            $.ajax({
+                type: "POST",
+                url:'@Url.Action("RemoveFile", "VendorsInfo")',
+                data: { Id: Count, VendorNo: Vendor },
+                success: function (response) {
+
+                },
+            });
+
+            return true;
+        }
+        return false;
+    }
+    function DownloadFile(FileName, base64) {
+        var binaryString = window.atob(base64);
+        var binaryLen = binaryString.length;
+        var bytes = new Uint8Array(binaryLen);
+        for (var i = 0; i < binaryLen; i++) {
+            var ascii = binaryString.charCodeAt(i);
+            bytes[i] = ascii;
+        }
+        saveByteArray(FileName, bytes)
+    }
+    function saveByteArray(reportName, byte) {
+        var blob = new Blob([byte], { type: "application/pdf" });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        var fileName = reportName;
+        link.download = fileName;
+        link.click();
+    };
+    function CloseDocumentArchive(srl) {
+        $('#Model_VendorExistAcount_EditDocumentsArchive_' + srl).modal('hide');
+    }
+</script>
+@*--------------------------------END Model Documents -----------------------------*@
+
+
+
+
+<script>
+    $('#VendorExistAcount_Edit_CboCountry_' + @VendorNo).select2();
+    $('#VendorExistAcount_Edit_CboArea_' + @VendorNo).select2();
+    $('#VendorExistAcount_Edit_CboSubArea_' + @VendorNo).select2();
+    $('#VendorExistAcount_Edit_CboStreet_' + @VendorNo).select2();
+    $('#VendorExistAcount_Edit_CboSurTitle_' + @VendorNo).select2();
+    $('#VendorExistAcount_Edit_CboPaymentType_' + @VendorNo).select2();
+    $('#VendorExistAcount_Edit_CboCurrCode_' + @VendorNo).select2();
+    $('#VendorExistAcount_Edit_CboGroup_' + @VendorNo).select2();
+
+    function changeExistAcountVendorName(srl) {
+        $('#VendorExistAcount_Edit_VendorEngName_' + srl).val($('#VendorExistAcount_Edit_VendorName_' + srl).val());
+    }
+    function EditValueCountry(srl) {
+        burn({ CountryId: $('#VendorExistAcount_Edit_CboCountry_' + srl).val(), srl: srl}, '../../../VendorsInfo/LoadArea', '', GetLoadArea, true);
+    }
+    function GetLoadArea(r) {
+
+        $("#VendorExistAcount_Edit_CboArea_" + r.id).empty();
+
+        for (var i = 0; i < r.Area.length; i++) {
+            var newOption = new Option(r.Area[i].DescAr, r.Area[i].Id, false, false);
+            $("#VendorExistAcount_Edit_CboArea_" + r.id).append(newOption);
+        }
+        EditValueArea(r.id)
+    }
+    function EditValueArea(srl) {
+        burn({ CountryId: $('#VendorExistAcount_Edit_CboCountry_' + srl).val(), AreaId: $('#VendorExistAcount_Edit_CboArea_' + srl).val(), srl: srl }, '../../../VendorsInfo/LoadSubArea', '', GetLoadSubArea, true);
+    }
+    function GetLoadSubArea(r) {
+        $("#VendorExistAcount_Edit_CboSubArea_" + r.id).empty();
+        for (var i = 0; i < r.SAreas.length; i++) {
+            var newOption = new Option(r.SAreas[i].DescAr, r.SAreas[i].Id, false, false);
+            $("#VendorExistAcount_Edit_CboSubArea_" + r.id).append(newOption);
+        }
+        EditValueSubArea(r.id)
+    }
+    function EditValueSubArea(srl) {
+        burn({ CountryId: $('#VendorExistAcount_Edit_CboCountry_' + srl).val(), AreaId: $('#VendorExistAcount_Edit_CboArea_' + srl).val(), SubAreaId: $('#VendorExistAcount_Edit_CboSubArea_' + srl).val(), srl: srl }, '../../../VendorsInfo/LoadStreet', '', GetLoadStreet, true);
+    }
+    function GetLoadStreet(r) {
+        $("#VendorExistAcount_Edit_CboStreet_" + r.id).empty();
+
+        for (var i = 0; i < r.Street.length; i++) {
+            var newOption = new Option(r.Street[i].DescAr, r.Street[i].Id, false, false);
+            $("#VendorExistAcount_Edit_CboStreet_" + r.id).append(newOption);
+        }
+    }
+
+    function CheckValueGridTotlal(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt <= 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+        else {
+            if (Amt == '' || Amt == null) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function ExcuteEdit_VendorExistAcount(srl) {
+        if (CheckValueGridTotlal(0, $('#VendorExistAcount_Edit_VendorNo_' + srl).val())) {
+            alert('@Html.Translate("يجب إدخال رقم المورد", "You Must Enter Vendor Number")');
+            return;
+        }
+        if (CheckValueGridTotlal(0, $('#VendorExistAcount_Edit_VendorName_' + srl).val())) {
+            alert('@Html.Translate("يجب إدخال اسم المورد", "You Must Enter Vendor Name")');
+            return;
+        }
+
+        var IsHalt;
+        if ($('#VendorExistAcount_Edit_Active_' + srl)[0].checked == false) {
+            IsHalt = true;
+        }
+        else if ($('#VendorExistAcount_Edit_Active_' + srl)[0].checked == true) {
+            IsHalt = false;
+        }
+        var Vendors = {
+            comp: '@company.comp_num',
+            VendorNo: $('#VendorExistAcount_Edit_VendorNo_' + srl).val(),
+            Name: $('#VendorExistAcount_Edit_VendorName_' + srl).val(),
+            Eng_Name: $('#VendorExistAcount_Edit_VendorEngName_' + srl).val(),
+            Title: $('#VendorExistAcount_Edit_CboSurTitle_' + srl).val(),
+            IsHalt: IsHalt,
+            Notes: $('#VendorExistAcount_Edit_Notes_' + srl).val(),
+            Pmethod: $('#VendorExistAcount_Edit_CboPaymentType_' + srl).val(),
+            Pay_Method: 1,
+            Cr_Lim: 0,
+
+            Curr: $('#VendorExistAcount_Edit_CboCurrCode_' + srl).val(),
+            DelayDays: $('#VendorExistAcount_Edit_DueDays_' + srl).val(),
+            VenLevel: 1,
+            Address: $('#VendorExistAcount_Edit_Address_' + srl).val(),
+
+            Country: $('#VendorExistAcount_Edit_CboCountry_' + srl).val(),
+            Area: $('#VendorExistAcount_Edit_CboArea_' + srl).val(),
+            SArea: $('#VendorExistAcount_Edit_CboSubArea_' + srl).val(),
+            Street_No: $('#VendorExistAcount_Edit_CboStreet_' + srl).val(),
+
+            Location: $('#VendorExistAcount_Edit_Location_' + srl).val(),
+            Resp_Person: $('#VendorExistAcount_Edit_ContactPerson_' + srl).val(),
+            Tel1: $('#VendorExistAcount_Edit_Tel1_' + srl).val(),
+            Tel2: $('#VendorExistAcount_Edit_Tel2_' + srl).val(),
+
+            Mobile_No: $('#VendorExistAcount_Edit_Mobile_' + srl).val(),
+            POBox: $('#VendorExistAcount_Edit_POBox_' + srl).val(),
+            Postal_Code: $('#VendorExistAcount_Edit_PostalCode_' + srl).val(),
+            Fax: $('#VendorExistAcount_Edit_Fax_' + srl).val(),
+
+            Telex: $('#VendorExistAcount_Edit_Telex_' + srl).val(),
+            EMail: $('#VendorExistAcount_Edit_Email_' + srl).val(),
+            Disc: $('#VendorExistAcount_Edit_Discount_' + srl).val(),
+            Penf: $('#VendorExistAcount_Edit_Beneficiary_' + srl).val(),
+
+            Evaluated: $('#VendorExistAcount_Edit_Evaluated_' + srl)[0].checked,
+            GroupNo: $('#VendorExistAcount_Edit_CboGroup_' + srl).val(),
+            GenCondition: $('#VendorExistAcount_Edit_VendorInfo_' + srl).val(),
+            TransporterNo: $('#VendorExistAcount_Edit_TransporterVendor_' + srl).val(),
+            Taxable: $('#VendorExistAcount_Edit_SubjectToTax_' + srl)[0].checked
+        }
+
+        var Ven_Contact = new Array();
+        var Ven_bankInfo = new Array();
+
+        var ContactPersons = $('#VendorExistAcount_Edit_ContactPersonsTable_' + srl).find('tbody tr');
+        var trsContactPersons = ContactPersons;
+        for (var i = 0; i < trsContactPersons.length; i++) {
+            if (CheckValueGridTotlal(1, $(trsContactPersons[i]).closest('tr').find('#VendorExistAcount_EditContactPersons_SupervisorNo')[0].value)) {
+                alert('@Html.Translate("يجب إدخال رقم المسؤول", "You Must Enter Supervisor Number")');
+                return;
+            }
+
+            Ven_Contact.push({
+                CompNo: '@company.comp_num',
+                VendorNo: $('#VendorExistAcount_Edit_VendorNo_' + srl).val(),
+                ContactNo: $(trsContactPersons[i]).closest('tr').find('#VendorExistAcount_EditContactPersons_SupervisorNo')[0].value,
+                ContactName: $(trsContactPersons[i]).closest('tr').find('#VendorExistAcount_EditContactPersons_SupervisorName')[0].value
+            })
+        }
+
+        var BankInfo = $('#VendorExistAcount_EditBankInfoTable_' + srl).find('tbody tr');
+        var trsBankInfo = BankInfo;
+        for (var i = 0; i < trsBankInfo.length; i++) {
+            if (CheckValueGridTotlal(1, $(trsBankInfo[i]).closest('tr').find('#VendorExistAcount_EditBankInfo_Number')[0].value)) {
+                alert('@Html.Translate("يجب إدخال رقم البنك", "You Must Enter Bank Number")');
+                return;
+            }
+
+            Ven_bankInfo.push({
+                CompNo: '@company.comp_num',
+                VendorNo: $('#VendorExistAcount_Edit_VendorNo_' + srl).val(),
+                ID: $(trsBankInfo[i]).closest('tr').find('#VendorExistAcount_EditBankInfo_Number')[0].value,
+                BankName: $(trsBankInfo[i]).closest('tr').find('#VendorExistAcount_EditBankInfo_BankName')[0].value,
+                AccNo: $(trsBankInfo[i]).closest('tr').find('#VendorExistAcount_EditBankInfo_BankAccount')[0].value,
+                Iban: $(trsBankInfo[i]).closest('tr').find('#VendorExistAcount_EditBankInfo_BankIban')[0].value
+            })
+        }
+
+        var DocumentArchivetable = $("#VendorExistAcount_EditDocumentArchiveTbody_" + srl);
+        var trsDocumentArchive = DocumentArchivetable.find('tr');
+
+        var DocumentArchive = new Array();
+
+        for (var i = 0; i < trsDocumentArchive.length; i++) {
+            var InputSerial = $(trsDocumentArchive[i]).closest('tr').find('#VendorExistAcount_EditDocumentArchive_FileId')[0].value;
+            DocumentArchive.push({
+                VendorNo: $('#VendorExistAcount_Edit_VendorNo_' + srl).val(),
+                FileId: InputSerial,
+                Description: $(trsDocumentArchive[i]).closest('tr').find('#VendorExistAcount_EditDocumentArchive_Description_' + InputSerial)[0].value,
+                DateUploded: $(trsDocumentArchive[i]).closest('tr').find('#VendorExistAcount_EditDocumentArchive_UploadDate_' + InputSerial)[0].value,
+                ContentType: $(trsDocumentArchive[i]).closest('tr').find('#VendorExistAcount_EditDocumentArchive_FileType_' + InputSerial)[0].value
+            })
+        }
+
+        wait();
+        burn({ Vendors: Vendors, VenContact: Ven_Contact, VenbankInfo: Ven_bankInfo, FileArchive: DocumentArchive }, '../../../VendorsInfo/EditVendorInfo', '', ReloadEditVendorsInfo, true);
+    }
+    function ReloadEditVendorsInfo(r) {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        CloseWindow('/VendorsInfo/EditVendorsInfo?VendorNo=' + r.VendorNo +'');
+        $('#Ord_VendorsInfoListDiv').load('../../../VendorsInfo/VendorsInfoList');
+    }
+</script>

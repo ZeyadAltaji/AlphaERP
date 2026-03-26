@@ -1,0 +1,75 @@
+@model IEnumerable<AlphaERP.Models.Prod_RevisionSetup>
+
+<div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+        </button>
+        <label class="modal-title">@Html.Translate(" البحث عن أرقام المراجعة", "Search Revisions")</label>
+</div>
+<div class="modal-body">
+    <table class="table  table-hover" id="revisionsTable">
+        <thead>
+            <tr>
+                <th style="text-align:center !important">@Html.Translate("رقم المراجعة", "Revision No")</th>
+            </tr>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var r in Model)
+                {
+                    <tr ondblclick="SelectRevision('@r.RevisionNo')" style="cursor:pointer;">
+                        <td style="text-align:center !important">@r.RevisionNo</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td class="text-center">@Html.Translate("لا يوجد بيانات" , "No data")</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+<div class="modal-footer">
+    <button type="button" onclick="ConfirmSelectRevision()" class="btn btn-primary">@Html.Translate("اختيار", "Select")</button>
+    <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+</div>
+
+<style>
+    .selected-revision-row {
+        background-color: #d9edf7 !important;
+        font-weight: bold;
+    }
+</style>
+
+<script>
+    var selectedRev = null;
+
+    $(document).ready(function() {
+        var table = $('#revisionsTable').DataTable({
+            "scrollY": "300px",
+            "scrollCollapse": true,
+            "paging": false,
+            "info": false,
+            "searching": true
+        });
+
+        $('#revisionsTable tbody').on('click', 'tr', function () {
+            if ($(this).hasClass('selected-revision-row')) {
+                $(this).removeClass('selected-revision-row');
+                selectedRev = null;
+            } else {
+                table.$('tr.selected-revision-row').removeClass('selected-revision-row');
+                $(this).addClass('selected-revision-row');
+                selectedRev = $(this).find('td:first').text().trim();
+            }
+        });
+    });
+
+    function ConfirmSelectRevision() {
+        if (selectedRev) {
+            SelectRevision(selectedRev);
+        } else {
+            alert('@Html.Translate("الرجاء اختيار رقم المراجعة أولاً", "Please select a revision number first")');
+        }
+    }
+</script>

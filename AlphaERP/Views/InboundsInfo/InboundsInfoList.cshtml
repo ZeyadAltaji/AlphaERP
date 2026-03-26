@@ -1,0 +1,104 @@
+﻿@model IEnumerable<AlphaERP.Models.PurchaseOrderInfo>
+@using System.Data.SqlClient;
+@using AlphaERP.Models
+
+<table class="table" id="InboundsInfoTable">
+    <thead>
+        <tr>
+                <th>@*@Html.Recource(3197)*@</th>
+                <th>@Html.Translate("# طلب الشراء الفا", "# P.R No")</th>
+                <th>@Html.Translate("# إمر الشراء الفا", "# P.O No.")</th>
+                <th>@Html.Recource(6315)</th>
+                <th>@*@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")*@</th>
+                <th>@Html.Recource(517)</th>
+                <th>@Html.Recource(1627)</th>
+                <th>@Html.Recource(96)</th>
+                <th></th>
+        </tr>
+    </thead>
+    <tbody id="InboundsInfoTbody">
+        @foreach (PurchaseOrderInfo P in Model.OrderByDescending(o => o.TawreedNo))
+        {
+            <tr OrdYear="@P.OrdYear" OrderNo="@P.OrderNo" TawreedNo="@P.TawreedNo">
+                <td>@*@P.ReqNo*@</td>
+                <td>@P.OrderNo</td>
+                <td>@P.TawreedNo</td>
+                <td>@P.EnterDate.ToString("yyyy-MM-dd")</td>
+                <td>@*@P.ReqDeliveryDate.ToString("yyyy-MM-dd")*@</td>
+                <td>@Html.Translate(P.Name, P.Eng_Name)</td>
+                <td style="text-align center !important; word-wrap break-word; white-space normal; background-color: @P.colorName">
+                    @Html.Translate(P.DlvState, P.DlvState_Eng)
+                </td>
+                <td>@P.RefNo</td>
+                <td>
+                    @if (P.IsClosed == false)
+                    {
+                        <button onclick="ClosedInboundsInfo('@P.OrdYear','@P.OrderNo', '@P.TawreedNo')" type="button" class="btn btn-ed ex" title="@Html.Translate("اغلاق امر الشراء", "Close Purchase Order")">
+                            <i class="fa fa-times" style="color:red"></i>
+                        </button>
+                        <button onclick="btnexInboundsInfo(this)" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default ex" title="@Html.Recource(769)">
+                                <i style="font-weight:100" class="fa fa-folder"></i>
+                            </button>
+                        <button onclick="CreateInbounds('@P.OrdYear','@P.OrderNo','@P.TawreedNo')" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default" title="@Html.Translate("اضافة المعلومات الواردة", "Add Inbounds Information")">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                        <button id="AddInbounds" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                                        @Html.Translate("اضافة المعلومات الواردة", "Add Inbounds Information")
+                                    </button>
+                    }
+                    else
+                    {
+                        <button onclick="btnexInboundsInfo(this)" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default ex" title="@Html.Recource(769)">
+                            <i style="font-weight:100" class="fa fa-folder"></i>
+                        </button>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+    var InboundsInfoTable;
+    InboundsInfoTable = $('#InboundsInfoTable').dataTable({
+        "scrollY": 'calc( 100vh - 270px)',
+        "paging": true,
+        "pageLength": 25,
+        "order": [[0, "desc"], [1, "desc"]],
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+
+    function btnexInboundsInfo(e) {
+        var nTr = e.parentNode.parentNode;
+        if ($(e).attr("opened") == 'details_close') {
+            InboundsInfoTable.fnClose(nTr);
+            $(e).attr("opened", "details_open");
+        }
+        else {
+            wait();
+            $(e).attr("opened", "details_close");
+            var OrdYear = $(e.parentNode.parentNode).attr("OrdYear");
+            var OrderNo = $(e.parentNode.parentNode).attr("OrderNo");
+            var TawreedNo = $(e.parentNode.parentNode).attr("TawreedNo");
+
+            $.get("../../../../InboundsInfo/DetailsInboundsInfo?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo, function (data) {
+                InboundsInfoTable.fnOpen(nTr, data, 'details');
+                done();
+            });
+        }
+    }
+
+    function CreateInbounds(OrdYear, OrdNo, TawreedNo) {
+        $('#AddInbounds').attr("href", '/InboundsInfo/AddInboundsInfo?OrdYear=' + OrdYear + '&OrderNo=' + OrdNo + '&TawreedNo=' + TawreedNo + '')
+        $('#AddInbounds').click();
+    }
+</script>
+
+
+
+
+
+

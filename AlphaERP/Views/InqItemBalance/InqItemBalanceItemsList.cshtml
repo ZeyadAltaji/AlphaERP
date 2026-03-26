@@ -1,0 +1,63 @@
+﻿@model IEnumerable<AlphaERP.Models.InvItemsMF>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    int StoreNo = ViewBag.StoreNo;
+}
+
+
+
+<table class="table table-hover" id="SelectInqItemBalanceItemsTable">
+    <thead>
+        <tr>
+            <th style="text-align: center !important;">@Html.Recource(44)</th>
+            <th style="text-align: center !important;">@Html.Recource(74)</th>
+            <th style="text-align: center !important;">@Html.Recource(96)</th>
+            <th style="text-align: center !important; ">@Html.Recource(312)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="SelectSlaughterOrderItemTbody">
+        @{
+            int Comp_num = company.comp_num;
+            string query = string.Format("exec SP_Search {0},'WHERE (InvSItemsMF.CompNo = {0}) AND (InvSItemsMF.StoreNo = {1}) AND (IsHalt = 0)',5", Comp_num, StoreNo);
+            using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+            {
+                SqlCommand cmd = new SqlCommand(query, cn);
+                cn.Open();
+                SqlDataReader rdr = cmd.ExecuteReader();
+                if (rdr.HasRows)
+                {
+                    while (rdr.Read())
+                    {
+                        string ItemDesc = rdr["ItemDesc"].ToString();
+                        string ItemDescEn = rdr["ItemDesc_Ara"].ToString();
+                        string Desc = Html.Translate(ItemDesc, ItemDescEn).ToString();
+                        <tr onclick="SelectInqItemBalance_InvItems(this)" ondblclick="GetInqItemBalanceItemNo(this)" ItemNo="@rdr["ItemNo"]" ItemDesc="@Html.Trim(Desc,50)">
+                            <td style="text-align: center;" id="ItemNo">@rdr["ItemNo"]</td>
+                            <td style="text-align: center;word-wrap: break-word; white-space: normal;" id="ItemDesca" title="@Desc">@Desc</td>
+                            <td style="text-align: center;">@rdr["RefrenceNo"]</td>
+                            <td style="text-align: center !important; ">@rdr["BarCode"]</td>
+                            <td></td>
+                        </tr>
+                    }
+                }
+            }
+        }
+
+    </tbody>
+</table>
+
+<script>
+    $('#SelectInqItemBalanceItemsTable').DataTable({
+        "scrollY": 'calc( 100vh - 385px)',
+        "paging": true,
+        "pageLength": 25,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+</script>

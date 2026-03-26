@@ -1,0 +1,49 @@
+﻿@model List<AlphaERP.Models.PordCost_FormTestView>
+@{
+    int i = 1;
+}
+<table id="PordCost_FormTestDataTable" class="table table-hover dataTable">
+    <thead>
+        <tr>
+
+            <th style="width:5%">@Resources.Resource.Id</th>
+            <th style="width:10%">@Html.Translate("رقم النموذج", "Form No")</th>
+            <th style="width:10%">@Html.Translate("BOM", " BOM")</th>
+            <th>@Html.Translate("الوصف", "Description")</th>
+
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr style="height:36px !important">
+
+                <td>@i</td>
+                <td>@item.FormNo</td>
+                <td>@item.UsedInBOMs</td>
+                <td>@item.FormDesc</td>
+                <td>
+                    <button class="btn-ed" onclick="EditPordCost_FormTest('@item.FormNo',this)">
+                        <i class="fa fa-pencil-alt"></i>
+                    </button>
+                    <button class="btn-de" onclick="DeletePordCost_FormTest('@item.FormNo', this)">
+                        <i class="fa fa-trash-alt" aria-hidden="true"></i>
+                    </button>
+                </td>
+
+            </tr>
+            i++;
+        }
+    </tbody>
+</table>
+
+
+<script>
+    var table = $('#PordCost_FormTestDataTable').DataTable({
+        "scrollY": '56vh',
+        "paging": true,
+        "pageLength":100
+    });
+
+</script>

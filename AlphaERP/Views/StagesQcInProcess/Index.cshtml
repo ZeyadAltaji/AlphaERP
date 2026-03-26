@@ -1,0 +1,361 @@
+﻿ @model System.Data.DataSet
+@using System.Data.SqlClient;
+@{
+
+}
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-11" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+
+                </label>
+            </div>
+            <div class="col-md-1">
+                <button style="width:100%" class="btn btn-default btn-block" onclick="$('#StagesQcInProcessListTableDiv').load('../../StagesQcInProcess/List')">
+                    <i class="fa fa-sync-alt"></i>
+                </button>
+            </div> 
+        </div>
+    </div>
+    <div class="box-body box-profile" id="StagesQcInProcessListTableDiv">
+        @Html.Partial("~/Views/StagesQcInProcess/List.cshtml")
+    </div>
+</div>
+
+
+<div class="modal fade" id="StagesQcInProcess_save_StagesQcInProcess">
+
+    <div class="modal-dialog">
+        <div class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(9247)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <label class="unselectable" for="StagesQcInProcess_save_TxtYear">@Html.Recource(59) </label>
+                    </div>
+                    <div class="col-md-3" style="margin-bottom: 5px;">
+                        <input style="width:100%" disabled style="width:100%" required="false" type="text" id="StagesQcInProcess_save_TxtYear" placeholder="@Html.Recource(59)" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="unselectable" for="StagesQcInProcess_save_TxtOrderNo">@Html.Recource(8610) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:100%" disabled style="width:100%" required="false" type="text" id="StagesQcInProcess_save_TxtOrderNo" placeholder="@Html.Recource(8610)" />
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <label class="unselectable" for="StagesQcInProcess_save_LblFormDesc">@Html.Recource(4286) </label>
+                    </div>
+                    <div class="col-md-9" style="margin-bottom: 5px;">
+                        <input style="width:100%" disabled required="false" type="text" id="StagesQcInProcess_save_LblFormDesc" placeholder="@Html.Recource(4286)" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <label class="unselectable" for="StagesQcInProcess_save_LblFinItem">@Html.Recource(306) </label>
+                    </div>
+                    <div class="col-md-9" style="margin-bottom: 5px;">
+                        <input style="width:100%" disabled required="false" type="text" id="StagesQcInProcess_save_LblFinItem" placeholder="@Html.Recource(306)" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <label class="unselectable" for="StagesQcInProcess_save_TxtStageDesc">@Html.Recource(4482) </label>
+                    </div>
+                    <div class="col-md-9" style="margin-bottom: 5px;">
+                        <input style="width:100%" disabled required="false" type="text" id="StagesQcInProcess_save_TxtStageDesc" placeholder="@Html.Recource(4482)" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <label class="unselectable" for="StagesQcInProcess_save_Date">@Html.Recource(58) </label>
+                    </div>
+                    <div class="col-md-9" style="margin-bottom: 5px;">
+                        <input value="@DateTime.Now.ToString("yyyy-MM-dd")" required="false" type="date" id="StagesQcInProcess_save_Date" placeholder="@Html.Recource(1627)" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <label class="unselectable">@Html.Recource(9271) </label>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="unselectable">
+                            <input id="OptSuccess" style="width: 15px;" checked type="radio" name="StagesQcInProcess" />
+                            @Html.Recource(9272)
+                        </label>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="unselectable">
+                            <input style="width: 15px;" type="radio" name="StagesQcInProcess" />
+                            @Html.Recource(9273)
+                        </label>
+                    </div>
+                    <div class="col-md-3">
+                    </div>
+
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3">
+                        <label for="StagesQcInProcess_save_Notes" class="unselectable">@Html.Recource(70) </label>
+                    </div>
+                    <div class="col-md-9">
+                        <input id="StagesQcInProcess_save_Notes" style="width:100%" type="text" />
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="StagesQcInProcessQcPass()" class="btn btn-primary">@Html.Recource(9270)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade wideBom " id="StagesQcInProcessEdit_edit_StagesQcInProcessEdit">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(9267)</label>
+            </div>
+            <div class="modal-body row" id="StageQCinProcessEit">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="CloseQualityControl" onclick="StagesQcInProcessQcPass()" >@Html.Translate("أغلاق مراقبة الجودة", "Close Quality Control")</button>
+                <button type="button" id="SaveStagesQcInProcessTestBtn" onclick="SaveStagesQcInProcessTest()" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade wideBom" id="StagesQcInProcessView">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("نتيجة  مراقبة الجودة", "Quality Control Result")</label>
+            </div>
+            <div class="modal-body row" id="StageQCinProcessView">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Translate("أغلاق","Close")</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+
+    var StagesQcInProcessTransType = 1;
+
+    var RefNo_ = 0;
+
+    var gu_ = '';
+    var QCTrNo_ = 0;
+    $('#StagesQcInProcessEdit_edit_StagesQcInProcessEdit').draggable({
+        handle: '.modal-header'
+    });
+
+    $('#StagesQcInProcessView').draggable({
+        handle: '.modal-header'
+    });
+    $('#StagesQcInProcessEdit_edit_StagesQcInProcessEdit').on('shown.bs.modal', function () {
+        $('#StagesQcInProcessEdit_edit_IssueCost').focus();
+        $('#StagesQcInProcessEdit_edit_IssueCost').select();
+    });
+
+    $('#StagesQcInProcess_save_StagesQcInProcess').draggable({
+        handle: '.modal-header'
+    });
+
+    $('#StagesQcInProcess_save_StagesQcInProcess').on('shown.bs.modal', function () {
+        $('#StagesQcInProcessEdit_edit_Select').val('')
+        $('#StagesQcInProcessEdit_edit_IssueCost').focus();
+        $('#StagesQcInProcessEdit_edit_IssueCost').select();
+    });
+
+    function StagesQcInProcessCloseQcTest(e, RefNo) {
+        debugger;
+        RefNo_ = RefNo;
+        $('#StagesQcInProcess_save_TxtYear').val(e.parentNode.parentNode.children[0].innerHTML.trim());
+        $('#StagesQcInProcess_save_TxtOrderNo').val(e.parentNode.parentNode.children[2].innerHTML.trim());
+        $('#StagesQcInProcess_save_LblFormDesc').val(e.parentNode.parentNode.children[4].innerHTML.trim());
+        $('#StagesQcInProcess_save_LblFinItem').val(e.parentNode.parentNode.children[3].innerHTML.trim());
+        $('#StagesQcInProcess_save_TxtStageDesc').val(e.parentNode.parentNode.children[8].innerHTML.trim());
+        $('#StagesQcInProcess_save_Date').val('@DateTime.Now.ToString("yyyy-MM-dd")');
+
+        $('#StagesQcInProcess_save_StagesQcInProcess').modal('show')
+    }
+
+    function StagesQcInProcessQcPass() {
+        debugger;
+        var rdBtn = $('input[name="StagesQcInProcess0"]:checked').val();
+        var QCClosed = true;
+        burn({
+            RefNo: RefNo_, QCPassed: rdBtn, Notes: $('#StagesQcInProcess_save_Notes').val(), QCClosed: QCClosed, QCTrNo: QCTrNo_}, '../../../StagesQcInProcess/Close', '', RefreshMe, false);
+    }
+
+    //function DeleteStagesQcInProcess(e, RefNo, QCTrNo,gu) {
+    //    if (RemoveRow(e)) {
+    //        RefNo_ = RefNo; gu_ = gu;
+    //        burn({ RefNo: RefNo, QCTrNo: QCTrNo }, '../../../StagesQcInProcess/Delete', '', DeletedStagesQcInProcess, false);
+    //    }
+    //}
+
+    function DeletedStagesQcInProcess(RefNo_, orderyear, orderno) {
+        debugger;
+        $('#StagesQcInProcessEdit_edit_StagesQcInProcessEdit').modal('hide')
+        $('#' + gu_).ineerHTML = '';
+        $('#' + gu_).load("../../../../StagesQcInProcess/LoadQcPros?RefNo=" + RefNo_ + "&orderyear=" + orderyear + "&orderno=" + orderno)
+    }
+    function StagesQcInProcessEdit(e, RefNo, QCTrNo, gu, tt, orderyear, orderno) {
+        debugger;
+        wait();
+        RefNo_ = RefNo; gu_ = gu; QCTrNo_ = QCTrNo;
+        orderyear = orderyear;
+        orderno = orderno;
+        StagesQcInProcessTransType = tt;
+
+        $('#StageQCinProcessEit').load("../../../StagesQcInProcess/LoadTestDetQcDf?RefNo=" + RefNo + '&QCTrNo=' + QCTrNo + '&orderyear=' + orderyear + '&orderno=' + orderno);
+        $('#StagesQcInProcessEdit_edit_StagesQcInProcessEdit').modal('show');
+        done();
+    }
+    function StageQCinProcesView(e, RefNo, QCTrNo, gu, tt) {
+        wait();
+        RefNo = RefNo;
+        gu = gu;
+        QCTrNo = QCTrNo;
+        $('#StageQCinProcessView').load("../../../StagesQcInProcess/LoadViewTestDetQCDf?RefNo=" + RefNo + '&QCTrNo=' + QCTrNo);
+        $('#StagesQcInProcessView').modal('show');
+        done();
+
+    }
+
+    function StagesQcInProcessEditing(rx) {
+        $('#StagesQcInProcess_save_Notes0').val(rx.Notes);
+        if (rx.OptSuccess) {
+            document.getElementById('OptSuccess0').checked = true;
+        } else {
+            document.getElementById('OptSuccess00').checked = true;
+        }
+        document.getElementById('FixTest').checked = rx.FixTest;
+        if (rx.FixTest == true) {
+            $('#SaveStagesQcInProcessTestBtn').hide();
+        } else {
+            $('#SaveStagesQcInProcessTestBtn').show();
+        }
+        StagesQcInProcessTestR_.clear().draw();
+        $.each(rx.tests, function (i, item) {
+            ItemInsert(item.TestNo, item.TestDesc, item.ValFrom, item.ValTo, item.QCVal, item.Notes);
+        });
+        $('#StagesQcInProcessEdit_edit_StagesQcInProcessEdit').modal('show')
+    }
+
+
+
+    function AddTestToMe() {
+        if (!$('#StagesQcInProcessEdit_edit_Select').val()) {
+            $('#StagesQcInProcessEdit_edit_Select').focus();
+            return;
+        }
+        ItemInsert(
+            $('#StagesQcInProcessEdit_edit_Select').val(),
+            $('#StagesQcInProcessEdit_edit_Select option:selected').text(), '', '', '', ''
+        )
+
+
+
+    }
+
+    function SaveStagesQcInProcessTest() {
+        debugger;
+        var trs = document.getElementById('StagesQcDetQcTestRsTB').getElementsByTagName("tr");
+        for (var i = 0; i < trs.length; i++) {
+            if (trs[i].cells[2].children[0].value == '') { trs[i].cells[2].children[0].focus(); return; }
+            if (trs[i].cells[3].children[0].value == '') { trs[i].cells[3].children[0].focus(); return; }
+            if (trs[i].cells[4].children[0].value == '') { trs[i].cells[4].children[0].focus(); return; }
+            if (Number(trs[i].cells[2].children[0].value) > Number(trs[i].cells[3].children[0].value)) {
+                trs[i].cells[2].children[0].focus();
+                return;
+            }
+        }
+        var Dts = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            var OrderYear = trs[i].getAttribute("orderyear");
+            var OrderNo = trs[i].getAttribute("orderno");
+            var RefNo = trs[i].getAttribute("RefNo")
+
+            Dts.push({
+                TestNo: trs[i].cells[0].innerHTML,
+                ValFrom: trs[i].cells[2].children[0].value,
+                ValTo: trs[i].cells[3].children[0].value,
+                QCVal: trs[i].cells[6].children[0].value,
+                Notes: trs[i].cells[7].children[0].value,
+                QCPassed: trs[i].cells[8].children[0].value,
+                OrderYear: OrderYear,
+                OrderNo: OrderNo,
+                RefNo: RefNo
+            });
+        }
+        var Note = $('#StagesQcInProcess_save_Notes0').val();
+        var rdBtn = $('input[name="StagesQcInProcess0"]:checked').val();
+         burn({
+            tests: Dts,
+            OrderYear: OrderYear,
+            OrderNo: OrderNo,
+            TransType: StagesQcInProcessTransType,
+            QCTrNo: QCTrNo_,
+            RefNo: RefNo,
+            Notes: Note
+            // ,
+            //OptSuccess: rdBtn,
+
+        }, '../../../StagesQcInProcess/SaveFile', '', DeletedStagesQcInProcess(RefNo, OrderYear, OrderNo), false);
+    }
+
+    function ItemInsert(tNO, tDE, v1, v2, v3, v4) {
+        var table_ = $("#StagesQcInProcessTestR > tbody");
+        var Added_ = false;
+        table_.find("tr").each(function () {
+            var tNo_ = $(this).find("td:first-child").text();
+            if (tNo_ == tNO) {
+                Added_ = true;
+            }
+        });
+        if (!Added_) {
+            StagesQcInProcessTestR_.row.add([
+                tNO, tDE,
+                '<input type="number" style="width:100px" value="' + v1 + '" />',
+                '<input type="number" style="width:100px" value="' + v2 + '" />',
+                '<input type="number" style="width:100px" value="' + v3 + '" />',
+                '<input type="text" style="width:150px" value="' + v4 + '" />',
+                '<button onclick="RemoveRow(this)" class="btn btn-de" type="button"><i class="fa fa-trash-alt" aria-hidden="true"></i></button>'
+            ]).draw(false);
+        }
+    }
+
+</script>

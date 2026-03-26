@@ -1,0 +1,262 @@
+﻿@using System.Data
+@using AlphaERP.Models;
+
+@model System.Data.DataSet
+@{
+    string gue = "div___" + Guid.NewGuid().ToString();
+    string lang = Session["language"].ToString();
+    int serialNumber = 0;
+    int QA_ProcNo = ViewBag.QA_ProcNo;
+    bool hasFalseValu = false;
+    string compNo = string.Empty;
+    int mainReqNo = ViewBag.MainReqNo;
+    Company company = (Company)Session["company"];
+
+    var dataSet = Model;
+    var table = dataSet.Tables["ListEventsummary"];
+    string value = null;
+
+    if (table.Rows.Count > 0)
+    {
+        DataRow latestRow = table.Rows[table.Rows.Count - 1];
+
+        if (latestRow.ItemArray.Length > 7)
+        {
+            value = latestRow[8].ToString();
+        }
+    }
+
+
+
+    string FinalPostUser = "No Posted";
+    //string FPostDate = 
+}
+<style>
+ 
+ 
+    .gue {
+        background-color: #f5f5f5;
+        transform: scale(1.00);
+        box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.2), 3px 9px 8px rgba(0, 0, 0, 0.2);
+        margin-bottom: 3rem;
+        max-height: 35vh;
+        overflow-y: auto;
+     }
+ 
+
+    #table {
+         text-align: left !important;
+    }
+    .tableInfos tbody .table-Event:hover{
+            background-color: #cfcfcf !important;
+
+    }
+   
+   
+ 
+</style>
+@if (lang == "en")
+{
+    <style>
+        .tableInfos caption{
+            text-align: center;
+            height: 20px;
+            position: relative;
+            bottom: 11px;
+            font-size: 14px;
+        }
+    </style>
+}
+else
+{
+    <style>
+        .tableInfos caption{
+            text-align: center;
+            height: 20px;
+            position: relative;
+            bottom: 11px;
+            font-size: 14px; 
+
+        }
+    </style>
+} 
+<div id="@gue" class="gue" style="width: 100%;padding: 7px; ">
+    <div class="table-wrapper">
+        <table style="width: 100%; margin: 0;" id="table" class="tableInfos">
+            <caption>@Html.Translate("مراقبة الإنتاج/عمليات التفتيش على الجودة", "Production Control / Quality inspection movements")</caption>
+            <thead style="background: lavender; " class="sticky-thead">
+                <tr >
+                    <th style="width: 8rem;">@Html.Translate("التسلسل", "Ser")</th>
+                    <th>@Html.Translate("تاريخ التحديث", "Post Date")</th>
+                    <th>@Html.Translate("المستخدم", "User")</th>
+                    <th>@Html.Translate("الحالة", "Result Status")</th>
+                    <th>@Html.Translate("إجراء", "Action")</th>
+                 </tr>
+            </thead>
+            <tbody style="position:relative;top: 0rem !important;">
+                @{
+                    bool AddMoodEdit = false;
+
+                }
+                @foreach (DataRow Dr in Model.Tables["ListEventsummary"].Rows)
+                {
+                    short eventserial = Convert.ToInt16(Dr["eventserial"]);
+                    compNo = Dr["CompNo"].ToString();
+                    bool? Valu = null;
+                    if (Dr["Valu"] != DBNull.Value)
+                    {
+                        Valu = Convert.ToBoolean(Dr["Valu"]);
+                        if (Valu == false)
+                        {
+                            hasFalseValu = true;
+                        }
+                    }
+
+                    <tr class="table-Event data-row" style="text-align:left;position: relative;">
+                        <td>@(serialNumber + 1)</td> 
+                            <td>@if (@Dr["FPostDate"] == DBNull.Value) {
+                                @FinalPostUser
+
+                            }
+                            else
+                            {
+                                @Dr["FPostDate"]
+
+                            }</td>
+                        <td>
+                        @if (string.IsNullOrWhiteSpace(@Dr["FinalPostUser"].ToString()))
+                        {
+
+                            @FinalPostUser
+
+
+                        }
+                        else
+                        {
+                            @Dr["FinalPostUser"].ToString()
+                        }
+                        </td>
+                        <td>
+                            @if (Valu.HasValue)
+                            {
+                                if (Valu.Value)
+                                {
+                                    @Html.Translate("اجتياز", "Pass")
+                                }
+                                else
+                                {
+                                    @Html.Translate("فشل", "Fail")
+                                }
+                            }
+                            else
+                            {
+                                @Html.Translate("معلقة", "Pending")
+                            }
+                     </td>
+                        <td>
+
+                            @if (Valu == null && string.IsNullOrWhiteSpace(@Dr["FinalPostUser"].ToString()) && @Dr["FPostDate"] == DBNull.Value)
+                            {
+
+                                <button type="button" value="@eventserial" data-eventserial="@eventserial" class="btn btn-danger" onclick="EditEvent(@Dr["CompNo"],@Dr["MainReqNo"],@eventserial,@QA_ProcNo,@AddMoodEdit)">@Html.Translate("تعديل", "Edit")</button>
+                            }
+
+                            else
+                            {
+                                <button type="button" value="@eventserial" data-eventserial="@eventserial" class="btn btn-primary" onclick="ShowEvent(@Dr["CompNo"],@Dr["MainReqNo"],@eventserial,@QA_ProcNo,@AddMoodEdit)">@Html.Translate("رؤية ", "View")</button>
+                            }
+                        </td>
+                       
+                     </tr>
+                    serialNumber++;
+                }
+            </tbody>
+            <tfoot style="background: lavender; ">
+                <tr style="height: 2rem !important;">
+                    <td></td><td></td><td></td><td></td>
+                    <td>
+                        @if ((value == "False" || serialNumber == 0 || value != "") && value != "True")
+                        {
+                            <button onclick="AddValue(@company.comp_num,@QA_ProcNo,@mainReqNo)" type="button" id="addValueButton" value="" class="btn btn-primary" style="position: relative;left: 14rem;margin-top: 1rem;">@Html.Translate("اضافة", "Add")</button>
+
+                        }
+                    </td>
+                </tr>
+             </tfoot>
+        </table>
+    </div>
+</div>
+<script>
+
+    function EditEvent(CompNo, reqNo, eventSerial, qaProcNo, AddMoodEdit) {
+        debugger;
+        AddMoodEdit = false;
+        $.ajax({
+            url: '@Url.Action("GetByReqNoedit", "ProdCost_QA")',
+            type: 'GET',
+            data: {
+                CompNo: CompNo,
+                MainReqNo: reqNo,
+                QA_ProcNo: qaProcNo,
+                Eventserial: eventSerial,
+                AddMood: AddMoodEdit
+
+
+            },
+            success: function (dataevent) {
+                $('#ProdCost_QAEventEditModal').modal('show');
+                ShowEditListEvent(dataevent, reqNo, qaProcNo, eventSerial, AddMoodEdit, eventSerial);
+
+            }
+        });
+    }
+    function ShowEvent(CompNo, reqNo, eventSerial, qaProcNo, AddMoodEdit) {
+        AddMoodEdit = false;
+         $.ajax({
+            url: '@Url.Action("GetByReqNoedit", "ProdCost_QA")',
+            type: 'GET',
+            data: {
+                CompNo: CompNo,
+                MainReqNo: reqNo,
+                QA_ProcNo: qaProcNo,
+                Eventserial: eventSerial,
+                AddMood: AddMoodEdit
+
+
+            },
+            success: function (dataevent) {
+                $('#ProdCost_QAEventShowModal').modal('show');
+                ShowListEvent(dataevent, reqNo, qaProcNo, eventSerial, AddMoodEdit);
+
+            }
+        });
+    }
+    $('.data-row').on('dblclick', function () {
+        var btnShowButton = $(this).find('.BtnShow');
+        if (btnShowButton.length > 0) {
+            btnShowButton.click();
+        }
+    });
+    function AddValue(CompNo, qaProcNo, mainReqNo) {
+        debugger;
+        var AddMoodSave = true;
+         $.ajax({
+            url: '@Url.Action("GetByReqNo", "ProdCost_QA")',
+            type: 'GET',
+            data: {
+
+                CompNo: CompNo,
+                MainReqNo: mainReqNo,
+                QA_ProcNo: qaProcNo,
+                AddMood: AddMoodSave
+            },
+
+            success: function (dataevent) {
+                $('#ProdCost_QAEventModal').modal('show');
+
+                ModalEvent(dataevent, mainReqNo, qaProcNo, AddMoodSave)
+            }
+
+        });    
+    }
+</script>

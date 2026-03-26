@@ -1,0 +1,227 @@
+﻿@using System.Data.SqlClient;
+@using System.Configuration;
+@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+    List<ProdCost_Parameter> parameters = new MDB().ProdCost_Parameters.Where(x => x.CompNo == company.comp_num)
+        .Where(x => x.ParmID == 7 || x.ParmID == 8).ToList();
+}
+<style>
+    .tbl-label {
+        padding: 0;
+        margin: 0
+    }
+</style>
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-10" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2" style="padding:0">
+
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" style="height:calc( 100vh - 165px)">
+        <div style="height:100%">
+            <div class="form-group">
+                <div class="col-md-4">
+                    <label class="unselectable" for="ExpensesDistributionDate">@Html.Recource(5657) </label>
+                    <input onblur="GetExpensesDistribution()" autofocus type="number" id="ExpensesDistributionDate" value="@DateTime.Now.Year" maxlength="4" max="2099" min="2000" />
+                </div>
+                <div class="col-md-8" style="margin-bottom: 5px;">
+                    <label class="unselectable" for="ExpensesDistributionStage">@Html.Recource(4482) </label>
+                    <select onchange="GetExpensesDistribution()" required="false" id="ExpensesDistributionStage">
+                        @{
+                            int Comp_num = company.comp_num;
+                            string query = string.Format("SELECT Stage_Code,Stage_Desc FROM Prod_ProdStage_Info WHERE Comp_No = {0} order by Stage_code asc", Comp_num);
+                            using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                            {
+                                SqlCommand cmd = new SqlCommand(query, cn);
+                                cn.Open();
+                                SqlDataReader rdr = cmd.ExecuteReader();
+                                if (rdr.HasRows)
+                                {
+                                    while (rdr.Read())
+                                    {
+                                        <option value="@rdr["Stage_Code"]">@rdr["Stage_Desc"]</option>
+                                    }
+                                }
+                            }
+                        }
+                    </select>
+                    <button onclick="SIMONIOM()" class="btn btn-default" style="padding:0 5px;margin-top:-5px">
+                        <i class="fa fa-chevron-right"></i>
+                    </button>
+                    <button onclick="SIMONIOM2()" class="btn btn-default" style="padding:0 5px;margin-top:-5px">
+                        <i class="fa fa-chevron-left"></i>
+                    </button>
+                </div>
+            </div>
+            <script>
+                function SIMONIOM() {
+                    var v = $('#ExpensesDistributionStage').prop('selectedIndex');
+                    if (v == 0) {
+                        return;
+                    }
+                    v -= 1;
+                    $('#ExpensesDistributionStage').prop('selectedIndex', v); 
+                    GetExpensesDistribution()
+                }
+                function SIMONIOM2() {
+                    var v = $('#ExpensesDistributionStage').prop('selectedIndex');
+                    if (v == $('#ExpensesDistributionStage > option').length -1 ) {
+                        return;
+                    }
+                    v += 1;
+                    $('#ExpensesDistributionStage').prop('selectedIndex', v);
+                    GetExpensesDistribution()
+                }
+            </script>
+            <div class="form-group" style="height:88%">
+                <div class="col-md-6" style="@Html.Translate("border-left","border-right"):solid 0.5px gray;height:100%">
+                    <label class="unselectable" style="width:100%;text-align:center">
+                        @Html.Recource(5764)
+                    </label>
+                    <table class="table table-hover" style="width:100%" id="DirectExpensesDistribution">
+                        <thead>
+                            <tr>
+                                <th>@Html.Recource(1689)</th>
+                                <th>@Html.Recource(66)</th>
+                                <th>@Html.Recource(972)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in parameters.Where(x => x.ParmID == 7))
+                            {
+                                <tr>
+                                    <td>@p.ParmCode</td>
+                                    <td>@Html.Translate(p.LocalDesc, p.EngDesc)</td>
+                                    <td>
+                                        <input type="number" />
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-6" style="height:100%">
+                    <label class="unselectable" style="width:100%;text-align:center">
+                        @Html.Recource(5765)
+                    </label>
+                    <table class="table table-hover" style="width:100%" id="inDirectExpensesDistribution">
+                        <thead>
+                            <tr>
+                                <th>@Html.Recource(1689)</th>
+                                <th>@Html.Recource(66)</th>
+                                <th>@Html.Recource(972)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in parameters.Where(x => x.ParmID == 8))
+                            {
+                                <tr>
+                                    <td>@p.ParmCode</td>
+                                    <td>@Html.Translate(p.LocalDesc, p.EngDesc)</td>
+                                    <td>
+                                        <input type="number" />
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <button class="btn btn-success" onclick="ExpensesDistributionSave()">
+                    <i class="fa fa-save"></i>
+                    @Html.Recource(475)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var ExpensesDistributionSaving = false;
+    function ExpensesDistributionChangeValues() {
+
+    }
+    function ExpensesDistributionSave() {
+        var parameters = new Array();
+        var StageCode = document.getElementById('ExpensesDistributionStage').value;
+        var DExpYear = document.getElementById('ExpensesDistributionDate').value;
+        var trs = document.querySelectorAll('#DirectExpensesDistribution tbody tr'), i;
+        for (i = 0; i < trs.length; ++i) {
+            var inpt = trs[i].cells[2].children[0]
+            parameters.push
+                ({
+                    DExpCode: trs[i].cells[0].innerText,
+                    DExpValue: inpt.value,
+                    Direct: true
+                });
+        }
+        trs = document.querySelectorAll('#inDirectExpensesDistribution tbody tr'), i;
+        for (i = 0; i < trs.length; ++i) {
+            var inpt = trs[i].cells[2].children[0]
+            parameters.push
+                ({
+                    DExpCode: trs[i].cells[0].innerText,
+                    DExpValue: inpt.value,
+                    Direct: false
+                });
+        }
+        burn({ parameters: parameters, StageCode: StageCode, DExpYear: DExpYear }, '../../../ExpensesDistribution/SaveExpensesDistribution', '', ExpensesDistributionSaved, true)
+    }
+    function ExpensesDistributionSaved() {
+        MsgBox('@Html.Translate("حفظ ناجح", "Saved successfully")','green');
+
+    }
+    function GetExpensesDistribution() {
+        var StageCode = document.getElementById('ExpensesDistributionStage').value;
+        var DExpYear = document.getElementById('ExpensesDistributionDate').value;
+        var tb = 'inDirectExpensesDistribution';
+        var trs = document.querySelectorAll('#' + tb + ' tbody tr'), i;
+        for (i = 0; i < trs.length; ++i) {
+            var inpt = trs[i].cells[2].children[0]
+            inpt.value = ''
+        }
+        tb = 'DirectExpensesDistribution';
+        var trs = document.querySelectorAll('#' + tb + ' tbody tr'), i;
+        for (i = 0; i < trs.length; ++i) {
+            var inpt = trs[i].cells[2].children[0]
+            inpt.value = ''
+        }
+        burn({ StageCode: StageCode, DExpYear: DExpYear }, '../../../ExpensesDistribution/GetExpensesDistribution', '', ExpensesDistributionGeted, true)
+
+    }
+
+    function ExpensesDistributionGeted(r) {
+        $.each(r.parameters, function (i, item) {
+            var tb = 'inDirectExpensesDistribution';
+            if (item.Direct == true) {
+                tb = 'DirectExpensesDistribution';
+            }
+            var trs = document.querySelectorAll('#' + tb + ' tbody tr'), i;
+            for (i = 0; i < trs.length; ++i) {
+                var inpt = trs[i].cells[2].children[0]
+                if (Number(trs[i].cells[0].innerText) == item.DExpCode) {
+                    inpt.value = item.DExpValue
+                }
+            }
+
+        });
+    }
+
+    GetExpensesDistribution()
+</script>

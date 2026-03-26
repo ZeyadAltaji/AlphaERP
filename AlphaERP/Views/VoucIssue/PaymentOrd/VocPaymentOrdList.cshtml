@@ -1,0 +1,100 @@
+﻿@using System.Data.SqlClient;
+@using AlphaERP.Models
+@{
+    int OrdYear = 0;
+    if (ViewBag.OrdYear == null)
+    {
+        OrdYear = DateTime.Now.Year;
+    }
+    else
+    {
+        OrdYear = ViewBag.OrdYear;
+    }
+    Company company = (Company)Session["company"];
+    List<OrdReceiptInfo> lOrdReceiptInfo = new MDB().Database.SqlQuery<OrdReceiptInfo>(string.Format("SELECT OrderYear,OrderNo ,TawreedNo,VendorNo " +
+    "FROM Ord_PortInfoHF " +
+    "where (CompNo = '{0}') AND (OrderYear = '{1}') AND (IsApproval = 1) GROUP BY OrderYear, OrderNo, TawreedNo,VendorNo ", company.comp_num, OrdYear)).ToList();
+}
+
+
+<table class="table" id="OrdVoucIssueTable">
+    <thead>
+        <tr>
+            <th>@Html.Recource(3197)</th>
+            <th>@Html.Recource(3797)</th>
+            <th>@Html.Recource(517)</th>
+            <th>@Html.Recource(96)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="OrdVoucIssueTbody">
+        @foreach (OrdReceiptInfo P in lOrdReceiptInfo)
+        {
+            string RefNo = new MDB().OrderHFs.Where(x => x.CompNo == company.comp_num && x.OrdYear == P.OrderYear && x.OrderNo == P.OrderNo && x.TawreedNo == P.TawreedNo).Select(o => o.RefNo).FirstOrDefault();
+            Vendor v = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.VendorNo == P.VendorNo).FirstOrDefault();
+            <tr OrdYear="@P.OrderYear" OrderNo="@P.OrderNo" TawreedNo="@P.TawreedNo" >
+                <td>@P.OrderNo</td>
+                <td>@P.TawreedNo</td>
+                <td>@Html.Translate(v.Name, v.Eng_Name)</td>
+                <td>@RefNo</td>
+                <td>
+                    <button style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default ex" title="@Html.Recource(769)">
+                        <i style="font-weight:100" class="fa fa-folder"></i>
+                    </button>
+                    <button onclick="CreateVoucIssue('@P.OrderYear','@P.OrderNo','@P.TawreedNo')" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default" title=" @Html.Translate("اضافة محضر استلام", "Add Order Receipt")">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                    <button id="AddVoucIssue" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                        @Html.Translate("اضافة سند صرف", "Add Payment Order")
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+
+    var OrdVoucIssueTable;
+    OrdVoucIssueTable = $('#OrdVoucIssueTable').dataTable({
+        "scrollY": 'calc( 100vh - 270px)',
+        "paging": true,
+        "pageLength": 25,
+        "order": [[0, "desc"],[1,"desc"]],
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+
+    $('#OrdVoucIssueTable tbody td button.ex').click(function () {
+        var nTr = this.parentNode.parentNode;
+        if ($(this).attr("opened") == 'details_close') {
+            OrdVoucIssueTable.fnClose(nTr);
+            $(this).attr("opened", "details_open");
+        }
+        else {
+            wait();
+            $(this).attr("opened", "details_close");
+            var OrdYear = $(this.parentNode.parentNode).attr("OrdYear");
+            var OrderNo = $(this.parentNode.parentNode).attr("OrderNo");
+            var TawreedNo = $(this.parentNode.parentNode).attr("TawreedNo");
+
+            $.get("../../../../VoucIssue/DetailsPaymentOrderRec?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo , function (data) {
+                OrdVoucIssueTable.fnOpen(nTr, data, 'details');
+                done();
+            });
+        }
+    });
+
+    function CreateVoucIssue(OrdYear, OrdNo, TawreedNo) {
+        $('#AddVoucIssue').attr("href", '/VoucIssue/AddPaymentOrder?OrdYear=' + OrdYear + '&OrderNo=' + OrdNo + '&TawreedNo=' + TawreedNo + '')
+        $('#AddVoucIssue').click();
+    }
+
+</script>
+
+
+
+
+
+

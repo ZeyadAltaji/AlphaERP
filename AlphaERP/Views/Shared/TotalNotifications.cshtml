@@ -1,0 +1,33 @@
+﻿@using AlphaERP.Models;
+@{
+    User Me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    List<Alpha_WorkFlowLog> logs = new MDB().Alpha_WorkFlowLog.SqlQuery(string.Format("select * from Alpha_WorkFlowLog where BUUser = '{0}' and CompNo = '{1}' and FID = '50' and RAction = 'cr' and BUUserAction is null", Me.UserID, company.comp_num)).ToList();
+}
+<a class="nav-link dropdown-toggle" id="navbarDropdown" role="button"
+   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    <i class="fa fa-bell" aria-hidden="true"></i>
+    <span style="border:none;position:absolute; top: 18px;left: 25px;z-index:20!important;" class="badge badge-@logs.Count" id="Badge-TotalNotes">@logs.Count</span>
+</a>
+<ul id="myUL" class="dropdown-menu dropdown-menu-xs" style="    max-height: 235px;overflow-y: auto;">
+    @foreach (var l in logs.OrderBy(x => x.TID))
+    {
+        <li>
+            <a text="@Html.Translate("بطاقة","Ticket") @l.TID" onclick="OPWR('@l.TID')" style="direction: rtl;">
+                @l.TrDesc
+            </a>
+        </li>
+    }
+</ul>
+
+<script>
+    function OPWR(TID) {
+        TID_ = TID;
+        //LoadingP();
+        $('#WFHDIALGBD').load('../../../WF/GetWF?TID=' + TID, function () {
+            $('#ActivatePlan_save_BU').select2();
+            $('#WFHDIALG').modal('show');
+            //ULoadingP();
+        })
+    }
+</script>

@@ -1,0 +1,116 @@
+﻿@model IEnumerable<AlphaERP.Models.ProdCost_StageAccExpLink>
+@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+    ProdCost_StageAccExpLink StageAccExpLink = Model.FirstOrDefault();
+    prod_prodstage_info s = new MDB().prod_prodstage_info.Where(x => x.comp_no == company.comp_num &&
+    x.stage_code == StageAccExpLink.StageCode).FirstOrDefault();
+
+    Acc acc = new MDB().Database.SqlQuery<Acc>(string.Format("SELECT glactmf.acc_desc as AccDescAr,glactmf.acc_edesc as AccDescEn " +
+                                                    "FROM glactmf " +
+                                                     "WHERE (glactmf.acc_comp = '{0}') AND (glactmf.acc_num = '{1}')", company.comp_num, StageAccExpLink.CloseAcc)).FirstOrDefault();
+
+    int i = 1;
+
+}
+
+
+    <div class="form-group">
+        <div class="col-md-2">
+            <label class="unselectable" for="Prod_StageAccExpLink_Stagecode">@Html.Recource(4482) </label>
+        </div>
+        <div class="col-md-2">
+            <input style="width: 125%;" id="Prod_eStageAccExpLink_Stagecode" value="@StageAccExpLink.StageCode" disabled />
+        </div>
+        <div class="col-md-8">
+            <input style="width: 100%;" id="Prod_eStageAccExpLink_StageDesc" value="@s.stage_desc" disabled />
+        </div>
+        @*<div class="col-md-1">
+            <button onclick="Serach_StageInfo()" type="button" class="btn btn-primary">@Html.Recource(6661)</button>
+        </div>
+        <div class="col-md-1">
+            <button onclick="Serach_StageInfo()" type="button" class="btn btn-primary">@Html.Recource(6660)</button>
+        </div>*@
+    </div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_StageAccExpLink_Deptcode">@Html.Recource(9590) </label>
+    </div>
+    <div class="col-md-2">
+        <input required="true" style="width: 125%;" id="Prod_eStageAccExpLink_Deptcode" value="@StageAccExpLink.CloseDept" disabled />
+    </div>
+    <div class="col-md-8">
+        <input style="width: 100%;" id="Prod_eStageAccExpLink_DeptDesc" value="@Html.Translate(StageAccExpLink.dept.DEP_NAME,StageAccExpLink.dept.DEP_ENAME)" disabled />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_StageAccExpLink_formula_code">@Html.Recource(7473) </label>
+    </div>
+    <div class="col-md-2">
+        <input style="width: 125%;" id="Prod_eStageAccExpLink_Acccode" value="@StageAccExpLink.CloseAcc" disabled />
+    </div>
+    <div class="col-md-8">
+        <input style="width: 100%;" id="Prod_eStageAccExpLink_AccDesc" value="@Html.Translate(acc.AccDescAr,acc.AccDescEn)" disabled />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12">
+        <button onclick="Edit_DeptDet()" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+    </div>
+
+    <div class="col-md-12" style="width:872px !important;overflow-y:auto">
+        <table class="table table-hover" id="ePackingItemTable">
+            <thead>
+                <tr>
+
+                    <th style="width: 35px !important; text-align:center">@Html.Recource(110)</th>
+                    <th style=" text-align:center">@Html.Recource(109)</th>
+                    <th></th>
+                    <th style=" text-align:center">@Html.Recource(255)</th>
+                    <th style=" text-align:center">@Html.Recource(256)</th>
+                    <th></th>
+                    <th style="width: 62px !important; text-align:center">@Html.Recource(9586)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="eStageAccExpLinkTBody">
+                @foreach (var item in Model)
+                {
+                    Acc acc1 = new MDB().Database.SqlQuery<Acc>(string.Format("SELECT GLCRBMF.crb_dep as deptid, glactmf.acc_num as AccId, glactmf.acc_desc as AccDescAr, glactmf.acc_edesc as AccDescEn " +
+                                                        "FROM glactmf INNER JOIN GLCRBMF ON glactmf.acc_comp = GLCRBMF.CRB_COMP AND glactmf.acc_num = GLCRBMF.crb_acc " +
+                                                         "WHERE(GLCRBMF.crb_dep = '{0}') AND (glactmf.acc_comp = '{1}') AND (GLCRBMF.crb_acc = '{2}')", item.ExpDept, company.comp_num,item.ExpAcc)).FirstOrDefault();
+
+                    <tr id="eStageAccExpLink_@i">
+                        <td>
+                            <input id="StageAccExpLink_eDeptNoDet" type="number" style="width: 35px !important;" value="@item.ExpDept" disabled />
+                        </td>
+                        <td>
+                            <input id="StageAccExpLink_eDeptNameDet" type="text" value="@Html.Translate(item.Expdepts.DEP_NAME,item.Expdepts.DEP_ENAME)" disabled />
+                        </td>
+                        <td>
+                            <button onclick="eAddDeptNo(@i)" type="button" class="btn btn-primary">@Html.Recource(1867)</button>
+                        </td>
+                        <td>
+                            <input id="StageAccExpLink_eAccNoDet" type="number" value="@item.ExpAcc" disabled />
+                        </td>
+                        <td>
+                            <input id="StageAccExpLink_eAccNameDet" type="text" value="@Html.Translate(acc1.AccDescAr,acc1.AccDescEn)" disabled />
+                        </td>
+                        <td>
+                            <button onclick="eAddAccNo(@i)" type="button" class="btn btn-primary">@Html.Recource(256)</button>
+                        </td>
+                        <td>
+                            <input id="StageAccExpLink_eCostShare" value="@item.CostShare" type="number" style="width: 62px !important;" onblur="CheckValueCostShare(2,@i)" />
+                        </td>
+                        <td>
+                            <button class="btn-de" onclick="eRemoveRow(this)" type="button"><i class="fa fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                    i++;
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>

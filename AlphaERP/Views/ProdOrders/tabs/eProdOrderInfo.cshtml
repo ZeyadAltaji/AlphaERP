@@ -1,0 +1,245 @@
+@model AlphaERP.Models.prod_prepare_info
+@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+    int count = new MDB().prod_hiring_prepare_info.Where(x => x.comp_no == company.comp_num && x.prepare_year == Model.prepare_year
+                                                          && x.prepare_code == Model.prepare_code).Count();
+    User me = (User)Session["me"];
+    string formula_desc = new MDB().prod_formula_header_info.Where(x => x.comp_no == company.comp_num && x.formula_code == Model.formula_code).FirstOrDefault().formula_desc;
+    string itemDescAr = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == Model.item_no).FirstOrDefault().ItemDesc;
+    string itemDescEn = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == Model.item_no).FirstOrDefault().ItemDesc_Ara;
+    string SroreDescAr = new MDB().InvStoresMFs.Where(x => x.CompNo == company.comp_num && x.StoreNo == Model.StoreNo).FirstOrDefault().StoreName;
+    string SroreDescEn = new MDB().InvStoresMFs.Where(x => x.CompNo == company.comp_num && x.StoreNo == Model.StoreNo).FirstOrDefault().StoreNameEng;
+
+    List<BusunisUnit> BU = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("SELECT BusUnitID as Id, BusUnitDescAr as DescAr, BusUnitDescEng as DescEn FROM Alpha_BusinessUnitDef  WHERE CompNo = '{0}' AND BusUnitID IN (SELECT BusUnit From Alpha_BusUnitUserPermissions  WHERE (CompNo =  '{0}') AND (UserID = '{1}') AND ((AllPerm = 1) OR (ProdOrder = 1)))", company.comp_num, me.UserID)).ToList();
+
+}
+<style>
+    .GroupTitle {
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        background-color: lightblue;
+    }
+</style>
+
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Edit_OrderYear">@Html.Recource(2063) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <input onblur="eGetProdOrder_Checkyear(1)" type="number" id="Prod_ProdOrder_Edit_OrderYear" value="@Model.prepare_year" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" disabled />
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" style="margin: 0px 20px 0px 20px;" for="Prod_ProdOrder_Edit_OrderNo">@Html.Recource(8610) </label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <input style="width:100%;" type="text" id="Prod_ProdOrder_Edit_OrderNo" value="@Model.prepare_code" disabled />
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Edit_OrderDate">@Html.Recource(2065)</label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <input value="@Model.prepare_date.Value.ToString("yyyy-MM-dd")" required="false" type="date" id="Prod_ProdOrder_Edit_OrderDate" placeholder="@Html.Recource(2065)" />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Edit_formulacode">@Html.Recource(4286) </label>
+    </div>
+    <div class="col-md-2">
+        <input required="true" type="text" id="Prod_ProdOrder_Edit_formulacode" value="@Model.formula_code" disabled />
+    </div>
+    <div class="col-md-7">
+        <input style="width: 100%;margin: 0px 30px 0px 30px;" required="true" type="text" id="Prod_ProdOrder_Edit_formulaDesc" value="@formula_desc" disabled />
+    </div>
+    <div class="col-md-1">
+        <button style="width: 150%;margin: 0px 5px 0px 5px;" type="button" class="btn btn-success btn-block" onclick="SearchProdOrder_FormulaCode(2)">
+            @Html.Recource(975)
+        </button>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Edit_ItemNo">@Html.Recource(306) </label>
+    </div>
+    <div class="col-md-2">
+        <input type="text" id="Prod_ProdOrder_Edit_ItemNo" value="@Model.item_no" disabled />
+    </div>
+    <div class="col-md-8">
+        <input style="width: 99%;margin: 0px 30px 0px 30px;" type="text" id="Prod_ProdOrder_Edit_ItemDesc" value="@Html.Translate(itemDescAr, itemDescEn)" disabled />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Edit_Qty">@Html.Recource(49) </label>
+    </div>
+    <div class="col-md-2">
+        <input required="true" type="number" id="Prod_ProdOrder_Edit_Qty" value="@Model.qty_prepare.Value" onblur="eGetValueProdOrder_Qty()" />
+    </div>
+    <div class="col-md-2">
+        <label style="margin: 0px 20px 0px 20px;" class="unselectable" for="Prod_ProdOrder_Edit_WasteQty">@Html.Recource(4405) </label>
+    </div>
+    <div class="col-md-2">
+        <input style="width: 100%;" type="number" id="Prod_ProdOrder_Edit_WasteQty" value="@Model.waste.Value" onblur="eGetValueProdOrder_WasteQty()" />
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Edit_SQ">@Html.Recource(9255) </label>
+    </div>
+    <div class="col-md-2">
+        <input style="width: 125%;" type="text" id="Prod_ProdOrder_Edit_SQ" value="@Model.Actual_SG" placeholder="@Html.Recource(9255)" disabled />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Edit_StoreNo">@Html.Recource(1) </label>
+    </div>
+    <div class="col-md-2">
+        <input required="true" type="text" id="Prod_ProdOrder_Edit_StoreNo" value="@Model.StoreNo" disabled />
+    </div>
+    <div class="col-md-7">
+        <input style="width: 99%;margin: 0px 30px 0px 30px;" required="true" type="text" id="Prod_ProdOrder_Edit_StoreDesc" value="@Html.Translate(SroreDescAr, SroreDescEn)" disabled />
+    </div>
+    <div class="col-md-1">
+        <button style="width:68px;" type="button" class="btn btn-success btn-block" onclick="SearchProdOrder_StoreNo(2)">
+            @Html.Recource(975)
+        </button>
+    </div>
+
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Edit_SalesOrder">@Html.Recource(241) </label>
+    </div>
+    <div class="col-md-1">
+        <input value="@Model.SalesOrderY" required="true" style="width: 126%;" type="number" id="Prod_ProdOrder_Edit_SalesOrderYear" />
+    </div>
+    <div class="col-md-2">
+        <input style="width: 103%;margin: 0px -19px 0px 19px;" required="true" type="text" id="Prod_ProdOrder_Edit_SalesOrderNo" placeholder="@Html.Recource(205)" />
+    </div>
+    @*<div class="col-md-2">
+            <button style="width: 77%;margin: 0px -42px 0px 42px;" type="button" class="btn btn-success btn-block">
+                @Html.Recource(6377)
+            </button>
+        </div>*@
+    <div class="col-md-2">
+        <label style="margin: 0 -35px 0px 35px;" class="unselectable" for="Prod_ProdOrder_Edit_BusUnitID">@Html.Recource(5667)</label>
+    </div>
+    <div class="col-md-5">
+        <select style="width:120%" id="Prod_ProdOrder_Edit_BusUnitID" required="true">
+            @foreach (var item in BU)
+            {
+                if (Model.BusUnitID.Value == item.Id)
+                {
+                    <option value="@item.Id" selected>@Html.Translate(item.DescAr, item.DescEn) </option>
+                }
+                else
+                {
+                    <option value="@item.Id">@Html.Translate(item.DescAr, item.DescEn) </option>
+                }
+            }
+        </select>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Edit_Notes"> @Html.Recource(70)</label>
+    </div>
+    <div class="col-md-10" style="margin-bottom: 5px;">
+        <textarea style="width: 100%;height:55px !important;" id="Prod_ProdOrder_Edit_Notes">@Model.Note</textarea>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Edit_RefNo1">@Html.Translate("رقم مرجعي 1", "Reference No 1")</label>
+    </div>
+    <div class="col-md-4">
+        <input style="width: 100%;" type="text" id="Prod_ProdOrder_Edit_RefNo1" value="@Model.RefNo1"/>
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Edit_RefNo2">@Html.Translate("رقم مرجعي 2", "Reference No 2")</label>
+    </div>
+    <div class="col-md-4">
+        <input style="width: 100%;" type="text" id="Prod_ProdOrder_Edit_RefNo2" value="@Model.RefNo2" />
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12 GroupTitle">
+        @Html.Recource(9408)
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Edit_Year"> @Html.Recource(59)</label>
+    </div>
+    <div class="col-md-2">
+        <input onblur="eGetProdOrder_Checkyear(2)" type="number" id="Prod_ProdOrder_Edit_Year" value="@Model.PlanYear" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" />
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable" for="Prod_ProdOrder_Edit_Month"> @Html.Recource(1198)</label>
+    </div>
+    <div class="col-md-2">
+        <input style="width:30% !important;" type="number" id="Prod_ProdOrder_Edit_Month" value="@Model.PlanMonth" max="12" min="1" onblur="eGetChangeMonth()" />
+    </div>
+</div>
+
+
+<script>
+    if (@count == 1) {
+        $("#EditProd_ProdOrders").prop("disabled", true);
+    }
+    else {
+        $("#EditProd_ProdOrders").prop("disabled", false);
+    }
+    $('#Prod_ProdOrder_Edit_BusUnitID').select2();
+    function eGetProdOrder_Checkyear(type) {
+        if (type == 1) {
+            if (Prod_ProdOrder_Edit_OrderYear.value < 2000) {
+                Prod_ProdOrder_Edit_OrderYear.value = '@DateTime.Now.Year';
+                Prod_ProdOrder_Edit_OrderYear.focus();
+            }
+        }
+        if (type == 2) {
+            if (Prod_ProdOrder_Edit_Year.value < 2000) {
+                Prod_ProdOrder_Edit_Year.value = '@DateTime.Now.Year';
+                Prod_ProdOrder_Edit_Year.focus();
+            }
+        }
+    }
+    function eGetValueProdOrder_Qty() {
+        if (Prod_ProdOrder_Edit_Qty.value != '') {
+            if (Prod_ProdOrder_Edit_Qty.value < 0) {
+                alert('@Html.Translate("لا يجوز ان تكون الكمية اقل من 0", "The amount of the equation may not be less than 0")');
+                Prod_ProdOrder_Edit_Qty.value = 0
+                Prod_ProdOrder_Edit_Qty.focus()
+                return false;
+            }
+        }
+        else {
+            Prod_ProdOrder_Add_Qty.value = 0
+        }
+
+        GetDataRMDeatails(Prod_ProdOrder_Edit_Qty.value, 2);
+    }
+    function eGetValueProdOrder_WasteQty() {
+        if (Prod_ProdOrder_Edit_WasteQty.value != '') {
+            if (Prod_ProdOrder_Edit_WasteQty.value < 0) {
+                alert('@Html.Translate("لا يجوز ان تكون كمية الهدر اقل من 0", "The Waste Qty of the equation may not be less than 0")');
+                Prod_ProdOrder_Edit_WasteQty.value = 0
+                Prod_ProdOrder_Edit_WasteQty.focus()
+                return false;
+            }
+        }
+        else {
+            Prod_ProdOrder_Edit_WasteQty.value = 0
+        }
+    }
+    function eGetChangeMonth() {
+        if (Prod_ProdOrder_Edit_Month.value < 1 || Prod_ProdOrder_Edit_Month.value > 12) {
+            Prod_ProdOrder_Edit_Month.value = "@DateTime.Now.Month"
+            Prod_ProdOrder_Edit_Month.focus();
+		}
+    }
+</script>
+
+

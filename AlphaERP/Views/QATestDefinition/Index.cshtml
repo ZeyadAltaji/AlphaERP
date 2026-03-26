@@ -1,0 +1,865 @@
+﻿@model IEnumerable<AlphaERP.Models.PordCost_FormTestView>
+@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+
+    List<ProdCost_Parameter> parameters = new MDB().ProdCost_Parameters.Where(x => x.CompNo == company.comp_num && x.ParmID == 5).ToList();
+    List<ProdCost_Parameter> Groupparameters = new MDB().ProdCost_Parameters.Where(x => x.CompNo == company.comp_num && x.ParmID == 9).ToList();
+
+    List<Alpha_BusinessUnitDef> M_C = new MDB().Alpha_BusinessUnitDef.Where(x => x.CompNo == company.comp_num).ToList();
+    string mCJson = new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(M_C);
+    Alpha_BusinessUnitDef get = new MDB().Alpha_BusinessUnitDef.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    ProdCost_FormTest ProdCost_FormTest = new MDB().ProdCost_FormTest.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    short getAlertBU = 0;
+    if (ProdCost_FormTest != null)
+    {
+        getAlertBU = new MDB().ProdCost_FormTest.Where(x => x.CompNo == company.comp_num && ProdCost_FormTest.AlertBU == get.BusUnitID).Select(x => x.AlertBU.Value).FirstOrDefault();
+    }
+
+}
+<style>
+    #NormalcolQCe {
+        border-right: 1px solid #ccc;
+        width: 20%;
+        height: 3rem;
+        font-size: 14px;
+        bottom: 33px;
+        background: #efefef;
+        position: inherit;
+        z-index: 2;
+        top: 0;
+        color: black;
+        height: 2rem;
+        padding-left: 8px !important;
+    }
+
+
+
+    #AlertcolQCe {
+        position: absolute;
+        width: 21.6%;
+        font-size: 13.6px;
+        background: #efefef;
+        z-index: 2;
+        top: 0;
+        color: black;
+        height: 3.7rem;
+        padding-left: 8px !important;
+    }
+
+    #eMainTestTable thead #Subheader-list-QCdef th {
+        background-color: #e6e6fa;
+    }
+
+        #eMainTestTable thead #Subheader-list-QCdef th:nth-child(4),
+        #eMainTestTable #eMainTestTableBD tr td:nth-child(4) {
+            border-right: 1px solid #ccc;
+        }
+
+
+
+    .alerttxt {
+        padding-left: 8px !important;
+    }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-10" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2 col-sm-2">
+                <button class="btn btn-primary btn-block" onclick="CreateNewPordCost_FormTest()">
+                    <i class="fa fa-plus"></i> @Resources.Resource.Add
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="PordCost_FormTestListTableDiv">
+        @Html.Partial("~/Views/QATestDefinition/List.cshtml")
+    </div>
+</div>
+<div class="modal fade wide" id="PordCost_FormTest_add_PordCost_FormTest">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أضف اختبار جودة جديد", "Add New Quality test") >> @Html.Translate("فحص الجودة", "Quality test")</label>
+            </div>
+            <div class="modal-body row" id="addQAtestProd">
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcutePordCost_FormTest_save_PordCost_FormTestadd();" class="btn btn-primary">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+
+<div class="modal fade wide" id="PordCost_FormTest_Edit_PordCost_FormTest">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="$('.box-primary').removeClass('Overlay')">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Resources.Resource.Save >> @Html.Translate("فحص الجودة", "Quality test")</label>
+            </div>
+            <div class="modal-body row" id="eMainTest">
+
+
+            </div>
+
+
+            <div class="modal-footer">
+                <button type="button" onclick="ExcutePordCost_FormTest_save_PordCost_FormTest();" class="btn btn-primary">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal" onclick="$('.box-primary').removeClass('Overlay')">@Resources.Resource.Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade wide" id="Test_edit_Test">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("الفحوصات", "Tests")</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectTestTable">
+                            <thead>
+                                <tr>
+                                    <th>@Html.Recource(9259)</th>
+                                    <th>@Html.Recource(9260)</th>
+                                    <th>@Html.Translate("مجموعات فحوصات الانتاج", "QA Tests Groups")</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (parameters.Count != 0 && Groupparameters.Count != 0)
+                                {
+                                    foreach (var p in parameters)
+                                    {
+                                        var getvalue = Groupparameters.Where(x => x.ParmCode == p.Groups).FirstOrDefault();
+                                        <tr onclick="$(this).toggleClass('selected');">
+                                            <td>@p.ParmCode</td>
+                                            <td>@Html.Translate(p.LocalDesc, p.EngDesc)</td>
+                                            <td>@Html.Translate(getvalue.LocalDesc, getvalue.EngDesc)</td>
+                                            <td></td>
+                                        </tr>
+                                    }
+                                }
+
+
+
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="InsertTest()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade wide" id="Test_Add_Test">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("الفحوصات", "Tests")</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectTestTableNew">
+                            <thead>
+                                <tr>
+                                    <th>@Html.Recource(9259)</th>
+                                    <th>@Html.Recource(9260)</th>
+                                    <th>@Html.Translate("مجموعات فحوصات الانتاج", "QA Tests Groups")</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @*@foreach (var p in parameters)
+                                    {
+                                        var getvalue = Groupparameters.Where(x => x.ParmCode == p.Groups).FirstOrDefault();
+                                        <tr onclick="$(this).toggleClass('selected');">
+                                            <td>@p.ParmCode</td>
+                                            <td>@Html.Translate(p.LocalDesc, p.EngDesc)</td>
+                                            <td>@Html.Translate(getvalue.LocalDesc, getvalue.EngDesc)</td>
+                                            <td></td>
+                                        </tr>
+                                    }*@
+                                @if (parameters.Count != 0 && Groupparameters.Count != 0)
+                                {
+                                    foreach (var p in parameters)
+                                    {
+                                        var getvalue = Groupparameters.Where(x => x.ParmCode == p.Groups).FirstOrDefault();
+                                        <tr onclick="$(this).toggleClass('selected');">
+                                            <td>@p.ParmCode</td>
+                                            <td>@Html.Translate(p.LocalDesc, p.EngDesc)</td>
+                                            <td>@Html.Translate(getvalue.LocalDesc, getvalue.EngDesc)</td>
+                                            <td></td>
+                                        </tr>
+                                    }
+                                }
+
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="InsertTestforadd()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    $('#AlertBUSelect').select2()
+    var mCData = @Html.Raw(mCJson);
+
+    function SelectedFiles() {
+        var fileInput = document.getElementById('Attachments');
+        document.getElementById('SelectedAttachments').innerHTML = '';
+        for (var i = 0; i < fileInput.files.length; i++) {
+            var filename = fileInput.files[i].name;
+            document.getElementById('SelectedAttachments').innerHTML += filename.toLowerCase() + ", ";
+        }
+    }
+
+    var TestsTable = $('#SelectTestTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    var TestsTableadd = $('#SelectTestTableNew').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    $('#AlertBU').select2();
+
+    var FormNo_ = 0;
+    function InsertTest() {
+        debugger
+        var data = TestsTable.rows('.selected').data();
+        if (data.length == 0) {
+            alert('@Html.Translate("يرجى اختيار فحص واحد على الاقل", "Select one test at least")');
+            return;
+        }
+        var table_ = $("#eMainTestTableBD");
+        for (var i = 0; i < data.length; i++) {
+            var Added = false;
+            table_.find("tr").each(function () {
+                var TestNo_ = $(this).find("td:first-child").text();
+                if (TestNo_ == data[i][0]) {
+                    Added = true;
+                }
+            });
+
+            if (!Added) {
+                debugger;
+                var newarray = [];
+                newarray.push(data[i][0])
+                newarray.push(data[i][1])
+                newarray.push(data[i][2])
+                newarray.push('<select onchange="eSelectOption(this)" id="eGroupQAselect"  style="width:89px !important"><option value="3">@Html.Translate("بين", "Between")</option><option value="1">@Html.Translate("اكبر من ", "Greater Than")</option><option value="2">@Html.Translate("اقل من", "Less Than")</option><option value="4">@Html.Translate("نص", "Text")</option></select>');
+                newarray.push('<input onblur="eformatToNo(this)"  name="FromNo"  type="number" style="width:89px !important" />')
+                newarray.push('<input onblur="eformat(this)"  name="ToNo" type="number" style="width:89px !important" />')
+                newarray.push('<input onblur="eformatAlertToNo(this)" name="AlertFromNo"  type="number" style="width:89px !important" />')
+                newarray.push('<input onblur="eformat(this)" name="AlertToNo" type="number" style="width:89px !important" />')
+                newarray.push('<button class="btn-de" onclick="RemoveRow(this)"><i class= "fa fa-trash-alt"></i ></button>')
+                $("#eMainTestTableBD").append(
+                    GenRow(newarray)
+                );
+            }
+
+        }
+        $('#Test_edit_Test').modal('hide')
+
+    }
+    function SelectOption(e){
+        debugger
+        var val = e.value;
+        var row = e.closest('tr');
+
+        var NewtoNoInput = row.querySelector('input[name="NewToNo"]');
+        var NewalertToNoInput = row.querySelector('input[name="NewAlertToNo"]');
+        var NewFromNoInput = row.querySelector('input[name="NewFromNo"]');
+        var NewAlertFromNoNoInput = row.querySelector('input[name="NewAlertFromNo"]');
+
+        if (val == 1 || val == 2 || val == 4) {
+            NewtoNoInput.value = NewFromNoInput.value;
+            NewalertToNoInput.value = NewAlertFromNoNoInput.value
+            NewtoNoInput.disabled = true;
+            NewalertToNoInput.disabled = true;
+        } else {
+            NewtoNoInput.value = "";
+            NewalertToNoInput.value = "";
+            NewtoNoInput.disabled = false;
+            NewalertToNoInput.disabled = false;
+        }
+        if (val == 4) {
+            NewtoNoInput.type = "text";
+            NewalertToNoInput.type = "text";
+            NewFromNoInput.type = "text";
+            NewAlertFromNoNoInput.type = "text";
+        } else {
+            NewtoNoInput.type = "number";
+            NewalertToNoInput.type = "number";
+            NewFromNoInput.type = "number";
+            NewAlertFromNoNoInput.type = "number";
+        }
+    }
+    function InsertTestforadd() {
+        debugger
+        var data = TestsTableadd.rows('.selected').data();
+        if (data.length == 0) {
+            alert('@Html.Translate("يرجى اختيار فحص واحد على الاقل", "Select one test at least")');
+            return;
+        }
+        var table_ = $("#MainTestTable");
+        for (var i = 0; i < data.length; i++) {
+            var Added = false;
+            table_.find("tr").each(function () {
+                var TestNo_ = $(this).find("td:first-child").text();
+                if (TestNo_ == data[i][0]) {
+                    Added = true;
+                }
+            });
+
+            if (!Added) {
+                debugger;
+                var newarray = [];
+                newarray.push(data[i][0])
+                newarray.push(data[i][1])
+                newarray.push(data[i][2])
+                newarray.push('<select onchange="SelectOption(this)"  id="RangeType" style="width:89px !important"><option value="3">@Html.Translate("بين", "Between")</option><option value="1">@Html.Translate("اكبر من ", "Greater Than")</option><option value="2">@Html.Translate("اقل من", "Less Than")</option><option value="4">@Html.Translate("نص", "Text")</option></select>');
+
+                newarray.push('<input onblur="formatToNo(this)"  name="NewFromNo"  type="number" style="width:89px !important" />')
+                newarray.push('<input onblur="format(this)" name="NewToNo" type="number" style="width:89px !important" />')
+                newarray.push('<input onblur="formatAlertToNo(this)" name="NewAlertFromNo" type="number" style="width:89px !important" />')
+                newarray.push('<input  onblur="format(this)"  name="NewAlertToNo" type="number" style="width:89px !important" />')
+                newarray.push('<button class="btn-de" onclick="RemoveRow(this)"><i class= "fa fa-trash-alt"></i ></button>')
+                $("#MainTestTableBD").append(
+                    GenRow(newarray)
+                );
+            }
+
+        }
+        $('#Test_Add_Test').modal('hide')
+
+    }
+    $('#Test_Add_Test').draggable({
+        handle: '.modal-header'
+    });
+    $('#PordCost_FormTest_save_PordCost_FormTest').draggable({
+        handle: '.modal-header'
+    });
+    $('#PordCost_FormTest_add_PordCost_FormTest').draggable({
+        handle: '.modal-header'
+    });
+    $('#Test_edit_Test').draggable({
+        handle: '.modal-header'
+    });
+    $('#PordCost_FormTest_save_PordCost_FormTest').on('shown.bs.modal', function () {
+        $('#PordCost_FormTest_save_FormDesc').focus();
+        $('#PordCost_FormTest_save_FormDesc').select();
+    });
+
+    function CreateNewPordCost_FormTest() {
+        $('#addQAtestProd').load("../../../QATestDefinition/LoadAddNewQC");
+
+        $('#PordCost_FormTest_add_PordCost_FormTest').modal('show')
+        $('.div-overlay-background').css('opacity', '0.3');
+
+
+    }
+
+    function ExcutePordCost_FormTest_save_PordCost_FormTestadd() {
+        debugger
+        if (document.getElementById('PordCost_FormTest_save_FormDesc').value == '') { document.getElementById('PordCost_FormTest_save_FormDesc').focus(); return; }
+        var trs = document.getElementById('MainTestTableBD').getElementsByTagName("tr");
+        if (trs.length == 0) {
+            alert('@Html.Translate("اضف فحص واحد على الاقل","Add one test at least")');
+            return;
+        }
+        for (var i = 0; i < trs.length; i++) {
+            var v1 = 0; var v2 = 0;
+            var inpt = trs[i].cells[4].children[0]
+            v1 = Number(inpt.value);
+            if (Number(inpt.value) <= 0) { inpt.focus(); return; }
+            inpt = trs[i].cells[5].children[0]
+            v2 = Number(inpt.value);
+            if (Number(inpt.value) <= 0) { inpt.focus(); return; }
+
+            if (v1 > v2) {
+                inpt.focus();
+                MsgBox('@Html.Translate("-إلى رقم- يجب ان يكون اكبر من -من رقم-","-To No- must be greater than -From No-")', 'red');
+                return;
+            }
+            var inpt = trs[i].cells[6].children[0]
+            v3 = Number(inpt.value);
+            if (Number(inpt.value) <= 0) { inpt.focus(); return; }
+            inpt = trs[i].cells[7].children[0]
+            v4 = Number(inpt.value);
+            if (Number(inpt.value) <= 0) { inpt.focus(); return; }
+
+            if (v3 > v4) {
+                inpt.focus();
+                var message = '@Html.Translate("في التنبيه يجب ان يكون الى الرقم اكبر من الرقم", "In Alert -To No- must be greater than -From No-")';
+
+                displayNotification("warning", message);
+
+                return;
+            }
+
+
+        }
+
+
+
+
+
+
+        var fileUpload = $("#Attachments").get(0);
+        var files = fileUpload.files;
+        var formData = new FormData();
+        for (var i = 0; i < files.length; i++) {
+            formData.append('files', files[i]);
+        }
+        for (var i = 0; i < trs.length; i++) {
+            debugger
+            var inpt = trs[i].cells[4].children[0]
+            var inpt2 = trs[i].cells[5].children[0]
+            var inptAlertFromNo = trs[i].cells[6].children[0]
+            var inptAlertToNo = trs[i].cells[7].children[0]
+            var RangType = trs[i].cells[3].children[0]
+
+            formData.append('Forms[' + i + '].TestNo', trs[i].cells[0].innerHTML);
+            formData.append('Forms[' + i + '].FormDesc', document.getElementById('PordCost_FormTest_save_Notes').value);
+            formData.append('Forms[' + i + '].Notes', trs[i].cells[1].innerHTML);
+            formData.append('Forms[' + i + '].AlertBU', document.getElementById('AlertBU').value);
+            formData.append('Forms[' + i + '].RangType', RangType.value);
+
+            formData.append('Forms[' + i + '].FromNo', inpt.value);
+            formData.append('Forms[' + i + '].ToNo', inpt2.value);
+            formData.append('Forms[' + i + '].AlertFromNo', inptAlertFromNo.value);
+            formData.append('Forms[' + i + '].AlertToNo', inptAlertToNo.value);
+        }
+        formData.append('FormNo', FormNo_);
+        wait();
+        $.ajax({
+            type: 'POST',
+            url: '../../../QATestDefinition/Action',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (data) {
+                done();
+                if (data.ok == 'ok') {
+                    done();
+                    LoadPordCost_FormTest()
+                } else {
+                    done(); alert(data.error)
+                }
+            }
+        });
+    }
+    function ExcutePordCost_FormTest_save_PordCost_FormTest() {
+        if (document.getElementById('PordCost_FormTest_save_FormDesc').value == '') { document.getElementById('PordCost_FormTest_save_FormDesc').focus(); return; }
+        var trs = document.getElementById('eMainTestTableBD').getElementsByTagName("tr");
+        if (trs.length == 0) {
+            alert('@Html.Translate("اضف فحص واحد على الاقل","Add one test at least")');
+            return;
+        }
+        for (var i = 0; i < trs.length; i++) {
+            var v1 = 0; var v2 = 0;
+            var inpt = trs[i].cells[4].children[0]
+            v1 = Number(inpt.value);
+            if (Number(inpt.value) <= 0) { inpt.focus(); return; }
+            inpt = trs[i].cells[5].children[0]
+            v2 = Number(inpt.value);
+            if (Number(inpt.value) <= 0) { inpt.focus(); return; }
+
+            if (v1 > v2) {
+                inpt.focus();
+                MsgBox('@Html.Translate("-إلى رقم- يجب ان يكون اكبر من -من رقم-","-To No- must be greater than -From No-")', 'red');
+                return;
+            }
+            var inpt = trs[i].cells[6].children[0]
+            v3 = Number(inpt.value);
+            if (Number(inpt.value) <= 0) { inpt.focus(); return; }
+            inpt = trs[i].cells[7].children[0]
+            v4 = Number(inpt.value);
+            if (Number(inpt.value) <= 0) { inpt.focus(); return; }
+
+            if (v3 > v4) {
+                inpt.focus();
+                var message = '@Html.Translate("في التنبيه يجب ان يكون الى الرقم اكبر من الرقم", "In Alert -To No- must be greater than -From No-")';
+                displayNotification("warning", message);
+
+                return;
+            }
+
+        }
+
+
+
+
+
+
+
+        var fileUpload = $("#Attachments").get(0);
+        var files = fileUpload.files;
+        var formData = new FormData();
+        for (var i = 0; i < files.length; i++) {
+            formData.append('files', files[i]);
+        }
+        for (var i = 0; i < trs.length; i++) {
+            debugger
+            var inpt = trs[i].cells[4].children[0]
+            var inpt2 = trs[i].cells[5].children[0]
+            var inptAlertFromNo = trs[i].cells[6].children[0]
+            var inptAlertToNo = trs[i].cells[7].children[0]
+            var RangType = trs[i].cells[3].children[0]
+
+            formData.append('Forms[' + i + '].TestNo', trs[i].cells[0].innerHTML);
+            formData.append('Forms[' + i + '].FormDesc', document.getElementById('PordCost_FormTest_save_FormDesc').value);
+            formData.append('Forms[' + i + '].Notes', trs[i].cells[1].innerHTML);
+            formData.append('Forms[' + i + '].AlertBU', document.getElementById('AlertBUSelect').value);
+            formData.append('Forms[' + i + '].RangType', RangType.value);
+
+            formData.append('Forms[' + i + '].FromNo', inpt.value);
+            formData.append('Forms[' + i + '].ToNo', inpt2.value);
+            formData.append('Forms[' + i + '].AlertFromNo', inptAlertFromNo.value);
+            formData.append('Forms[' + i + '].AlertToNo', inptAlertToNo.value);
+        }
+        formData.append('FormNo', FormNo_);
+        wait();
+        $.ajax({
+            type: 'POST',
+            url: '../../../QATestDefinition/Action',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (data) {
+                done();
+                if (data.ok == 'ok') {
+                    done();
+                    LoadPordCost_FormTest()
+                } else {
+                    done(); alert(data.error)
+                }
+            }
+        });
+    }
+    function LoadPordCost_FormTest() {
+        $('#PordCost_FormTestListTableDiv').load('../../../QATestDefinition/List');
+        $('#PordCost_FormTest_Edit_PordCost_FormTest').modal('hide')
+        $('#PordCost_FormTest_add_PordCost_FormTest').modal('hide')
+
+    }
+
+    function formatToNo(e) {
+        debugger
+        var row = e.closest('tr');
+
+        var GroupQAselectVal = row.querySelector('#RangeType');
+        var GroupQAselect = GroupQAselectVal.value;
+        if (GroupQAselect == "1" || GroupQAselect == "2" || GroupQAselect == "4") {
+            if(GroupQAselect == "4"){
+                var val = e.value;
+                var parentRow = $(e).closest('tr');
+                var NewtoNoInput = parentRow.find('input[name="NewToNo"]');
+                if(val != ''){
+                    NewtoNoInput.val(val);
+                }else{
+                    NewtoNoInput.val();
+                }
+            }
+            else{
+                var val = parseFloat(e.value).toFixed(4);
+                var parentRow = $(e).closest('tr');
+                var NewtoNoInput = parentRow.find('input[name="NewToNo"]');
+                if(!isNaN(val)){
+                    NewtoNoInput.val(val);
+                }else{
+                    NewtoNoInput.val();
+                }
+            }
+
+        }
+
+    }
+    function formatAlertToNo(e) {
+        debugger
+        var row = e.closest('tr');
+
+        var GroupQAselectVal = row.querySelector('#RangeType');
+        var GroupQAselect = GroupQAselectVal.value;
+        if (GroupQAselect == "1" || GroupQAselect == "2" || GroupQAselect == "4") {
+            if( GroupQAselect == "4"){
+                var val = e.value;
+                var parentRow = $(e).closest('tr');
+                var NewalertToNoInput = parentRow.find('input[name="NewAlertToNo"]');
+                if(val != ''){
+                    NewalertToNoInput.val(val);
+                }else{
+                    NewalertToNoInput.val();
+                }
+            }else{
+                var val = parseFloat(e.value).toFixed(4);
+                var parentRow = $(e).closest('tr');
+                var NewalertToNoInput = parentRow.find('input[name="NewAlertToNo"]');
+                if(!isNaN(val)){
+                    NewalertToNoInput.val(val);
+                }else{
+                    NewalertToNoInput.val();
+                }
+            }
+
+        }
+
+    }
+
+
+    function EditPordCost_FormTest(FormNo, e) {
+        debugger
+        wait();
+        FormNo_ = FormNo;
+        var frm = {
+            FormNo: FormNo
+        }
+        eMainTest.innerHTML = "";
+        $('#eMainTest').load('../../../QATestDefinition/EditQCForm',{ frm: frm }, function () {
+            $('#PordCost_FormTest_Edit_PordCost_FormTest').modal('show')
+
+            done();
+        });
+    }
+
+    function EditingPorsssdCost_FormTest(r) {
+        debugger
+        if (r && r.files) {
+            document.getElementById('SelectedAttachments').innerHTML = r.files;
+        } else {
+            document.getElementById('SelectedAttachments').innerHTML = '';
+        }
+        $.each(r.f, function (i, item) {
+            document.getElementById('PordCost_FormTest_save_FormDesc').value = item.FormDesc;
+            document.getElementById('PordCost_FormTest_save_Notes').value = item.Notes;
+            document.getElementById('getAlertBU').value = item.AlertBU;
+
+        });
+        var getdata = document.getElementById('getAlertBU').value;
+        var select = document.getElementById('AlertBUSelect');
+        select.innerHTML = ''; // Clear existing options
+        var getdataNumber = parseInt(getdata);
+        var translatedText  = '@Html.Translate("BusUnitDescAr_", "BusUnitDescEng_")';
+
+        $.each(mCData, function (i, item) {
+            var option = document.createElement("option");
+            option.value = item.BusUnitID;
+            option.text = translatedText.replace("BusUnitDescAr_", item.BusUnitDescAr).replace("BusUnitDescEng_", item.BusUnitDescEng);
+
+            if (item.BusUnitID ===getdataNumber) {
+                option.selected = true;
+            }
+
+            select.appendChild(option);
+        });
+
+        $.each(r.l, function (i, item) {
+            var newarray = [];
+            r.l
+            newarray.push(item.ParmCode)
+            newarray.push(ar())
+            //newarray.push(ar(item.LocalDesc, item.EngDesc))
+
+            var selectOptions = '<select onchange="SelectOption(this)" id="RangeType" style="width:89px !important">';
+            selectOptions += '<option value="1" ' + (r.f[i].Rangtype == 1 ? 'selected' : '') + '>@Html.Translate("اكبر من ", "Greater Than")</option>';
+            selectOptions += '<option value="2" ' + (r.f[i].Rangtype == 2 ? 'selected' : '') + '>@Html.Translate("اقل من", "Less Than")</option>';
+            selectOptions += '<option value="3" ' + (r.f[i].Rangtype == 3 ? 'selected' : '') + '>@Html.Translate("بين", "Between")</option>';
+            selectOptions += '<option value="4" ' + (r.f[i].Rangtype == 4 ? 'selected' : '') + '>@Html.Translate("قيمة الاختبار", "Test Value")</option>';
+            selectOptions += '</select>';
+
+            newarray.push(selectOptions);
+            newarray.push('<input onblur="format(this, 4)" type="number" style="width:89px !important" value="' + Number(r.f[i].FromNo).toFixed(4) + '" />')
+            newarray.push('<input onblur="format(this, 4)" type="number" style="width:89px !important" value="' + Number(r.f[i].ToNo).toFixed(4) + '" />')
+            newarray.push('<input onblur="format(this, 4)" type="number" style="width:89px !important" value="' + Number(r.f[i].AlertFromNo).toFixed(4) + '" />')
+            newarray.push('<input onblur="format(this, 4)" type="number" style="width:89px !important" value="' + Number(r.f[i].AlertToNo).toFixed(4) + '" />')
+            newarray.push('<button class="btn-de" onclick="RemoveRow(this)"><i class= "fa fa-trash-alt"></i ></button>')
+            $("#eMainTestTableBD").append(
+                GenRow(newarray)
+            );
+        });
+        debugger;
+        $('#PordCost_FormTest_save_PordCost_FormTest').modal('show')
+        $(".box-primary").addClass('Overlay');
+
+    }
+    function format(e, x) {
+        if (x == null) {
+            e.value = Number(e.value).toFixed(3);
+        } else {
+            e.value = Number(e.value).toFixed(Number(x));
+        }
+    }
+    function eformat(e, x) {
+        if (x == null) {
+            e.value = Number(e.value).toFixed(3);
+        } else {
+            e.value = Number(e.value).toFixed(Number(x));
+        }
+    }
+
+    function DeletePordCost_FormTest(FormNo, e) {
+        debugger;
+        if (confirm('@Resources.Resource.ConfirmDeleteDialog')) {
+
+            FormNo_ = FormNo;
+            var frm = {
+                FormNo: FormNo
+            }
+            wait();
+
+
+            burn({ frm: frm }, '../../../QATestDefinition/DeleteForm', false)
+            LoadPordCost_FormTest()
+
+
+        }
+    }
+
+    function eSelectOption(e){
+        debugger
+        var val = e.value;
+        var row = e.closest('tr');
+
+        var toNoInput = row.querySelector('input[name="ToNo"]');
+        var alertToNoInput = row.querySelector('input[name="AlertToNo"]');
+        var FromNoInput = row.querySelector('input[name="FromNo"]');
+        var AlertFromNoNoInput = row.querySelector('input[name="AlertFromNo"]');
+
+        if (val == 1 || val == 2 || val == 4) {
+            toNoInput.value = FromNoInput.value;
+            alertToNoInput.value = AlertFromNoNoInput.value
+            toNoInput.disabled = true;
+            alertToNoInput.disabled = true;
+        } else {
+            toNoInput.value = "";
+            alertToNoInput.value = "";
+            toNoInput.disabled = false;
+            alertToNoInput.disabled = false;
+        }
+        if (val == 4) {
+            toNoInput.type = "text";
+            alertToNoInput.type = "text";
+            FromNoInput.type = "text";
+            AlertFromNoNoInput.type = "text";
+        } else {
+            toNoInput.type = "number";
+            alertToNoInput.type = "number";
+            FromNoInput.type = "number";
+            AlertFromNoNoInput.type = "number";
+        }
+    }
+    function eformatToNo(e) {
+        debugger
+        var row = e.closest('tr');
+
+        var eGroupQAselectVal = row.querySelector('#eGroupQAselect');
+        var eGroupQAselect = eGroupQAselectVal.value;
+        if (eGroupQAselect == "1" || eGroupQAselect == "2" || eGroupQAselect == "4") {
+            if (eGroupQAselect == "4") {
+                var val = e.value;
+                var parentRow = $(e).closest('tr');
+                var toNoInput = parentRow.find('input[name="ToNo"]');
+                if (val != '') {
+                    toNoInput.val(val);
+                } else {
+                    toNoInput.val();
+                }
+            }else{
+                var val = parseFloat(e.value).toFixed(4);
+                var parentRow = $(e).closest('tr');
+                var toNoInput = parentRow.find('input[name="ToNo"]');
+                if (!isNaN(val)) {
+                    toNoInput.val(val);
+                } else {
+                    toNoInput.val();
+                }
+            }
+
+        }
+
+    }
+    function eformatAlertToNo(e) {
+        debugger
+        var row = e.closest('tr');
+
+        var eGroupQAselectVal = row.querySelector('#eGroupQAselect');
+        var eGroupQAselect = eGroupQAselectVal.value;
+        if (eGroupQAselect == "1" || eGroupQAselect == "2" || eGroupQAselect == "4") {
+            if (eGroupQAselect == "4") {
+                var val = e.value;
+                var parentRow = $(e).closest('tr');
+                var alertToNoInput = parentRow.find('input[name="AlertToNo"]');
+                if (val!='') {
+                    alertToNoInput.val(val);
+                } else {
+                    alertToNoInput.val();
+                }
+            }else{
+                var val = parseFloat(e.value).toFixed(4);
+                var parentRow = $(e).closest('tr');
+                var alertToNoInput = parentRow.find('input[name="AlertToNo"]');
+                if (!isNaN(val)) {
+                    alertToNoInput.val(val);
+                } else {
+                    alertToNoInput.val();
+                }
+            }
+
+        }
+
+    }
+</script>

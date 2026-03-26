@@ -1,0 +1,145 @@
+﻿@using System.Data.SqlClient;
+@using AlphaERP.Models
+@{
+    int OrdYear = 0;
+    if (ViewBag.OrdYear == null)
+    {
+        OrdYear = DateTime.Now.Year;
+    }
+    else
+    {
+        OrdYear = ViewBag.OrdYear;
+    }
+
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+
+    List<PurchaseOrderInfo> lOrderInfo = new MDB().Database.SqlQuery<PurchaseOrderInfo>(string.Format("SELECT OrderHF.OrdYear,OrderHF.OrderNo ,OrderHF.TawreedNo,convert(date,OrderHF.EnterDate) as EnterDate ,OrderHF.VendorNo,OrderHF.RefNo  " +
+    "FROM Ord_RequestDF INNER JOIN OrderHF on Ord_RequestDF.CompNo = OrderHF.CompNo AND Ord_RequestDF.PurchaseOrderYear = OrderHF.OrdYear AND Ord_RequestDF.PurchaseOrderNo = OrderHF.OrderNo AND Ord_RequestDF.PurchaseOrdTawreedNo = OrderHF.TawreedNo " +
+    "where (Ord_RequestDF.CompNo = '{0}') AND (Ord_RequestDF.PurchaseOrderYear = '{1}') AND (Ord_RequestDF.bPurchaseOrder = 1) AND (OrderHF.Approved = 1) GROUP BY OrderHF.OrdYear,OrderHF.OrderNo ,OrderHF.TawreedNo ,convert(date,OrderHF.EnterDate),OrderHF.VendorNo,OrderHF.RefNo order by OrderHF.OrdYear,OrderHF.OrderNo desc ,OrderHF.TawreedNo desc ", company.comp_num, OrdYear)).ToList();
+    List<Vendor> Vend = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.IsHalt == false).ToList();
+}
+
+<table class="table" id="PortInfoTable">
+    <thead>
+        <tr>
+            <th>@Html.Recource(3197)</th>
+            <th>@Html.Recource(3797)</th>
+            <th>@Html.Recource(6315)</th>
+            <th>@Html.Recource(517)</th>
+            <th>@Html.Recource(96)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="PortInfoTbody">
+        @foreach (PurchaseOrderInfo P in lOrderInfo)
+        {
+            Vendor v = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.VendorNo == P.VendorNo).FirstOrDefault();
+            <tr OrdYear="@P.OrdYear" OrderNo="@P.OrderNo" TawreedNo="@P.TawreedNo">
+                <td>@P.OrderNo</td>
+                <td>@P.TawreedNo</td>
+                <td>@P.EnterDate.ToString("yyyy-MM-dd")</td>
+                <td>@Html.Translate(v.Name,v.Eng_Name)</td>
+                <td>@P.RefNo</td>
+                <td>
+                    <button onclick="btnexPortInfo(this)" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default ex" title="@Html.Recource(769)">
+                        <i style="font-weight:100" class="fa fa-folder"></i>
+                    </button>
+                    @*<button id="btnex" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default ex" title="@Html.Recource(769)">
+                        <i style="font-weight:100" class="fa fa-folder"></i>
+                    </button>*@
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+    var PortInfoTable;
+    PortInfoTable = $('#PortInfoTable').dataTable({
+        "scrollY": 'calc( 100vh - 267px)',
+        "paging": true,
+        "pageLength": 25,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+
+    function btnexPortInfo(e) {
+        var nTr = e.parentNode.parentNode;
+        if ($(e).attr("opened") == 'details_close') {
+            PortInfoTable.fnClose(nTr);
+            $(e).attr("opened", "details_open");
+        }
+        else {
+            wait();
+            $(e).attr("opened", "details_close");
+            var OrdYear = $(e.parentNode.parentNode).attr("OrdYear");
+            var OrderNo = $(e.parentNode.parentNode).attr("OrderNo");
+            var TawreedNo = $(e.parentNode.parentNode).attr("TawreedNo");
+
+            $.get("../../../../PortInfo/DetailsPortInfo?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo, function (data) {
+                PortInfoTable.fnOpen(nTr, data, 'details');
+                done();
+            });
+        }
+    }
+
+    //$('#PortInfoTable tbody #btnex').click(function () {
+    //    debugger
+    //    var nTr = this.parentNode.parentNode;
+    //    if ($(this).attr("opened") == 'details_close') {
+    //        PortInfoTable.fnClose(nTr);
+    //        $(this).attr("opened", "details_open");
+    //    }
+    //    else {
+            
+    //        wait();
+    //        $(this).attr("opened", "details_close");
+    //        var OrdYear = $(this.parentNode.parentNode).attr("OrdYear");
+    //        var OrderNo = $(this.parentNode.parentNode).attr("OrderNo");
+    //        var TawreedNo = $(this.parentNode.parentNode).attr("TawreedNo");
+
+    //        $.get("../../../../PortInfo/DetailsPortInfo?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo, function (data) {
+    //            PortInfoTable.fnOpen(nTr, data, 'details');
+    //            done();
+    //        });
+    //    }
+    //});
+
+    function SelectPortInfoInfo(e) {
+        var table = $('#PortInfoTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function SelectionPortInfoDiv() {
+        var table = $('#PortInfoTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+
+        if (trs.length == 0) {
+            MsgBox('@Resources.Resource.NoPurchaseOrderWasChosen', 'red');
+            done();
+            return false
+        }
+
+        var OrdYear = trs[0].getAttribute('OrdYear');
+        var OrderNo = trs[0].getAttribute('OrderNo');
+        var TawreedNo = trs[0].getAttribute('TawreedNo');
+
+        SelectionPortInfo(OrdYear, OrderNo, TawreedNo);
+    }
+</script>
+
+
+
+
+
+

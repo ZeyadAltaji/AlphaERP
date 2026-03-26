@@ -1,0 +1,154 @@
+﻿<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-6">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="OrdReceipt_OrdYear">@Resources.Resource.Year </label>
+            </div>
+            <div class="col-md-2">
+                <input onblur="Checkyear()" type="number" id="OrdReceipt_OrdYear" value="@DateTime.Now.Year" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" />
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-success btn-block" onclick="SerachOrdReceipt()">
+                    @Resources.Resource.Search
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="Ord_OrdReceiptDiv">
+        @Html.Partial("~/Views/OrdReceipt/OrdReceiptList.cshtml")
+    </div>
+</div>
+
+@*<div class="modal fade" id="Model_OrdReceip">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="OrdReceipDiv">
+
+            </div>
+        </form>
+    </div>
+</div>*@
+
+<script>
+    $('#Model_OrdReceip').draggable({
+        handle: ".modal-header",
+    });
+
+    function Checkyear() {
+        if (OrdReceipt_OrdYear.value < 2000) {
+            OrdReceipt_OrdYear.value = "@DateTime.Now.Year"
+            OrdReceipt_OrdYear.focus();
+        }
+    }
+
+    function SerachOrdReceipt() {
+        Ord_OrdReceiptDiv.innerHTML = "";
+        $('#Ord_OrdReceiptDiv').load('../../../OrdReceipt/OrdReceiptList?OrdYear=' + OrdReceipt_OrdYear.value );
+    }
+
+    function SelectionOrdReceiptInfo(OrdYear, OrderNo, TawreedNo, ShipSer) {
+        wait();
+        burn({ OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo, ShipSer: ShipSer }, '../../../OrdReceipt/ChooseOrdReceipt', '', LoadChooseOrdReceipt, true);
+    }
+    function LoadChooseOrdReceipt(r) {
+        Ord_OrdReceiptDiv.innerHTML = "";
+        $('#Ord_OrdReceiptDiv').html(r);
+        $('#Model_OrdReceip').modal('hide');
+        done();
+    }
+
+    var _OrdYear = 0;
+    var _OrderNo = 0;
+    var _TawreedNo = 0;
+    var _ShipSer = 0;
+
+    function DeleteOrdReceipt(OrdYear, OrderNo, TawreedNo, ShipSer, RecNo, IsHalt) {
+        if (IsHalt == "True") {
+            alert('@Html.Translate("لا يمكن التعديل المورد موقوف", "Cannot edit vendor suspended")');
+            return false;
+        }
+        if (confirm('@Resources.Resource.ConfirmDeleteDialog')) {
+            _OrdYear = OrdYear;
+            _OrderNo = OrderNo;
+            _TawreedNo = TawreedNo;
+            _ShipSer = ShipSer;
+            burn({ OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo, ShipSer: ShipSer, RecNo: RecNo }, '../../../OrdReceipt/Del_OrdReceipt', '', ReloadDelOrdReceiptInfo, false);
+        }
+    }
+    function ReloadDelOrdReceiptInfo() {
+        MsgBox('@Html.Recource(2598)', 'red');
+        $('#Ord_OrdReceiptInfoTBody').empty();
+        var table = $("#OrdReceiptTable tbody");
+        var trs = table.find('tr');
+
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i])[0].getAttribute('OrdYear') == _OrdYear && $(trs[i])[0].getAttribute('OrderNo') == _OrderNo && $(trs[i])[0].getAttribute('TawreedNo') == _TawreedNo && $(trs[i])[0].getAttribute('ShipSer') == _ShipSer) {
+                var nTr = $(trs[i])[0];
+                wait();
+                $(this).attr("opened", "details_close");
+                var OrdYear = _OrdYear;
+                var OrderNo = _OrderNo;
+                var TawreedNo = _TawreedNo;
+                var ShipSer = _ShipSer;
+
+                $.get("../../../../OrdReceipt/DetailsOrdReceipt?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo + '&ShipSer=' + ShipSer, function (data) {
+                    OrdReceiptTable.fnOpen(nTr, data, 'details');
+                    done();
+                });
+            }
+        }
+    }
+
+
+    function PostedOrdReceipt(OrdYear, OrderNo, TawreedNo, ShipSer, RecNo, IsHalt) {
+         if (IsHalt == "True") {
+            alert('@Html.Translate("لا يمكن التعديل المورد موقوف", "Cannot edit vendor suspended")');
+            return false;
+        }
+        if (confirm('@Resources.Resource.ApprovalVoucIssue')) {
+            _OrdYear = OrdYear;
+            _OrderNo = OrderNo;
+            _TawreedNo = TawreedNo;
+            _ShipSer = ShipSer;
+
+            burn({ OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo, ShipSer: ShipSer, RecNo: RecNo }, '../../../OrdReceipt/Posted_OrdReceipt', '', ReloadPostedOrdReceiptInfo, false);
+        }
+    }
+    function ReloadPostedOrdReceiptInfo() {
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#Ord_OrdReceiptInfoTBody').empty();
+        var table = $("#OrdReceiptTable tbody");
+        var trs = table.find('tr');
+
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i])[0].getAttribute('OrdYear') == _OrdYear && $(trs[i])[0].getAttribute('OrderNo') == _OrderNo && $(trs[i])[0].getAttribute('TawreedNo') == _TawreedNo && $(trs[i])[0].getAttribute('ShipSer') == _ShipSer) {
+                var nTr = $(trs[i])[0];
+                wait();
+                $(this).attr("opened", "details_close");
+                var OrdYear = _OrdYear;
+                var OrderNo = _OrderNo;
+                var TawreedNo = _TawreedNo;
+                var ShipSer = _ShipSer;
+
+                $.get("../../../../OrdReceipt/DetailsOrdReceipt?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo + '&ShipSer=' + ShipSer, function (data) {
+                    OrdReceiptTable.fnOpen(nTr, data, 'details');
+                    done();
+                });
+            }
+        }
+    }
+
+</script>
+

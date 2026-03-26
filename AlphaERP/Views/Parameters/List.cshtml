@@ -1,0 +1,58 @@
+﻿@model IEnumerable<AlphaERP.Models.ProdCost_ParametersHF>
+<table id="ProdCost_ParametersHFDataTable" class="table table-hover dataTable">
+    <thead>
+        <tr>
+            <th>@Resources.Resource.Id</th>
+            <th>@Html.Recource(66)</th>
+            <th>@Html.Recource(118)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr ParmID="@item.ParmID">
+                <td>@item.ParmID</td>
+                <td>@item.LocalDesc</td>
+                <td>@item.EngDesc</td>
+                <td>
+                    <button style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default ex" title="@Html.Recource(769)">
+                        <i style="font-weight:100" class="fa fa-folder"></i>
+                    </button>
+                    <button onclick="AddNewParameter('@item.ParmID')" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default" title="@Html.Recource(4300)">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+
+    $('#ProdCost_ParametersHFDataTable tbody td button.ex').click(function () {
+        var nTr = this.parentNode.parentNode;
+        if ($(this).attr("opened") == 'details_close') {
+            ParametersTable.fnClose(nTr);
+            $(this).attr("opened", "details_open");
+        }
+        else {
+            wait();
+            $(this).attr("opened", "details_close");
+            var ParmID = $(this.parentNode.parentNode).attr("ParmID");
+            $.get("../../../../Parameters/Details?ParmID=" + ParmID , function (data) {
+                ParametersTable.fnOpen(nTr, data, 'details');
+                done();
+            });
+        }
+    });
+
+    var ParametersTable;
+    ParametersTable = $('#ProdCost_ParametersHFDataTable').dataTable({
+        "scrollY": '56vh',
+        "paging": true,
+        "pageLength":100
+    });
+
+</script>

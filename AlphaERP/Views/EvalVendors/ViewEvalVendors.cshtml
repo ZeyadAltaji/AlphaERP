@@ -1,0 +1,217 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    int OrdYear = ViewBag.OrdYear;
+    int OrderNo = ViewBag.OrderNo;
+    string TawreedNo = ViewBag.TawreedNo;
+    long EvalVendId = ViewBag.EvalVendId;
+
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+
+    Ord_Web_EvalVenodrsHF EvalVenodrsHF = new MDB().Ord_Web_EvalVenodrsHF.Where(x => x.CompNo == company.comp_num && x.Orderyear == OrdYear
+    && x.OrderNo == OrderNo && x.TawreedNo == TawreedNo && x.EvalVendId == EvalVendId).FirstOrDefault();
+
+    List<EvalVenodrs> EvalVenodrs = new MDB().Database.SqlQuery<EvalVenodrs>(string.Format("select CodeId, Marks,syscodes.sys_adesc,syscodes.sys_edesc FROM   Ord_Web_EvalVenodrsDF inner join syscodes on syscodes.CompNo = Ord_Web_EvalVenodrsDF.CompNo AND  syscodes.sys_minor = Ord_Web_EvalVenodrsDF.CodeId and (syscodes.sys_major='EITEM')  " +
+"where (Ord_Web_EvalVenodrsDF.CompNo = '{0}') AND (Ord_Web_EvalVenodrsDF.EvalVendId = '{1}') union all SELECT syscodes.sys_minor as CodeId,0 as Marks ,syscodes.sys_adesc,syscodes.sys_edesc " +
+"from syscodes LEFT OUTER JOIN Ord_Web_EvalVenodrsDF ON syscodes.CompNo = Ord_Web_EvalVenodrsDF.CompNo AND syscodes.sys_minor = Ord_Web_EvalVenodrsDF.CodeId and (syscodes.sys_major='EITEM')  " +
+"where (syscodes.CompNo = '{0}') AND (syscodes.sys_major = 'EITEM') AND (Ord_Web_EvalVenodrsDF.EvalVendId IS NULL) ", company.comp_num, EvalVendId)).ToList();
+
+    List<Ord_Web_EvalVenodrsDF> EvalVenodrsDF = new MDB().Ord_Web_EvalVenodrsDF.Where(x => x.CompNo == company.comp_num && x.EvalVendId == EvalVendId).ToList();
+    List<syscode> lsyscode = new MDB().syscodes.Where(x => x.CompNo == company.comp_num && x.sys_major == "EItem").ToList();
+    Vendor Vend = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.VendorNo == EvalVenodrsHF.VendorNo).FirstOrDefault();
+}
+
+
+<link href="~/Content/stickytooltip.css" rel="stylesheet" />
+<script src="~/Scripts/stickytooltip.js?s=15"></script>
+
+<style>
+    #Ord_vEvalVendorsTable span.badge {
+        border: none;
+        position: static;
+        z-index: 20 !important;
+        box-sizing: content-box;
+        visibility: visible;
+        z-index: 9999999999 !important;
+        padding: 1px;
+        font-family: Arial, verdana, tahoma;
+        font-size: 13px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        text-shadow: 1px 1px 1px rgba(0,0,0,.3);
+        background: #ff3019;
+        background: -webkit-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Chrome10+,Safari5.1+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff3019), color-stop(100%, #cf0404)); /* Chrome,Safari4+ */
+        background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* FF3.6+ */
+        background: -ms-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* IE10+ */
+        background: -o-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Opera 11.10+ */
+        background: linear-gradient(to bottom, #ff3019 0%, #cf0404 100%); /* W3C */
+        width: 18px;
+        height: 18px;
+        line-height: 20px;
+        border-radius: 50%;
+        filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff3019', endColorstr='#cf0404', GradientType=0)"; /* IE6-9 */
+        filter: "progid:DXImageTransform.Microsoft.Shadow(direction=135, strength=2, color=ff0000)"; /* IE10 text shadows */
+        box-shadow: 0 2px 5px rgba(0,0,0,.4);
+    }
+</style>
+
+<style>
+    #Ord_vEvalVendors_DIV table th, #Ord_vEvalVendors_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+
+    .wrapperx {
+        padding: 0;
+        position: relative;
+        white-space: nowrap;
+    }
+
+    .wrapperxOld {
+        padding: 0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+</style>
+
+<style>
+    .modal-body{
+        max-height: 78vh !important;
+    }
+    .modal-title {
+        width: calc(100% - 120px) !important;
+        text-align: center;
+        position: absolute;
+        font-weight: bold;
+    }
+    .form-group{
+        margin-bottom: 1px !important;
+    }
+    .col-md-12{
+        margin-bottom: 3px !important;
+    }
+    hr {
+        margin-top: 3px !important;
+        margin-bottom: 5px !important;
+    }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(100vh - 210px) !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_vEvalVendors_OrderYear_@EvalVendId">@Html.Recource(3196)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input onblur="Checkyear(this.value)" type="number" id="Ord_vEvalVendors_OrderYear_@EvalVendId" value="@EvalVenodrsHF.Orderyear" disabled maxlength="4" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_vEvalVendors_OrdNo_@EvalVendId">@Html.Recource(3197)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input  type="text" id="Ord_vEvalVendors_EvalVendId_@EvalVendId" value="@EvalVenodrsHF.EvalVendId" hidden />
+                        <input required="false" style="width: 125px !important;" type="text" id="Ord_vEvalVendors_OrdNo_@EvalVendId" value="@EvalVenodrsHF.OrderNo" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_vEvalVendors_TawreedNo_@EvalVendId">@Html.Recource(3797) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important;" type="text" id="Ord_vEvalVendors_TawreedNo_@EvalVendId" value="@EvalVenodrsHF.TawreedNo" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_vEvalVendors_VendorNo_@EvalVendId">@Html.Recource(3087)</label>
+                    </div>
+                    <div class="col-md-10" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 125px !important;" type="text" id="Ord_vEvalVendors_VendorNo_@EvalVendId" value="@EvalVenodrsHF.VendorNo" disabled />
+                        <input required="false" style="width: 390px !important;" type="text" id="Ord_vEvalVendors_VendorName_@EvalVendId" value="@Html.Translate(Vend.Name,Vend.Eng_Name)" disabled />
+                    </div>
+                    
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3777) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important;" type="date" id="Ord_vEvalVendors_AgreementDate_@EvalVendId" value="@EvalVenodrsHF.recdate.Value.ToString("yyyy-MM-dd")" disabled />
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_vEvalVendors_RealDeliveryDate_@EvalVendId">@Html.Recource(3778)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important;" type="date" id="Ord_vEvalVendors_RealDeliveryDate_@EvalVendId" value="@EvalVenodrsHF.realdate.Value.ToString("yyyy-MM-dd")" disabled />
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_vEvalVendors_ClassificationDate_@EvalVendId">@Html.Recource(3780)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important;" type="date" id="Ord_vEvalVendors_ClassificationDate_@EvalVendId" value="@EvalVenodrsHF.catdate.Value.ToString("yyyy-MM-dd")" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_vEvalVendors_Documents_@EvalVendId">@Html.Recource(3779)</label>
+                    </div>
+                    <div class="col-md-10">
+                        <textarea required="true" style="width: 100%;height:58px !important;" id="Ord_vEvalVendors_Documents_@EvalVendId" disabled>@EvalVenodrsHF.doc</textarea>
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group" style="height:calc(100vh - 550px) !important;">
+                <div class="col-md-12 wrapperx" id="Ord_vEvalVendors_DIV">
+                    <table class="table table-hover Ord_vEvalVendors" id="Ord_vEvalVendorsTable">
+                        <thead>
+                            <tr>
+                                <th class="first-col">@Html.Recource(3781)</th>
+                                <th>@Html.Translate("علامة", "Marks")</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody style="text-align: center;" id="Ord_vEvalVendorsTBody_@EvalVendId">
+
+                            @foreach (EvalVenodrs item in EvalVenodrs)
+                            {
+                                 <tr style="height: 25px;" CodeId="@item.CodeId">
+                                     <td hidden id="vEvalVendors_CodeId">@item.CodeId</td>
+                                     <td class="second-col" style="text-align: center !important; word-wrap: break-word; white-space: normal; " id="vEvalVendors_Name">@Html.Translate(item.sys_adesc, item.sys_edesc)</td>
+                                     <td>
+                                         <input id="vEvalVendors_Mark" value="@item.Marks" type="number" style="width:100px !important"  />
+                                     </td>
+                                     <td></td>
+                                 </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+        </div>
+    </div>
+</div>

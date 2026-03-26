@@ -1,0 +1,161 @@
+﻿@using System.Data.SqlClient;
+@using AlphaERP.Models
+@{
+    int OrdYear = 0;
+    if (ViewBag.OrdYear == null)
+    {
+        OrdYear = DateTime.Now.Year;
+    }
+    else
+    {
+        OrdYear = ViewBag.OrdYear;
+    }
+
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+
+    List<OrdReceiptInfo> lOrdReceiptInfo = new MDB().Database.SqlQuery<OrdReceiptInfo>(string.Format("SELECT OrderYear,OrderNo ,TawreedNo ,ShipSer,VendorNo,convert(date,ArrivalDate) as ArrivalDate  " +
+    "FROM Ord_PortInfoHF " +
+    "where (CompNo = '{0}') AND (OrderYear = '{1}') AND (IsApproval = 1) GROUP BY OrderYear, OrderNo, TawreedNo, ShipSer,VendorNo,convert(date,ArrivalDate) ", company.comp_num, OrdYear)).ToList();
+    List<Vendor> Vend = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.IsHalt == false).ToList();
+}
+
+<table class="table" id="OrdReceiptTable">
+    <thead>
+        <tr>
+            <th>@Html.Recource(3197)</th>
+            <th>@Html.Recource(3797)</th>
+            <th>@Html.Recource(696)</th>
+            <th>@Html.Recource(3833)</th>
+            <th>@Html.Recource(517)</th>
+            <th>@Html.Recource(96)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="OrdReceiptTbody">
+        @foreach (OrdReceiptInfo P in lOrdReceiptInfo)
+        {
+            string RefNo = new MDB().OrderHFs.Where(x => x.CompNo == company.comp_num && x.OrdYear == P.OrderYear && x.OrderNo == P.OrderNo && x.TawreedNo == P.TawreedNo).Select(o => o.RefNo).FirstOrDefault();
+            Vendor v = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.VendorNo == P.VendorNo).FirstOrDefault();
+        <tr OrdYear="@P.OrderYear" OrderNo="@P.OrderNo" TawreedNo="@P.TawreedNo" ShipSer="@P.ShipSer">
+            <td>@P.OrderNo</td>
+            <td>@P.TawreedNo</td>
+            <td>@P.ShipSer</td>
+            <td>@P.ArrivalDate.ToString("yyyy-MM-dd")</td>
+            <td>@Html.Translate(v.Name, v.Eng_Name)</td>
+            <td>@RefNo</td>
+            <td>
+                <button onclick="btnexOrdReceipt(this)" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default ex" title="@Html.Recource(769)">
+                    <i style="font-weight:100" class="fa fa-folder"></i>
+                </button>
+                @*<button style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default ex" title="@Html.Recource(769)">
+                    <i style="font-weight:100" class="fa fa-folder"></i>
+                </button>*@
+                <button onclick="CreateOrdReceipt('@P.OrderYear','@P.OrderNo','@P.TawreedNo','@P.ShipSer')" style="background-color:transparent;width:22px;padding:0" type="button" class="btn btn-default" title=" @Html.Translate("اضافة محضر استلام", "Add Order Receipt")">
+                    <i class="fa fa-plus"></i>
+                </button>
+                <button id="AddOrdReceipt" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                    @Html.Translate("اضافة محضر استلام", "Add Order Receipt")
+                </button>
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+
+    var OrdReceiptTable;
+    OrdReceiptTable = $('#OrdReceiptTable').dataTable({
+        "scrollY": 'calc( 100vh - 270px)',
+        "paging": true,
+        "pageLength": 25,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+
+    function btnexOrdReceipt(e) {
+        var nTr = e.parentNode.parentNode;
+        if ($(e).attr("opened") == 'details_close') {
+            OrdReceiptTable.fnClose(nTr);
+            $(e).attr("opened", "details_open");
+        }
+        else {
+            wait();
+            $(e).attr("opened", "details_close");
+            var OrdYear = $(e.parentNode.parentNode).attr("OrdYear");
+            var OrderNo = $(e.parentNode.parentNode).attr("OrderNo");
+            var TawreedNo = $(e.parentNode.parentNode).attr("TawreedNo");
+            var ShipSer = $(e.parentNode.parentNode).attr("ShipSer");
+
+            $.get("../../../../OrdReceipt/DetailsOrdReceipt?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo + '&ShipSer=' + ShipSer, function (data) {
+                OrdReceiptTable.fnOpen(nTr, data, 'details');
+                done();
+            });
+        }
+    }
+
+    //$('#OrdReceiptTable tbody td button.ex').click(function () {
+    //    var nTr = this.parentNode.parentNode;
+    //    if ($(this).attr("opened") == 'details_close') {
+    //        OrdReceiptTable.fnClose(nTr);
+    //        $(this).attr("opened", "details_open");
+    //    }
+    //    else {
+    //        wait();
+    //        $(this).attr("opened", "details_close");
+    //        var OrdYear = $(this.parentNode.parentNode).attr("OrdYear");
+    //        var OrderNo = $(this.parentNode.parentNode).attr("OrderNo");
+    //        var TawreedNo = $(this.parentNode.parentNode).attr("TawreedNo");
+    //        var ShipSer = $(this.parentNode.parentNode).attr("ShipSer");
+
+    //        $.get("../../../../OrdReceipt/DetailsOrdReceipt?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo + '&ShipSer=' + ShipSer, function (data) {
+    //            OrdReceiptTable.fnOpen(nTr, data, 'details');
+    //            done();
+    //        });
+    //    }
+    //});
+
+    function CreateOrdReceipt(OrdYear, OrdNo, TawreedNo, ShipSer) {
+        $('#AddOrdReceipt').attr("href", '/OrdReceipt/AddOrdReceipt?OrdYear=' + OrdYear + '&OrderNo=' + OrdNo + '&TawreedNo=' + TawreedNo +  '&ShipSer=' + ShipSer + '')
+        $('#AddOrdReceipt').click();
+    }
+
+    function SelectOrdReceipt(e) {
+        var table = $('#OrdReceiptTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function SelectionOrdReceiptDiv() {
+        var table = $('#OrdReceiptTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+
+        if (trs.length == 0) {
+            MsgBox('@Resources.Resource.NoPurchaseOrderWasChosen', 'red');
+            done();
+            return false
+        }
+
+        var OrdYear = trs[0].getAttribute('OrdYear');
+        var OrderNo = trs[0].getAttribute('OrderNo');
+        var TawreedNo = trs[0].getAttribute('TawreedNo');
+        var ShipSer = trs[0].getAttribute('ShipSer');
+
+        SelectionOrdReceiptInfo(OrdYear, OrderNo, TawreedNo, ShipSer);
+    }
+</script>
+
+
+
+
+
+

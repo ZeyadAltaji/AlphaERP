@@ -1,0 +1,96 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    int Srial = 1;
+    int OrdYear = ViewBag.OrdYear;
+    int OrderNo = ViewBag.OrderNo;
+    string TawreedNo = ViewBag.TawreedNo;
+    string ShipSer = ViewBag.ShipSer;
+    int Ser = ViewBag.srl;
+    Ord_WeightChangeRate WeightChangeRate = new MDB().Ord_WeightChangeRate.Where(x => x.CompNo == company.comp_num && x.OrderYear == OrdYear && x.OrderNo == OrderNo && x.TawreedNo == TawreedNo && x.ShipSer == ShipSer && x.Ser == Ser).FirstOrDefault();
+}
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(100vh - 210px) !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_vWeightChangeRate_OrdYear">@Html.Recource(3196) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="text" id="MRP_vWeightChangeRate_OrdYear_@Ser" value="@OrdYear" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_vWeightChangeRate_OrderNo">@Html.Recource(3197) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:90px !important;" type="text" id="MRP_vWeightChangeRate_OrderNo_@Ser" value="@OrderNo" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_vWeightChangeRate_TawreedNo">@Html.Recource(3797) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:150px !important;" type="text" id="MRP_vWeightChangeRate_TawreedNo_@Ser" value="@TawreedNo" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="MRP_vWeightChangeRate_ShipSer">@Html.Recource(696) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 120px !important; direction: ltr; text-align: right;" type="text" id="MRP_vWeightChangeRate_ShipSer_@Ser" value="@ShipSer" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_vWeightChangeRate_TransNo">@Html.Recource(1871)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 120px !important;" type="text" id="MRP_vWeightChangeRate_TransNo_@Ser" value="@Ser" disabled />
+                    </div>
+                    
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="MRP_vWeightChangeRate_WeightRateDate">@Html.Recource(718) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="date" id="MRP_vWeightChangeRate_WeightRateDate_@Ser" value="@WeightChangeRate.WeightRateDate.Value.ToString("yyyy-MM-dd")" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_vWeightChangeRate_WeightRate">@Html.Translate("معدل زيادة الوزن", "Weight Rate") </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="number" id="MRP_vWeightChangeRate_WeightRate_@Ser" value="@WeightChangeRate.WeightRate" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_vWeightChangeRate_WeightRateNote">@Html.Recource(70)</label>
+                    </div>
+                    <div class="col-md-10">
+                        <textarea required="true" style="width: 100%; height: 25px !important; " id="MRP_vWeightChangeRate_WeightRateNote_@Ser" disabled>@WeightChangeRate.WeightRateNote</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

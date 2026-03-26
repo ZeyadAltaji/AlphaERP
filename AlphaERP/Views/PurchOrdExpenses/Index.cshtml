@@ -1,0 +1,66 @@
+﻿<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-6" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="Ord_PurchaseOrdExpenses_OrdYear">@Resources.Resource.Year </label>
+            </div>
+            <div class="col-md-2">
+                <input onblur="Checkyear()" type="number" id="Ord_PurchaseOrdExpenses_OrdYear" value="@DateTime.Now.Year" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" />
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-success btn-block" onclick="SerachPurchOrdExpensesInfo()">
+                    @Resources.Resource.Search
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="Ord_PurchOrdExpensesListDiv">
+    </div>
+</div>
+
+<script>
+    function Checkyear() {
+        if (Ord_PurchaseOrdExpenses_OrdYear.value < 2000) {
+            Ord_PurchaseOrdExpenses_OrdYear.value = "@DateTime.Now.Year"
+            Ord_PurchaseOrdExpenses_OrdYear.focus();
+        }
+    }
+
+    SerachPurchOrdExpensesInfo()
+    function SerachPurchOrdExpensesInfo() {
+        Ord_PurchOrdExpensesListDiv.innerHTML = "";
+        $('#Ord_PurchOrdExpensesListDiv').load('../../../PurchOrdExpenses/PurchOrdExpensesList?OrdYear=' + Ord_PurchaseOrdExpenses_OrdYear.value);
+    }
+
+    function Delete_PurchOrdExpenses(TransYear, TransNo) {
+        if (confirm('@Resources.Resource.ConfirmDeleteDialog')) {
+            wait();
+            burn({ TransYear: TransYear, TransNo: TransNo }, '../../../PurchOrdExpenses/Delete_PurchOrdExpenses', '', ReloadDelPurchOrdExpenses, false);
+        }
+    }
+
+    function ReloadDelPurchOrdExpenses() {
+        done();
+        MsgBox('@Html.Recource(475)', 'red');
+        SerachPurchOrdExpensesInfo();
+    }
+
+
+    function PostedPurchOrdExpenses(TransYear, TransNo) {
+        if (confirm('@Resources.Resource.ApprovalVoucIssue')) {
+            burn({ TransYear: TransYear, TransNo: TransNo }, '../../../PurchOrdExpenses/Post_OrdExpenses', '', ReloadPostOrdExpenses, false);
+        }
+    }
+
+    function ReloadPostOrdExpenses() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        SerachPurchOrdExpensesInfo();
+    }
+</script>

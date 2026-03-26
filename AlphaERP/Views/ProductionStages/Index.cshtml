@@ -1,0 +1,719 @@
+﻿@using AlphaERP.Models;
+@{ 
+    Company company = (Company)Session["company"];
+    List<ProdCost_Parameter> LGroub = new MDB().ProdCost_Parameters.Where(x => x.CompNo == company.comp_num && x.ParmID == 2).ToList();
+}
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-10">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable"></label>
+                <button class="btn btn-primary btn-block" onclick="Add_ProdStages()">
+                    <i class="fa fa-plus"></i> @Html.Recource(32)
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="ProdStagesDiv">
+        @Html.Partial("~/Views/ProductionStages/ProdStagesList.cshtml")
+    </div>
+</div>
+
+<div class="modal fade" id="Model_Add_ProdStages">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4319)</label>
+            </div>
+            <div class="box-body box-profile" id="AddProdStagesDiv">
+                <div class="modal-body row">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item active">
+                            <a class="nav-link active" data-toggle="tab" href="#BDefineStage" role="tab">
+                                @Html.Recource(4322)
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#DefineMachinesStage" role="tab">
+                                @Html.Recource(4321)
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="tab-content" style="height:252px;padding:10px">
+                        <div class="tab-pane active" id="BDefineStage" role="tabpanel">
+                            <div class="form-group">
+                                <div class="col-md-4">
+                                    <label class="unselectable" for="ProdStages_save_StageCode">@Html.Recource(2558)</label>
+                                </div>
+                                <div class="col-md-4">
+                                    <input required="true" type="number" id="ProdStages_save_StageCode" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-4">
+                                    <label class="unselectable" for="ProdStages_save_StageName">@Html.Recource(4318)</label>
+                                </div>
+                                <div class="col-md-4">
+                                    <input required="true" style="width:220%" type="text" id="ProdStages_save_StageName" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-4">
+                                    <label class="unselectable" for="ProdStages_save_Group">@Html.Recource(1734)</label>
+                                </div>
+                                <div class="col-md-4">
+                                    <select style="width:100%" id="ProdStages_save_Group" required="true">
+                                        @foreach (var G in LGroub)
+                                        {
+                                            <option value="@G.ParmCode">@Html.Translate(G.LocalDesc, G.EngDesc)</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-4">
+                                    <label class="unselectable" for="ProdStages_save_AnualWorkingDays">@Html.Recource(4302)</label>
+                                </div>
+                                <div class="col-md-4">
+                                    <input required="true" type="number" id="ProdStages_save_AnualWorkingDays" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="unselectable">
+                                        <input id="ProdStages_save_QualityStage" type="checkbox" />
+                                        @Html.Recource(9587)
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-4">
+                                    <label class="unselectable" for="ProdStages_save_DailyWorkingHours">@Html.Recource(4303)</label>
+                                </div>
+                                <div class="col-md-2">
+                                    <input required="true" type="number" id="ProdStages_save_DailyWorkingHours" style="width: 100% !important;" />
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="unselectable" for="ProdStages_save_SetupTime">@Html.Recource(4326)</label>
+                                </div>
+                                <div class="col-md-4">
+                                    <input required="true" type="number" id="ProdStages_save_SetupTime" style="width: 100% !important;" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-4">
+                                    <label class="unselectable" for="ProdStages_save_SetupTimeCost">@Html.Recource(4327)</label>
+                                </div>
+                                <div class="col-md-2">
+                                    <input required="true" type="number" id="ProdStages_save_SetupTimeCost" style="width: 100% !important;" min="0" max="100" onblur="CheckValueSetupTime(1)" />
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="unselectable" for="ProdStages_save_StopTime">@Html.Recource(2583) %</label>
+                                </div>
+                                <div class="col-md-4">
+                                    <input required="true" type="number" id="ProdStages_save_StopTime" style="width: 100% !important;" min="0" max="100" onblur="CheckValueStopTime(1)" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-4">
+                                    <label class="unselectable" for="ProdStages_save_Notes">@Html.Recource(70)</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <textarea required="true" style="width: 100%;height:75px !important;" id="ProdStages_save_Notes" placeholder="@Html.Recource(70)" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="DefineMachinesStage" role="tabpanel">
+                            <div class="form-group">
+                                <div class="col-md-12">
+                                    <button onclick="AddMachinesStage()" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-12" style="width:535px !important ;overflow-y:auto">
+                                    <table class="table table-hover" id="DefineMachinesStageTable">
+                                        <thead>
+                                            <tr>
+                                                <th style="text-align:center;">@Html.Recource(4324)</th>
+                                                <th style="text-align:center;">@Html.Recource(4320)</th>
+                                                <th style="text-align:center;">@Html.Recource(4325)</th>
+                                                <th style="text-align:center;">@Html.Recource(4323)</th>
+                                                <th style="text-align:center;"></th>
+                                                <th style="text-align:center;">@Html.Recource(309)</th>
+                                                <th style="text-align:center;"></th>
+                                                <th style="text-align:center;"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="DefineMachinesStageTbody" style="border-top: 1px solid #ddd;">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteSave_ProdStages()" class="btn btn-primary">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal fade" id="Model_Edit_ProdStages">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4319)</label>
+            </div>
+            <div class="box-body box-profile" id="eProdStagesDiv">
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteEdit_ProdStages()" class="btn btn-primary">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal fade" id="Model_FixAssest">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(6375)</label>
+            </div>
+            <div class="modal-body row" id="FixAssestDiv">
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selecting_FixAssest()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal fade wide" id="Model_SerialFixAssest">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(6375)</label>
+            </div>
+            <div class="modal-body row" id="SerialFixAssestDiv">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selecting_SerialFixAssest()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#ProdStages_save_Group').select2();
+    var ststaus = 0;
+    var thisValue = '';
+    var thisValueSerial = '';
+    var Count = 0;
+    var eCount = 0;
+    $('#Model_Add_ProdStages').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_Edit_ProdStages').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_FixAssest').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_SerialFixAssest').draggable({
+        handle: ".modal-header",
+    });
+    function GenRowMas(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function AddMachinesStage() {
+        ststaus = 1;
+        Count++;
+        var newarray = [];
+        newarray.push('<input id="DefineMachinesStage_MachineNo" min="0" onblur="CheckValueMachineNo(' + Count +' )" type="number" style="width: 65px !important;" />')
+        newarray.push('<input id="DefineMachinesStage_MachineName" type="text" style="width: 120px  !important;" />')
+        newarray.push('<input id="DefineMachinesStage_DepreciationValue" onblur="CheckValueDepreciationValue(' + Count +' )" type="number" style="width: 68px  !important;" />')
+        newarray.push('<input id="DefineMachinesStage_FixAssestNo" type="number" style="width: 60px  !important;" disabled />')
+        newarray.push('<button onclick="AddFixAssestNo(' + Count +')" type="button" class="btn btn-primary">@Html.Recource(4323)</button>')
+        newarray.push('<input id="DefineMachinesStage_Serial" type="number" style="width: 35px  !important;" disabled  />')
+        newarray.push('<button onclick="AddSerial(' + Count +')" type="button" class="btn btn-primary">@Html.Recource(309)</button>')
+        newarray.push('<button class="btn-de" onclick="RemoveRow(this)" type="button"><i class= "fa fa-trash-alt"></i ></button>')
+        $("#DefineMachinesStageTbody").append(
+            GenRowMas(newarray, 'MachinesStage_' + Count)
+        );
+    }
+    function CheckValueMachineNo(val) {
+        var tr = $("#DefineMachinesStageTbody #MachinesStage_" + val + "");
+        if (tr.find('#DefineMachinesStage_MachineNo')[0].value != '') {
+            if (tr.find('#DefineMachinesStage_MachineNo')[0].value < 0) {
+                MsgBox('@Html.Translate("لا يجوز ان يكون رقم الماكينة بالسالب", "The machine number should not be negative")', 'red');
+                tr.find('#DefineMachinesStage_MachineNo')[0].focus();
+                return false;
+            }
+        }
+    }
+    function CheckValueDepreciationValue(val) {
+        var tr = $("#DefineMachinesStageTbody #MachinesStage_" + val + "");
+        if (tr.find('#DefineMachinesStage_DepreciationValue')[0].value != '') {
+            if (tr.find('#DefineMachinesStage_DepreciationValue')[0].value < 0) {
+                MsgBox('@Html.Translate("لا يجوز ان يكون قيمة الاستهلاك اقل من 0", "The depreciation value may not be less than 0")', 'red');
+                tr.find('#DefineMachinesStage_DepreciationValue')[0].focus();
+                return false;
+            }
+        }
+    }
+    function eCheckValueMachineNo(val) {
+        var tr = $("#eDefineMachinesStageTbody #eMachinesStage_" + val + "");
+        if (tr.find('#eDefineMachinesStage_MachineNo')[0].value != '') {
+            if (tr.find('#eDefineMachinesStage_MachineNo')[0].value < 0) {
+                MsgBox('@Html.Translate("لا يجوز ان يكون رقم الماكينة بالسالب", "The machine number should not be negative")', 'red');
+                tr.find('#eDefineMachinesStage_MachineNo')[0].focus();
+                return false;
+            }
+        }
+    }
+    function eCheckValueDepreciationValue(val) {
+        var tr = $("#eDefineMachinesStageTbody #eMachinesStage_" + val + "");
+        if (tr.find('#eDefineMachinesStage_DepreciationValue')[0].value != '') {
+            if (tr.find('#eDefineMachinesStage_DepreciationValue')[0].value < 0) {
+                MsgBox('@Html.Translate("لا يجوز ان يكون قيمة الاستهلاك اقل من 0", "The depreciation value may not be less than 0")', 'red');
+                tr.find('#eDefineMachinesStage_DepreciationValue')[0].focus();
+                return false;
+            }
+        }
+    }
+    function eAddMachinesStage() {
+        ststaus = 2;
+        if (eCount == 0) {
+            var tr = $("#eDefineMachinesStageTbody tr");
+            eCount = tr.length;
+        }
+        eCount++;
+        var newarray = [];
+        newarray.push('<input id="eDefineMachinesStage_MachineNo" min="0" onblur="eCheckValueMachineNo(' + eCount +')" type="number" style="width: 65px !important;" />')
+        newarray.push('<input id="eDefineMachinesStage_MachineName" type="text" style="width: 120px  !important;" />')
+        newarray.push('<input id="eDefineMachinesStage_DepreciationValue" onblur="eCheckValueDepreciationValue(' + eCount +')" type="number" style="width: 68px  !important;" />')
+        newarray.push('<input id="eDefineMachinesStage_FixAssestNo" type="number" style="width: 60px  !important;" disabled />')
+        newarray.push('<button onclick="eAddFixAssestNo(' + eCount +')" type="button" class="btn btn-primary">@Html.Recource(4323)</button>')
+        newarray.push('<input id="eDefineMachinesStage_Serial" type="number" style="width: 35px  !important;" disabled  />')
+        newarray.push('<button onclick="eAddSerial(' + eCount +')" type="button" class="btn btn-primary">@Html.Recource(309)</button>')
+        newarray.push('<button class="btn-de" onclick="eRemoveRow(this)" type="button"><i class= "fa fa-trash-alt"></i ></button>')
+        $("#eDefineMachinesStageTbody").append(
+            GenRowMas(newarray, 'eMachinesStage_' + eCount)
+        );
+    }
+    function eRemoveRow(e) {
+    if (confirm('@Resources.Resource.DeleteConfirm')) {
+        var p = e.parentNode.parentNode;
+        p.parentNode.parentNode.deleteRow(p.rowIndex);
+        return true;
+        eCount++;
+    }
+    return false;
+}
+    function AddFixAssestNo(val) {
+        var tr = $("#DefineMachinesStageTbody #MachinesStage_" + val + "");
+        if (tr.find('#DefineMachinesStage_MachineNo')[0].value == '') {
+            MsgBox('@Html.Translate("يجب ادخال رقم الماكينة", "Machine No must be entered")', 'red');
+            tr.find('#DefineMachinesStage_MachineNo')[0].focus();
+            return false;
+        }
+        if (tr.find('#DefineMachinesStage_MachineName')[0].value == '') {
+            MsgBox('@Html.Translate("يجب ادخال اسم الماكينة", "Machine Name must be entered")', 'red');
+            tr.find('#DefineMachinesStage_MachineName')[0].focus();
+            return false;
+        }
+        thisValue = val;
+        burn('','../../../ProductionStages/FixAssest', '', ReloadFixAssestNo, true);
+    }
+    function eAddFixAssestNo(val) {
+        ststaus = 2;
+        var tr = $("#eDefineMachinesStageTbody #eMachinesStage_" + val + "");
+        if (tr.find('#eDefineMachinesStage_MachineNo')[0].value == '') {
+            MsgBox('@Html.Translate("يجب ادخال رقم الماكينة", "Machine No must be entered")', 'red');
+            tr.find('#eDefineMachinesStage_MachineNo')[0].focus();
+            return false;
+        }
+        if (tr.find('#eDefineMachinesStage_MachineName')[0].value == '') {
+            MsgBox('@Html.Translate("يجب ادخال اسم الماكينة", "Machine Name must be entered")', 'red');
+            tr.find('#eDefineMachinesStage_MachineName')[0].focus();
+            return false;
+        }
+        thisValue = val;
+        burn('', '../../../ProductionStages/FixAssest', '', ReloadFixAssestNo, true);
+    }
+    function ReloadFixAssestNo(r) {
+        FixAssestDiv.innerHTML = "";
+        $('#FixAssestDiv').html(r);
+        $('#Model_FixAssest').modal('show')
+    }
+    function AddSerial(Val) {
+        var tr = $("#DefineMachinesStageTbody #MachinesStage_" + thisValue + "");
+        if (tr.find('#DefineMachinesStage_FixAssestNo')[0].value == '') {
+            alert('@Html.Translate("يحب ادخال رقم الاصل الثابت", "Fix AssestNo must be entered")');
+            return false;
+        }
+        thisValueSerial = Val;
+        burn({ FixAssestNo: tr.find('#DefineMachinesStage_FixAssestNo')[0].value }, '../../../ProductionStages/SerialFixAssest', '', ReloadSerialFixAssestNo, true);
+    }
+    function eAddSerial(Val) {
+        ststaus = 2;
+        var tr = $("#eDefineMachinesStageTbody #eMachinesStage_" + thisValue + "");
+        if (tr.find('#eDefineMachinesStage_FixAssestNo')[0].value == '') {
+            alert('@Html.Translate("يحب ادخال رقم الاصل الثابت", "Fix AssestNo must be entered")');
+            return false;
+        }
+        thisValueSerial = Val;
+        burn({ FixAssestNo: tr.find('#eDefineMachinesStage_FixAssestNo')[0].value }, '../../../ProductionStages/SerialFixAssest', '', ReloadSerialFixAssestNo, true);
+    }
+    function ReloadSerialFixAssestNo(r) {
+        SerialFixAssestDiv.innerHTML = "";
+        $('#SerialFixAssestDiv').html(r);
+        $('#Model_SerialFixAssest').modal('show')
+    }
+    function Select_FixAssest(e) {
+        var table = $('#FixAssestTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Selecting_FixAssest() {
+        var table = $('#FixAssestTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار اصل واحد على الاقل", "Select one Assest at least")');
+            return;
+        }
+        if (ststaus == 1) {
+            var tr = $("#DefineMachinesStageTbody #MachinesStage_" + thisValue + "");
+            tr.find('#DefineMachinesStage_FixAssestNo')[0].value = trs[0].getAttribute('Item_Num');
+            tr.find('#DefineMachinesStage_Serial')[0].value = '';
+            $('#Model_FixAssest').modal('hide');
+        }
+        if (ststaus == 2) {
+            var tr = $("#eDefineMachinesStageTbody #eMachinesStage_" + thisValue + "");
+            tr.find('#eDefineMachinesStage_FixAssestNo')[0].value = trs[0].getAttribute('Item_Num');
+            tr.find('#eDefineMachinesStage_Serial')[0].value = '';
+            $('#Model_FixAssest').modal('hide');
+        }
+    }
+    function Select_SerialFixAssest(e) {
+        var table = $('#SerialFixAssestTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Selecting_SerialFixAssest() {
+        var table = $('#SerialFixAssestTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار تسلسل على الاقل", "Select one Serial at least")');
+            return;
+        }
+        if (ststaus == 1) {
+            var tr = $("#DefineMachinesStageTbody #MachinesStage_" + thisValue + "");
+            tr.find('#DefineMachinesStage_Serial')[0].value = trs[0].getAttribute('Item_Serl');
+            $('#Model_SerialFixAssest').modal('hide');
+        }
+        if (ststaus == 2) {
+            var tr = $("#eDefineMachinesStageTbody #eMachinesStage_" + thisValue + "");
+            tr.find('#eDefineMachinesStage_Serial')[0].value = trs[0].getAttribute('Item_Serl');
+            $('#Model_SerialFixAssest').modal('hide');
+        }
+    }
+    function Add_ProdStages() {
+        $('#DefineMachinesStageTbody').empty();
+        ProdStages_save_QualityStage.checked = false;
+        ProdStages_save_StageCode.value = '';
+        ProdStages_save_StageName.value = '';
+        ProdStages_save_AnualWorkingDays.value = '';
+        ProdStages_save_DailyWorkingHours.value = '';
+        ProdStages_save_SetupTime.value = '';
+        ProdStages_save_SetupTimeCost.value = '';
+        ProdStages_save_StopTime.value = '';
+        ProdStages_save_Notes.innerHTML = '';
+        $('#Model_Add_ProdStages').modal('show')
+    }
+    function CheckValue(ID) {
+        if (document.getElementById(ID).getAttribute('required') == 'true') {
+            if (document.getElementById(ID).value == '') {
+                document.getElementById(ID).focus();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    function CheckValueGrid(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt == 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+        else if (NotEqualZero == '2') {
+            if (Amt < 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+        else {
+            if (Amt == '' || Amt == null) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function ExcuteSave_ProdStages() {
+        if (CheckValue('ProdStages_save_StageCode')) { return; }
+        if (CheckValue('ProdStages_save_StageName')) { return; }
+        if (CheckValue('ProdStages_save_AnualWorkingDays')) { return; }
+        if (CheckValueGrid(2, ProdStages_save_AnualWorkingDays.value)) {
+            alert('@Html.Translate("لا يجوز ان يكون عدد ايام العمل بالسنة بالسالب", "The number of working days per year may not be negative")');
+            ProdStages_save_AnualWorkingDays.focus();
+            return false;
+        }
+        if (CheckValue('ProdStages_save_DailyWorkingHours')) { return; }
+        if (CheckValueGrid(2, ProdStages_save_DailyWorkingHours.value)) {
+            alert('@Html.Translate("لا يجوز ان يكون عدد ساعات العمل في اليوم بالسالب", "The number of working hours per day may not be negative")');
+            ProdStages_save_DailyWorkingHours.focus();
+            return false;
+        }
+        if (CheckValue('ProdStages_save_SetupTime')) { return; }
+        if (CheckValueGrid(2, ProdStages_save_SetupTime.value)) {
+            alert('@Html.Translate("لا يجوز ان يكون وقت التجهيز بالسالب", "The time of preparation may not be negative")');
+            ProdStages_save_SetupTime.focus();
+            return false;
+        }
+        if (CheckValue('ProdStages_save_SetupTimeCost')) { return; }
+        if (CheckValue('ProdStages_save_StopTime')) { return; }
+
+
+
+
+        var ProdStages = {
+            comp_no: '@company.comp_num',
+            stage_code: ProdStages_save_StageCode.value,
+            stage_desc: ProdStages_save_StageName.value,
+            GroupID: ProdStages_save_Group.value,
+            no_yearly_daily_work: ProdStages_save_AnualWorkingDays.value,
+            notes: ProdStages_save_Notes.value,
+            Hr: ProdStages_save_DailyWorkingHours.value,
+            SetupTime: ProdStages_save_SetupTime.value,
+            SetupTimePrc: ProdStages_save_SetupTimeCost.value,
+            StopTimePrc: ProdStages_save_StopTime.value,
+            QualityControl: ProdStages_save_QualityStage.checked,
+        }
+
+        var MachinesStage = new Array();
+
+        var table = $('#DefineMachinesStageTbody tr');
+        var trs = table;
+        if (trs.length != 0) {
+            for (var i = 0; i < trs.length; i++) {
+                if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#DefineMachinesStage_MachineNo')[0].value)) {
+                    alert('@Html.Translate("يجب ادخال رقم الماكينة", "Machine No must be entered")');
+                    return false;
+                }
+                if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#DefineMachinesStage_MachineName')[0].value)) {
+                    alert('@Html.Translate("يجب ادخال اسم الماكينة", "Machine Name must be entered")');
+                    return false;
+                }
+
+                MachinesStage.push({
+                    CompNo: '@company.comp_num',
+                    stage_code: ProdStages_save_StageCode.value,
+                    machine_code: $(trs[i]).closest('tr').find('#DefineMachinesStage_MachineNo')[0].value,
+                    machine_Desc: $(trs[i]).closest('tr').find('#DefineMachinesStage_MachineName')[0].value,
+                    consumption_value: $(trs[i]).closest('tr').find('#DefineMachinesStage_DepreciationValue')[0].value,
+                    FACode: $(trs[i]).closest('tr').find('#DefineMachinesStage_FixAssestNo')[0].value,
+                    FASr: $(trs[i]).closest('tr').find('#DefineMachinesStage_Serial')[0].value,
+                });
+            }
+        }
+
+        wait();
+
+        burn({ stageinfo: ProdStages, MachineInfo: MachinesStage }, '../../../ProductionStages/Save_ProdStages', '', ReloadProdStages, true);
+    }
+    function ReloadProdStages() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#Model_Add_ProdStages').modal('hide');
+        $('#ProdStagesDiv').load('../../../ProductionStages/ProdStagesList');
+    }
+    function Edit_ProdStages(comp_no,stage_code) {
+        burn({ CompNo: comp_no, StageCode: stage_code }, '../../../ProductionStages/eProdStages', '', ReloadProdStagesInfo, true);
+    }
+    function ReloadProdStagesInfo(r) {
+        eProdStagesDiv.innerHTML = "";
+        $('#eProdStagesDiv').html(r);
+        $('#Model_Edit_ProdStages').modal('show')
+    }
+    function CheckValueSetupTime(status) {
+        if (status == 1) {
+            if (ProdStages_save_SetupTimeCost.value > 100 || ProdStages_save_SetupTimeCost.value < 0) {
+                MsgBox('@Html.Translate("النسبة يجب ان تكون بين 0 و 100", "The ratio should be between 0 and 100")', 'red');
+                ProdStages_save_SetupTimeCost.focus();
+                return false;
+            }
+        }
+        if (status == 2) {
+            if (ProdStages_Edit_SetupTimeCost.value > 100 || ProdStages_Edit_SetupTimeCost.value < 0) {
+                MsgBox('@Html.Translate("النسبة يجب ان تكون بين 0 و 100", "The ratio should be between 0 and 100")', 'red');
+                ProdStages_Edit_SetupTimeCost.focus();
+                return false;
+            }
+        }
+    }
+    function CheckValueStopTime(status) {
+        if (status == 1) {
+            if (ProdStages_save_StopTime.value > 100 || ProdStages_save_StopTime.value < 0) {
+                MsgBox('@Html.Translate("النسبة يجب ان تكون بين 0 و 100", "The ratio should be between 0 and 100")', 'red');
+                ProdStages_save_StopTime.focus();
+                return false;
+            }
+        }
+        if (status == 2) {
+            if (ProdStages_Edit_StopTime.value > 100 || ProdStages_Edit_StopTime.value < 0) {
+                MsgBox('@Html.Translate("النسبة يجب ان تكون بين 0 و 100", "The ratio should be between 0 and 100")', 'red');
+                ProdStages_Edit_StopTime.focus();
+                return false;
+            }
+        }
+    }
+    function ExcuteEdit_ProdStages() {
+        if (CheckValue('ProdStages_Edit_StageName')) { return; }
+        if (CheckValue('ProdStages_Edit_AnualWorkingDays')) { return; }
+        if (CheckValueGrid(2, ProdStages_Edit_AnualWorkingDays.value)) {
+            alert('@Html.Translate("لا يجوز ان يكون عدد ايام العمل بالسنة بالسالب", "The number of working days per year may not be negative")');
+            ProdStages_Edit_AnualWorkingDays.focus();
+            return false;
+        }
+        if (CheckValue('ProdStages_Edit_DailyWorkingHours')) { return; }
+        if (CheckValueGrid(2, ProdStages_Edit_DailyWorkingHours.value)) {
+            alert('@Html.Translate("لا يجوز ان يكون عدد ساعات العمل في اليوم بالسالب", "The number of working hours per day may not be negative")');
+            ProdStages_Edit_DailyWorkingHours.focus();
+            return false;
+        }
+        if (CheckValue('ProdStages_Edit_SetupTime')) { return; }
+        if (CheckValueGrid(2, ProdStages_Edit_SetupTime.value)) {
+            alert('@Html.Translate("لا يجوز ان يكون وقت التجهيز بالسالب", "The time of preparation may not be negative")');
+            ProdStages_Edit_SetupTime.focus();
+            return false;
+        }
+        if (CheckValue('ProdStages_Edit_SetupTimeCost')) { return; }
+        if (CheckValue('ProdStages_Edit_StopTime')) { return; }
+
+        var ProdStages = {
+            comp_no: '@company.comp_num',
+            stage_code: ProdStages_Edit_StageCode.innerHTML,
+            stage_desc: ProdStages_Edit_StageName.value,
+            GroupID: ProdStages_Edit_Group.value,
+            no_yearly_daily_work: ProdStages_Edit_AnualWorkingDays.value,
+            notes: ProdStages_Edit_Notes.value,
+            Hr: ProdStages_Edit_DailyWorkingHours.value,
+            SetupTime: ProdStages_Edit_SetupTime.value,
+            SetupTimePrc: ProdStages_Edit_SetupTimeCost.value,
+            StopTimePrc: ProdStages_Edit_StopTime.value,
+            QualityControl: ProdStages_Edit_QualityStage.checked,
+        }
+
+        var MachinesStage = new Array();
+
+        var table = $('#eDefineMachinesStageTbody tr');
+        var trs = table;
+        if (trs.length != 0) {
+            for (var i = 0; i < trs.length; i++) {
+                if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#eDefineMachinesStage_MachineNo')[0].value)) {
+                    alert('@Html.Translate("يجب ادخال رقم الماكينة", "Machine No must be entered")');
+                    return false;
+                }
+                if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#eDefineMachinesStage_MachineName')[0].value)) {
+                    alert('@Html.Translate("يجب ادخال اسم الماكينة", "Machine Name must be entered")');
+                    return false;
+                }
+
+                MachinesStage.push({
+                    CompNo: '@company.comp_num',
+                    stage_code: ProdStages_Edit_StageCode.innerHTML,
+                    machine_code: $(trs[i]).closest('tr').find('#eDefineMachinesStage_MachineNo')[0].value,
+                    machine_Desc: $(trs[i]).closest('tr').find('#eDefineMachinesStage_MachineName')[0].value,
+                    consumption_value: $(trs[i]).closest('tr').find('#eDefineMachinesStage_DepreciationValue')[0].value,
+                    FACode: $(trs[i]).closest('tr').find('#eDefineMachinesStage_FixAssestNo')[0].value,
+                    FASr: $(trs[i]).closest('tr').find('#eDefineMachinesStage_Serial')[0].value,
+                });
+            }
+        }
+
+        wait();
+        burn({ stageinfo: ProdStages, MachineInfo: MachinesStage }, '../../../ProductionStages/Edit_ProdStages', '', ReloadEditProdStages, true);
+    }
+    function ReloadEditProdStages() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#Model_Edit_ProdStages').modal('hide');
+        $('#ProdStagesDiv').load('../../../ProductionStages/ProdStagesList');
+    }
+    function Del_ProdStages(comp_no, stage_code) {
+        if (confirm('@Resources.Resource.ConfirmDeleteDialog')) {
+            burn({ CompNo: comp_no, StageCode: stage_code }, '../../../ProductionStages/Del_ProdStages', '', ReloadDelProdStagesInfo, true);
+        }
+    }
+    function ReloadDelProdStagesInfo() {
+        MsgBox('@Html.Recource(2598)', 'red');
+        $('#ProdStagesDiv').load('../../../ProductionStages/ProdStagesList');
+    }
+</script>

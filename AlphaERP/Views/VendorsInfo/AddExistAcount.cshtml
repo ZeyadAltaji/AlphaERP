@@ -1,0 +1,1193 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    string language = (string)HttpContext.Current.Session["language"];
+    Company company = (Company)Session["company"];
+    long AccountNo = 0;
+    List<PayCodes> SurTitle = new MDB().Database.SqlQuery<PayCodes>("select SYS_MINOR as SYS_MINORId ,SYS_DESC as DescAr,isnull(SYS_EDESC,'No Desc.') as DescEn from SYSTEM WHERE (SYS_MAJOR = 1000)").ToList();
+    List<BusunisUnit> PaymentM = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("select MCode as Id ,[Desc] as DescAr,isnull([EngDesc],'No Desc.') as DescEn from PayMethods where (Comp = '{0}')", company.comp_num)).ToList();
+    List<PayCodes> Currency = new MDB().Database.SqlQuery<PayCodes>("select CurrType as Id ,CurrName as DescAr,isnull(CurrNameE,'No Desc.') as DescEn from CurrType").ToList();
+    List<PayCodes> Groups = new MDB().Database.SqlQuery<PayCodes>(string.Format("select GroupNo as SYS_MINORId ,GroupName as DescAr,isnull(GroupName,'No Desc.') as DescEn from Ven_Groups  where (CompNo = '{0}')", company.comp_num)).ToList();
+    List<PayCodes> Country = new MDB().Database.SqlQuery<PayCodes>("select Country as SYS_MINORId ,[Desc] as DescAr,isnull(EngDesc,'No Desc.') as DescEn from Countries").ToList();
+    List<Vendor> Vend = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.IsHalt == false).ToList();
+    DataTable Dt = new DataTable();
+    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+    {
+        Dt = new DataTable();
+        cn.Open();
+        using (SqlCommand cmd = new SqlCommand())
+        {
+            cmd.Connection = cn;
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+            cmd.CommandText = "GLN_FillDepts";
+            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+            cmd.Parameters.Add(new SqlParameter("@UserID", SqlDbType.VarChar)).Value = me.UserID;
+            if (language == "en")
+            {
+                cmd.Parameters.Add(new SqlParameter("@RptLang", SqlDbType.Int)).Value = 2;
+            }
+            else
+            {
+                cmd.Parameters.Add(new SqlParameter("@RptLang", SqlDbType.Int)).Value = 1;
+            }
+            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+            {
+                DA.Fill(Dt);
+            }
+        }
+    }
+}
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="max-height: 68vh !important;">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item active">
+                    <a class="nav-link active" data-toggle="tab" href="#VendorExistAcount_MainInfo" role="tab">
+                        @Html.Recource(450)
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#VendorExistAcount_VendorAddress" role="tab">
+                        @Html.Recource(3204)
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content" style="height:390px;padding:10px">
+                <div class="tab-pane active" id="VendorExistAcount_MainInfo" role="tabpanel">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_VendorNo">@Html.Recource(3087)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <input required="true" type="number" id="VendorExistAcount_save_VendorNo" value="" maxlength="10" max="10" onblur="checkMaxValue()" />
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-block" onclick="SelectVendors()">
+                                    @Html.Translate("الموردين", "Vendors")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_VendorName">@Html.Recource(2114)</label>
+                            </div>
+                            <div class="col-md-6">
+                                <input required="true" type="text" id="VendorExistAcount_save_VendorName" value="" style="width:100%" onblur="changeExistAcountVendorName()" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_VendorEngName">@Html.Recource(2115)</label>
+                            </div>
+                            <div class="col-md-6">
+                                <input required="true" type="text" id="VendorExistAcount_save_VendorEngName" value="" style="width:100%" />
+                            </div>
+                            <div class="col-md-2"></div>
+
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_SurName">@Html.Recource(1165)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <select style="width: 62%" id="VendorExistAcount_save_CboSurTitle">
+                                    @foreach (var v in SurTitle)
+                                    {
+                                        <option value="@Html.Translate(v.DescAr, v.DescEn)">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_SubjectToTax">
+                                    <input name="VendorExistAcount_save_VendorTax" type="checkbox" id="VendorExistAcount_save_SubjectToTax" />
+                                    @Html.Recource(1000)
+                                </label>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_Evaluated">
+                                    <input name="VendorExistAcount_save_VendorEvaluated" type="checkbox" id="VendorExistAcount_save_Evaluated" />
+                                    @Html.Recource(5205)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable">@Html.Recource(5203)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_Active">
+                                    <input id="VendorExistAcount_save_Active" type="radio" name="VendorExistAcount_VendorStatus" checked>
+                                    @Html.Recource(1153)
+                                </label>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_Halt">
+                                    <input name="VendorExistAcount_VendorStatus" type="radio" id="VendorExistAcount_save_Halt" />
+                                    @Html.Recource(48)
+                                </label>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-block" onclick="AddDocuments()" style="width:100px !important;">
+                                    @Html.Recource(7744)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_PaymentType">@Html.Recource(1874)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <select style="width: 62%" id="VendorExistAcount_save_CboPaymentType">
+                                    @foreach (var v in PaymentM)
+                                    {
+                                        <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_CurrCode">@Html.Recource(1671)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <select style="width: 62%" id="VendorExistAcount_save_CboCurrCode">
+                                    @foreach (var v in Currency)
+                                    {
+                                        <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_Group">@Html.Recource(1734)</label>
+                            </div>
+                            <div class="col-md-3">
+                                <select style="width: 62%" id="VendorExistAcount_save_CboGroup">
+                                    @foreach (var v in Groups)
+                                    {
+                                        <option value="@v.SYS_MINORId">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_DueDays">@Html.Recource(7737)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" type="number" id="VendorExistAcount_save_DueDays" value="0" style="width:100%" />
+                            </div>
+                            <div class="col-md-1">
+                                <label class="unselectable" for="VendorExistAcount_save_Discount">@Html.Recource(2124)</label>
+                            </div>
+                            <div class="col-md-1">
+                                <input required="true" type="number" id="VendorExistAcount_save_Discount" value="0" style="width:100%" />
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_Notes">@Html.Recource(70) </label>
+                            </div>
+                            <div class="col-md-10" style="margin-bottom: 5px;">
+                                <textarea required="true" style="width: 103%;" id="VendorExistAcount_save_Notes"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="VendorExistAcount_VendorAddress" role="tabpanel">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_Address">@Html.Recource(1042) </label>
+                            </div>
+                            <div class="col-md-10" style="margin-bottom: 5px;">
+                                <textarea required="true" style="width: 100%;" id="VendorExistAcount_save_Address"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_Country">@Html.Recource(1143)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <select onchange="ChangeValueCountry()" style="width: 100%" id="VendorExistAcount_save_CboCountry">
+                                    @foreach (var v in Country)
+                                    {
+                                        <option value="@v.SYS_MINORId">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_Area">@Html.Recource(1144)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <select onchange="ChangeValueArea()" style="width: 100%" id="VendorExistAcount_save_CboArea">
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_SubArea">@Html.Recource(1145)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <select onchange="ChangeValueSubArea()" style="width: 100%" id="VendorExistAcount_save_CboSubArea">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_Street">@Html.Recource(2133)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <select  style="width: 62%" id="VendorExistAcount_save_CboStreet">
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_Location">@Html.Translate("الموقع", "Location")</label>
+                            </div>
+                            <div class="col-md-6">
+                                <input required="true" style="width: 100%;" type="text" id="VendorExistAcount_save_Location" value="" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_ContactPerson">@Html.Recource(1166)</label>
+                            </div>
+                            <div class="col-md-4">
+                                <input required="true" style="width: 100%;" type="text" id="VendorExistAcount_save_ContactPerson" value="" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_Beneficiary">@Html.Recource(3821)</label>
+                            </div>
+                            <div class="col-md-4">
+                                <input required="true" style="width: 100%;" type="text" id="VendorExistAcount_save_Beneficiary" value="" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_Tel1">@Html.Recource(1029)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="number" id="VendorExistAcount_save_Tel1" value="" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_Tel2">@Html.Recource(1031)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="number" id="VendorExistAcount_save_Tel2" value="" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_Mobile">@Html.Recource(1123)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="number" id="VendorExistAcount_save_Mobile" value="" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_Fax">@Html.Recource(165)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="text" id="VendorExistAcount_save_Fax" value="" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_Telex">@Html.Recource(166)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="text" id="VendorExistAcount_save_Telex" value="" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_PostalCode">@Html.Recource(2139)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 100%;" type="text" id="VendorExistAcount_save_PostalCode" value="" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_POBox">@Html.Recource(2138)</label>
+                            </div>
+                            <div class="col-md-4">
+                                <input required="true" style="width: 100%;" type="text" id="VendorExistAcount_save_POBox" value="" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_Email">@Html.Recource(1124)</label>
+                            </div>
+                            <div class="col-md-2">
+                                <input required="true" style="width: 219%;" type="email" id="VendorExistAcount_save_Email" value="" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable" for="VendorExistAcount_save_VendorInfo">@Html.Recource(5207) </label>
+                            </div>
+                            <div class="col-md-10" style="margin-bottom: 5px;">
+                                <textarea required="true" style="width: 100%;" id="VendorExistAcount_save_VendorInfo"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <div class="col-md-2">
+                                <label class="unselectable">@Html.Recource(8983) </label>
+                            </div>
+                            <div class="col-md-1" style="min-width: 5% !important;">
+                                <input style="width:87%" type="text" id="VendorExistAcount_save_TransporterVendor" disabled />
+                            </div>
+                            <div class="col-md-3" style="min-width: 5% !important;">
+                                <input type="text" id="VendorExistAcount_save_TransporterVendorName" value="" disabled />
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-block" onclick="AddTransporter()">
+                                    @Html.Recource(8983)
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-block" onclick="AddContactPersons()">
+                                    @Html.Recource(5197)
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-block" onclick="AddBankInfo()">
+                                    @Html.Recource(5200)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="ExcuteSave_VendorExistAcount()" class="btn btn-primary">@Resources.Resource.Save</button>
+        </div>
+    </div>
+</div>
+
+@*-----------------------------Model Documents-------------------------------------*@
+<div class="modal fade" id="Model_VendorExistAcount_DocumentsArchive">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أرشفة الوثائق", "Archive Documents")</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <button onclick="AddDocumentArchive()" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="DocumentArchiveTable">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(66)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5628)</th>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(5629)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5630)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5631)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5632)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5633)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="VendorExistAcountDocumentArchiveTbody" style="border-top: 1px solid #ddd;">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SaveVendorExistAcountDocumentArchive()" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var DocumentsArchiveValue = 0;
+    var Count = 0;
+    $('#Model_VendorExistAcount_DocumentsArchive').draggable({
+        handle: ".modal-header",
+    });
+    function AddDocuments(val) {
+        DocumentsArchiveValue = val;
+        $('#Model_VendorExistAcount_DocumentsArchive').modal('show')
+    }
+    function AddDocumentArchive() {
+        Count++;
+        var newarray = [];
+        newarray.push('<input id="VendorExistAcount_DocumentArchive_FileId" type="hidden" value="' + Count + '" />')
+        newarray.push('<input id="VendorExistAcount_DocumentArchive_Description_' + Count + '" type="text" style="width: 115px !important;text-align: center !important" />')
+        newarray.push('<div class="image-upload"><label for="file-input"><span class="glyphicon glyphicon-upload" onclick="OpenFileUpload(this)"></span></label><input type="file" name="uploadFile_7" style="display:none" id="DocumentArchive_File_' + Count + '" onchange="uploadFile(this,' + Count + ')" /></div>')
+        newarray.push('')
+        newarray.push('<a id="VendorExistAcount_DownloadFile_' + Count + '" onclick="DownloadFile()"><span class="glyphicon glyphicon-download"></span></a>')
+        newarray.push('<input id="VendorExistAcount_DocumentArchive_FileName_' + Count + '" type="text" style="text-align: center !important" disabled />')
+        newarray.push('<input id="VendorExistAcount_DocumentArchive_UploadDate_' + Count + '" type="text" style="width: 95px;text-align: center !important" disabled />')
+        newarray.push('<input id="VendorExistAcount_DocumentArchive_FileSize_' + Count + '" type="text" style="width: 70px;text-align: center !important" disabled />')
+        newarray.push('<input id="VendorExistAcount_DocumentArchive_FileType_' + Count + '" type="text" style="width: 55px;text-align: center !important" disabled />')
+        newarray.push('<button class="btn-de" onclick="RemoveRowUpload(this,' + Count + ')" type="button"><i class= "fa fa-trash-alt"></i ></button>')
+        $("#VendorExistAcountDocumentArchiveTbody").append(
+            GenRowDocumentArchive(newarray, 'VendorExistAcount_DocumentArchive_' + Count)
+        );
+    }
+    function GenRowDocumentArchive(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function OpenFileUpload(ID) {
+        if (VendorExistAcount_save_VendorNo.value == "") {
+            alert('@Html.Translate("يجب ادخال رقم المورد", "You Must Enter Vendor Number")');
+        }
+        else {
+            var $td = $(ID).closest("td");
+            $($td).find("input[type=file]").click();
+        }
+    }
+    function uploadFile(Elem,Count) {
+        var uploadDate = new Date($.now());
+        var shortDate = moment(uploadDate).format('DD/MM/YYYY');
+        var InputID = $(Elem).attr("id");
+        var file_size = $(Elem)[0].files[0].size;
+        var fileName = $("#DocumentArchive_File_" + Count).val().replace(/C:\\fakepath\\/i, '');
+        var filetype = fileName.split('.').pop();
+
+        var tr = $("#VendorExistAcountDocumentArchiveTbody #VendorExistAcount_DocumentArchive_" + Count + "");
+        tr.find('#VendorExistAcount_DocumentArchive_FileName_' + Count)[0].value = fileName;
+        tr.find('#VendorExistAcount_DocumentArchive_UploadDate_' + Count)[0].value = shortDate;
+        tr.find('#VendorExistAcount_DocumentArchive_FileSize_' + Count)[0].value = file_size;
+        tr.find('#VendorExistAcount_DocumentArchive_FileType_' + Count)[0].value = "." + filetype;
+
+        var $file = document.getElementById(InputID);
+        $formData = new FormData();
+        if ($file.files.length > 0) {
+            for (var i = 0; i < $file.files.length; i++) {
+                $formData.append('file-' + i, $file.files[i]);
+            }
+            $formData.append('Id', Count);
+            $formData.append('VendorNo', VendorExistAcount_save_VendorNo.value);
+        }
+
+        $.ajax({
+            url: '@Url.Action("InsertFile", "VendorsInfo")',
+            type: 'POST',
+            data: $formData,
+            contentType: false,
+            processData: false,
+            success: function (r) {
+                var tr = $("#VendorExistAcountDocumentArchiveTbody #VendorExistAcount_DocumentArchive_" + Count + "");
+                tr.find('#VendorExistAcount_DownloadFile_' + Count)[0].setAttribute('onclick', 'DownloadFile("' + fileName + '","' + r + '")')
+            },
+            error: function (error) {
+            }
+        });
+    }
+    function RemoveRowUpload(e, Count) {
+        if (confirm('@Resources.Resource.DeleteConfirm')) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+            $.ajax({
+                type: "POST",
+                url:'@Url.Action("RemoveFile", "VendorsInfo")',
+                data: { Id: Count, VendorNo: VendorExistAcount_save_VendorNo.value },
+                success: function (response) {
+
+                },
+            });
+
+            return true;
+        }
+        return false;
+    }
+    function DownloadFile(FileName, base64) {
+        var binaryString = window.atob(base64);
+        var binaryLen = binaryString.length;
+        var bytes = new Uint8Array(binaryLen);
+        for (var i = 0; i < binaryLen; i++) {
+            var ascii = binaryString.charCodeAt(i);
+            bytes[i] = ascii;
+        }
+        saveByteArray(FileName, bytes)
+    }
+    function saveByteArray(reportName, byte) {
+        var blob = new Blob([byte], { type: "application/pdf" });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        var fileName = reportName;
+        link.download = fileName;
+        link.click();
+    }
+    function SaveVendorExistAcountDocumentArchive() {
+        $('#Model_VendorExistAcount_DocumentsArchive').modal('hide')
+    }
+</script>
+@*--------------------------------END Model Documents -----------------------------*@
+
+
+@*--------------------------------Model Transporter -------------------------------------------*@
+<div class="modal fade" id="Model_VendorExistAcount_VendorInfo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="VendorExistAcount_VendorInfoDiv">
+                <table class="table" id="SelectVendorExistAcount_VendorInfoTable">
+                    <thead>
+                        <tr>
+                            <th>@Html.Recource(318)</th>
+                            <th>@Html.Recource(321)</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="VendorExistAcount_VendorInfoTbody">
+                        @foreach (Vendor v in Vend)
+                        {
+                            <tr onclick="Select_VendorExistAcount(this)" VendorNo="@v.VendorNo" VendorName="@Html.Translate(v.Name, v.Eng_Name)">
+                                <td id="VendorNo">@v.VendorNo</td>
+                                <td>@Html.Translate(v.Name, v.Eng_Name)</td>
+                                <td></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selection_VendorExistAcount_VendorDiv()" class="btn btn-primary">@Resources.Resource.Choose</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_VendorExistAcount_VendorInfo').draggable({
+        handle: ".modal-header",
+    });
+    var table = $('#SelectVendorExistAcount_VendorInfoTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    function AddTransporter() {
+        $('#SelectVendorExistAcount_VendorInfoTable tr').removeClass("selected");
+        VendorExistAcount_save_TransporterVendor.value = "";
+        $('#Model_VendorExistAcount_VendorInfo').modal('show')
+    }
+    function Select_VendorExistAcount(e) {
+        var table = $('#SelectVendorExistAcount_VendorInfoTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Selection_VendorExistAcount_VendorDiv() {
+        var table = $('#SelectVendorExistAcount_VendorInfoTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مورد واحدة على الاقل", "Select one Vendor at least")');
+            return;
+        }
+
+        VendorExistAcount_save_TransporterVendor.value = trs[0].getAttribute('VendorNo');
+        VendorExistAcount_save_TransporterVendorName.value = trs[0].getAttribute('VendorName');
+
+        $('#Model_VendorExistAcount_VendorInfo').modal('hide')
+    }
+</script>
+@*--------------------------------END Model Transporter -------------------------------------------*@
+
+@*--------------------------------Model ContactPersons -------------------------------------------*@
+<div class="modal fade" id="Model_VendorExistAcount_ContactPersons">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="VendorExistAcount_VendorInfoDiv">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2">
+                            <button onclick="AddContactPersonsModel()" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="width:535px !important ;overflow-y:auto">
+                        <table class="table table-hover" id="VendorExistAcount_ContactPersonsTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 90px !important; text-align:center; ">@Html.Recource(2429)</th>
+                                    <th style="width: 295% !important; text-align: center; ">@Html.Recource(5206)</th>
+                                    <th style="text-align:center;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="VendorExistAcount_ContactPersonsTbody" style="border-top: 1px solid #ddd;">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="save_VendorExistAcount_ContactPersons()" class="btn btn-primary">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_VendorExistAcount_ContactPersons').draggable({
+        handle: ".modal-header",
+    });
+    function AddContactPersons() {
+        $('#Model_VendorExistAcount_ContactPersons').modal('show')
+    }
+    var Count = 0;
+    function AddContactPersonsModel() {
+        ststaus = 1;
+        Count++;
+        var newarray = [];
+        newarray.push('<input id="VendorExistAcount_ContactPersons_SupervisorNo" onblur="CheckValueSupervisorNo(' + Count + ' )" type="number" style="width: 90px !important;" />')
+        newarray.push('<input id="VendorExistAcount_ContactPersons_SupervisorName" type="text" style="width: 95%  !important;" />')
+        newarray.push('<input id="VendorExistAcount_ContactPersons_Input" type="hidden" value="' + Count + '"  />')
+        newarray.push('<button class="btn-de" onclick="RemoveRow(this)" type="button"><i class= "fa fa-trash-alt"></i ></button>')
+        $("#VendorExistAcount_ContactPersonsTbody").append(
+            GenRowMas(newarray, 'ContactPersons_' + Count)
+        );
+    }
+    function GenRowMas(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function CheckValueSupervisorNo(val) {
+        var tr = $("#VendorExistAcount_ContactPersonsTbody #ContactPersons_" + val + "");
+        if (tr.find('#VendorExistAcount_ContactPersons_SupervisorNo')[0].value != '') {
+            if (tr.find('#VendorExistAcount_ContactPersons_SupervisorNo')[0].value < 0) {
+                MsgBox('@Html.Translate("لا يجوز ان يكون رقم المسؤول بالسالب", "The Supervisor number should not be negative")', 'red');
+                tr.find('#VendorExistAcount_ContactPersons_SupervisorNo')[0].focus();
+                return false;
+            }
+        }
+        if (tr.find('#VendorExistAcount_ContactPersons_SupervisorNo')[0].value == '') {
+            MsgBox('@Html.Translate("لا يجوز ان يكون رقم المسؤول فارغ", "The Supervisor number should not be Empty")', 'red');
+            tr.find('#VendorExistAcount_ContactPersons_SupervisorNo')[0].focus();
+            return false;
+        }
+        var ContactPersons = $('#VendorExistAcount_ContactPersonsTbody tr');
+        var trsContactPersons = ContactPersons;
+        for (var i = 0; i < trsContactPersons.length; i++) {
+            if ($(trsContactPersons[i]).closest('tr').find('#VendorExistAcount_ContactPersons_Input')[0].value != tr.find('#VendorExistAcount_ContactPersons_Input')[0].value) {
+                if ($(trsContactPersons[i]).closest('tr').find('#VendorExistAcount_ContactPersons_SupervisorNo')[0].value == tr.find('#VendorExistAcount_ContactPersons_SupervisorNo')[0].value) {
+                    alert('@Html.Translate("رقم المسؤول مكرر", "Duplicate Supervisor number")');
+                    tr.find('#VendorExistAcount_ContactPersons_SupervisorNo')[0].value = ""
+                    tr.find('#VendorExistAcount_ContactPersons_SupervisorNo')[0].focus();
+                    return false;
+                }
+            }
+        }
+    }
+
+    function save_VendorExistAcount_ContactPersons() {
+        $('#Model_VendorExistAcount_ContactPersons').modal('hide')
+    }
+</script>
+@*--------------------------------END Model ContactPersons -------------------------------------------*@
+
+@*--------------------------------Model BankInfo -------------------------------------------*@
+<div class="modal fade wide" id="Model_VendorExistAcount_BankInfo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="VendorExistAcount_BankInfoDiv">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2">
+                            <button onclick="AddBankInfoModel()" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="VendorExistAcount_BankInfoTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:60px;text-align:center;">@Html.Recource(1222)</th>
+                                    <th style="width:225px;text-align:center;">@Html.Recource(1015)</th>
+                                    <th style="width:190px;text-align:center;">@Html.Recource(1023)</th>
+                                    <th style="width:285px;text-align:center;">IBAN</th>
+                                    <th style="text-align:center;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="VendorExistAcount_BankInfoTbody" style="border-top: 1px solid #ddd;">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="save_VendorExistAcount_BankInfo()" class="btn btn-primary">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_VendorExistAcount_BankInfo').draggable({
+        handle: ".modal-header",
+    });
+    function AddBankInfo() {
+        $('#Model_VendorExistAcount_BankInfo').modal('show')
+    }
+    var Count = 0;
+    function AddBankInfoModel() {
+        ststaus = 1;
+        Count++;
+        var newarray = [];
+        newarray.push('<input id="VendorExistAcount_BankInfo_Number" onblur="CheckValueBankInfoNo(' + Count + ' )" type="text" style="width: 60px !important;" />')
+        newarray.push('<input id="DVendorExistAcount_BankInfo_BankName" type="text" style="width:225px !important;" />')
+        newarray.push('<input id="DVendorExistAcount_BankInfo_BankAccount" type="number" style="width:190px !important;" />')
+        newarray.push('<input id="DVendorExistAcount_BankInfo_BankIban" type="text" style="width:285px !important;" />')
+        newarray.push('<input id="VendorExistAcount_BankInfo_Input" type="hidden" value="' + Count + '" style="width: 95%  !important;" />')
+        newarray.push('<button class="btn-de" onclick="RemoveRow(this)" type="button"><i class= "fa fa-trash-alt"></i ></button>')
+        $("#VendorExistAcount_BankInfoTbody").append(
+            GenRowMas(newarray, 'BankInfo_' + Count)
+        );
+    }
+    function GenRowMas(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function CheckValueBankInfoNo(val) {
+        var tr = $("#VendorExistAcount_BankInfoTbody #BankInfo_" + val + "");
+        if (tr.find('#VendorExistAcount_BankInfo_Number')[0].value == '') {
+            MsgBox('@Html.Translate("لا يجوز ان يكون رقم فارغ", "The number should not be empty")', 'red');
+            tr.find('#VendorExistAcount_BankInfo_Number')[0].focus();
+            return false;
+        }
+
+
+        var BankInfo = $('#VendorExistAcount_BankInfoTbody tr');
+        var trsBankInfo = BankInfo;
+        for (var i = 0; i < trsBankInfo.length; i++) {
+            if ($(trsBankInfo[i]).closest('tr').find('#VendorExistAcount_BankInfo_Input')[0].value != tr.find('#VendorExistAcount_BankInfo_Input')[0].value) {
+                if ($(trsBankInfo[i]).closest('tr').find('#VendorExistAcount_BankInfo_Number')[0].value == tr.find('#VendorExistAcount_BankInfo_Number')[0].value) {
+                    alert('@Html.Translate("رقم البنك مكرر", "Duplicate Bank number")');
+                    tr.find('#VendorExistAcount_BankInfo_Number')[0].value = ""
+                    tr.find('#VendorExistAcount_BankInfo_Number')[0].focus();
+                    return false;
+                }
+            }
+        }
+    }
+    function save_VendorExistAcount_BankInfo() {
+        $('#Model_VendorExistAcount_BankInfo').modal('hide')
+    }
+</script>
+@*--------------------------------END Model BankInfo -------------------------------------------*@
+
+@*--------------------------------Model LinkDeptWithAccs -------------------------------------------*@
+<div class="modal fade" id="Model_VendorExistAcount_LinkDeptWithAccs">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="VendorExistAcount_LinkDeptWithAccsDiv">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2">
+                            <button onclick="SelectCheckAllDept()" type="button" class="btn btn-primary">@Html.Recource(498)</button>
+                        </div>
+                        <div class="col-md-2">
+                            <button onclick="UnSelectCheckAllDept()" type="button" class="btn btn-primary">@Html.Recource(499)</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="VendorExistAcount_LinkDeptWithAccsTable">
+                            <thead>
+                                <tr>
+                                    <th>@Html.Recource(110)</th>
+                                    <th>@Html.Recource(109)</th>
+                                    <th style="text-align:center;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="VendorExistAcount_LinkDeptWithAccsTbody" style="border-top: 1px solid #ddd;">
+                                @foreach (DataRow row in Dt.Rows)
+                                {
+                                    <tr onclick="$(this).toggleClass('selected');">
+                                        <td id="DVendorExistAcount_LinkDeptWithAccs_DeptNo">@row["DEP_NUM"].ToString()</td>
+                                        <td id="DVendorExistAcount_LinkDeptWithAccs_DeptName">@row["DEP_NAME"].ToString()</td>
+                                        <td></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="save_VendorExistAcount_LinkDeptWithAccs()" class="btn btn-primary">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_VendorExistAcount_LinkDeptWithAccs').draggable({
+        handle: ".modal-header",
+    });
+    var oTable = $('#VendorExistAcount_LinkDeptWithAccsTable').dataTable({
+        stateSave: true,
+    })
+    function SelectCheckAllDept() {
+        var allPages = oTable.fnGetNodes();
+        $(allPages).addClass('selected');
+    }
+    function UnSelectCheckAllDept() {
+        var allPages = oTable.fnGetNodes();
+        $(allPages).removeClass('selected');
+    }
+    function CheckValueGridTotlal(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt <= 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+        else {
+            if (Amt == '' || Amt == null) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function save_VendorExistAcount_LinkDeptWithAccs() {
+
+        $('#Model_VendorExistAcount_LinkDeptWithAccs').modal('hide')
+
+        if (CheckValueGridTotlal(0, VendorExistAcount_save_VendorNo.value)) {
+            alert('@Html.Translate("يجب إدخال رقم المورد", "You Must Enter Vendor Number")');
+            return;
+        }
+        if (CheckValueGridTotlal(0, VendorExistAcount_save_VendorName.value)) {
+            alert('@Html.Translate("يجب إدخال اسم المورد", "You Must Enter Vendor Name")');
+            return;
+        }
+
+        var allPages = oTable.fnGetNodes();
+        var trs = $(allPages).filter('.selected');
+
+        var GLCR = new Array();
+
+        for (var i = 0; i < trs.length; i++) {
+
+            GLCR.push({
+                CompNo: '@company.comp_num',
+                DeptNo: $(trs[i]).closest('tr').find('#DVendorExistAcount_LinkDeptWithAccs_DeptNo')[0].innerHTML,
+                AccNo: VendorExistAcount_save_VendorNo.value
+            });
+        }
+
+        var IsHalt;
+        if (VendorExistAcount_save_Active.checked == false) {
+            IsHalt = true;
+        }
+        else if (VendorExistAcount_save_Active.checked == true) {
+            IsHalt = false;
+        }
+
+        var Vendors = {
+            comp: '@company.comp_num',
+            VendorNo: VendorExistAcount_save_VendorNo.value,
+            Name: VendorExistAcount_save_VendorName.value,
+            Eng_Name: VendorExistAcount_save_VendorEngName.value,
+
+            Title: VendorExistAcount_save_CboSurTitle.value,
+            IsHalt: IsHalt,
+            Notes: VendorExistAcount_save_Notes.value,
+            Pmethod: VendorExistAcount_save_CboPaymentType.value,
+            Pay_Method: 1,
+            Cr_Lim: 0,
+            Curr: VendorExistAcount_save_CboCurrCode.value,
+            DelayDays: VendorExistAcount_save_DueDays.value,
+            VenLevel: 1,
+            Address: VendorExistAcount_save_Address.value,
+            Country: VendorExistAcount_save_CboCountry.value,
+            Area: VendorExistAcount_save_CboArea.value,
+            SArea: VendorExistAcount_save_CboSubArea.value,
+            Street_No: VendorExistAcount_save_CboStreet.value,
+            Location: VendorExistAcount_save_Location.value,
+            Resp_Person: VendorExistAcount_save_ContactPerson.value,
+            Tel1: VendorExistAcount_save_Tel1.value,
+            Tel2: VendorExistAcount_save_Tel2.value,
+            Mobile_No: VendorExistAcount_save_Mobile.value,
+            POBox: VendorExistAcount_save_POBox.value,
+            Postal_Code: VendorExistAcount_save_PostalCode.value,
+            Fax: VendorExistAcount_save_Fax.value,
+            Telex: VendorExistAcount_save_Telex.value,
+            EMail: VendorExistAcount_save_Email.value,
+            Disc: VendorExistAcount_save_Discount.value,
+            Penf: VendorExistAcount_save_Beneficiary.value,
+            Evaluated: VendorExistAcount_save_Evaluated.checked,
+            GroupNo: VendorExistAcount_save_CboGroup.value,
+            GenCondition: VendorExistAcount_save_VendorInfo.value,
+            TransporterNo: VendorExistAcount_save_TransporterVendor.value,
+            Taxable: VendorExistAcount_save_SubjectToTax.checked
+        }
+
+        var Ven_Contact = new Array();
+        var Ven_bankInfo = new Array();
+
+        var ContactPersons = $('#VendorExistAcount_ContactPersonsTbody tr');
+        var trsContactPersons = ContactPersons;
+        for (var i = 0; i < trsContactPersons.length; i++) {
+            if (CheckValueGridTotlal(1, $(trsContactPersons[i]).closest('tr').find('#VendorExistAcount_ContactPersons_SupervisorNo')[0].value)) {
+                alert('@Html.Translate("يجب إدخال رقم المسؤول", "You Must Enter Supervisor Number")');
+                return;
+            }
+
+            Ven_Contact.push({
+                CompNo: '@company.comp_num',
+                VendorNo: VendorExistAcount_save_VendorNo.value,
+                ContactNo: $(trsContactPersons[i]).closest('tr').find('#VendorExistAcount_ContactPersons_SupervisorNo')[0].value,
+                ContactName: $(trsContactPersons[i]).closest('tr').find('#VendorExistAcount_ContactPersons_SupervisorName')[0].value
+            })
+        }
+
+        var BankInfo = $('#VendorExistAcount_BankInfoTbody tr');
+        var trsBankInfo = BankInfo;
+        for (var i = 0; i < trsBankInfo.length; i++) {
+            if (CheckValueGridTotlal(1, $(trsBankInfo[i]).closest('tr').find('#VendorExistAcount_BankInfo_Number')[0].value)) {
+                alert('@Html.Translate("يجب إدخال رقم البنك", "You Must Enter Bank Number")');
+                return;
+            }
+
+            Ven_bankInfo.push({
+                CompNo: '@company.comp_num',
+                VendorNo: VendorExistAcount_save_VendorNo.value,
+                ID: $(trsBankInfo[i]).closest('tr').find('#VendorExistAcount_BankInfo_Number')[0].value,
+                BankName: $(trsBankInfo[i]).closest('tr').find('#DVendorExistAcount_BankInfo_BankName')[0].value,
+                AccNo: $(trsBankInfo[i]).closest('tr').find('#DVendorExistAcount_BankInfo_BankAccount')[0].value,
+                Iban: $(trsBankInfo[i]).closest('tr').find('#DVendorExistAcount_BankInfo_BankIban')[0].value
+            })
+        }
+
+
+        var DocumentArchivetable = $('#VendorExistAcountDocumentArchiveTbody tr');
+        var trsDocumentArchive = DocumentArchivetable;
+        var DocumentArchive = new Array();
+
+        for (var i = 0; i < trsDocumentArchive.length; i++) {
+            var InputSerial = $(trsDocumentArchive[i]).closest('tr').find('#VendorExistAcount_DocumentArchive_FileId')[0].value;
+            DocumentArchive.push({
+                VendorNo: VendorExistAcount_save_VendorNo.value,
+                FileId: InputSerial,
+                Description: $(trsDocumentArchive[i]).closest('tr').find('#VendorExistAcount_DocumentArchive_Description_' + InputSerial)[0].value,
+                DateUploded: $(trsDocumentArchive[i]).closest('tr').find('#VendorExistAcount_DocumentArchive_UploadDate_' + InputSerial)[0].value,
+                ContentType: $(trsDocumentArchive[i]).closest('tr').find('#VendorExistAcount_DocumentArchive_FileType_' + InputSerial)[0].value
+            })
+        }
+
+        wait();
+        burn({ Vendors: Vendors, GLCRs: GLCR, VenContact: Ven_Contact, VenbankInfo: Ven_bankInfo, FileArchive: DocumentArchive }, '../../../VendorsInfo/CreateVendorsInfo', '', ReloadVendorsInfo, true);
+    }
+    function ReloadVendorsInfo(r) {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        CloseWindow('/VendorsInfo/AddExistAcount');
+        $('#Ord_VendorsInfoListDiv').load('../../../VendorsInfo/VendorsInfoList');
+    }
+</script>
+@*--------------------------------END Model LinkDeptWithAccs -------------------------------------------*@
+
+<div class="modal fade" id="Model_VendorExistAcountInfo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="VendorExistAcountInfoDiv">
+
+            </div>
+
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_VendorExistAcountInfo').draggable({
+        handle: ".modal-header",
+    });
+
+    $('#VendorExistAcount_save_CboCountry').select2();
+    $('#VendorExistAcount_save_CboArea').select2();
+    $('#VendorExistAcount_save_CboSubArea').select2();
+    $('#VendorExistAcount_save_CboStreet').select2();
+    $('#VendorExistAcount_save_CboPaymentType').select2();
+    $('#VendorExistAcount_save_CboCurrCode').select2();
+    $('#VendorExistAcount_save_CboGroup').select2();
+    $('#VendorExistAcount_save_CboSurTitle').select2();
+
+    function SelectVendors() {
+        VendorExistAcountInfoDiv.innerHTML = "";
+        $('#VendorExistAcountInfoDiv').load('../../../VendorsInfo/VendorExistAcount');
+        $('#Model_VendorExistAcountInfo').modal('show');
+    }
+    function AddEnterVendorExist(AccountNo, AccountName, AccounteName) {
+        AccountNo = AccountNo;
+        VendorExistAcount_save_VendorNo.value = AccountNo;
+        VendorExistAcount_save_VendorName.value = AccountName;
+        VendorExistAcount_save_VendorEngName.value = AccounteName;
+        $('#Model_VendorExistAcountInfo').modal('hide');
+    }
+    function changeExistAcountVendorName() {
+        VendorExistAcount_save_VendorEngName.value = VendorExistAcount_save_VendorName.value
+    }
+    ChangeValueCountry()
+    function checkMaxValue() {
+        if (VendorExistAcount_save_VendorNo.value.length > 10) {
+            alert('@Html.Translate("رقم المورد اكبر من الحد المطلوب", "The Vendor number is greater than the required limit")');
+            VendorExistAcount_save_VendorNo.value = "";
+            return false;
+        }
+    }
+    function ChangeValueCountry() {
+        burn({ CountryId: VendorExistAcount_save_CboCountry.value, srl: 0 }, '../../../VendorsInfo/LoadArea', '', GetLoadArea, true);
+    }
+    function GetLoadArea(r) {
+        $('#VendorExistAcount_save_CboArea').empty();
+
+        for (var i = 0; i < r.Area.length; i++) {
+            var newOption = new Option(r.Area[i].DescAr, r.Area[i].Id, false, false);
+            $('#VendorExistAcount_save_CboArea').append(newOption).trigger('change');
+        }
+        ChangeValueArea()
+    }
+    function ChangeValueArea() {
+        burn({ CountryId: VendorExistAcount_save_CboCountry.value, AreaId: VendorExistAcount_save_CboArea.value, srl: 0 }, '../../../VendorsInfo/LoadSubArea', '', GetLoadSubArea, true);
+    }
+    function GetLoadSubArea(r) {
+        $('#VendorExistAcount_save_CboSubArea').empty();
+
+        for (var i = 0; i < r.SAreas.length; i++) {
+            var newOption = new Option(r.SAreas[i].DescAr, r.SAreas[i].Id, false, false);
+            $('#VendorExistAcount_save_CboSubArea').append(newOption).trigger('change');
+        }
+        ChangeValueSubArea()
+    }
+    function ChangeValueSubArea() {
+        burn({ CountryId: VendorExistAcount_save_CboCountry.value, AreaId: VendorExistAcount_save_CboArea.value, SubAreaId: VendorExistAcount_save_CboSubArea.value, srl: 0 }, '../../../VendorsInfo/LoadStreet', '', GetLoadStreet, true);
+    }
+    function GetLoadStreet(r) {
+        $('#VendorExistAcount_save_CboStreet').empty();
+
+        for (var i = 0; i < r.Street.length; i++) {
+            var newOption = new Option(r.Street[i].DescAr, r.Street[i].Id, false, false);
+            $('#VendorExistAcount_save_CboStreet').append(newOption).trigger('change');
+        }
+        ChangeValueStreet()
+    }
+    
+    function ExcuteSave_VendorExistAcount() {
+        if (CheckValueGridTotlal(0, VendorExistAcount_save_VendorNo.value)) {
+            alert('@Html.Translate("يجب إدخال رقم المورد", "You Must Enter Vendor Number")');
+            return;
+        }
+        if (CheckValueGridTotlal(0, VendorExistAcount_save_VendorNo.value)) {
+            alert('@Html.Translate("يجب إدخال اسم المورد", "You Must Enter Vendor Name")');
+            return;
+        }
+        var allPages = oTable.fnGetNodes();
+        $(allPages).addClass('selected');
+        $('#Model_VendorExistAcount_LinkDeptWithAccs').modal('show')
+    }
+</script>

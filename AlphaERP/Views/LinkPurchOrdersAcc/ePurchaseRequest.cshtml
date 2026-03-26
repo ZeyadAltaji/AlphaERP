@@ -1,0 +1,60 @@
+﻿@using AlphaERP.Models;
+@{
+    Company company = (Company)Session["company"];
+    int reqyear = ViewBag.ReqYear;
+    string ReqNo = ViewBag.ReqNo;
+    Ord_RequestHF ordReqHf = new MDB().Ord_RequestHF.Where(x => x.CompNo == company.comp_num && x.ReqYear == reqyear && x.ReqNo == ReqNo).FirstOrDefault();
+    string DeptDesc = "";
+    string AccDesc = "";
+    string DeptNo = "";
+    string AccNo = "";
+
+    if (ordReqHf.DeptNo != 0)
+    {
+        DeptNo = ordReqHf.DeptNo.ToString();
+        List<GLDEPMF> gl = new MDB().GLDEPMFs.Where(x => x.DEP_COMP == company.comp_num).ToList();
+        GLDEPMF g = gl.Where(x => x.DEP_NUM == ordReqHf.DeptNo).FirstOrDefault();
+        DeptDesc = Html.Translate(g.DEP_NAME, g.DEP_ENAME).ToString();
+    }
+    if (ordReqHf.AccNo != 0)
+    {
+        AccNo = ordReqHf.AccNo.ToString();
+        Acc Ac = new MDB().Database.SqlQuery<Acc>(string.Format("SELECT GLCRBMF.crb_dep as deptid, glactmf.acc_num as AccId, glactmf.acc_desc as AccDescAr, glactmf.acc_edesc as AccDescEn " +
+                      "FROM glactmf INNER JOIN GLCRBMF ON glactmf.acc_comp = GLCRBMF.CRB_COMP AND glactmf.acc_num = GLCRBMF.crb_acc " +
+                       "WHERE(GLCRBMF.crb_dep = '{0}') AND (glactmf.acc_comp = '{1}') AND (glactmf.acc_num = '{2}') AND (glactmf.acc_report = 2)", ordReqHf.DeptNo, company.comp_num, ordReqHf.AccNo)).FirstOrDefault();
+        AccDesc = Html.Translate(Ac.AccDescAr, Ac.AccDescEn).ToString();
+    }
+}
+
+<div class="modal-body row">
+    <div class="form-group">
+        <div class="col-md-2">
+            <label class="unselectable" for="MRP_LinkPurchOrdersAcc_save_DeptNo">@Html.Recource(220) </label>
+        </div>
+        <div class="col-md-2">
+            <input required="true" style="width: 125%;" id="MRP_LinkPurchOrdersAcc_save_txtDeptNo" value="@DeptNo" disabled />
+        </div>
+        <div class="col-md-6">
+            <input style="width: 100%;" id="MRP_LinkPurchOrdersAcc_save_txtDeptDesc" value="@DeptDesc" disabled />
+        </div>
+        <div class="col-md-2">
+            <button onclick="Serach_Dept()" type="button" class="btn btn-primary">@Html.Recource(975)</button>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-2">
+            <label class="unselectable" for="MRP_LinkPurchOrdersAcc_save_AccNo">@Html.Recource(219) </label>
+        </div>
+        <div class="col-md-2">
+            <input required="true" style="width: 125%;" id="MRP_LinkPurchOrdersAcc_save_txtAccNo" value="@AccNo" disabled />
+        </div>
+        <div class="col-md-6">
+            <input style="width: 100%;" id="MRP_LinkPurchOrdersAcc_save_txtAccDesc" value="@AccDesc" disabled />
+        </div>
+        <div class="col-md-2">
+            <button onclick="Serach_Acc()" type="button" class="btn btn-primary">@Html.Recource(975)</button>
+        </div>
+    </div>
+</div>
+
+

@@ -1,0 +1,38 @@
+﻿@model IEnumerable<AlphaERP.Controllers.ProdOrdersController.Formula>
+
+<div class="form-group">
+    <div class="col-md-12">
+        <table class="table table-hover" id="SelectProdOrdFormulaItemsTable">
+            <thead>
+                <tr>
+                    <th style="text-align:center;">@Html.Recource(282)</th>
+                    <th style="text-align:center;">@Html.Recource(283)</th>
+                    <th style="text-align:center;">@Html.Recource(44)</th>
+                    <th style="text-align:center;">@Html.Recource(2215)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr onclick="Select_FormulaItems(this)" ondblclick="dbclickSelect_FormulaItems(this)" formula_code="@item.Formula_code" formula_desc="@item.Formula_Desc" item_no="@item.Item_no" ItemDesc="@item.Item_Desc">
+                        <td style="text-align:center;">@item.Formula_code</td>
+                        <td style="text-align:center;" title="@item.Formula_Desc">@item.Formula_Desc</td>
+                        <td style="text-align:center;">@item.Item_no</td>
+                        <td style="text-align:center;">@item.Item_Desc</td>
+                        <td></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<script>
+    $('#SelectProdOrdFormulaItemsTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+</script>

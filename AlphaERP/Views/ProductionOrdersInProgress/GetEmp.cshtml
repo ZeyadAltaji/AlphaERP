@@ -1,0 +1,113 @@
+﻿
+@model List<AlphaERP.Models.EmpStage>
+
+<table class="table table-hover" id="Emp_toStageTable">
+    <thead>
+        <tr>
+            <th>@Html.Translate("رقم الموظف", "Employee No")</th>
+            <th>@Html.Translate("اسم الموظف", "Employee Name")</th>
+            <th>@Html.Translate("مكان العمل", "Work Place")</th>
+            <th>@Html.Translate("المسمى الوظيفي", "Job Desc")</th>
+
+        </tr>
+    </thead>
+    <tbody id="Emp_toStageTableBody">
+        @foreach (var item in Model)
+        {
+            <tr class="table-row" Emp_No="@item.Emp_num" EmpEngName="@item.EmpEngName">
+                <td>
+                    @Html.DisplayFor(modelItem => item.Emp_num)
+                </td>
+                <td>
+                    @Html.Translate(item.EmpName, item.EmpEngName)
+                </td>
+                <td>
+
+                    @Html.Translate(item.WorkPlaceAr, item.WorkPlaceEn)
+
+
+                </td>
+                <td>
+                    @Html.Translate(item.JobDescrAr, item.JobDescrEn)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    var selectedEmployeesByDate = {};
+
+    var Emp_toStageTable = $('#Emp_toStageTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+
+    function updateBaseTable() {
+        var selectedDate = document.getElementById("Date_Time").value;
+
+        $.each(selectedEmployeesByDate[selectedDate], function (index, employee) {
+            var existingRow = $("#tableEmplBody").find('td:contains("' + employee.EmpNum + '")').closest('tr');
+
+            if (existingRow.length) {
+                existingRow.find('td:eq(2) input').val(employee.TotalHours);
+            } else {
+                var row = '<tr>';
+                row += '<td></td>';
+                row += '<td id="EmpNo">' + employee.EmpNum + '</td>';
+                row += '<td>' + employee.EmpName + '</td>';
+                row += '<td>' + '<input id="ActualWorkHours" type="text" value="" oninput="calculateTotal(this)"/>' + '</td>';
+
+                row += '<td></td>';
+                row += '</tr>';
+                $("#tableEmplBody").append(row);
+            }
+        });
+ 
+    }
+
+    function selectEmployee(row) {
+        var empNum = $(row).attr("Emp_No");
+        var empName = $(row).attr("EmpEngName");
+        var selectedDate = document.getElementById("Date_Time").value;
+
+        if (!selectedEmployeesByDate[selectedDate]) {
+            selectedEmployeesByDate[selectedDate] = [];
+        }
+
+        var existingEmployee = selectedEmployeesByDate[selectedDate].find(function (employee) {
+            return employee.EmpNum === empNum;
+        });
+
+        if (!existingEmployee) {
+            selectedEmployeesByDate[selectedDate].push({
+                EmpNum: empNum,
+                EmpName: empName,
+                TotalHours: ""
+            });
+            $(row).addClass("selected");
+        } else {
+            selectedEmployeesByDate[selectedDate] = selectedEmployeesByDate[selectedDate].filter(function (employee) {
+                return employee.EmpNum !== empNum;
+            });
+            $(row).removeClass("selected");
+        }
+    }
+
+    $(".table-row").on("click", function () {
+        selectEmployee(this);
+    });
+
+    $("#selectbtnaddEmp").on("click", function () {
+        $('#Model_add_emp_toStage').modal('hide');
+
+        updateBaseTable();
+
+        // Clear selected employees for the current date
+        var selectedDate = document.getElementById("Date_Time").value;
+        selectedEmployeesByDate[selectedDate] = [];
+    });
+</script>

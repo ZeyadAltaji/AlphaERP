@@ -1,0 +1,32 @@
+﻿@model IEnumerable<AlphaERP.Models.Acc>
+
+    <div class="form-group">
+        <div class="col-md-12">
+            <table class="table table-hover" id="ConItemsToPurchOrd_VendorTable">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">@Html.Recource(255)</th>
+                        <th style="width: 55%;">@Html.Recource(256)</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="ConItemsToPurchOrd_VendorTbody">
+                    @foreach (var item in Model)
+                    {
+                        <tr onclick="Select_finVendor(this)" deptid="@item.deptid" VendorNo="@item.AccId" VendorDesc="@Html.Translate(item.AccDescAr,item.AccDescEn)">
+                            <td style="width: 20%;" id="ConItemsToPurchOrd_VendorNo">@item.AccId</td>
+                            <td style="width: 55%;" id="ConItemsToPurchOrd_VendorDesc">@Html.Translate(item.AccDescAr, item.AccDescEn).ToString()</td>
+                            <td></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+<script>
+    $('#ConItemsToPurchOrd_VendorTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+</script>

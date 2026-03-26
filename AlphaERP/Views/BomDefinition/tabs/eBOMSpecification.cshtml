@@ -1,0 +1,35 @@
+﻿@model IEnumerable<AlphaERP.Models.ProdCost_FormulaProperties>
+
+<div class="form-group">
+    <div class="col-md-12">
+        <label class="unselectable">@Html.Recource(2564) :</label>
+        <button onclick="Edit_Property()" type="button" class="btn btn-default">@Html.Recource(2564)</button>
+    </div>
+    <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+        <table class="table table-hover" id="ePropertyTable">
+            <thead>
+                <tr>
+                    <th style="width: 40%;">@Html.Recource(7557)</th>
+                    <th style="width: 25%;text-align: center;">@Html.Recource(49)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="ePropertyTBody">
+                @foreach (var item in Model)
+                {
+                <tr>
+                    <td>
+                        <input id="BOMProperty_PropertyName" value="@item.PropertName" type="text" style="width:102% !important" />
+                    </td>
+                    <td>
+                        <input id="BOMProperty_Qty" type="number" value="@item.PropertValue" style="width:95% !important;text-align: center !important;" />
+                    </td>
+                    <td>
+                        <button class="btn-de" onclick="RemoveRow(this)"><i class="fa fa-trash-alt"></i></button>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

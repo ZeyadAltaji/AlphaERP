@@ -1,0 +1,420 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+}
+
+<div class="box box-primary">
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="max-height: 68vh !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1">
+                        <label class="unselectable" for="Invt_InqItemBalance_StoreNo">@Html.Recource(1) </label>
+                    </div>
+                    <div class="col-md-5" style="margin-bottom: 5px;">
+                        <input required="true" style="width: 125px !important;" type="text" id="Invt_InqItemBalance_StoreNo" value="" onblur="GetStoreDesc(this.value)" />
+                        <input required="false" style="width: 225px !important;" type="text" id="Invt_InqItemBalance_StoreDesc" value="" disabled />
+                        <button onclick="SearchInqItemBalance_StoreNo()" type="button" class="btn btn-primary">
+                            <i class="fa fa-search" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="Invt_InqItemBalance_ItemNo">@Html.Recource(42) </label>
+                    </div>
+                    <div class="col-md-5" style="margin-bottom: 5px;">
+                        <input required="true" style="width: 125px !important;" type="text" id="Invt_InqItemBalance_ItemNo" value="" onblur="GetItemDesc(this.value)" />
+                        <input required="false" style="width: 225px !important;" type="text" id="Invt_InqItemBalance_ItemDesc" value="" disabled />
+                        <button onclick="SearchInqItemBalance_ItemNo()" type="button" class="btn btn-primary">
+                            <i class="fa fa-search" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="Invt_InqItemBalance_ItemInfoDiv">
+
+            </div>
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item active">
+                    <a class="nav-link active" data-toggle="tab" href="#Invt_InqItemBalance_ItemQtyInSelectedStore" role="tab">
+                        @Html.Recource(95)
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#Invt_InqItemBalance_ItemQtyInAllStores" role="tab">
+                        @Html.Recource(94)
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#Invt_InqItemBalance_AlternativeItems" role="tab">
+                        @Html.Recource(7308)
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content" style="height:390px;padding:10px">
+                <div class="tab-pane active" id="Invt_InqItemBalance_ItemQtyInSelectedStore" role="tabpanel">
+
+                </div>
+                <div class="tab-pane" id="Invt_InqItemBalance_ItemQtyInAllStores" role="tabpanel">
+
+                </div>
+                <div class="tab-pane" id="Invt_InqItemBalance_AlternativeItems" role="tabpanel">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*----------------------------Store---------------------------*@ 
+<div class="modal fade" id="Model_InqItemBalance_Store">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4286)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectInqItemBalance_StoreTable">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:center;">@Html.Recource(41)</th>
+                                    <th style="text-align:center;">@Html.Recource(31)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    string query = string.Format("exec SP_Search {0},'WHERE (InvStoresMF.CompNo = {0})',1", company.comp_num);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                string StoreName = Html.Translate(rdr["StoreName"].ToString(), rdr["StoreNameEng"].ToString()).ToString();
+
+                                                <tr onclick="Select_finInqItemBalancStore(this)" ondblclick="Select_InqItemBalancStore(this)" StoreNo="@rdr["StoreNo"]" StoreName="@StoreName">
+                                                    <td style="text-align:center;">@rdr["StoreNo"]</td>
+                                                    <td style="text-align:center;" title="@StoreName">@StoreName</td>
+                                                    <td></td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingInqItemBalance_Store()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var StoreTable = $('#SelectInqItemBalance_StoreTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    var StoreNo = 0;
+    $('#Model_InqItemBalance_Store').draggable({
+        handle: ".modal-header",
+    });
+    function SearchInqItemBalance_StoreNo() {
+        $('#SelectInqItemBalance_StoreTable tr').removeClass("selected");
+        $('#Model_InqItemBalance_Store').modal('show')
+    }
+    function Select_finInqItemBalancStore(e) {
+        var table = $('#SelectInqItemBalance_StoreTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function SelectingInqItemBalance_Store() {
+        var table = $('#SelectInqItemBalance_StoreTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مستودع واحدة على الاقل", "Select one Store at least")');
+            return;
+        }
+
+        Invt_InqItemBalance_StoreNo.value = trs[0].getAttribute('StoreNo');
+        Invt_InqItemBalance_StoreDesc.value = trs[0].getAttribute('StoreName');
+
+        StoreNo = trs[0].getAttribute('StoreNo');
+
+        $('#Model_InqItemBalance_Store').modal('hide')
+    }
+    function Select_InqItemBalancStore(e) {
+        var trs = StoreTable.$('tr[name=selected]');
+        Invt_InqItemBalance_StoreNo.value = trs[0].getAttribute('StoreNo');
+        Invt_InqItemBalance_StoreDesc.value = trs[0].getAttribute('StoreName');
+
+        StoreNo = trs[0].getAttribute('StoreNo');
+
+        $('#Model_InqItemBalance_Store').modal('hide')
+    }
+
+    function GetStoreDesc(e) {
+        if (StoreNo != e) {
+            StoreNo = e;
+            burn({ StoreNo: e }, '../../../InqItemBalance/GetStoreName', '', LoadStoreName, true);
+        }
+    }
+    function LoadStoreName(r) {
+        if (r.StoreName == "") {
+            Invt_InqItemBalance_StoreNo.value = null;
+            Invt_InqItemBalance_StoreDesc.value = null;
+        }
+        else {
+            Invt_InqItemBalance_StoreDesc.value = r.StoreName;
+        }
+    }
+</script>
+@*----------------------------End Store---------------------------*@ 
+
+
+@*----------------------------Item---------------------------*@
+<div class="modal fade" id="Model_InqItemBalance_InvItemsMF">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4756)</label>
+            </div>
+            <div class="box-body box-profile">
+                <div class="modal-body row">
+                    <div class="form-group">
+                        <div class="col-md-12" id="InqItemBalance_ItemsMF">
+
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="SelectingInqItemBalance_InvItemsMF()" class="btn btn-primary">@Html.Recource(4599)</button>
+                    <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_InqItemBalance_InvItemsMF').draggable({
+        handle: ".modal-header",
+    });
+    var ItemNo = 0;
+    function SearchInqItemBalance_ItemNo() {
+        if (Invt_InqItemBalance_StoreNo.value == "") {
+            alert('@Html.Translate("يجب إدخال المستودع", "You Must Enter Store")');
+            Invt_InqItemBalance_StoreNo.focus();
+            return;
+        }
+
+        $('#InqItemBalance_ItemsMF').empty();
+        $('#SelectInqItemBalanceItemsTable tr').removeClass("selected");
+        $('#InqItemBalance_ItemsMF').load('../../../InqItemBalance/InqItemBalanceItemsList?StoreNo=' + Invt_InqItemBalance_StoreNo.value);
+        $('#Model_InqItemBalance_InvItemsMF').modal('show');
+    }
+
+    function SelectInqItemBalance_InvItems(e) {
+        var trs = $('#SelectInqItemBalanceItemsTable tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function SelectingInqItemBalance_InvItemsMF() {
+        var trs = $('#SelectInqItemBalanceItemsTable tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة", "Select one Item")');
+            return;
+        }
+        Invt_InqItemBalance_ItemNo.value = trs[0].getAttribute('ItemNo');
+        Invt_InqItemBalance_ItemDesc.value = trs[0].getAttribute('ItemDesc');
+
+        ItemNo = trs[0].getAttribute('ItemNo');
+        wait();
+
+        $('#Invt_InqItemBalance_ItemInfoDiv').empty();
+        $('#Invt_InqItemBalance_ItemQtyInSelectedStore').empty();
+        $('#Invt_InqItemBalance_ItemQtyInAllStores').empty();
+        $('#Invt_InqItemBalance_AlternativeItems').empty();
+
+        $.get("../../../../InqItemBalance/InfoItem?StoreNo=" + Invt_InqItemBalance_StoreNo.value + '&ItemNo=' + Invt_InqItemBalance_ItemNo.value, function (data) {
+            $('#Invt_InqItemBalance_ItemInfoDiv').html(data);
+
+            var UnitSerial = 0;
+            if (Invt_InqItemBalance_FirstUnit.checked == true) {
+                UnitSerial = 1;
+            }
+            else if (Invt_InqItemBalance_SecondUnit.checked == true) {
+                UnitSerial = 2;
+            }
+            else if (Invt_InqItemBalance_ThirdUnit.checked == true) {
+                UnitSerial = 3;
+            }
+            else if (Invt_InqItemBalance_FourthUnit.checked == true) {
+                UnitSerial = 4;
+            }
+
+            $('#Invt_InqItemBalance_ItemQtyInSelectedStore').load('../../../InqItemBalance/AllStoresQty?StoreNo=' + Invt_InqItemBalance_StoreNo.value + '&ItemNo=' + Invt_InqItemBalance_ItemNo.value + '&UnitSerial=' + UnitSerial + '&PrintZero=' + Invt_InqItemBalance_PrintZeroQty.checked);
+            $('#Invt_InqItemBalance_ItemQtyInAllStores').load('../../../InqItemBalance/StoresQty?ItemNo=' + Invt_InqItemBalance_ItemNo.value + '&UnitSerial=' + UnitSerial + '&PrintZero=' + Invt_InqItemBalance_PrintZeroQty.checked);
+            $('#Invt_InqItemBalance_AlternativeItems').load('../../../InqItemBalance/AlternativeItems?ItemNo=' + Invt_InqItemBalance_ItemNo.value + '&UnitSerial=' + UnitSerial + '&PrintZero=' + Invt_InqItemBalance_PrintZeroQty.checked);
+
+            $('#Model_InqItemBalance_InvItemsMF').modal('hide')
+
+            done();
+        });
+    }
+    function GetInqItemBalanceItemNo(e) {
+        var trs = $('#SelectInqItemBalanceItemsTable tr[name=selected]');
+        Invt_InqItemBalance_ItemNo.value = trs[0].getAttribute('ItemNo');
+        Invt_InqItemBalance_ItemDesc.value = trs[0].getAttribute('ItemDesc');
+
+        ItemNo = trs[0].getAttribute('ItemNo');
+
+        wait();
+
+        $('#Invt_InqItemBalance_ItemInfoDiv').empty();
+        $('#Invt_InqItemBalance_ItemQtyInSelectedStore').empty();
+        $('#Invt_InqItemBalance_ItemQtyInAllStores').empty();
+        $('#Invt_InqItemBalance_AlternativeItems').empty();
+
+        $.get("../../../../InqItemBalance/InfoItem?StoreNo=" + Invt_InqItemBalance_StoreNo.value + '&ItemNo=' + Invt_InqItemBalance_ItemNo.value, function (data) {
+            $('#Invt_InqItemBalance_ItemInfoDiv').html(data);
+
+            var UnitSerial = 0;
+            if (Invt_InqItemBalance_FirstUnit.checked == true) {
+                UnitSerial = 1;
+            }
+            else if (Invt_InqItemBalance_SecondUnit.checked == true) {
+                UnitSerial = 2;
+            }
+            else if (Invt_InqItemBalance_ThirdUnit.checked == true) {
+                UnitSerial = 3;
+            }
+            else if (Invt_InqItemBalance_FourthUnit.checked == true) {
+                UnitSerial = 4;
+            }
+
+            $('#Invt_InqItemBalance_ItemQtyInSelectedStore').load('../../../InqItemBalance/AllStoresQty?StoreNo=' + Invt_InqItemBalance_StoreNo.value + '&ItemNo=' + Invt_InqItemBalance_ItemNo.value + '&UnitSerial=' + UnitSerial + '&PrintZero=' + Invt_InqItemBalance_PrintZeroQty.checked);
+            $('#Invt_InqItemBalance_ItemQtyInAllStores').load('../../../InqItemBalance/StoresQty?ItemNo=' + Invt_InqItemBalance_ItemNo.value + '&UnitSerial=' + UnitSerial + '&PrintZero=' + Invt_InqItemBalance_PrintZeroQty.checked);
+            $('#Invt_InqItemBalance_AlternativeItems').load('../../../InqItemBalance/AlternativeItems?ItemNo=' + Invt_InqItemBalance_ItemNo.value + '&UnitSerial=' + UnitSerial + '&PrintZero=' + Invt_InqItemBalance_PrintZeroQty.checked);
+
+            $('#Model_InqItemBalance_InvItemsMF').modal('hide')
+
+            done();
+        });
+    }
+    function GetItemDesc(e) {
+        if (Invt_InqItemBalance_StoreNo.value == "") {
+            alert('@Html.Translate("يجب إدخال المستودع", "You Must Enter Store")');
+            Invt_InqItemBalance_StoreNo.focus();
+            return;
+        }
+
+        if (ItemNo != e) {
+            ItemNo = e;
+            burn({ ItemNo: e }, '../../../InqItemBalance/GetItemName', '', LoadItemName, true);
+        }
+    }
+    function LoadItemName(r) {
+        if (r.ItemDesc == "") {
+            Invt_InqItemBalance_ItemNo.value = null;
+            Invt_InqItemBalance_ItemDesc.value = null;
+        }
+        else {
+            Invt_InqItemBalance_ItemDesc.value = r.ItemDesc;
+
+            $('#Invt_InqItemBalance_ItemInfoDiv').empty();
+            $('#Invt_InqItemBalance_ItemQtyInSelectedStore').empty();
+            $('#Invt_InqItemBalance_ItemQtyInAllStores').empty();
+            $('#Invt_InqItemBalance_AlternativeItems').empty();
+
+            $.get("../../../../InqItemBalance/InfoItem?StoreNo=" + Invt_InqItemBalance_StoreNo.value + '&ItemNo=' + Invt_InqItemBalance_ItemNo.value, function (data) {
+                $('#Invt_InqItemBalance_ItemInfoDiv').html(data);
+
+                var UnitSerial = 0;
+                if (Invt_InqItemBalance_FirstUnit.checked == true) {
+                    UnitSerial = 1;
+                }
+                else if (Invt_InqItemBalance_SecondUnit.checked == true) {
+                    UnitSerial = 2;
+                }
+                else if (Invt_InqItemBalance_ThirdUnit.checked == true) {
+                    UnitSerial = 3;
+                }
+                else if (Invt_InqItemBalance_FourthUnit.checked == true) {
+                    UnitSerial = 4;
+                }
+
+                $('#Invt_InqItemBalance_ItemQtyInSelectedStore').load('../../../InqItemBalance/AllStoresQty?StoreNo=' + Invt_InqItemBalance_StoreNo.value + '&ItemNo=' + Invt_InqItemBalance_ItemNo.value + '&UnitSerial=' + UnitSerial + '&PrintZero=' + Invt_InqItemBalance_PrintZeroQty.checked);
+                $('#Invt_InqItemBalance_ItemQtyInAllStores').load('../../../InqItemBalance/StoresQty?ItemNo=' + Invt_InqItemBalance_ItemNo.value + '&UnitSerial=' + UnitSerial + '&PrintZero=' + Invt_InqItemBalance_PrintZeroQty.checked);
+                $('#Invt_InqItemBalance_AlternativeItems').load('../../../InqItemBalance/AlternativeItems?ItemNo=' + Invt_InqItemBalance_ItemNo.value + '&UnitSerial=' + UnitSerial + '&PrintZero=' + Invt_InqItemBalance_PrintZeroQty.checked);
+
+                $('#Model_InqItemBalance_InvItemsMF').modal('hide')
+
+                done();
+            });
+        }
+    }
+
+    function GetStoreQty() {
+        wait();
+        var UnitSerial = 0;
+        if (Invt_InqItemBalance_FirstUnit.checked == true) {
+            UnitSerial = 1;
+        }
+        else if (Invt_InqItemBalance_SecondUnit.checked == true) {
+            UnitSerial = 2;
+        }
+        else if (Invt_InqItemBalance_ThirdUnit.checked == true) {
+            UnitSerial = 3;
+        }
+        else if (Invt_InqItemBalance_FourthUnit.checked == true) {
+            UnitSerial = 4;
+        }
+        $('#Invt_InqItemBalance_ItemQtyInSelectedStore').empty();
+        $('#Invt_InqItemBalance_ItemQtyInAllStores').empty();
+        $('#Invt_InqItemBalance_AlternativeItems').empty();
+
+        $.get("../../../../InqItemBalance/AllStoresQty?StoreNo=" + Invt_InqItemBalance_StoreNo.value + '&ItemNo=' + Invt_InqItemBalance_ItemNo.value + '&UnitSerial=' + UnitSerial + '&PrintZero=' + Invt_InqItemBalance_PrintZeroQty.checked, function (data) {
+            $('#Invt_InqItemBalance_ItemQtyInSelectedStore').html(data);
+
+            $('#Invt_InqItemBalance_ItemQtyInAllStores').load('../../../InqItemBalance/StoresQty?ItemNo=' + Invt_InqItemBalance_ItemNo.value + '&UnitSerial=' + UnitSerial + '&PrintZero=' + Invt_InqItemBalance_PrintZeroQty.checked);
+            $('#Invt_InqItemBalance_AlternativeItems').load('../../../InqItemBalance/AlternativeItems?ItemNo=' + Invt_InqItemBalance_ItemNo.value + '&UnitSerial=' + UnitSerial + '&PrintZero=' + Invt_InqItemBalance_PrintZeroQty.checked);
+
+            done();
+        });
+    }
+
+</script>

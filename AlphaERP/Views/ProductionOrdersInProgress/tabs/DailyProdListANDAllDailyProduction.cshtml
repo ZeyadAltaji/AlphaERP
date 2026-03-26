@@ -1,0 +1,208 @@
+﻿@using AlphaERP.Models;
+
+@model List<AlphaERP.Models.ProductionReceivingView>
+@{
+    string FormCode = ViewBag.FormCode;
+    int OrderYear = ViewBag.OrderYear;
+    int OrderNo = ViewBag.OrderNo;
+    List<AlphaERP.Controllers.ProductionOrdersInProgressController.DailyProductionH> lDailyProductionH = ViewBag.DailyProductionH;
+    Company company = (Company)Session["company"];
+
+}
+<div class="form-group">
+    <div class="col-md-12">
+
+        <table id="DailyProdListTB" class="LoadViewRawMateriaTB table dataTable table table-hover">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>@Html.Translate("رمز المادة", "ItemNo")</th>
+                    <th>@Html.Translate("وصف المادة", "ItemDesc")</th>
+                    <th>@Html.Translate("الوحدة", "UnitName")</th>
+                    <th>@Html.Translate("اخر كلفة", "LastRecCost")</th>
+                    <th>@Html.Translate("اجمالي الكمية المصروفة", "RecQty")</th>
+                    <th>@Html.Translate("الكمية المعياريه", "StdQty")</th>
+                    <th>@Html.Translate("الكمية المتباينة", "QtyVar")</th>
+                    <th>@Html.Translate("كلفة الصرف", "RecCost")</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var Dr in Model)
+            {
+                    <tr>
+                        <td></td>
+                        <td>@Dr.ItemNo</td>
+                        <td>@Html.Translate(Dr.ItemDesc_Ara, Dr.ItemDesc)</td>
+                        <td>@Dr.UnitName</td>
+                        <td>@Dr.lastreccost</td>
+                        <td>@Dr.RecCost</td>
+                        <td>@Dr.stdqty</td>
+                        <td>@Dr.qtyvar</td>
+                        <td>@Dr.RecQty</td>
+                        <td></td>
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+    </div>
+    <hr />
+
+    <div class="col-md-12">
+        <div>
+            <div class="col-md-10" style="visibility:hidden">
+
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary btn-block" onclick="addDailyProductionNew()">
+                    <i class="fa fa-plus"></i> @Resources.Resource.Add
+                </button>
+            </div>
+        </div>
+        <table class="table table-hover" id="listAllDailyProduction">
+            <thead>
+                <tr>
+                    <th style="display:none;"></th>
+                    <th>@Html.Translate("رقم الأمر السند", "Report No")</th>
+                    <th>@Html.Translate("تاريخ الأنتاج", "Production Date")</th>
+                    <th>@Html.Translate("الحالة المنتج ", "Product status")</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="listAllDailyProductionTbody">
+                @foreach (var item in lDailyProductionH)
+                {
+                    <tr style="height: 26px;" onclick="DailProdSelect(this)" ondblclick="DoubleClickSelect(this)">
+
+                        <td id="ReportYear" style="display:none;">@item.ReportYear</td>
+                        <td  id="ReportNo">@item.ReportNo</td>
+                        <td>@item.Prod_Date.ToString("yyyy-MM-dd")</td>
+                        <td>
+                            @if (item.Closed == true)
+                            {
+
+                                <span style="background-color: #0b9f0b !important;" class="badge badge-success">@Html.Translate("مغلقة", "Closed")</span>
+
+                            }
+                            else
+                            {
+                                <span class="badge badge-danger">@Html.Translate("غير مغلقة", "Non Closed")</span>
+                            }
+
+                        </td>
+                        <td></td>
+                        <td></td>
+
+                    </tr>
+                }
+
+
+            </tbody>
+
+        </table>
+    </div>
+
+</div>
+<script>
+    var DailyProdListTB = $('#DailyProdListTB').DataTable({
+        "scrollY": '18vh',
+        "paging": false,
+        "searching": false,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    var tableRFI = $('#listAllDailyProduction').dataTable({
+            "scrollY": '18vh',
+            "paging": true,
+            "pageLength": 100,
+            "searching": false,
+            "bLengthChange" : false
+
+        });
+    function addDailyProductionNew() {
+        var CompNo = @company.comp_num;
+        var OrderYear =@OrderYear;
+        var OrderNo =@OrderNo;
+        $('#LoadProductionReceivingBody').load("../../../ProductionOrdersInProgress/ProductionReceiving?CompNo=" + CompNo
+                                                     + "&OrderYear=" + OrderYear
+                                                     +"&OrderNo="+OrderNo
+                                                      );
+        $('#ModalProductionReceiving').modal('show');
+    }
+    function DailProdSelect(row) {
+        var rows = document.querySelectorAll('tr');
+        rows.forEach(function (row) {
+            row.classList.remove('selected');
+        });
+
+        row.classList.add('selected');
+    }
+    function SelectingDailyProduction() {
+        var selectedRow = document.querySelector('#listAllDailyProduction tr.selected');
+
+ 
+            var ReportYear = selectedRow.querySelector('#ReportYear').innerHTML.trim();
+            var ReportNo = selectedRow.querySelector('#ReportNo').innerHTML.trim();
+            var CompNo =@company.comp_num;
+            var OrderYear =@OrderYear
+            var OrderNo =@OrderNo;
+            var IsClosed = selectedRow.querySelector('.badge-success') ? true : false;
+
+            var LoadIssueOrderMBody = document.getElementById("LoadProductionReceivingBody");
+            LoadIssueOrderMBody.innerHTML = "";
+
+
+            var queryString ="CompNo=" + CompNo + "&OrderYear=" + OrderYear + "&OrderNo=" + OrderNo +  "&ReportYear=" + ReportYear+"&ReportNo="+ReportNo;
+            if (IsClosed) {
+                queryString += "&IsClosed=true";
+            }
+            $('#LoadProductionReceivingBody').load("../../../ProductionOrdersInProgress/ProductionReceiving?" + queryString);
+
+            //$('#LoadProductionReceivingBody').load("../../../ProductionOrdersInProgress/ProductionReceiving?
+            //    CompNo="+CompNo+"&OrderYear="+OrderYear+"&OrderNo="+OrderNo+"&ReportYear="+ReportYear+"&ReportNo="+ReportNo);
+            $('#ModalProductionReceiving').modal('show');
+
+
+        
+
+    }
+    function DoubleClickSelect(r){
+        debugger;
+         var selectedRow = r;
+
+        var ReportYear = selectedRow.querySelector('#ReportYear').innerHTML.trim();
+        var ReportNo = selectedRow.querySelector('#ReportNo').innerHTML.trim();
+        var CompNo = @company.comp_num; 
+        var OrderYear = @OrderYear; 
+        var OrderNo = @OrderNo; 
+        var IsClosed = selectedRow.querySelector('.badge-success') ? true : false;
+          if(IsClosed === true){
+            $("#btnProductionReceiving").css("display", "none");
+
+            $("#btnCloseProductionReceiving").removeClass("btn-default").addClass("btn-primary").text("@Html.Translate("أغلاق", "Close")");;
+
+          }  else if(IsClosed === null ||IsClosed === false ){
+              $("#btnProductionReceiving").css("display", "inline-block");
+              $("#btnCloseProductionReceiving").removeClass("btn-primary").addClass("btn-default").text("@Html.Recource(15)");;
+          }
+
+        var LoadIssueOrderMBody = document.getElementById("LoadProductionReceivingBody");
+        LoadIssueOrderMBody.innerHTML = "";
+
+        var queryString = "CompNo=" + CompNo + "&OrderYear=" + OrderYear + "&OrderNo=" + OrderNo + "&ReportYear=" + ReportYear + "&ReportNo=" + ReportNo;
+        if (IsClosed) {
+            queryString += "&IsClosed=true";
+        }
+
+        $('#LoadProductionReceivingBody').load("../../../ProductionOrdersInProgress/ProductionReceiving?" + queryString);
+        $('#ModalProductionReceiving').modal('show');
+        r.classList.remove('selected');
+
+  
+    }
+
+</script>

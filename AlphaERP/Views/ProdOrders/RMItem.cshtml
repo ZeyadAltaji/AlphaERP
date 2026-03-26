@@ -1,0 +1,147 @@
+
+@model IEnumerable<AlphaERP.Controllers.ProdOrdersController.RMItems>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    DataTable Dt = new DataTable();
+    int i = 0;
+    int st = 0;
+    if (Model.ToList().Count != 0)
+    {
+        i = Model.FirstOrDefault().count;
+        st = Model.FirstOrDefault().staus;
+    }
+}
+@foreach (var item in Model)
+{
+    <tr id="RMDetItem_@i">
+        <td>
+            <input style="width: 95px;" id="RM_ItemNo" value="@item.RmCode" type="text" disabled>
+        </td>
+        <td>
+            <div style="display:flex; align-items:center;">
+                <input id="RefrenceNo" value="@item.RefrenceNo" type="text" class="form-control"
+                       style="width:75px; padding:6px;" disabled="disabled">
+                <button type="button" class="btn btn-sm btn-info" onclick="ShowRevisions(this, '@item.RmCode')"
+                        title="@Html.Translate("البحث عن ارقام المراجعات","Search for revision numbers")"
+                        style="margin-right:5px; margin-left:5px;">
+                    <i class="fa fa-search"></i>
+                </button>
+            </div>
+        </td>
+        <td>
+            <input id="RM_ItemDesc" value="@item.ItemDesc" type="text" disabled>
+        </td>
+        <td>
+            <button onclick="EditRmCode(@i,@item.staus)" type="button" class="btn btn-primary">@Html.Recource(4756)</button>
+        </td>
+        <td>
+            <select style="width:100%" class="RM_Unit">
+                @{
+                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                    {
+                        Dt = new DataTable();
+                        cn.Open();
+                        using (SqlCommand cmd = new SqlCommand())
+                        {
+                            cmd.Connection = cn;
+                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                            cmd.CommandText = "InvT_LoadItemUnits";
+                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                            cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = item.RmCode;
+                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                            {
+                                DA.Fill(Dt);
+                            }
+                        }
+                    }
+                }
+                @foreach (DataRow row in Dt.Rows)
+                {
+                    if (row["UnitSerial"].ToString() == item.UnitSerial.ToString())
+                    {
+                        <option value="@row["UnitSerial"].ToString()" selected>
+                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="@row["UnitSerial"].ToString()">
+                            @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                        </option>
+                    }
+
+                }
+            </select>
+        </td>
+        <td>
+            <input style="width: 75px; text-align:center;" id="RM_RmQty" value="@item.RmQty.ToString("0.000")" type="number"
+                   onblur="GetCheckValueSumTotal(this)" />
+        </td>
+        <td>
+            <input style="width: 75px;" id="RM_TotalQty" title="@item.TotalQty.ToString("0.000")"
+                   value="@item.TotalQty.ToString("0.000")" type="text" disabled>
+        </td>
+        <td>
+            <input style="width: 75px;" id="RM_Shortage" value="@item.Shortage.ToString("0.000")" type="text" disabled>
+        </td>
+        <td>
+            <button onclick="ItemQtyInAllStores(@item.RmCode)" type="button" class="btn btn-primary"></button>
+        </td>
+        <td>
+            <button onclick="AlternativeItems(@i,@item.staus)" type="button"
+                    class="btn btn-primary">
+                @Html.Recource(7308)
+                </button>
+            </td>
+            <td>
+                <textarea id="RM_NoteDet" type="text"></textarea>
+            </td>
+            <td>
+                <button class="btn-de" id="removeButton" onclick="RemoveRow(this)" type="button">
+                    <i class="fa fa-trash-alt"></i>
+                </button>
+            </td>
+        </tr>
+                        i++;
+                    }
+
+<script>
+    var Total = 0;
+    sumTotalQty();
+    $('.RM_Unit').select2();
+    $('.BatchNoBatchNo').select2();
+    function GetCheckValueSumTotal(e) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون الكمية اقل من 0", "The value of the Rejected may not be less than 0")');
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+        sumTotalQty();
+    }
+
+    function sumTotalQty() {
+        Total = 0;
+        var table = "";
+        if (@st == 1) {
+            table = $('#RMDetailsTbody tr');
+        }
+        else {
+            table = $('#eRMDetailsTbody tr');
+        }
+        var trs = table;
+        for (var i = 0; i < trs.length; i++) {
+            Total = Number(Total) + Number($(trs[i]).closest('tr').find('#RM_RmQty')[0].value);
+        }
+        if (1 == 1) {
+            RMTotalQty.innerHTML = Number(Total).toFixed(3);
+        }
+        else {
+            eRMTotalQty.innerHTML = Number(Total).toFixed(3);
+        }
+    }
+</script>

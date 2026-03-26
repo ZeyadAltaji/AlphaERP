@@ -1,0 +1,868 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<StiSerializer version="1.02" type="Net" application="StiReport">
+  <Dictionary Ref="1" type="Dictionary" isKey="true">
+    <BusinessObjects isList="true" count="0" />
+    <Databases isList="true" count="1">
+      <MS_x0020_SQL Ref="2" type="Stimulsoft.Report.Dictionary.StiSqlDatabase" isKey="true">
+        <Alias>MS SQL</Alias>
+        <ConnectionStringEncrypted>9NJTC0QIQ21pFeX45SXnEtFUwWhOSkuZRXQlzGFsZT+BePVpyUzZ1eFanIR3ASgq33zNTWFr061rRrml4URhF4tgw0heXHvdb035bGUl4C/5yNGjRRj6CcNNufzqnCVjxfL7aO9d69lFTdWJaUzjZ4t49ytWWquZ4hxtzGd0rfvj</ConnectionStringEncrypted>
+        <Name>MS SQL</Name>
+      </MS_x0020_SQL>
+    </Databases>
+    <DataSources isList="true" count="3">
+      <MRP_MRPCalculation Ref="3" type="Stimulsoft.Report.Dictionary.StiSqlSource" isKey="true">
+        <Alias>MRP_MRPCalculation</Alias>
+        <Columns isList="true" count="24">
+          <value>ItemNo,System.String</value>
+          <value>Un1Desc,System.String</value>
+          <value>ItemDesc,System.String</value>
+          <value>LeadTime,System.Int32</value>
+          <value>StockCoverage,System.Int32</value>
+          <value>Prefvendor,System.Int64</value>
+          <value>name,System.String</value>
+          <value>ReOrderQty,System.Int32</value>
+          <value>RmCode,System.String</value>
+          <value>TotalReqQty,System.Double</value>
+          <value>TotalPrvQty,System.Double</value>
+          <value>QtyOH,System.Double</value>
+          <value>QtyOHCDays,System.Int32</value>
+          <value>QtyInOrder,System.Double</value>
+          <value>QtyInOrderCDays,System.Int32</value>
+          <value>TotalAvialbeQty,System.Double</value>
+          <value>StockCDays,System.Int32</value>
+          <value>OrderStat,System.Boolean</value>
+          <value>QtyShoratge,System.Double</value>
+          <value>NoOforders,System.Double</value>
+          <value>QtyToOrder,System.Double</value>
+          <value>PlanPRNo,System.String</value>
+          <value>StartDate,System.DateTime</value>
+          <value>EndDate,System.String</value>
+        </Columns>
+        <CommandTimeout>30</CommandTimeout>
+        <Dictionary isRef="1" />
+        <Key>8382a353aadd4b1281019bf5642c50a6</Key>
+        <Name>MRP_MRPCalculation</Name>
+        <NameInSource>MS SQL</NameInSource>
+        <Parameters isList="true" count="3">
+          <value>_x0040_CompNo,CompNo,16,0</value>
+          <value>_x0040_PlanYear,PlanYear,16,0</value>
+          <value>_x0040_PlanNo,PlanNo,8,0</value>
+        </Parameters>
+        <SqlCommand>MRP_MRPCalculation</SqlCommand>
+        <Type>StoredProcedure</Type>
+      </MRP_MRPCalculation>
+      <MRP_GeneralPlanInfoH Ref="4" type="Stimulsoft.Report.Dictionary.StiSqlSource" isKey="true">
+        <Alias>MRP_GeneralPlanInfoH</Alias>
+        <Columns isList="true" count="10">
+          <value>CompNo,System.Int16</value>
+          <value>PlanYear,System.Int16</value>
+          <value>PlanNo,System.Int32</value>
+          <value>StartDate,System.DateTime</value>
+          <value>EndDate,System.DateTime</value>
+          <value>UserID,System.String</value>
+          <value>EntryDate,System.DateTime</value>
+          <value>PlanNotes,System.String</value>
+          <value>PlanActive,System.Boolean</value>
+          <value>Difference,System.Int32</value>
+        </Columns>
+        <CommandTimeout>30</CommandTimeout>
+        <Dictionary isRef="1" />
+        <Key>cba68cb072b9408691f126c37dcfb9e9</Key>
+        <Name>MRP_GeneralPlanInfoH</Name>
+        <NameInSource>MS SQL</NameInSource>
+        <Parameters isList="true" count="3">
+          <value>_x0040_CompNo,CompNo,16,0</value>
+          <value>_x0040_PlanYear,PlanYear,16,0</value>
+          <value>_x0040_PlanNo,PlanNo,8,0</value>
+        </Parameters>
+        <SqlCommand>select *,DATEDIFF(DAY,StartDate , EndDate) as Difference from MRP_GeneralPlanInfoH where CompNo=@CompNo and PlanYear = @PlanYear and PlanNo = @PlanNo</SqlCommand>
+      </MRP_GeneralPlanInfoH>
+      <MRP_GeneralPlanInfoD Ref="5" type="Stimulsoft.Report.Dictionary.StiSqlSource" isKey="true">
+        <Alias>MRP_GeneralPlanInfoD</Alias>
+        <Columns isList="true" count="6">
+          <value>CompNo,System.Int16</value>
+          <value>PlanYear,System.Int16</value>
+          <value>PlanNo,System.Int32</value>
+          <value>FormulaCode,System.String</value>
+          <value>ItemNo,System.String</value>
+          <value>PQty,System.Decimal</value>
+        </Columns>
+        <CommandTimeout>30</CommandTimeout>
+        <Dictionary isRef="1" />
+        <Key>24425a24d13e455f9f10c754b06f410a</Key>
+        <Name>MRP_GeneralPlanInfoD</Name>
+        <NameInSource>MS SQL</NameInSource>
+        <Parameters isList="true" count="3">
+          <value>_x0040_CompNo,CompNo,16,0</value>
+          <value>_x0040_PlanYear,PlanYear,16,0</value>
+          <value>_x0040_PlanNo,PlanNo,8,0</value>
+        </Parameters>
+        <SqlCommand>select * from MRP_GeneralPlanInfoD where CompNo=@CompNo and PlanYear = @PlanYear and PlanNo = @PlanNo</SqlCommand>
+      </MRP_GeneralPlanInfoD>
+    </DataSources>
+    <Relations isList="true" count="0" />
+    <Report isRef="0" />
+    <Resources isList="true" count="0" />
+    <Variables isList="true" count="3">
+      <value>,CompNo,CompNo,,System.Int16,_x0031_,False,False,False,False</value>
+      <value>,PlanYear,PlanYear,,System.Int16,_x0032_020,False,False,False,False</value>
+      <value>,PlanNo,PlanNo,,System.Int32,_x0031_3,False,False,False,False</value>
+    </Variables>
+  </Dictionary>
+  <EngineVersion>EngineV2</EngineVersion>
+  <GlobalizationStrings isList="true" count="0" />
+  <Key>0bfc99a9b9724746851d5bc124b05c2b</Key>
+  <MetaTags isList="true" count="0" />
+  <Pages isList="true" count="1">
+    <Page1 Ref="6" type="Page" isKey="true">
+      <Border>None;Black;2;Solid;False;4;Black</Border>
+      <Brush>Transparent</Brush>
+      <Components isList="true" count="3">
+        <PageHeaderBand1 Ref="7" type="PageHeaderBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <ClientRectangle>0,0.2,11.69,1.5</ClientRectangle>
+          <Components isList="true" count="13">
+            <Text9 Ref="8" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>9.8,0.1,0.7,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,10,Bold</Font>
+              <Guid>a481b0a6cf484dd4957be440a29e2dd1</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text9</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>{MRP_GeneralPlanInfoH.PlanYear}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text9>
+            <Text2 Ref="9" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>5.9,0.1,0.7,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,10,Bold</Font>
+              <Guid>0a7bcd58a881483d969455e1682d69f4</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text2</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>رقم الخطة :</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text2>
+            <Text10 Ref="10" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>5.1,0.1,0.7,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,10,Bold</Font>
+              <Guid>a496acbfe1c74404afe11e2b7651b098</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text10</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>{MRP_GeneralPlanInfoH.PlanNo}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text10>
+            <Text6 Ref="11" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>5.9,0.4,0.7,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,10,Bold</Font>
+              <Guid>660242158c394af98e9a6c2382355f0d</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text6</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>تاريخ النهاية :</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text6>
+            <Text7 Ref="12" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>5.1,0.4,0.7,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,10,Bold</Font>
+              <Guid>40505538e33b4ffe92cb8e7f9671c4af</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text7</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>{MRP_GeneralPlanInfoH.EndDate}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextFormat Ref="13" type="DateFormat" isKey="true" />
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text7>
+            <Text3 Ref="14" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>1.7,0.1,0.7,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,10,Bold</Font>
+              <Guid>e51a8571fb9b47499f77dabef7942e65</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text3</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>مدة الخطة :</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text3>
+            <Text8 Ref="15" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>0.7,0.1,1,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,10,Bold</Font>
+              <Guid>2c18d998b4a24e96886dc4295a31d09e</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text8</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>{MRP_GeneralPlanInfoH.Difference} يوم</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text8>
+            <Text5 Ref="16" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>9.8,0.4,0.7,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,10,Bold</Font>
+              <Guid>885f7c3da62a48a59d10a4a886527186</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text5</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>{MRP_GeneralPlanInfoH.StartDate}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextFormat Ref="17" type="DateFormat" isKey="true" />
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text5>
+            <Text12 Ref="18" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>2.8,0.7,7.7,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,10,Bold</Font>
+              <Guid>2e05e6ada7004f54853a55142bd2b217</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text12</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>{MRP_GeneralPlanInfoH.PlanNotes}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text12>
+            <Text1 Ref="19" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>10.6,0.1,0.8,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,10,Bold</Font>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text1</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>سنة التخطيط :</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text1>
+            <Text4 Ref="20" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>10.6,0.4,0.8,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,10,Bold</Font>
+              <Guid>576edc67305b485c8d6d4a5ed7e3e262</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text4</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>تاريخ البداية :</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text4>
+            <Text11 Ref="21" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>10.6,0.7,0.8,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,10,Bold</Font>
+              <Guid>b6a3eab6fd28403c890659683523dc37</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text11</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>ملاحظات :</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text11>
+            <Text13 Ref="22" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>9.7,1.2,1.7,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,10,Bold</Font>
+              <Guid>7b6b5cc2e86d49d6ae801627d5b7421f</Guid>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text13</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>بيانات الطلب</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,RightToLeft=True,,,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text13>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <Name>PageHeaderBand1</Name>
+          <Page isRef="6" />
+          <Parent isRef="6" />
+        </PageHeaderBand1>
+        <HeaderMRP_MRPCalculation Ref="23" type="HeaderBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <ClientRectangle>0,2.1,11.69,0.3</ClientRectangle>
+          <Components isList="true" count="13">
+            <HeaderMRP_MRPCalculation_StockCDays Ref="24" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>[224:224:224]</Brush>
+              <ClientRectangle>1.8,0,0.7,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,9</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>HeaderMRP_MRPCalculation_StockCDays</Name>
+              <Page isRef="6" />
+              <Parent isRef="23" />
+              <Text>مدة التغطية</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </HeaderMRP_MRPCalculation_StockCDays>
+            <HeaderMRP_MRPCalculation_TotalAvialbeQty Ref="25" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>[224:224:224]</Brush>
+              <ClientRectangle>2.5,0,1,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,9</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>HeaderMRP_MRPCalculation_TotalAvialbeQty</Name>
+              <Page isRef="6" />
+              <Parent isRef="23" />
+              <Text>مجموع الكمية المتوفرة</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </HeaderMRP_MRPCalculation_TotalAvialbeQty>
+            <HeaderMRP_MRPCalculation_QtyInOrderCDays Ref="26" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>[224:224:224]</Brush>
+              <ClientRectangle>3.5,0,0.9,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,9</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>HeaderMRP_MRPCalculation_QtyInOrderCDays</Name>
+              <Page isRef="6" />
+              <Parent isRef="23" />
+              <Text>مدة التغطية</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </HeaderMRP_MRPCalculation_QtyInOrderCDays>
+            <HeaderMRP_MRPCalculation_QtyInOrder Ref="27" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>[224:224:224]</Brush>
+              <ClientRectangle>4.4,0,0.9,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,9</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>HeaderMRP_MRPCalculation_QtyInOrder</Name>
+              <Page isRef="6" />
+              <Parent isRef="23" />
+              <Text>كمية تحت الطلب</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </HeaderMRP_MRPCalculation_QtyInOrder>
+            <HeaderMRP_MRPCalculation_QtyOHCDays Ref="28" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>[224:224:224]</Brush>
+              <ClientRectangle>5.3,0,0.9,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,9</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>HeaderMRP_MRPCalculation_QtyOHCDays</Name>
+              <Page isRef="6" />
+              <Parent isRef="23" />
+              <Text>مدة التغطية</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </HeaderMRP_MRPCalculation_QtyOHCDays>
+            <HeaderMRP_MRPCalculation_QtyOH Ref="29" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>[224:224:224]</Brush>
+              <ClientRectangle>6.2,0,0.9,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,9</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>HeaderMRP_MRPCalculation_QtyOH</Name>
+              <Page isRef="6" />
+              <Parent isRef="23" />
+              <Text>الكمية المتوفرة</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </HeaderMRP_MRPCalculation_QtyOH>
+            <HeaderMRP_MRPCalculation_TotalPrvQty Ref="30" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>[224:224:224]</Brush>
+              <ClientRectangle>7.1,0,0.9,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,9</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>HeaderMRP_MRPCalculation_TotalPrvQty</Name>
+              <Page isRef="6" />
+              <Parent isRef="23" />
+              <Text>كمية الخطة السابقة</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </HeaderMRP_MRPCalculation_TotalPrvQty>
+            <HeaderMRP_MRPCalculation_TotalReqQty Ref="31" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>[224:224:224]</Brush>
+              <ClientRectangle>8,0,0.9,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,9</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>HeaderMRP_MRPCalculation_TotalReqQty</Name>
+              <Page isRef="6" />
+              <Parent isRef="23" />
+              <Text>الكمية</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </HeaderMRP_MRPCalculation_TotalReqQty>
+            <HeaderMRP_MRPCalculation_Un1Desc Ref="32" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>[224:224:224]</Brush>
+              <ClientRectangle>8.9,0,0.9,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,9</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>HeaderMRP_MRPCalculation_Un1Desc</Name>
+              <Page isRef="6" />
+              <Parent isRef="23" />
+              <Text>الوحدة الرئيسية</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </HeaderMRP_MRPCalculation_Un1Desc>
+            <HeaderMRP_MRPCalculation_ItemDesc Ref="33" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>[224:224:224]</Brush>
+              <ClientRectangle>9.8,0,0.9,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,9</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>HeaderMRP_MRPCalculation_ItemDesc</Name>
+              <Page isRef="6" />
+              <Parent isRef="23" />
+              <Text>اسم المادة</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </HeaderMRP_MRPCalculation_ItemDesc>
+            <HeaderMRP_MRPCalculation_ItemNo Ref="34" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>[224:224:224]</Brush>
+              <ClientRectangle>10.7,0,0.7,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,9</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>HeaderMRP_MRPCalculation_ItemNo</Name>
+              <Page isRef="6" />
+              <Parent isRef="23" />
+              <Text>رمز المادة</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </HeaderMRP_MRPCalculation_ItemNo>
+            <Text14 Ref="35" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>[224:224:224]</Brush>
+              <ClientRectangle>1.1,0,0.7,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,9</Font>
+              <Guid>7a090583b72c44fabd249826eca71efb</Guid>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>Text14</Name>
+              <Page isRef="6" />
+              <Parent isRef="23" />
+              <Text>النقص</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text14>
+            <Text15 Ref="36" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>[224:224:224]</Brush>
+              <ClientRectangle>0.4,0,0.7,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,9</Font>
+              <Guid>6d5f63e65fe84ad18d3b3c8bd62eee16</Guid>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>Text15</Name>
+              <Page isRef="6" />
+              <Parent isRef="23" />
+              <Text>عدد الطلبات</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text15>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <Name>HeaderMRP_MRPCalculation</Name>
+          <Page isRef="6" />
+          <Parent isRef="6" />
+        </HeaderMRP_MRPCalculation>
+        <DataMRP_MRPCalculation Ref="37" type="DataBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <BusinessObjectGuid isNull="true" />
+          <ClientRectangle>0,2.8,11.69,0.3</ClientRectangle>
+          <Components isList="true" count="13">
+            <DataMRP_MRPCalculation_StockCDays Ref="38" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <CanGrow>True</CanGrow>
+              <ClientRectangle>1.8,0,0.7,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>DataMRP_MRPCalculation_StockCDays</Name>
+              <Page isRef="6" />
+              <Parent isRef="37" />
+              <Text>{MRP_MRPCalculation.StockCDays}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <VertAlignment>Center</VertAlignment>
+            </DataMRP_MRPCalculation_StockCDays>
+            <DataMRP_MRPCalculation_TotalAvialbeQty Ref="39" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <CanGrow>True</CanGrow>
+              <ClientRectangle>2.5,0,1,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>DataMRP_MRPCalculation_TotalAvialbeQty</Name>
+              <Page isRef="6" />
+              <Parent isRef="37" />
+              <Text>{MRP_MRPCalculation.TotalAvialbeQty}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <VertAlignment>Center</VertAlignment>
+            </DataMRP_MRPCalculation_TotalAvialbeQty>
+            <DataMRP_MRPCalculation_QtyInOrderCDays Ref="40" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <CanGrow>True</CanGrow>
+              <ClientRectangle>3.5,0,0.9,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>DataMRP_MRPCalculation_QtyInOrderCDays</Name>
+              <Page isRef="6" />
+              <Parent isRef="37" />
+              <Text>{MRP_MRPCalculation.QtyInOrderCDays}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <VertAlignment>Center</VertAlignment>
+            </DataMRP_MRPCalculation_QtyInOrderCDays>
+            <DataMRP_MRPCalculation_QtyInOrder Ref="41" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <CanGrow>True</CanGrow>
+              <ClientRectangle>4.4,0,0.9,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>DataMRP_MRPCalculation_QtyInOrder</Name>
+              <Page isRef="6" />
+              <Parent isRef="37" />
+              <Text>{MRP_MRPCalculation.QtyInOrder}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <VertAlignment>Center</VertAlignment>
+            </DataMRP_MRPCalculation_QtyInOrder>
+            <DataMRP_MRPCalculation_QtyOHCDays Ref="42" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <CanGrow>True</CanGrow>
+              <ClientRectangle>5.3,0,0.9,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>DataMRP_MRPCalculation_QtyOHCDays</Name>
+              <Page isRef="6" />
+              <Parent isRef="37" />
+              <Text>{MRP_MRPCalculation.QtyOHCDays}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <VertAlignment>Center</VertAlignment>
+            </DataMRP_MRPCalculation_QtyOHCDays>
+            <DataMRP_MRPCalculation_QtyOH Ref="43" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <CanGrow>True</CanGrow>
+              <ClientRectangle>6.2,0,0.9,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>DataMRP_MRPCalculation_QtyOH</Name>
+              <Page isRef="6" />
+              <Parent isRef="37" />
+              <Text>{MRP_MRPCalculation.QtyOH}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <VertAlignment>Center</VertAlignment>
+            </DataMRP_MRPCalculation_QtyOH>
+            <DataMRP_MRPCalculation_TotalPrvQty Ref="44" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <CanGrow>True</CanGrow>
+              <ClientRectangle>7.1,0,0.9,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>DataMRP_MRPCalculation_TotalPrvQty</Name>
+              <Page isRef="6" />
+              <Parent isRef="37" />
+              <Text>{MRP_MRPCalculation.TotalPrvQty}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <VertAlignment>Center</VertAlignment>
+            </DataMRP_MRPCalculation_TotalPrvQty>
+            <DataMRP_MRPCalculation_TotalReqQty Ref="45" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <CanGrow>True</CanGrow>
+              <ClientRectangle>8,0,0.9,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>DataMRP_MRPCalculation_TotalReqQty</Name>
+              <Page isRef="6" />
+              <Parent isRef="37" />
+              <Text>{MRP_MRPCalculation.TotalReqQty}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <VertAlignment>Center</VertAlignment>
+            </DataMRP_MRPCalculation_TotalReqQty>
+            <DataMRP_MRPCalculation_Un1Desc Ref="46" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <CanGrow>True</CanGrow>
+              <ClientRectangle>8.9,0,0.9,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>DataMRP_MRPCalculation_Un1Desc</Name>
+              <Page isRef="6" />
+              <Parent isRef="37" />
+              <Text>{MRP_MRPCalculation.Un1Desc}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <VertAlignment>Center</VertAlignment>
+            </DataMRP_MRPCalculation_Un1Desc>
+            <DataMRP_MRPCalculation_ItemDesc Ref="47" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <CanGrow>True</CanGrow>
+              <ClientRectangle>9.8,0,0.9,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>DataMRP_MRPCalculation_ItemDesc</Name>
+              <Page isRef="6" />
+              <Parent isRef="37" />
+              <Text>{MRP_MRPCalculation.ItemDesc}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <VertAlignment>Center</VertAlignment>
+            </DataMRP_MRPCalculation_ItemDesc>
+            <DataMRP_MRPCalculation_ItemNo Ref="48" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <CanGrow>True</CanGrow>
+              <ClientRectangle>10.7,0,0.7,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>DataMRP_MRPCalculation_ItemNo</Name>
+              <Page isRef="6" />
+              <Parent isRef="37" />
+              <Text>{MRP_MRPCalculation.ItemNo}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <VertAlignment>Center</VertAlignment>
+            </DataMRP_MRPCalculation_ItemNo>
+            <Text16 Ref="49" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <CanGrow>True</CanGrow>
+              <ClientRectangle>1.1,0,0.7,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <Guid>c50a81ebe4154f3795e395a48a4624ae</Guid>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>Text16</Name>
+              <Page isRef="6" />
+              <Parent isRef="37" />
+              <Text>{MRP_MRPCalculation.QtyShoratge}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>DataColumn</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text16>
+            <Text17 Ref="50" type="Text" isKey="true">
+              <Border>All;[127:127:127];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <CanGrow>True</CanGrow>
+              <ClientRectangle>0.4,0,0.7,0.3</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <Guid>27ce3cfd9b584d67aba490f893562572</Guid>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,3,0,0</Margins>
+              <Name>Text17</Name>
+              <Page isRef="6" />
+              <Parent isRef="37" />
+              <Text>{MRP_MRPCalculation.NoOforders}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>DataColumn</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text17>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <DataSourceName>MRP_MRPCalculation</DataSourceName>
+          <Filters isList="true" count="0" />
+          <Name>DataMRP_MRPCalculation</Name>
+          <Page isRef="6" />
+          <Parent isRef="6" />
+          <Sort isList="true" count="0" />
+        </DataMRP_MRPCalculation>
+      </Components>
+      <Conditions isList="true" count="0" />
+      <Guid>43c14bfb98e6493794453c62cbf7fe45</Guid>
+      <Margins>0,0,1,0</Margins>
+      <Name>Page1</Name>
+      <Orientation>Landscape</Orientation>
+      <PageHeight>8.27</PageHeight>
+      <PageWidth>11.69</PageWidth>
+      <PaperSize>A4</PaperSize>
+      <Report isRef="0" />
+      <RightToLeft>True</RightToLeft>
+    </Page1>
+  </Pages>
+  <ReferencedAssemblies isList="true" count="8">
+    <value>System.Dll</value>
+    <value>System.Drawing.Dll</value>
+    <value>System.Windows.Forms.Dll</value>
+    <value>System.Data.Dll</value>
+    <value>System.Xml.Dll</value>
+    <value>Stimulsoft.Controls.Dll</value>
+    <value>Stimulsoft.Base.Dll</value>
+    <value>Stimulsoft.Report.Dll</value>
+  </ReferencedAssemblies>
+  <ReportAlias>Report</ReportAlias>
+  <ReportChanged>4/10/2020 9:44:08 PM</ReportChanged>
+  <ReportCreated>9/13/2019 10:29:57 PM</ReportCreated>
+  <ReportFile>d:\workarea\mrp.web\mrp\views\reports\calculation.mrt</ReportFile>
+  <ReportGuid>097656af0db4498abb81ba821f231aa4</ReportGuid>
+  <ReportName>Report</ReportName>
+  <ReportUnit>Inches</ReportUnit>
+  <ReportVersion>2019.3.1.0</ReportVersion>
+  <Script>using System;
+using System.Drawing;
+using System.Windows.Forms;
+using System.Data;
+using Stimulsoft.Controls;
+using Stimulsoft.Base.Drawing;
+using Stimulsoft.Report;
+using Stimulsoft.Report.Dialogs;
+using Stimulsoft.Report.Components;
+
+namespace Reports
+{
+    public class Report : Stimulsoft.Report.StiReport
+    {
+        public Report()        {
+            this.InitializeComponent();
+        }
+
+        #region StiReport Designer generated code - do not modify
+		#endregion StiReport Designer generated code - do not modify
+    }
+}
+</Script>
+  <ScriptLanguage>CSharp</ScriptLanguage>
+  <Styles isList="true" count="0" />
+</StiSerializer>

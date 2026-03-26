@@ -1,0 +1,1300 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    int OrdYear = ViewBag.OrdYear;
+    int OrdNo = ViewBag.OrdNo;
+    string TawreedNo = ViewBag.TawreedNo;
+    Company company = (Company)Session["company"];
+
+    OrderHF OrdHf = new MDB().OrderHFs.Where(x => x.CompNo == company.comp_num && x.OrdYear == OrdYear && x.OrderNo == OrdNo
+    && x.TawreedNo == TawreedNo).FirstOrDefault();
+
+    List<OrderDF> Ord_Df = new MDB().OrderDFs.Where(x => x.CompNo == company.comp_num && x.OrdYear == OrdYear && x.OrderNo == OrdNo
+    && x.TawreedNo == TawreedNo).ToList();
+
+
+    GLDEPMF GLDEPMFs = new MDB().GLDEPMFs.Where(x => x.DEP_COMP == company.comp_num && x.DEP_NUM == OrdHf.Vend_Dept).FirstOrDefault();
+    Vendor Vend = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.VendorNo == OrdHf.VendorNo).FirstOrDefault();
+
+    PayCodes Source = new MDB().Database.SqlQuery<PayCodes>(string.Format("select sys_minor as sys_minor ,sys_adesc as DescAr,isnull(sys_edesc,'No Desc.') as DescEn from SysCodes where (CompNo = '{0}') AND (sys_minor = '{1}') AND sys_major='91k'", company.comp_num, OrdHf.SourceType)).FirstOrDefault();
+
+    PayCodes ShipMethod = new MDB().Database.SqlQuery<PayCodes>(string.Format("select sys_minor as sys_minor ,sys_adesc as DescAr,isnull(sys_edesc,'No Desc.') as DescEn from SysCodes where (CompNo = '{0}') AND (sys_minor = '{1}') AND sys_major='0f'", company.comp_num, OrdHf.ShipWay)).FirstOrDefault();
+
+    PayCodes DlivPlace = new MDB().Database.SqlQuery<PayCodes>(string.Format("select PlaceCode as Id ,Place as DescAr from OrdDlivPlace where (CompNo = '{0}') AND (PlaceCode = '{1}')", company.comp_num, OrdHf.DlvryPlace)).FirstOrDefault();
+
+    PayCodes Currency = new MDB().Database.SqlQuery<PayCodes>(string.Format("select CurrType as Id ,CurrName as DescAr,isnull(CurrNameE,'No Desc.') as DescEn from CurrType where (CurrType = '{0}')", OrdHf.CurType)).FirstOrDefault();
+
+    BusunisUnit PaymentM = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("select MCode as Id ,[Desc] as DescAr,isnull([EngDesc],'No Desc.') as DescEn from PayMethods where (Comp = '{0}') and (MCode = '{1}')", company.comp_num, OrdHf.PayWay)).FirstOrDefault();
+
+    OrdPreOrder PreOrder = new MDB().Database.SqlQuery<OrdPreOrder>(string.Format("SELECT OrdPreOrderHF.BusUnitID,Alpha_BusinessUnitDef.BusUnitDescAr,Alpha_BusinessUnitDef.BusUnitDescEng  " +
+"FROM OrdPreOrderHF INNER JOIN Alpha_BusinessUnitDef on Alpha_BusinessUnitDef.CompNo = OrdPreOrderHF.CompNo AND Alpha_BusinessUnitDef.BusUnitID = OrdPreOrderHF.BusUnitID  " +
+"where (OrdPreOrderHF.CompNo = '{0}') AND (OrdPreOrderHF.Year = '{1}') AND (OrdPreOrderHF.OrderNo = '{2}') ", company.comp_num, OrdYear, OrdNo)).FirstOrDefault();
+
+    List<InvItemsMF> MF = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+    int Srial = 1;
+    DataTable Dt = new DataTable();
+    DataTable DtAttachment = new DataTable();
+    DataTable DtConds = new DataTable();
+
+    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+    {
+        Dt = new DataTable();
+        cn.Open();
+        using (SqlCommand cmd = new SqlCommand())
+        {
+            cmd.Connection = cn;
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+            cmd.CommandText = "Ord_GetAttach";
+            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+            cmd.Parameters.Add(new SqlParameter("@TawreedNo", SqlDbType.VarChar)).Value = TawreedNo;
+            cmd.Parameters.Add(new SqlParameter("@OrderNo", SqlDbType.BigInt)).Value = OrdNo;
+            cmd.Parameters.Add(new SqlParameter("@OrdYear", SqlDbType.SmallInt)).Value = OrdYear;
+            cmd.Parameters.Add(new SqlParameter("@RptLang", SqlDbType.Int)).Value = 1;
+            cmd.Parameters.Add(new SqlParameter("@FrmStat", SqlDbType.SmallInt)).Value = 2;
+            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+            {
+                DA.Fill(Dt);
+            }
+        }
+    }
+    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+    {
+        DtAttachment = new DataTable();
+        cn.Open();
+        using (SqlCommand cmd = new SqlCommand())
+        {
+            cmd.Connection = cn;
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+            cmd.CommandText = "Ord_GetAttachmentFiles";
+            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+            cmd.Parameters.Add(new SqlParameter("@TawreedNo", SqlDbType.VarChar)).Value = TawreedNo;
+            cmd.Parameters.Add(new SqlParameter("@OrderNo", SqlDbType.BigInt)).Value = OrdNo;
+            cmd.Parameters.Add(new SqlParameter("@OrdYear", SqlDbType.SmallInt)).Value = OrdYear;
+            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+            {
+                DA.Fill(DtAttachment);
+            }
+        }
+    }
+    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+    {
+        DtConds = new DataTable();
+        cn.Open();
+        using (SqlCommand cmd = new SqlCommand())
+        {
+            cmd.Connection = cn;
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+            cmd.CommandText = "Ord_Web_GetCondsGuaranties";
+            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+            cmd.Parameters.Add(new SqlParameter("@OrdYear", SqlDbType.SmallInt)).Value = OrdYear;
+            cmd.Parameters.Add(new SqlParameter("@OrderNo", SqlDbType.BigInt)).Value = OrdNo;
+            cmd.Parameters.Add(new SqlParameter("@TwareedNo", SqlDbType.VarChar)).Value = TawreedNo;
+            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+            {
+                DA.Fill(DtConds);
+            }
+        }
+    }
+
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+
+}
+
+<style>
+
+    #MRP_InqPurchOrdDirect_DIV table th, #MRP_InqPurchOrdDirect_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+    .wrapperx {
+        padding:0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+
+    .sticky-col {
+        z-index:2;
+        position: sticky;
+        position: -webkit-sticky;
+        background-color: white;
+    }
+
+    .first-col {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        @Html.Translate("right: 0px;", "left: 0px;")
+    }
+
+    .second-col {
+        width: 80px;
+        min-width: 80px;
+        max-width: 80px;
+        @Html.Translate("right: 60px;", "left: 60px;")
+    }
+
+    .third-col {
+        width: 150px;
+        min-width: 150px;
+        max-width: 150px;
+        @Html.Translate("right: 125px;", "left: 125px;")
+    }
+
+    .four-col {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        @Html.Translate("right: 280px;", "left: 280px;")
+    }
+    .stickytooltip {
+        max-height: 80vh !important;
+        overflow: auto !important
+    }
+</style>
+
+<link href="~/Content/stickytooltip.css" rel="stylesheet" />
+<script src="~/Scripts/stickytooltip.js?s=15"></script>
+
+<style>
+    #MRP_InqPurchOrdDirectTable span.badge {
+        border: none;
+        position: static;
+        z-index: 20 !important;
+        box-sizing: content-box;
+        visibility: visible;
+        z-index: 9999999999 !important;
+        padding: 1px;
+        font-family: Arial, verdana, tahoma;
+        font-size: 13px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        text-shadow: 1px 1px 1px rgba(0,0,0,.3);
+        background: #ff3019;
+        background: -webkit-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Chrome10+,Safari5.1+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff3019), color-stop(100%, #cf0404)); /* Chrome,Safari4+ */
+        background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* FF3.6+ */
+        background: -ms-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* IE10+ */
+        background: -o-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Opera 11.10+ */
+        background: linear-gradient(to bottom, #ff3019 0%, #cf0404 100%); /* W3C */
+        width: 18px;
+        height: 18px;
+        line-height: 20px;
+        border-radius: 50%;
+        filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff3019', endColorstr='#cf0404', GradientType=0)"; /* IE6-9 */
+        filter: "progid:DXImageTransform.Microsoft.Shadow(direction=135, strength=2, color=ff0000)"; /* IE10 text shadows */
+        box-shadow: 0 2px 5px rgba(0,0,0,.4);
+    }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="max-height: 68vh !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1">
+                        <label class="unselectable" for="MRP_InqPurchOrdDirect_OrderYear">@Html.Recource(3196) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:80px !important;" type="text" id="MRP_InqPurchOrdDirect_OrderYear" value="@OrdHf.OrdYear" disabled />
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="MRP_InqPurchOrdDirect_OrderNo">@Html.Recource(3197) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:90px !important;" type="text" id="MRP_InqPurchOrdDirect_OrderNo" value="@OrdHf.OrderNo" disabled />
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="MRP_InqPurchOrdDirect_TawreedNo">@Html.Recource(3797) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:90px !important;" type="text" id="MRP_InqPurchOrdDirect_TawreedNo" value="@OrdHf.TawreedNo" disabled />
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3205) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:130px !important;" type="date" id="MRP_InqPurchOrdDirect_ConfDate" value="@OrdHf.ConfDate.Value.ToString("yyyy-MM-dd")" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(220) </label>
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <input style="width: 80px !important;" type="text" id="MRP_InqPurchOrdDirect_DeptNo" value="@OrdHf.Vend_Dept" disabled />
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_DeptName" value="@Html.Translate(GLDEPMFs.DEP_NAME,GLDEPMFs.DEP_ENAME)" disabled />
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3798) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:85%" type="number" id="MRP_InqPurchOrdDirect_SupplySource" value="@OrdHf.SourceType" hidden />
+                        <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_SupplySourceName" value="@Html.Translate(Source.DescAr,Source.DescEn)" disabled />
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3800) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_TermsOfShipment" value="@OrdHf.ShipTerms" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3087) </label>
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <input style="width: 80px !important;" type="text" id="MRP_InqPurchOrdDirect_VendorNo" value="@OrdHf.VendorNo" disabled />
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_VendorName" value="@Html.Translate(Vend.Name,Vend.Eng_Name)" disabled />
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3206) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:85%" type="number" id="MRP_InqPurchOrdDirect_ShipMethod" value="@OrdHf.ShipWay" hidden />
+                        <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_ShipMethodName" value="@Html.Translate(ShipMethod.DescAr,ShipMethod.DescEn)" disabled />
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3830) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_DestinationPort" value="@OrdHf.Port" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3204) </label>
+                    </div>
+                    <div class="col-md-5" style="margin-bottom: 5px;">
+                        <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_VendorAddress" value="@Vend.Address" disabled />
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3207) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_DeliveryPlace" value="@OrdHf.DlvryPlace" hidden />
+                        <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_DeliveryPlaceName" value="@Html.Translate(DlivPlace.DescAr,DlivPlace.DescEn)" disabled />
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(1671) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_CurrCode" value="@OrdHf.CurType" hidden />
+                        <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_CurrName" value="@Html.Translate(Currency.DescAr,Currency.DescEn)" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1">
+                        <label class="unselectable" for="MRP_InqPurchOrdDirect_ContactPerson">@Html.Recource(1166) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" type="text" id="MRP_InqPurchOrdDirect_ContactPerson" value="@OrdHf.PInCharge" disabled />
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="MRP_InqPurchOrdDirect_BusinessUnit">@Html.Recource(5667) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" type="text" id="MRP_InqPurchOrdDirect_BusinessUnit" value="@PreOrder.BusUnitID" hidden />
+                        <input required="false" style="width:150px  !important;" type="text" id="MRP_InqPurchOrdDirect_BusinessUnitName" value="@Html.Translate(PreOrder.BusUnitDescAr,PreOrder.BusUnitDescEng)" disabled />
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(1874) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_PaymentType" value="@OrdHf.PayWay" hidden />
+                        <input required="false" style="width:150px  !important;" type="text" id="MRP_InqPurchOrdDirect_PaymentTypeName" value="@Html.Translate(PaymentM.DescAr,PaymentM.DescEn)" disabled />
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(96) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_RefNo" value="@OrdHf.RefNo" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1" style="width: 10% !important; min-width: 5% !important;">
+                        <button class="btn btn-primary btn-block" onclick="AddInqPurchOrdDirectNotes()">
+                            @Html.Recource(70)
+                        </button>
+                    </div>
+                    <div class="col-md-1" style="width: 10% !important; min-width: 5% !important;">
+                        <button class="btn btn-primary btn-block" onclick="AddInqPurchOrdDirectDocuments()" style="width:95px !important;">
+                            @Html.Recource(7744)
+                        </button>
+                    </div>
+                    <div class="col-md-1" style="width: 10% !important; min-width: 5% !important;">
+                        <button class="btn btn-primary btn-block" onclick="AddInqPurchOrdDirectAttachments()" style="width:100px !important;">
+                            @Html.Recource(7743)
+                        </button>
+                    </div>
+                    <div class="col-md-1" style="width: 13% !important; min-width: 5% !important;">
+                        <button class="btn btn-primary btn-block" onclick="AddInqPurchOrdDirectConditionsAndGuaranties()" style="width:130px !important;">
+                            @Html.Recource(3161)
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group" style="display: block; height: 125px;">
+                <div class="col-md-12 wrapperx" id="MRP_InqPurchOrdDirect_DIV">
+                    <table class="table table-hover MRP_InqPurchOrdDirect" id="MRP_InqPurchOrdDirectTable">
+                        <thead>
+                            <tr>
+                                <th class="first-col">@Html.Recource(4216)</thclass="headcol">
+                                <th class="second-col">@Html.Recource(44)</th>
+                                <th class="third-col">@Html.Recource(74)</th>
+                                <th class="four-col">@Html.Recource(67)</th>
+                                @if (CActive.ClientNo == 335)
+                                {
+                                    <th>@Html.Recource(5693)</th>
+                                }
+                                else
+                                {
+                                    <th>@Html.Recource(49)</th>
+                                }
+                                @if (compMF.UseQty2 == true)
+                                {
+                                    if (CActive.ClientNo == 335)
+                                    {
+                                        <th>@Html.Recource(442)</th>
+                                    }
+                                    else
+                                    {
+                                        <th>@Html.Recource(72)</th>
+                                    }
+                                }
+                                else
+                                {
+                                    <th hidden>@Html.Recource(72)</th>
+                                }
+                                <th>@Html.Recource(3200)</th>
+                                <th>@Html.Recource(213)</th>
+                                <th>@Html.Recource(215)</th>
+                                <th>@Html.Recource(9100)</th>
+                                <th>@Html.Recource(96)</th>
+                                <th>@Html.Recource(68)</th>
+                                <th style="text-align: center !important;">@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody style="text-align: center;" id="InqPurchOrdDirectTBody">
+                            @foreach (OrderDF OrdDF in Ord_Df)
+                            {
+                                InvItemsMF MFItem = MF.Where(x => x.ItemNo == OrdDF.ItemNo).FirstOrDefault();
+                                string UnitName = "";
+                                switch (OrdDF.UnitSerial)
+                                {
+                                    case 1:
+                                        UnitName = MFItem.UnitC1;
+                                        break;
+                                    case 2:
+                                        UnitName = MFItem.UnitC2;
+                                        break;
+                                    case 3:
+                                        UnitName = MFItem.UnitC3;
+                                        break;
+                                    case 4:
+                                        UnitName = MFItem.UnitC4;
+                                        break;
+
+                                }
+
+                            <tr style="height: 25px;" itemNo="@OrdDF.ItemNo" id="InqPurchOrdDirect_Serial_@Srial">
+                                <td class="first-col" style="text-align: center !important" id="InqPurchOrdDirect_ItemSr">@OrdDF.ItemSr</td>
+                                <td class="second-col" style="text-align: center !important" id="InqPurchOrdDirect_ItemNo">@OrdDF.ItemNo</td>
+                                <td class="third-col" style="text-align: center !important" id="InqPurchOrdDirect_ItemDesc">@Html.Translate(MFItem.ItemDesc, MFItem.ItemDesc_Ara)</td>
+                                <td class="four-col" style="text-align: center !important" id="InqPurchOrdDirect_UnitName">@UnitName</td>
+                                <td class="four-col" style="text-align: center !important" id="InqPurchOrdDirect_Qty_@Srial">@OrdDF.Qty</td>
+                                @if (compMF.UseQty2 == true)
+                                {
+                                    <td class="four-col" style="text-align: center !important" id="InqPurchOrdDirect_Qty2_@Srial">@OrdDF.Qty2</td>
+                                }
+                                <td class="four-col" style="text-align: center !important" id="InqPurchOrdDirect_Bonus_@Srial">@OrdDF.Bonus</td>
+                                <td class="four-col" style="text-align: center !important" id="InqPurchOrdDirect_PerDiscount_@Srial">@OrdDF.PerDiscount</td>
+                                <td class="four-col" style="text-align: center !important" id="InqPurchOrdDirect_Price_@Srial">@OrdDF.Price</td>
+                                <td class="four-col" style="text-align: center !important" id="InqPurchOrdDirect_ItemTaxPer_@Srial">@OrdDF.ItemTaxPer</td>
+                                <td class="four-col" style="text-align: center !important" id="InqPurchOrdDirect_RefNo_@Srial">@OrdDF.RefNo</td>
+                                <td class="four-col" style="text-align: center !important" id="InqPurchOrdDirect_Total_@Srial">@OrdDF.ordamt</td>
+                                <td class="four-col" style="text-align: center !important" id="InqPurchOrdDirect_RequestedDeliveryDate_@Srial">@OrdDF.ReqDeliveryDate.Value.ToString("yyyy-MM-dd")</td>
+
+                                <td style="width: 45%;text-align: center;">
+                                    <button onclick="InqPurchOrdDirectItemNote(@Srial)" type="button" class="btn btn-primary">@Html.Recource(3799)</button>
+                                    <input type="text" id="InqPurchOrdDirect_ItemNote_@Srial" value="@OrdDF.Note" style="display:none;" />
+                                </td>
+                                <td>
+                                    <button onclick="InqPurchOrdDirectDetailedNotes(@Srial)" type="button" class="btn btn-primary">@Html.Translate("الملاحظات التفصيلية", "Detailed Notes")</button>
+                                    <input type="text" id="InqPurchOrdDirect_DetailedNotes_@Srial" value="@OrdDF.NoteDtl" style="display:none;" />
+                                </td>
+                                <td>
+                                    <input type="hidden" id="InqPurchOrdDirect_ItemTaxType_@Srial" value="@OrdDF.ItemTaxType" />
+                                    <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_InqPurchOrdDirect_DisPersTotal">@Html.Recource(221) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="number" id="MRP_InqPurchOrdDirect_DisPersTotal" value="@OrdHf.PerDiscount" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_InqPurchOrdDirect_DisTotal">@Html.Recource(222) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="number" id="MRP_InqPurchOrdDirect_DisTotal" value="@OrdHf.VouDiscount" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_InqPurchOrdDirect_FreightCost">@Html.Recource(7637) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="number" id="MRP_InqPurchOrdDirect_FreightCost" value="@OrdHf.FreightExpense" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_InqPurchOrdDirect_Amount">@Html.Recource(972) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="text" id="MRP_InqPurchOrdDirect_Amount" value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_InqPurchOrdDirect_Discount">@Html.Recource(213) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="number" id="MRP_InqPurchOrdDirect_Discount" value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_InqPurchOrdDirect_ExtraExp">@Html.Recource(9588) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="number" id="MRP_InqPurchOrdDirect_ExtraExp" value="@OrdHf.ExtraExpenses" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_InqPurchOrdDirect_TaxAmount">@Html.Recource(3211) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="text" id="MRP_InqPurchOrdDirect_TaxAmount" value="" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_InqPurchOrdDirect_TotalQty">@Html.Recource(4706) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="text" id="MRP_InqPurchOrdDirect_TotalQty" value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_InqPurchOrdDirect_NetAmount">@Html.Recource(3212) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="text" id="MRP_InqPurchOrdDirect_NetAmount" value="0" disabled />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+
+        </div>
+    </div>
+</div>
+
+
+
+@*--------------------------------Model InqPurchOrdDirect Notes -------------------------------------------*@
+<div class="modal fade" id="Model_InqPurchOrdDirectNotes">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(70)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2">
+                            <label class="unselectable" for="MRP_InqPurchOrdDirect_Notes">@Html.Recource(70)</label>
+                        </div>
+                        <div class="col-md-10">
+                            <textarea required="true" style="width: 100%;height:80px !important;" id="MRP_InqPurchOrdDirect_Notes" disabled>@OrdHf.Notes</textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2">
+                            <label class="unselectable" for="MRP_InqPurchOrdDirect_GenNote">@Html.Recource(5668)</label>
+                        </div>
+                        <div class="col-md-10">
+                            <textarea required="true" style="width: 100%; height: 80px !important;" id="MRP_InqPurchOrdDirect_GenNote" disabled>@OrdHf.GenNote</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ClosePurchOrdNotes()" class="btn btn-primary">@Resources.Resource.Close</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_InqPurchOrdDirectNotes').draggable({
+        handle: ".modal-header",
+    });
+
+    function AddInqPurchOrdDirectNotes(val) {
+        $('#Model_InqPurchOrdDirectNotes').modal('show')
+    }
+    function ClosePurchOrdNotes(e) {
+        $('#Model_InqPurchOrdDirectNotes').modal('hide')
+    }
+</script>
+@*--------------------------------END Model InqPurchOrdDirect Notes -------------------------------------------*@
+
+@*--------------------------------Model InqPurchOrdDirect ItemNote -------------------------------------------*@
+<div class="modal fade" id="Model_InqPurchOrdDirectItemNote">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(3799)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <textarea required="true" style="width: 100%; height: 200px !important;" id="Mrp__InqPurchOrdDirect_ItemNote" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="CloseItemNote()" class="btn btn-primary">@Resources.Resource.Close</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var ItemNoteValue = 0;
+    $('#Model_InqPurchOrdDirectItemNote').draggable({
+        handle: ".modal-header",
+    });
+
+    function InqPurchOrdDirectItemNote(val) {
+        ItemNoteValue = val;
+        var tr = $("#InqPurchOrdDirectTBody #InqPurchOrdDirect_Serial_" + ItemNoteValue + "");
+        $('#Mrp__InqPurchOrdDirect_ItemNote')[0].value = tr.find('#InqPurchOrdDirect_ItemNote_' + ItemNoteValue)[0].value
+        $('#Model_InqPurchOrdDirectItemNote').modal('show')
+    }
+    function CloseItemNote(e) {
+        $('#Model_InqPurchOrdDirectItemNote').modal('hide')
+    }
+</script>
+@*--------------------------------END Model InqPurchOrdDirect ItemNote -------------------------------------------*@
+
+@*--------------------------------Model InqPurchOrdDirect DetailedNotes -------------------------------------------*@
+<div class="modal fade" id="Model_InqPurchOrdDirectDetailedNotes">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("الملاحظات التفصيلية", "Detailed Notes")</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <textarea required="true" style="width: 100%; height: 200px !important;" id="Mrp_InqPurchOrdDirect_DetailedNotes" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="CloseDetailedNotes()" class="btn btn-primary">@Resources.Resource.Close</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var DetailedNotesValue = 0;
+    $('#Model_InqPurchOrdDirectDetailedNotes').draggable({
+        handle: ".modal-header",
+    });
+    function InqPurchOrdDirectDetailedNotes(val) {
+        DetailedNotesValue = val;
+        var tr = $("#InqPurchOrdDirectTBody #InqPurchOrdDirect_Serial_" + DetailedNotesValue + "");
+        $('#Mrp_InqPurchOrdDirect_DetailedNotes')[0].value = tr.find('#InqPurchOrdDirect_DetailedNotes_' + DetailedNotesValue)[0].value
+        $('#Model_InqPurchOrdDirectDetailedNotes').modal('show')
+    }
+    function CloseDetailedNotes(e) {
+        $('#Model_InqPurchOrdDirectDetailedNotes').modal('hide')
+    }
+</script>
+@*--------------------------------END Model DetailedNotes -------------------------------------------*@
+
+
+@*-----------------------------Model Documents-------------------------------------*@
+<div class="modal fade" id="Model_InqPurchOrdDirectDocumentsArchive">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أرشفة الوثائق", "Archive Documents")</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group" style=" display: block; height: 125px;">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="InqPurchOrdDirectDocumentArchiveTable">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center !important">@Html.Recource(66)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5629)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5630)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5631)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5632)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5633)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="InqPurchOrdDirectDocumentArchiveTbody" style="border-top: 1px solid #ddd;">
+                                @foreach (DataRow row in DtAttachment.Rows)
+                                {
+                                    DateTime date = Convert.ToDateTime(row["DateUploded"].ToString());
+                                    <tr>
+                                        <td>
+                                            <input type="text" style="text-align: center !important" id="InqPurchOrdDirect_AttachmentFiles_AttachDescAr" value="@row["Description"].ToString()" disabled />
+                                        </td>
+                                        <td>
+
+                                            <a onclick="DownloadFile('@row["FileName"].ToString()','@Convert.ToBase64String((byte[])row["FileData"])')"><span class="glyphicon glyphicon-download"></span></a>
+                                        </td>
+                                        <td>
+                                            <input id="InqPurchOrdDirectAttachmentFiles_FileName" type="text" style="text-align: center !important" value="@row["FileName"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="InqPurchOrdDirectDocumentArchive_UploadDate" type="text" style="text-align: center !important" value="@date.ToShortDateString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="InqPurchOrdDirectDocumentArchive_FileSize" type="text" style="text-align: center !important" value="@row["FileSize"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="InqPurchOrdDirectDocumentArchive_FileType" type="text" style="text-align: center !important" value="@row["ContentType"].ToString()" disabled />
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                }
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="CloseDocumentArchive()" class="btn btn-primary">@Resources.Resource.Close</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var DocumentsArchiveValue = 0;
+    var Count = 0;
+    $('#Model_InqPurchOrdDirectDocumentsArchive').draggable({
+        handle: ".modal-header",
+    });
+    function AddInqPurchOrdDirectDocuments(val) {
+        DocumentsArchiveValue = val;
+        $('#Model_InqPurchOrdDirectDocumentsArchive').modal('show')
+    }
+    function DownloadFile(FileName, base64) {
+        var binaryString = window.atob(base64);
+        var binaryLen = binaryString.length;
+        var bytes = new Uint8Array(binaryLen);
+        for (var i = 0; i < binaryLen; i++) {
+            var ascii = binaryString.charCodeAt(i);
+            bytes[i] = ascii;
+        }
+        saveByteArray(FileName, bytes)
+    }
+    function saveByteArray(reportName, byte) {
+        var blob = new Blob([byte], { type: "application/pdf" });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        var fileName = reportName;
+        link.download = fileName;
+        link.click();
+    };
+    function CloseDocumentArchive() {
+        $('#Model_InqPurchOrdDirectDocumentsArchive').modal('hide')
+    }
+</script>
+@*--------------------------------END Model Documents -----------------------------*@
+
+@*-----------------------------Model Attachments-------------------------------------*@
+<div class="modal fade" id="Model_InqPurchOrdDirectAttachments">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(7743)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="InqPurchOrdDirectAttachmentsTable">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center !important">@Html.Recource(66)</th>
+                                    <th style="text-align: center !important">@Html.Recource(118)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="InqPurchOrdDirectAttachmentsTbody" style="border-top: 1px solid #ddd;">
+                                @foreach (DataRow row in Dt.Rows)
+                                {
+                                    <tr>
+                                        <td>
+                                            <textarea style="width: 100%;height:50px !important;" id="InqPurchOrdDirect_AttachDescAr">@row["Description"].ToString()</textarea>
+                                        </td>
+                                        <td>
+                                            <textarea style="width: 100%;height:50px !important;" id="InqPurchOrdDirect_AttachDescEn">@row["DescriptionEng"].ToString()</textarea>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="CloseAttachments()" class="btn btn-primary">@Resources.Resource.Close</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var AttachmentsValue = 0;
+    $('#Model_InqPurchOrdDirectAttachments').draggable({
+        handle: ".modal-header",
+    });
+    function AddInqPurchOrdDirectAttachments(val) {
+        AttachmentsValue = val;
+        $('#Model_InqPurchOrdDirectAttachments').modal('show')
+    }
+    function CloseAttachments() {
+        $('#Model_InqPurchOrdDirectAttachments').modal('hide')
+    }
+</script>
+@*--------------------------------END Model Attachments -----------------------------*@
+
+@*-----------------------------Model InqPurchOrdDirect CondsGuaranty-------------------------------------*@
+<div class="modal fade" id="Model_InqPurchOrdDirectCondsGuaranty">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(66)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="modal-title">@Html.Recource(3162)</label>
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="modal-title">@Html.Recource(3164)</label>
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                </div>
+                <hr />
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3165) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_CodePaymentCond1" value="@DtConds.Rows[0][4]" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_DescPaymentCond1" value="@Html.Translate(DtConds.Rows[0][5].ToString(),DtConds.Rows[0][6].ToString())" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtPaymentPerc1" value="@DtConds.Rows[0][7]" disabled />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_CodePaymentCond1" value="0" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_DescPaymentCond1" value="" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtPaymentPerc1" value="" disabled />
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3166) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtPaymentCond2" value="@DtConds.Rows[0][8]" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtPaymentCond2" value="@Html.Translate(DtConds.Rows[0][9].ToString(),DtConds.Rows[0][10].ToString())" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtPaymentPerc2" value="@DtConds.Rows[0][11]" disabled />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtPaymentCond2" value="0" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtPaymentCond2" value="" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtPaymentPerc2" value="" disabled />
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3167) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtPaymentCond3" value="@DtConds.Rows[0][12]" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtPaymentCond3" value="@Html.Translate(DtConds.Rows[0][13].ToString(),DtConds.Rows[0][14].ToString())" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_PurchaseReqHF_save_txtPaymentPerc3" value="@DtConds.Rows[0][15]" disabled />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtPaymentCond3" value="" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtPaymentCond3" value="" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_PurchaseReqHF_save_txtPaymentPerc3" value="" disabled />
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3168) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtPaymentCond4" value="@DtConds.Rows[0][16]" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtPaymentCond4" value="@Html.Translate(DtConds.Rows[0][17].ToString(),DtConds.Rows[0][18].ToString())" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_PurchaseReqHF_save_txtPaymentPerc4" value="@DtConds.Rows[0][19]" disabled />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtPaymentCond4" value="" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtPaymentCond4" value="" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_PurchaseReqHF_save_txtPaymentPerc4" value="" disabled />
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3169) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtPaymentCond5" value="@DtConds.Rows[0][20]" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtPaymentCond5" value="@Html.Translate(DtConds.Rows[0][21].ToString(),DtConds.Rows[0][22].ToString())" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtPaymentPerc5" value="@DtConds.Rows[0][23]" disabled />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtPaymentCond5" value="" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtPaymentCond5" value="" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtPaymentPerc5" value="" disabled />
+                            </div>
+                        }
+                    </div>
+                </div>
+                <hr />
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="modal-title">@Html.Recource(3163)</label>
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="modal-title">@Html.Recource(3164)</label>
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                </div>
+                <hr />
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3171) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuaranty1" value="@DtConds.Rows[0][24]" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtGuaranty1" value="@Html.Translate(DtConds.Rows[0][25].ToString(),DtConds.Rows[0][26].ToString())" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuarantyPerc1" value="@DtConds.Rows[0][27]" disabled />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuaranty1" value="" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtGuaranty1" value="" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuarantyPerc1" value="" disabled />
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3172) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuaranty2" value="@DtConds.Rows[0][28]" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtGuaranty2" value="@Html.Translate(DtConds.Rows[0][29].ToString(),DtConds.Rows[0][30].ToString())" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuarantyPerc2" value="@DtConds.Rows[0][31]" disabled />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuaranty2" value="" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtGuaranty2" value="" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuarantyPerc2" value="" disabled />
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3173) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuaranty3" value="@DtConds.Rows[0][32]" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtGuaranty3" value="@Html.Translate(DtConds.Rows[0][33].ToString(),DtConds.Rows[0][34].ToString())" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuarantyPerc3" value="@DtConds.Rows[0][35]" disabled />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuaranty3" value="" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtGuaranty3" value="" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuarantyPerc3" value="" disabled />
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3174) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuaranty4" value="@DtConds.Rows[0][36]" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtGuaranty4" value="@Html.Translate(DtConds.Rows[0][37].ToString(),DtConds.Rows[0][38].ToString())" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuarantyPerc4" value="@DtConds.Rows[0][39]" disabled />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuaranty4" value="" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtGuaranty4" value="" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuarantyPerc4" value="" disabled />
+                            </div>
+                        }
+
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3175) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuaranty5" value="@DtConds.Rows[0][40]" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtGuaranty5" value="@Html.Translate(DtConds.Rows[0][41].ToString(),DtConds.Rows[0][42].ToString())" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuarantyPerc5" value="@DtConds.Rows[0][43]" disabled />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuaranty5" value="" disabled hidden />
+                                <input style="width:100%" type="text" id="MRP_InqPurchOrdDirect_txtGuaranty5" value="" disabled />
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="MRP_InqPurchOrdDirect_txtGuarantyPerc5" value="" disabled />
+                            </div>
+                        }
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="CloseCondsGuaranty()" class="btn btn-primary">@Resources.Resource.Close</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_InqPurchOrdDirectCondsGuaranty').draggable({
+        handle: ".modal-header",
+    });
+    function AddInqPurchOrdDirectConditionsAndGuaranties(val) {
+        $('#Model_InqPurchOrdDirectCondsGuaranty').modal('show')
+    }
+    function CloseCondsGuaranty() {
+        $('#Model_InqPurchOrdDirectCondsGuaranty').modal('hide')
+    }
+</script>
+@*--------------------------------END Model CondsGuaranty -----------------------------*@
+
+<script>
+    sumTotalAll()
+    function sumTotalAll() {
+        var table = $('#InqPurchOrdDirectTBody tr');
+        var trs = table;
+        var itemTotal = 0;
+        var itemTotalqty = 0;
+        var totalAmount = 0;
+        var vouDiscountPer = Number($('#MRP_InqPurchOrdDirect_DisPersTotal').val()) / 100;
+        var vouDiscountPerItem = 0;
+        var itemDiscVal = 0;
+        var totalDiscVal = 0;
+        var ItemTaxVal = 0;
+        var totalTaxVal = 0;
+        var TotalNetAmount = 0;
+        var Total = 0;
+        var FreightCost = 0;
+        var ExtraExp = 0;
+    
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value
+            itemTotalqty += Number($(trs[i]).closest('tr').find('#InqPurchOrdDirect_Qty_' + InputSerial)[0].innerHTML);
+            itemTotal = Number($(trs[i]).closest('tr').find('#InqPurchOrdDirect_Qty_' + InputSerial)[0].innerHTML) * Number($(trs[i]).closest('tr').find('#InqPurchOrdDirect_Price_' + InputSerial)[0].innerHTML);
+            itemDiscVal = (Number($(trs[i]).closest('tr').find('#InqPurchOrdDirect_Qty_' + InputSerial)[0].innerHTML) * Number($(trs[i]).closest('tr').find('#InqPurchOrdDirect_Price_' + InputSerial)[0].innerHTML) * Number($(trs[i]).closest('tr').find('#InqPurchOrdDirect_PerDiscount_' + InputSerial)[0].innerHTML)) / 100;
+            vouDiscountPerItem = (Number(itemTotal) - Number(itemDiscVal)) * Number(vouDiscountPer);
+            ItemTaxVal = (Number($(trs[i]).closest('tr').find('#InqPurchOrdDirect_Qty_' + InputSerial)[0].innerHTML) * Number($(trs[i]).closest('tr').find('#InqPurchOrdDirect_Price_' + InputSerial)[0].innerHTML) - Number(itemDiscVal) - Number(vouDiscountPerItem)) * (Number($(trs[i]).closest('tr').find('#InqPurchOrdDirect_ItemTaxPer_' + InputSerial)[0].innerHTML) / 100);
+            //if ($(trs[i]).closest('tr').find('#InqPurchOrdDirect_ItemTaxType_' + InputSerial)[0].value == true) {
+            //    ItemTaxVal = (Number($(trs[i]).closest('tr').find('#InqPurchOrdDirect_Qty_' + InputSerial)[0].innerHTML) * Number($(trs[i]).closest('tr').find('#InqPurchOrdDirect_Price_' + InputSerial)[0].innerHTML) - Number(itemDiscVal) - Number(vouDiscountPerItem)) * (Number($(trs[i]).closest('tr').find('#InqPurchOrdDirect_ItemTaxPer_' + InputSerial)[0].innerHTML) / 100);
+            //}
+            //else {
+            //    ItemTaxVal = (Number($(trs[i]).closest('tr').find('#InqPurchOrdDirect_Qty_' + InputSerial)[0].innerHTML) * Number($(trs[i]).closest('tr').find('#InqPurchOrdDirect_ItemTaxPer_' + InputSerial)[0].innerHTML));
+            //}
+            totalAmount += Number(itemTotal)
+            totalDiscVal += Number(itemDiscVal);
+            totalTaxVal += Number(ItemTaxVal);
+            Total = (Number(itemTotal).toFixed(3) - Number(vouDiscountPerItem).toFixed(3) - Number(itemDiscVal).toFixed(3));
+            $(trs[i]).closest('tr').find('#InqPurchOrdDirect_Total_' + InputSerial)[0].innerHTML = Number(Total).toFixed(3)
+            TotalNetAmount += Number($(trs[i]).closest('tr').find('#InqPurchOrdDirect_Total_' + InputSerial)[0].innerHTML);
+        }
+
+        FreightCost = Number($('#MRP_InqPurchOrdDirect_FreightCost').val())
+        ExtraExp = Number($('#MRP_InqPurchOrdDirect_ExtraExp').val())
+        TotalNetAmount = Number(TotalNetAmount) + Number(totalTaxVal) + Number(FreightCost) + Number(ExtraExp);
+        $('#MRP_InqPurchOrdDirect_Amount').val(Number(totalAmount).toFixed(3));
+        $('#MRP_InqPurchOrdDirect_Discount').val(Number(totalDiscVal).toFixed(3));
+        $('#MRP_InqPurchOrdDirect_TaxAmount').val(Number(totalTaxVal).toFixed(3));
+        $('#MRP_InqPurchOrdDirect_TotalQty').val(Number(itemTotalqty).toFixed(3));
+        $('#MRP_InqPurchOrdDirect_NetAmount').val(Number(TotalNetAmount).toFixed(3));
+
+        var TotDiscPer = (Number($('#MRP_InqPurchOrdDirect_DisPersTotal').val()) / 100) * ($('#MRP_InqPurchOrdDirect_Amount').val() - $('#MRP_InqPurchOrdDirect_Discount').val());
+
+        $('#MRP_InqPurchOrdDirect_DisTotal').val(Number(TotDiscPer).toFixed(3));
+    }
+</script>

@@ -1,0 +1,841 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    int OrdYear = ViewBag.OrdYear;
+    int OrderNo = ViewBag.OrderNo;
+    string TawreedNo = ViewBag.TawreedNo;
+    string ShipSer = ViewBag.ShipSer;
+    string srl = ViewBag.srl;
+
+    int Srial = 1;
+    List<InvItemsMF> Mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+    DataTable Dt = new DataTable();
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+    List<int> store = new MDB().InvStoreUsers.Where(x => x.CompNo == company.comp_num && x.UserID == me.UserID && x.AllPerm == true).Select(o => o.StoreNo).ToList();
+    List<Vendor> Vend = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.IsHalt == false).ToList();
+    List<InvStoresMF> lStores = new MDB().InvStoresMFs.Where(x => x.CompNo == company.comp_num && store.Contains(x.StoreNo)).ToList();
+    List<Ord_PortInfoDF> PortInfoDF = new MDB().Ord_PortInfoDF.Where(x => x.CompNo == company.comp_num && x.OrderYear == OrdYear && x.OrderNo == OrderNo
+    && x.TawreedNo == TawreedNo && x.ShipSer == ShipSer).ToList();
+    List<InvDocType> DocType = new MDB().InvDocTypes.Where(x => x.CompNo == company.comp_num && x.VouchType == 13).ToList();
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+
+}
+
+<style>
+
+    #WriteOffOrd_DIV table th, #WriteOffOrd_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+    .wrapperx {
+        padding:0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+
+    .sticky-col {
+        z-index:2;
+        position: sticky;
+        position: -webkit-sticky;
+        background-color: white;
+    }
+
+    .first-col {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        @Html.Translate("right: 0px;", "left: 0px;")
+    }
+
+    .second-col {
+        width: 80px;
+        min-width: 80px;
+        max-width: 80px;
+        @Html.Translate("right: 60px;", "left: 60px;")
+    }
+
+    .third-col {
+        width: 150px;
+        min-width: 150px;
+        max-width: 150px;
+        @Html.Translate("right: 125px;", "left: 125px;")
+    }
+
+    .four-col {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        @Html.Translate("right: 280px;", "left: 280px;")
+    }
+    .stickytooltip {
+        max-height: 80vh !important;
+        overflow: auto !important
+    }
+</style>
+
+<link href="~/Content/stickytooltip.css" rel="stylesheet" />
+<script src="~/Scripts/stickytooltip.js?s=15"></script>
+
+<style>
+    #WriteOffOrdDFTable span.badge {
+        border: none;
+        position: static;
+        z-index: 20 !important;
+        box-sizing: content-box;
+        visibility: visible;
+        z-index: 9999999999 !important;
+        padding: 1px;
+        font-family: Arial, verdana, tahoma;
+        font-size: 13px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        text-shadow: 1px 1px 1px rgba(0,0,0,.3);
+        background: #ff3019;
+        background: -webkit-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Chrome10+,Safari5.1+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff3019), color-stop(100%, #cf0404)); /* Chrome,Safari4+ */
+        background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* FF3.6+ */
+        background: -ms-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* IE10+ */
+        background: -o-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Opera 11.10+ */
+        background: linear-gradient(to bottom, #ff3019 0%, #cf0404 100%); /* W3C */
+        width: 18px;
+        height: 18px;
+        line-height: 20px;
+        border-radius: 50%;
+        filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff3019', endColorstr='#cf0404', GradientType=0)"; /* IE6-9 */
+        filter: "progid:DXImageTransform.Microsoft.Shadow(direction=135, strength=2, color=ff0000)"; /* IE10 text shadows */
+        box-shadow: 0 2px 5px rgba(0,0,0,.4);
+    }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(100vh - 210px) !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_WriteOff_OrdYear">@Html.Recource(3196) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="text" id="Ord_WriteOff_OrdYear_@srl" value="@OrdYear" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_WriteOff_OrderNo">@Html.Recource(3197) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:90px !important;" type="text" id="Ord_WriteOff_OrderNo_@srl" value="@OrderNo" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_WriteOff_TawreedNo">@Html.Recource(3797) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="text" id="Ord_WriteOff_TawreedNo_@srl" value="@TawreedNo" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_WriteOff_ShipSer">@Html.Recource(3797) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 120px !important; direction: ltr; text-align: right;" type="text" id="Ord_WriteOff_ShipSer_@srl" value="@ShipSer" disabled />
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_WriteOff_PayOrderNo">@Html.Translate("رقم الاتلاف", "WriteOff") </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 120px !important; direction: ltr; text-align: right;" type="text" id="Ord_WriteOff_PayOrderNo_@srl" value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_WriteOff_PayOrderDate">@Html.Recource(206)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="date" id="Ord_WriteOff_PayOrderDate_@srl" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    </div>
+
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_WriteOff_DocType">@Html.Recource(61)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select onchange="$('#Ord_WriteOff_DocType').val(this.value)" style="width: 85%" id="Ord_WriteOff_CboDocType_@srl">
+                            @foreach (var v in DocType)
+                            {
+                                if (v.DocType == DocType.Select(o => o.DocType).FirstOrDefault())
+                                {
+                                    <option value="@v.DocType" selected>@Html.Translate(v.DocName, v.DocNameEng)</option>
+                                }
+                                else
+                                {
+                                    <option value="@v.DocType">@Html.Translate(v.DocName, v.DocNameEng)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_WriteOff_StoreNo">@Html.Recource(1)</label>
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <select onchange="$('#Ord_WriteOff_StoreNo').val(this.value)" style="width: 85%" id="Ord_WriteOff_CboStoreNo_@srl">
+                            @foreach (var v in lStores)
+                            {
+                                if (v.StoreNo == lStores.Select(o => o.StoreNo).FirstOrDefault())
+                                {
+                                    <option value="@v.StoreNo" selected>@Html.Translate(v.StoreName, v.StoreNameEng)</option>
+                                }
+                                else
+                                {
+                                    <option value="@v.StoreNo">@Html.Translate(v.StoreName, v.StoreNameEng)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_WriteOff_Notes">@Html.Recource(70)</label>
+                    </div>
+                    <div class="col-md-8">
+                        <textarea required="true" style="width: 96%; height: 25px !important; " id="Ord_WriteOff_Notes_@srl" />
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary btn-block" onclick="AddWriteOffDocuments(@srl)" style="width:100px !important;">
+                            @Html.Recource(7744)
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group" style="display: block; height: 225px;">
+                <div class="col-md-12">
+                    <label class="unselectable">@Html.Recource(4756) :</label>
+                    <button onclick="Add_InvItemsMF(1,@srl)" type="button" class="btn btn-default">@Html.Recource(4756)</button>
+                </div>
+                <div class="col-md-12 wrapperx" id="WriteOffOrd_DIV">
+                    <table class="table table-hover WriteOffOrdDF_Info" id="WriteOffOrdDFTable">
+                        <thead>
+                            <tr>
+                                <th style="text-align: center; width: 350px; word-wrap: break-word; white-space: normal;">@Html.Recource(44)</th>
+                                <th style="text-align: center; width: 990px; word-wrap: break-word; white-space: normal;">@Html.Recource(74)</th>
+                                <th style="width: 205px; word-wrap: break-word; white-space: normal;">@Html.Recource(67)</th>
+                                @if (CActive.ClientNo == 335)
+                                {
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(5693)</th>
+                                }
+                                else
+                                {
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(49)</th>
+                                }
+                                @if (compMF.UseQty2 == true)
+                                {
+                                    if (CActive.ClientNo == 335)
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(442)</th>
+                                    }
+                                    else
+                                    {
+                                        <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(72)</th>
+                                    }
+                                }
+                                else
+                                {
+                                    <th hidden>@Html.Recource(72)</th>
+                                }
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <th style="text-align: center;" colspan="3">@Html.Translate("الاجمالي", "Total")</th>
+                                <th style="text-align:center;" id="TotalQty1_@srl">0</th>
+                                @if (compMF.UseQty2 == true)
+                                {
+                                    <th style="text-align:center;" id="TotalQty2_@srl">0</th>
+                                }
+                                else
+                                {
+                                    <th hidden id="TotalQty2_@srl">0</th>
+                                }
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                        <tbody style="text-align: center;" id="WriteOffOrdDFTBody_@srl">
+                            @foreach (Ord_PortInfoDF item in PortInfoDF)
+                            {
+                                string ItemDesc = Mf.Where(x => x.ItemNo == item.ItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                                string UnitSerial = item.PortUnitSerial.Value.ToString();
+                                <tr id="WriteOff_Serial_@Srial">
+                                    <td style="width: 10%;" id="WriteOff_ItemNo">@item.ItemNo</td>
+                                    <td style="width: 35%;">@ItemDesc</td>
+                                    <td style="text-align: center; width: 10%;">
+                                        <select style="width:100%" class="WriteOff_Unit">
+                                            @{
+                                                using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                                {
+                                                    Dt = new DataTable();
+                                                    cn.Open();
+                                                    using (SqlCommand cmd = new SqlCommand())
+                                                    {
+                                                        cmd.Connection = cn;
+                                                        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                                        cmd.CommandText = "InvT_LoadItemUnits";
+                                                        cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                                        cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = item.ItemNo;
+                                                        using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                                        {
+                                                            DA.Fill(Dt);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            @foreach (DataRow row in Dt.Rows)
+                                            {
+                                                if (UnitSerial == row["UnitSerial"].ToString())
+                                                {
+                                                    <option value="@row["UnitSerial"].ToString()"  unitCode="@row["UnitCode"].ToString()" selected>
+                                                        @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                    </option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@row["UnitSerial"].ToString()"  unitCode="@row["UnitCode"].ToString()">
+                                                        @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                    </option>
+                                                }
+                                            }
+                                        </select>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <input id="WriteOff_Qty_@Srial" value="@item.PortQty" type="number" style="width:75px !important" onblur="GetValueqty(this,'@srl')" />
+                                    </td>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <td style="text-align: center;">
+                                            <input id="WriteOff_Qty2_@Srial" value="@item.PortQty2" type="number" style="width:75px !important" onblur="GetValueqty2(this,'@srl')" />
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td style="text-align: center;" hidden>
+                                            <input id="WriteOff_Qty2_@Srial" value="@item.PortQty2" type="number" style="width:75px !important" onblur="GetValueqty2(this,'@srl')" />
+                                        </td>
+                                    }
+                                    <td>
+                                        <button class="btn-de" onclick="RemoveRowWriteOff(this,@srl)"><i class="fa fa-trash-alt"></i></button>
+                                        <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="ExcuteSave_WriteOffInfo(@srl)" class="btn btn-primary">@Resources.Resource.Save</button>
+        </div>
+    </div>
+</div>
+
+@*-----------------------------Model WriteOff_Documents-------------------------------------*@
+<div class="modal fade" id="Model_WriteOff_DocumentsArchive_@srl">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أرشفة الوثائق", "Archive Documents")</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <button onclick="Add_WriteOff_DocumentArchive(@srl)" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="WriteOff_DocumentArchiveTable">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(66)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5628)</th>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(5629)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5630)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5631)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5632)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5633)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="WriteOff_DocumentArchiveTbody_@srl" style="border-top: 1px solid #ddd;">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SaveWriteOffDocumentArchive(@srl)" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var Count = 0;
+   
+    function AddWriteOffDocuments(Srl) {
+        $('#Model_WriteOff_DocumentsArchive_' + Srl).draggable({
+            handle: ".modal-header",
+        });
+        $('#Model_WriteOff_DocumentsArchive_' + Srl).modal('show')
+    }
+    function Add_WriteOff_DocumentArchive(srl) {
+        var table = $("#WriteOff_DocumentArchiveTbody_" + srl);
+        Count++;
+        var newarray = [];
+        newarray.push('<input id="WriteOff_DocumentArchive_FileId" type="hidden" value="' + Count + '" />')
+        newarray.push('<input id="WriteOff_DocumentArchive_Description_' + Count + '" type="text" style="width: 115px !important;text-align: center !important" />')
+        newarray.push('<div class="image-upload"><label for="file-input"><span class="glyphicon glyphicon-upload" onclick="OpenFileUpload(this)"></span></label><input type="file" name="uploadFile_7" style="display:none" id="WriteOff_DocumentArchive_File_' + Count + '" onchange="uploadFile(this,' + Count + ',' + srl +')" /></div>')
+        newarray.push('')
+        newarray.push('<a id="WriteOff_DownloadFile_' + Count + '" onclick="DownloadFile()"><span class="glyphicon glyphicon-download"></span></a>')
+        newarray.push('<input id="WriteOff_DocumentArchive_FileName_' + Count + '" type="text" style="text-align: center !important" disabled />')
+        newarray.push('<input id="WriteOff_DocumentArchive_UploadDate_' + Count + '" type="text" style="width: 95px;text-align: center !important" disabled />')
+        newarray.push('<input id="WriteOff_DocumentArchive_FileSize_' + Count + '" type="text" style="width: 70px;text-align: center !important" disabled />')
+        newarray.push('<input id="WriteOff_DocumentArchive_FileType_' + Count + '" type="text" style="width: 55px;text-align: center !important" disabled />')
+        newarray.push('<button class="btn-de" onclick="RemoveRowUpload(this,' + Count + ',' + srl +')" type="button"><i class= "fa fa-trash-alt"></i ></button>')
+        $(table).append(
+            GenRowDocumentArchive(newarray, 'WriteOff_DocumentArchive_' + Count)
+        );
+    }
+    function GenRowDocumentArchive(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function OpenFileUpload(ID) {
+        var $td = $(ID).closest("td");
+        $($td).find("input[type=file]").click();
+    }
+    function uploadFile(Elem, Count, srl) {
+        var uploadDate = new Date($.now());
+        var shortDate = moment(uploadDate).format('DD/MM/YYYY');
+        var InputID = $(Elem).attr("id");
+        var file_size = $(Elem)[0].files[0].size;
+
+        var table = $("#WriteOff_DocumentArchiveTbody_" + srl);
+        var tr = table.find('#WriteOff_DocumentArchive_' + Count);
+
+        var fileName = tr.find("#WriteOff_DocumentArchive_File_" + Count).val().replace(/C:\\fakepath\\/i, '');
+        var filetype = fileName.split('.').pop();
+
+        tr.find('#WriteOff_DocumentArchive_FileName_' + Count)[0].value = fileName;
+        tr.find('#WriteOff_DocumentArchive_UploadDate_' + Count)[0].value = shortDate;
+        tr.find('#WriteOff_DocumentArchive_FileSize_' + Count)[0].value = file_size;
+        tr.find('#WriteOff_DocumentArchive_FileType_' + Count)[0].value = "." + filetype;
+
+        var $file = document.getElementById(InputID);
+        $formData = new FormData();
+        if ($file.files.length > 0) {
+            for (var i = 0; i < $file.files.length; i++) {
+                $formData.append('file-' + i, $file.files[i]);
+            }
+
+            var OrderYear = $('#Ord_WriteOff_OrdYear_' + srl).val();
+            var OrderNo = $('#Ord_WriteOff_OrderNo_' + srl).val();
+            var TawreedNo = $('#Ord_WriteOff_TawreedNo_' + srl).val();
+            var ShipSer = $('#Ord_WriteOff_ShipSer_' + srl).val();
+
+            $formData.append('Id', Count);
+            $formData.append('OrderYear', OrderYear);
+            $formData.append('OrderNo', OrderNo);
+            $formData.append('TawreedNo', TawreedNo);
+            $formData.append('ShipSer', ShipSer);
+            $formData.append('VouNo', 0);
+            $formData.append('VouType', 13);
+        }
+
+        $.ajax({
+            url: '@Url.Action("InsertFileWriteOff", "VoucIssue")',
+            type: 'POST',
+            data: $formData,
+            contentType: false,
+            processData: false,
+            success: function (r) {
+                var table = $("#WriteOff_DocumentArchiveTbody_" + srl);
+                var tr = table.find('#WriteOff_DocumentArchive_' + Count);
+                tr.find('#WriteOff_DownloadFile_' + Count)[0].setAttribute('onclick', 'DownloadFile("' + fileName + '","' + r + '")')
+            },
+            error: function (error) {
+            }
+        });
+    }
+    function RemoveRowUpload(e, Count, srl) {
+        if (confirm('@Resources.Resource.DeleteConfirm')) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+            var OrderYear = $('#Ord_WriteOff_OrdYear_' + srl).val();
+            var OrderNo = $('#Ord_WriteOff_OrderNo_' + srl).val();
+            var TawreedNo = $('#Ord_WriteOff_TawreedNo_' + srl).val();
+            var ShipSer = $('#Ord_WriteOff_ShipSer_' + srl).val();
+            $.ajax({
+                type: "POST",
+                url:'@Url.Action("RemoveFileWriteOff", "VoucIssue")',
+                data: { Id: Count, OrderYear: OrderYear, OrderNo: OrderNo, TawreedNo: TawreedNo, ShipSer: ShipSer, VouNo: 0, VouType: 13 },
+                success: function (response) {
+
+                },
+            });
+
+            return true;
+        }
+        return false;
+    }
+    function DownloadFile(FileName, base64) {
+        var binaryString = window.atob(base64);
+        var binaryLen = binaryString.length;
+        var bytes = new Uint8Array(binaryLen);
+        for (var i = 0; i < binaryLen; i++) {
+            var ascii = binaryString.charCodeAt(i);
+            bytes[i] = ascii;
+        }
+        saveByteArray(FileName, bytes)
+    }
+    function saveByteArray(reportName, byte) {
+        var blob = new Blob([byte], { type: "application/pdf" });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        var fileName = reportName;
+        link.download = fileName;
+        link.click();
+    }
+    function SaveWriteOffDocumentArchive(srl) {
+        $('#Model_WriteOff_DocumentsArchive_' + srl).modal('hide')
+    }
+</script>
+@*--------------------------------END Model WriteOff_Documents -----------------------------*@
+
+@*-----------------------------Model WriteOff_InvItemsMF-------------------------------------*@
+<div class="modal fade wide" id="Model_WriteOff_InvItemsMF_@srl">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4756)</label>
+            </div>
+            <div class="box-body box-profile" id="eWriteOffItemTbody">
+                <div class="modal-body row">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <table class="table table-hover" id="SelectWriteOffItemTable_@srl">
+                                <thead>
+                                    <tr>
+                                        <th>@Html.Recource(44)</th>
+                                        <th>@Html.Recource(74)</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (Ord_PortInfoDF item in PortInfoDF)
+                                    {
+                                        InvItemsMF M = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == item.ItemNo).FirstOrDefault();
+                                        string Desc = Html.Translate(M.ItemDesc, M.ItemDesc_Ara).ToString();
+                                        <tr onclick="$(this).toggleClass('selected');">
+                                            <td id="ItemNo">@item.ItemNo</td>
+                                            <td id="ItemDesca" title="@Desc">@Html.Trim(Desc, 50)</td>
+                                            <td></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="Selecting_WriteOff_InvItemsMF(@srl)" class="btn btn-primary">@Html.Recource(4599)</button>
+                    <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var Items = $('#SelectWriteOffItemTable_' + @srl).DataTable({
+        "scrollY": TableHeight2(350),
+        "paging": true,
+        "pageLength": 25,
+        "scrollX": true,
+        "autoWidth": false
+    });
+
+    var itemType = 0;
+    var srls = 0;
+    var frmSatus = 1;
+    function Add_InvItemsMF(type, srl) {
+        itemType = type;
+        srls = srl;
+        frmSatus = 1;
+        var table = $("#SelectWriteOffItemTable_" + srl);
+        table.find('tr').removeClass("selected");
+
+        $('#Model_WriteOff_InvItemsMF_' + srl).draggable({
+            handle: ".modal-header",
+        });
+        $('#Model_WriteOff_InvItemsMF_' + srl).modal('show');
+    }
+    function Selecting_WriteOff_InvItemsMF(id) {
+        var data = Items.rows('.selected').data();
+
+        if (data.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة واحدة على الاقل", "Select one item at least")');
+            return;
+        }
+        if (frmSatus == 1) {
+            if (itemType == 1) {
+                var table_ = $("#WriteOffOrdDFTBody_" + id);
+                var item = new Array();
+                for (var i = 0; i < data.length; i++) {
+                    var Added = false;
+                    if (table_.find("tr").length != 0) {
+                        table_.find("tr").each(function () {
+                            var ItemNo_ = $(this).find("td:first-child").text();
+                            if (ItemNo_ == data[i][0]) {
+                                Added = true;
+                                return false;
+                            }
+                            else {
+                                Added = false;
+                            }
+                        });
+                        if (!Added) {
+                            item.push({
+                                ItemNo: data[i][0],
+                                ItemDesc: data[i][1]
+                            });
+                        }
+                    }
+                    else {
+                        item.push({
+                            ItemNo: data[i][0],
+                            ItemDesc: data[i][1]
+                        });
+                    }
+                }
+                if (item.length != 0) {
+                    burn({ items: item, srl: table_.find("tr").length, id: id }, '../../../VoucIssue/ChooseWriteOffOrdItems', '', LoadItemRawMaterial, true);
+                }
+                else {
+                    $('#Model_WriteOff_InvItemsMF_' + srl).modal('hide')
+                }
+            }
+        }
+    }
+    function LoadItemRawMaterial(r) {
+        if (frmSatus == 1) {
+            $('#WriteOffOrdDFTBody_' + srls).append(r);
+        }
+        else {
+            $('#WriteOffOrdDFTBody_' + srls).append(r);
+        }
+        $('#Model_WriteOff_InvItemsMF_' + srls).modal('hide')
+    }
+</script>
+@*--------------------------------END Model WriteOff_InvItemsMF -----------------------------*@
+
+<script>
+    $('#Ord_WriteOff_CboDocType_' + @srl).select2();
+    $('#Ord_WriteOff_CboStoreNo_' + @srl).select2();
+    $('.WriteOff_Unit').select2();
+    function GetValueqty(e, srl) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون الكمية اقل من 0", "The value of the Qty may not be less than 0")');
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+        SumTotalQty(srl)
+    }
+    function GetValueqty2(e, srl) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون الكمية 2 اقل من 0", "The value of the Qty 2 may not be less than 0")');
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+        SumTotalQty(srl)
+    }
+    function RemoveRowWriteOff(e, srl) {
+        if (confirm('@Resources.Resource.DeleteConfirm')) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+            SumTotalQty(srl)
+            return true;
+        }
+        return false;
+    }
+    SumTotalQty(@srl)
+    function SumTotalQty(id) {
+        var table = $("#WriteOffOrdDFTBody_" + id);
+        var trs = table.find('tr');
+
+        var TotalQty = 0
+        var TotalQty2 = 0
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value
+            TotalQty += Number($(trs[i]).closest('tr').find('#WriteOff_Qty_' + InputSerial)[0].value);
+            TotalQty2 += Number($(trs[i]).closest('tr').find('#WriteOff_Qty2_' + InputSerial)[0].value);
+        }
+
+        $('#TotalQty1_' + id).html(Number(TotalQty).toFixed(3));
+        $('#TotalQty2_' + id).html(Number(TotalQty2).toFixed(3));
+    }
+    function CheckValueGrid(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt == 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+        else {
+            if (Amt == '' || Amt == null) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function ExcuteSave_WriteOffInfo(id) {
+        var table = $("#WriteOffOrdDFTBody_" + id);
+        var trs = table.find('tr');
+
+        var OrdVoucIssueHF = {
+            CompNo: '@company.comp_num',
+            OrderYear: $('#Ord_WriteOff_OrdYear_' + id).val(),
+            OrderNo: $('#Ord_WriteOff_OrderNo_' + id).val(),
+            TawreedNo: $('#Ord_WriteOff_TawreedNo_' + id).val(),
+            VouType: 13,
+            VouNo: $('#Ord_WriteOff_PayOrderNo_' + id).val(),
+            ShipSer: $('#Ord_WriteOff_ShipSer_' + id).val(),
+            DocType: $('#Ord_WriteOff_CboDocType_' + id).val(),
+            StoreNo: $('#Ord_WriteOff_CboStoreNo_' + id).val(),
+            VouDate: $('#Ord_WriteOff_PayOrderDate_' + id).val(),
+            Notes: $('#Ord_WriteOff_Notes_' + id).val()
+        }
+
+        var OrdVoucIssueDF = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value
+            if ($(trs[i]).closest('tr').find('#WriteOff_Qty_' + InputSerial)[0].value > 0) {
+                OrdVoucIssueDF.push({
+                    CompNo: '@company.comp_num',
+                    OrderYear: $('#Ord_WriteOff_OrdYear_' + id).val(),
+                    OrderNo: $('#Ord_WriteOff_OrderNo_' + id).val(),
+                    TawreedNo: $('#Ord_WriteOff_TawreedNo_' + id).val(),
+                    VouType: 13,
+                    VouNo: $('#Ord_WriteOff_PayOrderNo_' + id).val(),
+                    ItemNo: $(trs[i]).closest('tr').find('#WriteOff_ItemNo')[0].innerHTML,
+                    ShipSer: $('#Ord_WriteOff_ShipSer_' + id).val(),
+                    Qty: $(trs[i]).closest('tr').find('#WriteOff_Qty_' + InputSerial)[0].value,
+                    TUnit: $(trs[i]).closest('tr').find('.WriteOff_Unit option:Selected')[0].getAttribute('unitCode'),
+                    UnitSerial: $(trs[i]).closest('tr').find('.WriteOff_Unit')[0].value,
+                    Qty2: $(trs[i]).closest('tr').find('#WriteOff_Qty2_' + InputSerial)[0].value
+                })
+            }
+        }
+
+        if (OrdVoucIssueDF.length == 0) {
+            alert('@Html.Translate("يجب إدخال الكميات", "Quantities must be entered")');
+            return false;
+        }
+
+        var DocumentArchivetable = $("#WriteOff_DocumentArchiveTbody_" + id);
+        var trsDocumentArchive = DocumentArchivetable.find('tr');
+
+        var DocumentArchive = new Array();
+
+        for (var i = 0; i < trsDocumentArchive.length; i++) {
+            var InputSerial = $(trsDocumentArchive[i]).closest('tr').find('#WriteOff_DocumentArchive_FileId')[0].value;
+            DocumentArchive.push({
+                OrderYear: $('#Ord_WriteOff_OrdYear_' + id).val(),
+                OrderNo: $('#Ord_WriteOff_OrderNo_' + id).val(),
+                TawreedNo: $('#Ord_WriteOff_TawreedNo_' + id).val(),
+                ShipSer: $('#Ord_WriteOff_ShipSer_' + id).val(),
+                VouType: 13,
+                VouNo: $('#Ord_WriteOff_PayOrderNo_' + id).val(),
+                FileId: InputSerial,
+                Description: $(trsDocumentArchive[i]).closest('tr').find('#WriteOff_DocumentArchive_Description_' + InputSerial)[0].value,
+                DateUploded: $(trsDocumentArchive[i]).closest('tr').find('#WriteOff_DocumentArchive_UploadDate_' + InputSerial)[0].value,
+                ContentType: $(trsDocumentArchive[i]).closest('tr').find('#WriteOff_DocumentArchive_FileType_' + InputSerial)[0].value
+            })
+        }
+
+        wait();
+        burn({ OrdVoucIssueHF: OrdVoucIssueHF, OrdVoucIssueDF: OrdVoucIssueDF, FileArchive: DocumentArchive }, '../../../VoucIssue/Save_WriteOff', '', ReloadWriteOffInfo, false);
+    }
+    function ReloadWriteOffInfo(r) {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#VoucIssueInfoTBody').empty();
+        var TawreedNo = r.TawreedNo;
+        var ShipSer = r.ShipSer;
+        CloseWindow('/VoucIssue/AddWriteOff?OrdYear=' + r.OrdYear + '&OrderNo=' + r.OrderNo + '&TawreedNo=' + TawreedNo + '&ShipSer=' + ShipSer + '');
+
+        var table = $("#OrdWriteOffTable tbody");
+        var trs = table.find('tr');
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i])[0].getAttribute('OrdYear') == r.OrdYear && $(trs[i])[0].getAttribute('OrderNo') == r.OrderNo && $(trs[i])[0].getAttribute('TawreedNo') == TawreedNo && $(trs[i])[0].getAttribute('ShipSer') == ShipSer) {
+                var nTr = $(trs[i])[0];
+                wait();
+                $(this).attr("opened", "details_close");
+                var OrdYear = $(trs[i])[0].getAttribute('OrdYear');
+                var OrderNo = $(trs[i])[0].getAttribute('OrderNo');
+                var TawreedNo = $(trs[i])[0].getAttribute('TawreedNo');
+                var ShipSer = $(trs[i])[0].getAttribute('ShipSer');
+
+                $.get("../../../../VoucIssue/DetailsWriteOffRec?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo + '&ShipSer=' + ShipSer, function (data) {
+                    OrdWriteOffTable.fnOpen(nTr, data, 'details');
+                    done();
+                });
+            }
+        }
+    }
+</script>

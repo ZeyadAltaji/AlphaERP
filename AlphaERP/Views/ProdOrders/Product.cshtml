@@ -1,0 +1,16 @@
+﻿@model IEnumerable<AlphaERP.Controllers.ProdOrdersController.ItemProduct>
+
+@foreach (var item in Model)
+{
+    <tr>
+        <td style="width: 110px;text-align:center;" id="Product_ItemNo">@item.item_no</td>
+        <td style="width:290px; text-align:center;" id="Product_ItemDesc">@item.ItemDesc</td>
+        <td style="width:50px;text-align: center;" id="Product_IUnit">@item.IUnit</td>
+        <td style="width:50px;text-align: center;" id="Product_Categ">@item.Categ</td>
+        <td style="width:65px;text-align:center;" id="Product_Qty">@item.Qty.ToString("0.000")</td>
+        <td style="width:65px;text-align:center;" id="Product_CostPrc">@item.CostPrc.ToString("0.000")</td>
+        <td>
+            <button class="btn-de" onclick="RemoveRow(this)" type="button"><i class="fa fa-trash-alt"></i></button>
+        </td>
+    </tr>
+}

@@ -1,0 +1,75 @@
+﻿@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+
+    List<Vendor> Vendor = new MDB().Vendors.Where(x => x.comp == company.comp_num).ToList();
+
+    
+}
+
+<table id="VendorsInfoTable" class="table">
+    <thead>
+        <tr>
+            <th style="text-align:center !important">@Html.Recource(3087)</th>
+            <th style="text-align:center !important">@Html.Recource(321)</th>
+            <th style="text-align:center !important">@Html.Recource(5203)</th>
+            <th style="text-align:center !important">@Html.Recource(1042)</th>
+            <th style="text-align:center !important">@Html.Recource(70)</th>
+
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Vendor)
+        {
+            string hultName = "";
+            if (item.IsHalt == false)
+            {
+                hultName = Html.Translate("ساري", "Active").ToHtmlString();
+            }
+            else
+            {
+                hultName = Html.Translate("موقوف", "Suspended").ToHtmlString();
+            }
+            <tr>
+                <td style="text-align:center !important">@item.VendorNo</td>
+                <td style="text-align: center !important;word-wrap: break-word; white-space: normal;">@Html.Translate(item.Name, item.Eng_Name)</td>
+                <td style="text-align:center !important">@hultName</td>
+                <td style="text-align:center !important;word-wrap: break-word; white-space: normal;">@item.Address</td>
+                <td style="text-align:center !important;word-wrap: break-word; white-space: normal;">@item.Notes</td>
+                <td>
+                    <button onclick="EditVendorsInformation('@item.VendorNo')" type="button" class="btn btn-ed ex" title=" @Html.Translate("تعديل معلومات الموردين", "Edit Vendors Information")">
+                        <i class="fa fa-pencil-alt"></i>
+                    </button>
+                    <button id="eVendorsInfo" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                        @Html.Translate("تعديل معلومات الموردين", "Edit Vendors Information")
+                    </button>
+                    <button class="btn-de" onclick="Delete_VendorsInfo(@item.VendorNo)">
+                        <i class="fa fa-trash-alt" aria-hidden="true"></i>
+                    </button>
+                    <button class="btn btn-default ex" title="عرض" href="/VendorsInfo/InqVendorsInfo?VendorNo=@item.VendorNo" target="_blank">
+                        <i style="font-weight:100" class="fa fa-folder"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+    $('#VendorsInfoTable').DataTable({
+        "scrollY": 'calc( 100vh - 270px)',
+        "paging": true,
+        "pageLength": 25,
+        "ordering": false,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+
+    function EditVendorsInformation(VendorNo) {
+        $('#eVendorsInfo').attr("href", '/VendorsInfo/EditVendorsInfo?VendorNo=' + VendorNo + '')
+        $('#eVendorsInfo').click();
+    }
+</script>

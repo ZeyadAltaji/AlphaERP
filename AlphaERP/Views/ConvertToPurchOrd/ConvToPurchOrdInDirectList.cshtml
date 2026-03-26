@@ -1,0 +1,307 @@
+﻿@using AlphaERP.Models
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    int ReqYear =  ViewBag.ReqYear;
+    string ReqNo = ViewBag.ReqNo;
+    List<OrdRequestDF> lOrdRequestDF = new MDB().Database.SqlQuery<OrdRequestDF>(string.Format("SELECT Ord_RequestDF.SubItemNo as SubItemNo,Ord_RequestDF.SubUnitSerial  as SubUnitSerial ,Ord_RequestDF.Qty as Qty,case when Ord_RequestDF.Qty2 IS NULL then 0 else Ord_RequestDF.Qty2 end as Qty2   " +
+"FROM  Ord_RequestDF INNER JOIN  Ord_RequestHF ON Ord_RequestDF.CompNo = Ord_RequestHF.CompNo AND Ord_RequestDF.ReqYear = Ord_RequestHF.ReqYear AND Ord_RequestDF.ReqNo = Ord_RequestHF.ReqNo " +
+"where (Ord_RequestHF.CompNo = '{0}') AND (Ord_RequestHF.ReqYear = '{1}') AND (Ord_RequestHF.ReqNo = '{2}') ", company.comp_num, ReqYear, ReqNo)).ToList();
+    List<InvItemsMF> MFItems = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+    List<Vendor> Vend = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.IsHalt == false).ToList();
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+}
+
+<div class="modal-body row">
+    <div class="form-group">
+        <div class="col-md-12">
+            <div class="col-md-1">
+                <label class="unselectable" for="MRP_ConvToPurchOrdInDirect_save_ReqYear">@Html.Recource(3196) </label>
+            </div>
+            <div class="col-md-2" style="margin-bottom: 5px;">
+                <input required="false" style="width:80px !important;" type="text" id="MRP_ConvToPurchOrdInDirect_save_ReqYear" value="@ReqYear" disabled />
+            </div>
+            <div class="col-md-1">
+                <label class="unselectable" for="MRP_ConvToPurchOrdInDirect_save_ReqNo">@Html.Recource(3197) </label>
+            </div>
+            <div class="col-md-2" style="margin-bottom: 5px;">
+                <input required="false" style="width:90px !important;" type="text" id="MRP_ConvToPurchOrdInDirect_save_ReqNo" value="@ReqNo" disabled />
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-12">
+            <div class="col-md-6" style="width: 20% !important; min-width: 5% !important;">
+                <button class="btn btn-primary btn-block" onclick="SelectSuppliers()">
+                    @Html.Translate("تحديد الموردين", "Select Suppliers")
+                </button>
+            </div>
+        </div>
+    </div>
+    <hr />
+    <div class="form-group">
+        <div class="col-md-12">
+            <table id="ConItemsToPurchOrdOnDirectTable" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="text-align:center !important">@Resources.Resource.ItemNo</thclass="headcol">
+                        <th style="text-align:center !important">@Resources.Resource.ItemName</th>
+                        <th style="text-align:center !important">@Html.Recource(67)</th>
+                        <th style="text-align:center !important">@Html.Recource(49)</th>
+                        @if (compMF.UseQty2 == true)
+                        {
+                            <th style="text-align:center !important">@Html.Recource(72)</th>
+                        }
+                        else
+                        {
+                            <th style="text-align:center !important" hidden>@Html.Recource(72)</th>
+                        }
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody style="text-align: center;" id="MRP_ConvToPurchOrdInDirectTbody">
+                    @foreach (OrdRequestDF OrdDF in lOrdRequestDF)
+                    {
+                        string UnitName = "";
+                        InvItemsMF MItem = MFItems.Where(x => x.ItemNo == OrdDF.SubItemNo).FirstOrDefault();
+                        switch (OrdDF.SubUnitSerial)
+                        {
+                            case 1:
+                                UnitName = MItem.UnitC1;
+                                break;
+                            case 2:
+                                UnitName = MItem.UnitC2;
+                                break;
+                            case 3:
+                                UnitName = MItem.UnitC3;
+                                break;
+                            case 4:
+                                UnitName = MItem.UnitC4;
+                                break;
+                        }
+                    <tr style="height: 25px;" itemNo="@OrdDF.SubItemNo">
+                        <td style="text-align: center !important" id="OrdDF_ItemNo" ItemNo="@OrdDF.SubItemNo">@OrdDF.SubItemNo</td>
+                        <td style="text-align: center !important;word-wrap: break-word;white-space: normal;">@Html.Translate(MItem.ItemDesc, MItem.ItemDesc_Ara)</td>
+                        <td style="text-align: center !important" SubUnitSerial="@OrdDF.SubUnitSerial">@UnitName</td>
+                        <td style="text-align: center !important" id="OrdDF_Qty" Qty="@OrdDF.Qty">@OrdDF.Qty</td>
+                        @if (compMF.UseQty2 == true)
+                        {
+                            <td style="text-align: center !important" id="OrdDF_Qty2" Qty2="@OrdDF.Qty2">@OrdDF.Qty2</td>
+                        }
+                        else
+                        {
+                          <td style="text-align: center !important" id="OrdDF_Qty2" Qty2="@OrdDF.Qty2" hidden>@OrdDF.Qty2</td>
+                        }
+                        <td style="text-align: center !important">
+                            <button class="btn btn-primary btn-default" onclick="GetSuppliers('@OrdDF.SubItemNo')">
+                                @Html.Recource(9522)
+                            </button>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+            <table class="table table-hover" id="VendorTable" style="display:none;">
+                <tbody id="VendorTBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <div class="col-md-2">
+        <label class="unselectable">@Resources.Resource.Port</label>
+    </div>
+    <div class="col-md-5">
+        <input style="width:100%" type="text" id="MRP_ConvToPurchOrdInDirect_save_Port" />
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable">
+            <input id="MRP_ConvToPurchOrdInDirect_save_SendTestSample" type="checkbox" />
+            @Resources.Resource.SendTestSample
+        </label>
+    </div>
+    <div class="col-md-3">
+        <button class="btn btn-primary btn-block" onclick="CreateRequestforQuotation()">
+            @Resources.Resource.CreateRequestforQuotationPrice
+        </button>
+    </div>
+</div>
+
+
+<div class="modal fade" id="Model_VendorInfo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="ConvertToPurchOrdInDirectVendorDiv">
+                <table class="table" id="SelectVendorTable">
+                    <thead>
+                        <tr>
+                            <th>@Html.Recource(318)</th>
+                            <th>@Html.Recource(321)</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="PurchOrdTbody">
+                        @foreach (Vendor v in Vend)
+                        {
+                            <tr onclick="$(this).toggleClass('selected');">
+                                <td id="VendorNo">@v.VendorNo</td>
+                                <td>@Html.Translate(v.Name,v.Eng_Name)</td>
+                                <td></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectionVendorDiv()" class="btn btn-primary">@Resources.Resource.Choose</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal fade" id="Model_GetVendor_ByItemInfo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="Vendor_ByItemDiv">
+                <table class="table" id="SelectVendorItemsTable">
+                    <thead>
+                        <tr>
+                            <th>@Html.Recource(318)</th>
+                            <th>@Html.Recource(321)</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="VendorItemsTbody">
+                        
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+    $('#ConItemsToPurchOrdOnDirectTable').DataTable({
+        "scrollY": 'calc( 100vh - 458px)',
+        "paging": true,
+        "pageLength": 10,
+        "ordering": false,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        },
+    });
+    var Vendor = $('#SelectVendorTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    function SelectSuppliers() {
+        $('#SelectVendorTable tr').removeClass("selected");
+        $("#VendorTBody").empty();
+        $('#Model_VendorInfo').modal('show')
+    }
+    function SelectionVendorDiv() {
+        var data = Vendor.rows('.selected').data();
+        if (data.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مورد واحد على الاقل", "Select one Vendor at least")');
+            return;
+        }
+
+        for (var i = 0; i < data.length; i++) {
+            var newarray = [];
+            newarray.push('<input id="Vendor" type="text" value="' + data[i][0]+'" />')
+            $("#VendorTBody").append(
+                GenRow(newarray)
+            );
+        }
+        $('#Model_VendorInfo').modal('hide')
+    }
+    function GenRow(tds) {
+        var row = '';
+        row = '<tr>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+
+
+    function GetSuppliers(itemNo) {
+        burn({ itemNo: itemNo }, '../../../ConvertToPurchOrd/SuppliersItem', '', LoadSuppliersByItem, true);
+    }
+    function LoadSuppliersByItem(r) {
+        Vendor_ByItemDiv.innerHTML = "";
+        $('#Vendor_ByItemDiv').html(r);
+        $('#Model_GetVendor_ByItemInfo').modal('show');
+    }
+
+    function CreateRequestforQuotation() {
+        var table = $('#VendorTBody tr');
+        var trs = table;
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مورد واحد على الاقل", "Select one Vendor at least")');
+            return;
+        }
+        var OrdCopyInfo = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            $('#MRP_ConvToPurchOrdInDirectTbody tr').each(function () {
+                OrdCopyInfo.push({
+                    ItemNo: $(this).find('#OrdDF_ItemNo').attr("ItemNo"),
+                    VendorNo: $(trs[i]).closest('tr').find('#Vendor')[0].value,
+                    RequiredQty: $(this).find('#OrdDF_Qty').attr("Qty"),
+                    Qty2: $(this).find('#OrdDF_Qty2').attr("Qty2"),
+                    Port: MRP_ConvToPurchOrdInDirect_save_Port.value,
+                    SendTestSample: MRP_ConvToPurchOrdInDirect_save_SendTestSample.checked
+                });
+            });
+        }
+
+
+        if (OrdCopyInfo.length == 0) {
+            MsgBox('@Resources.Resource.NoVendorWasSelected', 'red');
+            return false
+        }
+         wait();
+        if (confirm('@Resources.Resource.confirmCreateQuotation')) {
+            burn({ OrdCopyInfo: OrdCopyInfo, ReqYear: @ReqYear, ReqNo:'@ReqNo' }, '../../../ConvertToPurchOrd/CreateRequestforQuotation', '', ReloadRequestforQuotation, false);
+        }
+        else {
+            done();
+        }
+    }
+
+    function ReloadRequestforQuotation() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#MRP_ConvertToPurchOrd_DIV').empty();
+        MRP_ConvertToPurchOrd_DirectPurchaseOrder.checked = true
+        $('#ConvertToPurchOrdInDirectDiv').load('../../../ConvertToPurchOrd/GetPurchOrd?PurchOrd=0');
+    }
+</script>
+
+
+

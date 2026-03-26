@@ -1,0 +1,393 @@
+﻿@model IEnumerable<AlphaERP.Models.ProdCost_QASetupHFView>
+@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+
+    List<ProdCost_QASetupHF> parameters = new MDB().ProdCost_QASetupHF.Where(x => x.CompNo == company.comp_num).ToList();
+    List<Alpha_BusinessUnitDef> M_C = new MDB().Alpha_BusinessUnitDef.ToList();
+    int lastElementID = 0;
+    int newElementID = 0;
+    try
+    {
+        lastElementID = parameters.Last().QA_ProcNo;
+        newElementID = lastElementID + 1;
+    }
+    catch (InvalidOperationException ex)
+    {
+        lastElementID = 1;
+    }
+}
+<style>
+    .dataTables_empty{
+        position:relative;
+        right:36.6rem;
+    }
+    .Overlay {
+    opacity: 0.5;
+}
+</style>
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-10" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2 col-sm-2">
+                <button class="btn btn-primary btn-block" onclick="CreateNewPordCost_FormQA()">
+                    <i class="fa fa-plus"></i> @Resources.Resource.Add
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="PordCost_FormQAListTableDiv">
+        @Html.Partial("~/Views/QAProceduresDefinition/List.cshtml")
+    </div>
+</div>
+
+<div class="modal fade wide" id="listQAprocDefinition_Model" style="left: 20.5rem;top: 12.1rem;">
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("إضافة تعريف إجراءات ضمان الجودة", "Add QA Procedures Definition")</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ProcDesc">@Html.Translate("وصف الإجراء", "Procedure Description")</label>
+                    </div>
+                    <div class="col-md-8" style="margin-bottom: 5px;">
+                        <input required type="text" id="ProcDesc" value="" name="QA_Desc" />
+                        <input type="hidden" id="newQA_ProcNo" value="@newElementID" style="width:100%" name="QA_ProcNo" />
+
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ProcDesc">@Html.Translate("وحدة أعمال صانع", "Maker Business Unit")</label>
+
+                    </div>
+                    <div class="col-md-8" style="margin-bottom: 5px;">
+                        <select style="width: 62%" id="MakerList" name="M_BusUnitID">
+                            <option selected>@Html.Translate("أختار واحد من القائمة", "Chose one from the list")</option>
+
+                            @foreach (var v in M_C)
+                            {
+                                <option value="@v.BusUnitID" name="M_BusUnitID">@Html.Translate(v.BusUnitDescAr, v.BusUnitDescEng)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ProcDesc">@Html.Translate("وحدة أعمال المدقق", "Checker Business Unit")</label>
+
+                    </div>
+                    <div class="col-md-8" style="margin-bottom: 5px;">
+                        <select style="width: 62%" id="CheckerList" name="C_BusUnitID">
+                            <option selected>@Html.Translate("أختار واحد من القائمة", "Chose one from the list")</option>
+
+                            @foreach (var v in M_C)
+                            {
+                                <option value="@v.BusUnitID" name="C_BusUnitID">@Html.Translate(v.BusUnitDescAr, v.BusUnitDescEng)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ProcDesc">@Html.Translate("النشر بالتسلسل", "Post in Sequence")</label>
+                    </div>
+                    <div class="col-md-8" style="margin-bottom: 5px;">
+                        <input type="checkbox" value="true" name="PostOnSeq" id="PostOnSeq">
+
+
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable">@Html.Translate("اضافة وصف", "Add Description") </label>
+                    </div>
+                    <div class="col-md-8" style="margin-bottom: 5px;">
+                        <input required type="text" id="description" value="" style="width: calc(108% - 106px);" name="QA_Desc" />
+                        <button type="button" onclick="addRowQA()" id="addButton" class="btn btn-default">@Html.Recource(32)</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover PostinSequence" id="MainQATable" width="100%">
+                            <thead>
+                                <tr>
+                                    <th>Ser</th>
+                                    <th style="text-align: center !important;">Description</th>
+                                     <th style="width: 23% !important"></th>
+                                    <th></th>
+
+                                </tr>
+                            </thead>
+                            <tbody id="MainQATableBD"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button type="submit" class="btn btn-primary" onclick="saveAndPrint()">@Resources.Resource.Save</button>
+                    <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade wide" id="EditQAprocDefinition_Model" tabindex="-1" aria-hidden="true" style="left: 20.5rem;top: 12.1rem;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" onclick="$('.box-primary').removeClass('Overlay')" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("تعديل تعريف إجراءات ضمان الجودة", "Edit QA Procedures Definition")</label>
+            </div>
+            <div class="modal-body row" id="EditQAprocDefinition">
+            </div>
+            <div class="modal-footer">
+
+                <button type="submit" class="btn btn-primary"  onclick="eSave()">@Resources.Resource.Save</button>
+                <button class="btn btn-default pull-left" onclick="$('.box-primary').removeClass('Overlay')" data-dismiss="modal">@Resources.Resource.Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    //$('#EditQAprocDefinition_Model').on('show.bs.modal', showOverlay);
+    //$('#EditQAprocDefinition_Model').on('hidden.bs.modal', hideOverlay);
+    $('#CheckerList').select2();
+    $('#MakerList').select2();
+
+    $('#listQAprocDefinition_Model').draggable({
+        handle: ".modal-header",
+    });
+    $('#EditQAprocDefinition_Model').draggable({
+        handle: ".modal-header",
+    });
+
+    var MainQATableBD = document.getElementById("MainQATableBD");
+    var description = document.getElementById("description");
+    var editIndex = 0;
+    function showInfo(data) {
+        debugger;
+        MainQATableBD.innerHTML = "";
+        data.forEach((element, index) => {
+            let createElement = `<tr class="listdescription" draggable="true" ondragstart="start()" ondragover="dragover()">
+                <td>${index + 1}</td>
+                <td style="text-align: center;width: 87%;"   name="Description" >${element.description}</td>
+                <td>
+                    <button class ="btn-ed" onclick="editInfo(${index}, '${element.description}')"><i class ="fa fa-pencil-alt"></i></button>
+                    <button class ="btn-de" onclick="deleteInfo(${index})"><i class ="fa fa-trash-alt"></i></button>
+                </td>
+                <td></td>
+            </tr>`;
+
+            MainQATableBD.innerHTML += createElement;
+        });
+    }
+
+    var getData = [];
+
+
+    function addRowQA() {
+        debugger;
+        var description = $("#description").val();
+
+        if (description === "") {
+            // Blank value, display an error message or take appropriate action
+            alert('@Html.Translate("لا يمكن أن يكون الوصف فارغًا", "Description cannot be blank")');
+            return;
+        }
+        //const information = {
+        //    description: description.value,
+        //};
+        const information = {
+            description: description,
+        };
+
+        getData.push(information);
+
+        // Clear the input field
+        $("#description").val("");
+        //getData.push(information);
+        //description.value = "";
+        showInfo(getData);
+    }
+    function deleteInfo(index) {
+        if (confirm('@Html.Translate("هل تريد الحذف ؟", "Do you want to delete?")')) {
+            getData.splice(index, 1)
+             showInfo(getData);
+        }
+    }
+    function createEditInput(value) {
+        return `<input id="description" value="${value}">`;
+    }
+    function editInfo(index, oldDescription) {
+        editIndex = index;
+        showInfo(getData);
+
+         const editCell = document.querySelector(`.listdescription:nth-child(${index + 1}) td:nth-child(2)`);
+        if (editCell) {
+            editCell.innerHTML = createEditInput(oldDescription);
+
+            const editDescriptionInput = editCell.querySelector("#description");
+            if (editDescriptionInput) {
+                editDescriptionInput.focus();
+                editDescriptionInput.addEventListener("blur", function () {
+                    saveEditedDescription(index, editDescriptionInput.value);
+                });
+            }
+        }
+    }
+
+    function saveEditedDescription(index, newDescription) {
+        if (index >= 0 && index < getData.length) {
+            getData[index].description = newDescription;
+            editIndex = -1;
+            showInfo(getData);
+        }
+    }
+     function start() {
+        row = event.target;
+    }
+
+    function dragover() {
+        var e = event;
+        e.preventDefault();
+        let children = Array.from(e.target.parentNode.parentNode.children);
+        let newIndex = children.indexOf(e.target.parentNode);
+        let oldIndex = children.indexOf(row);
+
+        if (newIndex !== oldIndex) {
+            if (newIndex > oldIndex) {
+                e.target.parentNode.after(row);
+            } else {
+                e.target.parentNode.before(row);
+            }
+        }
+    }
+
+    function saveAndPrint() {
+        debugger;
+        var procDesc = document.getElementById("ProcDesc").value;
+        var makerList = document.getElementById("MakerList").value;
+        var checkerList = document.getElementById("CheckerList").value;
+        var tableRows = document.querySelectorAll("#MainQATable tbody tr");
+
+        if (procDesc.trim() === "") {
+            alert("These fields must be populated: Procedure Description.");
+            return;
+        }
+            if (makerList === "" || makerList === "Chose one from the list") {
+                alert("These fields must be populated Maker Business Unit.");
+                return false;
+            } if (checkerList === "" || checkerList === "Chose one from the list") {
+                alert("These fields must be populated Checker Business Unit.");
+                return false;
+            }
+
+
+            if (tableRows.length === 0) {
+                alert("You should add at least one row to the table.");
+                return;
+            }
+            var formData = {
+                QA_Desc: $("#ProcDesc").val(),
+                M_BusUnitID: $("#MakerList").val(),
+                C_BusUnitID: $("#CheckerList").val(),
+                PostOnSeq: $("#PostOnSeq").val(),
+                QA_ProcNo: $("#newQA_ProcNo").val()
+            };
+
+            var Description = Array.from(MainQATableBD.querySelectorAll(".listdescription td[name='Description']"))
+                  .map(td => ({ Description: td.textContent.trim() }));
+
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("send", "QAProceduresDefinition")",
+                data: {
+                    ProdCost_QASetupHF: formData,
+                    Description: Description
+                },
+                success: function (response) {
+                    if (response.success) {
+                        LoadPordCost_FormTest()
+                    }
+                }
+            });
+
+    }
+
+    function LoadPordCost_FormTest() {
+        wait()
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#PordCost_FormQAListTableDiv').load('../../../QAProceduresDefinition/List');
+        $('#listQAprocDefinition_Model').modal('hide');
+        done();
+    }
+
+
+
+    $('#PordCost_FormTest_save_PordCost_FormTest').draggable({
+        handle: '.modal-header'
+    });
+    $('#PordCost_FormTest_save_PordCost_FormTest').draggable({
+        handle: '.modal-header'
+    });
+
+
+
+    function CreateNewPordCost_FormQA() {
+
+        $('#listQAprocDefinition_Model').modal('show')
+    }
+    function EditQAprocDefinition(QAProc) {
+        debugger;
+        $('#EditQAprocDefinition').load("../../../QAProceduresDefinition/Edit?QAProc=" + QAProc);
+
+        $("#EditQAprocDefinition_Model").modal("show");
+        $(".box-primary").addClass('Overlay');
+      }
+    function DeleteQAprocDefinition(FormNo) {
+        if (confirm('@Resources.Resource.ConfirmDeleteDialog')) {
+
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("Delete", "QAProceduresDefinition")",
+                data: {
+                    QA_ProcNo: FormNo,
+                },
+                success: function (response) {
+                    $('#PordCost_FormQAListTableDiv').load('../../../QAProceduresDefinition/List');
+                    MsgBox('@Html.Translate("تم الحذف بنجاح ", "Successfully deleted")', 'green');
+
+                }
+            });
+        } else {
+    
+
+        }
+    }
+
+
+</script>
+

@@ -1,0 +1,215 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    List<User> users = new MDB().Users.ToList();
+    Company company = (Company)Session["company"];
+    List<InvItemsMF> Mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+
+    List<OrdRequestDF> OrdReqtDF = new MDB().Database.SqlQuery<OrdRequestDF>(string.Format("SELECT Ord_RequestDF.CompNo as CompNo,Ord_RequestDF.ReqYear as ReqYear ,Ord_RequestDF.ReqNo as ReqNo,Ord_RequestDF.ItemSr as ItemSr,Ord_RequestDF.SubItemNo as SubItemNo,Ord_RequestDF.SubTUnit  as SubTUnit,  " +
+    "Ord_RequestDF.SubUnitSerial  as SubUnitSerial,Ord_RequestDF.Qty as Qty,case when Ord_RequestDF.Qty2 IS NULL then 0 else Ord_RequestDF.Qty2 end as Qty2,Ord_RequestDF.Price as Price,Ord_RequestDF.TotalValue as TotalValue,isnull(InvItemsMF.prefvendor,0) as prefvendor " +
+    "from Ord_RequestDF INNER JOIN  Ord_RequestHF ON Ord_RequestDF.CompNo = Ord_RequestHF.CompNo AND Ord_RequestDF.ReqYear = Ord_RequestHF.ReqYear AND Ord_RequestDF.ReqNo = Ord_RequestHF.ReqNo Inner Join " +
+    "InvItemsMF on Ord_RequestDF.CompNo = InvItemsMF.CompNo AND Ord_RequestDF.SubItemNo = InvItemsMF.ItemNo " +
+    "where Ord_RequestDF.CompNo = '{0}' AND bPurchaseOrder = 0 AND (bRequestforQuotation = 0) AND Ord_RequestHF.ReqStatus In(1,4) ", company.comp_num)).ToList();
+
+
+}
+<style>
+    #Ord_LinkPrchOrdUsersItems_DIV table th, #Ord_LinkPrchOrdUsersItems_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+
+    .wrapperx {
+        padding: 0;
+        position: relative;
+        white-space: nowrap;
+    }
+
+    .wrapperxOld {
+        padding: 0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+</style>
+
+<style>
+    #Ord_LinkPrchOrdUsersItemsTable_wrapper {
+        width: calc(181vh - 50px);
+    }
+</style>
+<link href="~/Content/stickytooltip.css" rel="stylesheet" />
+<script src="~/Scripts/stickytooltip.js?s=15"></script>
+
+@{
+    int i = 1;
+}
+<div class="form-group">
+    <div class="col-md-12 wrapperx" id="Ord_LinkPrchOrdUsersItems_DIV">
+        <table class="table table-hover Ord_LinkPrchOrdUsersItems" id="Ord_LinkPrchOrdUsersItemsTable">
+            <thead>
+                <tr>
+                    <th style="text-align: center !important;">@Html.Recource(3196)</th>
+                    <th style="text-align: center !important;">@Html.Recource(3197)</th>
+                    <th style="text-align: center !important;">@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</th>
+                    <th style="text-align: center !important;">@Html.Recource(44)</th>
+                    <th style="text-align: center !important;">@Html.Recource(74)</th>
+                    <th style="text-align: center !important; ">@Html.Recource(67)</th>
+                    <th>@Html.Recource(737)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody style="text-align: center;" id="Ord_LinkPrchOrdUsersItemsTbody">
+                @foreach (OrdRequestDF OrdDF in OrdReqtDF)
+                {
+                    Ord_RequestHF HF = new MDB().Ord_RequestHF.Where(x => x.CompNo == company.comp_num && x.ReqYear == OrdDF.ReqYear && x.ReqNo == OrdDF.ReqNo).FirstOrDefault();
+                    User u = new MDB().Users.Where(x => x.UserID == HF.UserID).FirstOrDefault();
+                    string UnitName = "";
+                    string ItemDesc = "";
+                    InvItemsMF M = new InvItemsMF();
+                    if (OrdDF.SubItemNo == "PKSTI00000002383")
+                    {
+                        List<InvItemsMF> Mf1 = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == "PKSTI00000002383").ToList();
+                        ItemDesc = Mf1.Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                        M = Mf1.FirstOrDefault();
+                    }
+                    else {
+                        M = Mf.Where(x => x.ItemNo == OrdDF.SubItemNo).FirstOrDefault();
+                        ItemDesc = Mf.Where(x => x.ItemNo == OrdDF.SubItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                    }
+
+                    switch (OrdDF.SubUnitSerial)
+                    {
+                        case 1:
+                            UnitName = M.UnitC1;
+                            break;
+                        case 2:
+                            UnitName = M.UnitC2;
+                            break;
+                        case 3:
+                            UnitName = M.UnitC3;
+                            break;
+                        case 4:
+                            UnitName = M.UnitC4;
+                            break;
+
+                    }
+                    Ord_LinkPrchOrdUsers LinkPrchOrdUsers = new MDB().Ord_LinkPrchOrdUsers.Where(x => x.CompNo == company.comp_num && x.ReqYear == OrdDF.ReqYear && x.ReqNo == OrdDF.ReqNo && x.ItemNo == OrdDF.SubItemNo).FirstOrDefault();
+
+                    <tr style="height: 25px;" itemNo="@OrdDF.SubItemNo">
+                        <td style="text-align: center !important">@HF.ReqYear</td>
+                        <td style="text-align: center !important">@HF.ReqNo</td>
+                        <td style="text-align: center !important">@HF.ReqDeliveryDate.Value.ToShortDateString()</td>
+                        <td style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="Ord_LinkPrchOrdUsersItems_ItemNo">@OrdDF.SubItemNo</td>
+                        <td style="text-align: center !important;word-wrap: break-word;white-space: normal;">@ItemDesc</td>
+                        <td style="text-align: center !important" SubUnitSerial="@OrdDF.SubUnitSerial">@UnitName</td>
+                        <td style="text-align: center !important">
+                            <select class="Ord_LinkPrchOrdUsersItems_UserID" id="Ord_LinkPrchOrdUsers_UserID_@i" required="true">
+                                @foreach (var user in users)
+                                {
+                                    <option></option>
+                                    if (LinkPrchOrdUsers != null)
+                                    {
+                                        if (LinkPrchOrdUsers.UserId == user.UserID)
+                                        {
+                                            <option value="@user.UserID" selected>
+                                                @user.UserName
+                                            </option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@user.UserID">
+                                                @user.UserName
+                                            </option>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <option value="@user.UserID">
+                                            @user.UserName
+                                        </option>
+                                    }
+                                }
+                            </select>
+                        </td>
+                        
+                        <td style="text-align:center!important">
+                            <input type="hidden" id="InputSerial" value="@(i++)" />
+                            <input type="hidden" id="Ord_LinkPrchOrdUsersItems_ReqYear" value="@OrdDF.ReqYear" />
+                            <input type="hidden" id="OrdDF_SubUnitSerial" value="@OrdDF.SubUnitSerial" />
+                            <input type="hidden" id="Ord_LinkPrchOrdUsersItems_ReqNo" value="@OrdDF.ReqNo" />
+                            <input type="hidden" id="OrdDF_ItemSrl" value="@OrdDF.ItemSr" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+
+
+<div class="modal-footer">
+    <br />
+    <div class="form-group">
+        <div class="col-md-10">
+            
+        </div>
+        <div class="col-md-2">
+            <div class="col-md-12">
+                <button style="height: 40px !important;float:left" class="btn btn-primary btn-block" onclick="SaveLinkPrchOrdUsersItems()" id="PurchOrder">
+                    @Resources.Resource.Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $('#Ord_LinkPrchOrdUsersItemsTable').DataTable({
+        "scrollY": 'calc( 100vh - 355px)',
+        "paging": false,
+        "pageLength": 10,
+        "order": [[0, "desc"]],
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        },
+    });
+
+    $('.Ord_LinkPrchOrdUsersItems_UserID').select2();
+
+    function SaveLinkPrchOrdUsersItems() {
+        var OrdReqDF = new Array();
+        $('.Ord_LinkPrchOrdUsersItems #Ord_LinkPrchOrdUsersItemsTbody tr').each(function () {
+            if ($(this).find('.Ord_LinkPrchOrdUsersItems_UserID')[0].value != "") {
+                OrdReqDF.push({
+                    ReqYear: $(this).find('#Ord_LinkPrchOrdUsersItems_ReqYear')[0].value,
+                    ReqNo: $(this).find('#Ord_LinkPrchOrdUsersItems_ReqNo')[0].value,
+                    UserID: $(this).find('.Ord_LinkPrchOrdUsersItems_UserID')[0].value,
+                    SubItemNo: $(this).find('#Ord_LinkPrchOrdUsersItems_ItemNo').html(),
+                });
+            }
+        });
+
+        if (OrdReqDF.length == 0) {
+            MsgBox('@Html.Translate("لم يتم اختيار المستخدم", "User not selected")', 'red');
+            return false
+        }
+
+        wait();
+        burn({ OrdReqDF: OrdReqDF }, '../../../LinkPrchOrdUsers/SaveLinkPrchOrdUsersItems', '', ReloadSaveLinkPrchOrdUsersItems, false);
+    }
+    function ReloadSaveLinkPrchOrdUsersItems(r) {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        LinkPrchOrdUsersSerach()
+    }
+</script>
+
+

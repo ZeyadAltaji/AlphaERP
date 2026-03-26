@@ -1,0 +1,63 @@
+﻿@model IEnumerable<AlphaERP.Models.ExpCodes>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    DataTable Dt = new DataTable();
+    int Srial = 0;
+    if (ViewBag.Serial != 0)
+    {
+        Srial = ViewBag.Serial + 1;
+    }
+    else
+    {
+        Srial = 1;
+    }
+    int Id = ViewBag.Id;
+
+}
+
+
+@foreach (ExpCodes item in Model)
+{
+    <tr style="height: 25px;" itemNo="@item.ExpID" id="ePOExpenses_Serial_@Srial">
+        <td class="first-col" style="text-align: center !important" id="ePOExpenses_OrdYear">@item.OrdYear</td>
+        <td class="first-col" style="text-align: center !important" id="ePOExpenses_OrderNo">@item.OrderNo</td>
+        <td class="first-col" style="text-align: center !important" id="ePOExpenses_TawreedNo">@item.TawreedNo</td>
+        <td class="second-col" style="text-align: center !important" id="ePOExpenses_ExpID">@item.ExpID</td>
+        <td class="third-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="POExpenses_ExpDesc">@item.ExpArDesc</td>
+        <td>
+            <input id="ePODF_Amount_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckAmunt(@Srial,@Id)" />
+        </td>
+        <td>
+            <input id="ePODF_FrAmount_@Srial" value="0" type="number" style="width:75px !important" onblur="CheckFrAmunt(this.value,@Srial,@Id)" />
+        </td>
+        <td>
+            <input id="ePODF_SalesTaxAmount_@Srial" value="0" type="number" style="width:75px !important" onblur="eCheckSalesTaxAmount(@Srial,@Id)" />
+        </td>
+        <td>
+            <input id="ePODF_SalesTaxAmountFr_@Srial" value="0" type="number" style="width:75px !important" onblur="eCheckSalesTaxAmountFr(this.value,@Srial,@Id)" />
+        </td>
+
+        <td>
+            <input id="ePODF_IncomeTaxAmount_@Srial" value="0" type="number" style="width:75px !important" onblur="eCheckIncomeTaxAmount(@Srial,@Id)" />
+        </td>
+        <td>
+            <input id="ePODF_IncomeTaxAmountFr_@Srial" value="0" type="number" style="width:75px !important" onblur="eCheckIncomeTaxAmountFr(this.value,@Srial,@Id)" />
+        </td>
+
+        <td>
+            <input id="ePODF_CustomtaxAmount_@Srial" value="0" type="number" style="width:75px !important" onblur="eCheckCustomtaxAmount(@Srial,@Id)" />
+        </td>
+        <td>
+            <input id="ePODF_CustomtaxAmountFr_@Srial" value="0" type="number" style="width:75px !important" onblur="eCheckCustomtaxAmountFr(this.value,@Srial,@Id)" />
+        </td>
+        <td>
+            <button class="btn-de" onclick="RemoveRow(this)"><i class="fa fa-trash-alt"></i></button>
+            <input type="hidden" id="InputSerial" value="@(Srial++)" />
+        </td>
+    </tr>
+}

@@ -1,0 +1,89 @@
+﻿@model IEnumerable<AlphaERP.Models.AllStores>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+}
+
+
+
+<table class="table table-hover" id="SelectAlternativeItemsTable">
+    <thead>
+        <tr>
+            <th style="text-align: center !important;">@Html.Recource(44)</th>
+            <th style="text-align: center !important;">@Html.Recource(2215)</th>
+            <th style="text-align: center !important; ">@Html.Recource(49)</th>
+            <th style="text-align: center !important; ">@Html.Recource(5432)</th>
+            <th style="text-align: center !important; ">@Html.Translate("الكمية الصافي", "Net Quantity")</th>
+            <th style="text-align: center !important; ">@Html.Recource(67)</th>
+        </tr>
+    </thead>
+    <tbody id="SelectAlternativeItemsTbody">
+        @foreach (AllStores item in Model)
+            {
+            <tr>
+                <td style="text-align: center;word-wrap: break-word; white-space: normal;" id="AlternativeItemNo">@item.AlternativeItemNo</td>
+                <td style="text-align: center;word-wrap: break-word; white-space: normal;" id="ItemDesc">@item.ItemDesc</td>
+                <td style="text-align: center;" id="Alternative_StoreQty">@item.StoreQty</td>
+                <td style="text-align: center;" id="Alternative_TotQtyRes">@item.TotQtyRes</td>
+                <td style="text-align: center;" id="Alternative_TotQtyNet"></td>
+                <td style="text-align: center !important;" id="UnitC4">@item.UnitC4</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="modal-footer">
+    <div class="form-group">
+        <div class="col-md-12">
+            <div class="col-md-2">
+                <label class="unselectable" for="Invt_Alternative_TotalQuantities">@Html.Recource(92) </label>
+            </div>
+            <div class="col-md-2" style="margin-bottom: 5px;">
+                <input required="true" style="width: 125px !important;" type="text" id="Invt_Alternative_TotalQuantities" value="0" readonly />
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="Invt_Alternative_StoreTotalQtyReserved">@Html.Recource(5548) </label>
+            </div>
+            <div class="col-md-2" style="margin-bottom: 5px;">
+                <input required="true" style="width: 125px !important;" type="text" id="Invt_Alternative_StoreTotalQtyReserved" value="0" readonly />
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="Invt_Alternative_StoreTotalQty">@Html.Recource(4706)</label>
+            </div>
+            <div class="col-md-2" style="margin-bottom: 5px;">
+                <input required="true" style="width: 125px !important;" type="text" id="Invt_Alternative_StoreTotalQty" value="0" readonly />
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#SelectAlternativeItemsTable').DataTable({
+        "scrollY": 'calc( 100vh - 385px)',
+        "paging": false,
+        "pageLength": 25,
+        "searching": false,
+        "ordering": false
+    });
+
+    sumTotal();
+    function sumTotal() {
+        var table = $('#SelectAlternativeItemsTbody tr');
+        var trs = table;
+        var AlternativeStoresQty = 0;
+        var AlternativeStoresResQty = 0;
+        var AlternativeTotal = 0;
+        for (var i = 0; i < trs.length; i++) {
+            AlternativeStoresQty += Number($(trs[i]).closest('tr').find('#Alternative_StoreQty')[0].innerHTML);
+            AlternativeStoresResQty += Number($(trs[i]).closest('tr').find('#Alternative_TotQtyRes')[0].innerHTML);
+        }
+        AlternativeTotal = Number(AlternativeStoresQty) + Number(AlternativeStoresResQty);
+        
+        $('#Invt_Alternative_TotalQuantities').val(Number(AlternativeStoresQty));
+        $('#Invt_Alternative_StoreTotalQtyReserved').val(Number(AlternativeStoresResQty));
+        $('#Invt_Alternative_StoreTotalQty').val(Number(AlternativeTotal));
+    }
+</script>

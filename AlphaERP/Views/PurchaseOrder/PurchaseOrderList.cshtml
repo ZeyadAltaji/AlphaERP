@@ -1,0 +1,253 @@
+﻿@model IEnumerable<AlphaERP.Models.LPROrder>
+@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+    int OrdYear;
+    if (ViewBag.OrdYear == null)
+    {
+        OrdYear = DateTime.Now.Year;
+    }
+    else
+    {
+        OrdYear = ViewBag.OrdYear;
+    }
+    //List<OrderHF> ordHF = new MDB().OrderHFs.Where(x => x.CompNo == company.comp_num && x.OrdYear == OrdYear).ToList();
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+
+}
+
+@if (Session["language"].ToString() == "en")
+{
+    <style>
+        .dataTables_wrapper .dataTables_filter {
+            text-align: center !important;
+            direction: rtl;
+        }
+    </style>
+}
+
+
+
+<table id="PurchaseOrderTable" class="table table-hover">
+    <thead>
+        <tr>
+            @if (CActive.ClientNo != 239)
+            {
+                <th style="text-align:center !important">@Html.Recource(3197)</th>
+                <th style="text-align:center !important">@Html.Recource(3797)</th>
+                <th style="text-align: center !important;">@Html.Recource(517)</th>
+                <th style="text-align: center !important;">@Html.Recource(1470)</th>
+                <th style="text-align: center !important;">@Html.Translate("حالة الاستلام", "Receipt Status")</th>
+                <th style="text-align: center !important;">@Html.Translate("المستوى الموافقات", "Level Approvals")</th>
+                <th></th>
+                <th></th>
+            }
+            else
+            {
+                <th style="text-align:center !important">@Html.Recource(3197)</th>
+                <th style="text-align:center !important">@Html.Translate("# طلب الشراء الفا", "# P.R No")</th>
+                <th style="text-align:center !important">@Html.Translate("# إمر الشراء الفا", "# P.O No.")</th>
+                <th style="text-align: center !important;">@Html.Recource(96)</th>
+                <th style="text-align: center !important;">@Html.Recource(517)</th>
+                <th style="text-align: center !important;">@Html.Recource(1470)</th>
+                <th style="text-align: center !important;">@Html.Translate("حالة الاستلام", "Receipt Status")</th>
+                <th style="text-align: center !important;">@Html.Translate("المستوى الموافقات", "Level Approvals")</th>
+                <th></th>
+                <th></th>
+            }
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in Model)
+        {
+            if (CActive.ClientNo != 239)
+            {
+                <tr>
+                    <td style="text-align: center !important" id="PurchaseOrder_OrderNo" OrderNo="@item.OrderNo">@item.OrderNo</td>
+                    <td style="text-align: center !important" id="PurchaseOrder_TawreedNo" TawreedNo="@item.TawreedNo">@item.TawreedNo</td>
+                    <td style="text-align:center !important">@Html.Translate(item.VenName, item.VenName_Eng)</td>
+                    <td style="text-align:center !important">@Html.Translate(item.OrderCloseDescAr, item.OrderCloseDescEn)</td>
+                    <td style="text-align:center !important">@Html.Translate(item.DlvState, item.DlvState_Eng)</td>
+                    <td style="text-align:center !important">@item.LevelApprv</td>
+                    @if (item.Approved == true)
+                    {
+                        <td style="text-align: center !important; background-color: lightgreen ">
+                            @Html.Translate(item.ApprovedDescAr, item.ApprovedDescEn)
+                        </td>
+                    }
+                    else
+                    {
+                        <td style="text-align: center !important; background-color: lightskyblue ">
+                            @Html.Translate(item.ApprovedDescAr, item.ApprovedDescEn)
+                        </td>
+                    }
+                    <td>
+                        @if (item.Approved == false)
+                        {
+                            <button onclick="EditPurchaseOrder('@item.OrdYear','@item.OrderNo', '@item.TawreedNo')" type="button" class="btn btn-ed ex" title="@Html.Translate("تعديل طلب شراء", "Edit Purchase Request")">
+                                <i class="fa fa-pencil-alt"></i>
+                            </button>
+                            <button id="ePurchaseOrder" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                                @Html.Translate("تعديل امر شراء", "Edit Purchase Order")
+                            </button>
+                            <button class="btn-de" onclick="Delete_PurchaseOrder('@item.OrdYear','@item.OrderNo','@item.TawreedNo')">
+                                <i class="fa fa-times-circle"></i>
+                            </button>
+                        }
+                        <button class="btn btn-default ex" title="@Html.Translate("عرض", "View")" href="/InqPurchaseOrder/InqPurchOrdDirect?OrdYear=@item.OrdYear&OrderNo=@item.OrderNo&TawreedNo=@item.TawreedNo" target="_blank">
+                            <i style="font-weight:100" class="fa fa-folder"></i>
+                            @item.TawreedNo
+                        </button>
+                        <button class="btn btn-info" id="btnReport" onclick="GetPrintReport('@item.OrdYear','@item.OrderNo', '@item.TawreedNo')" formenctype="multipart/form-data" formtarget="_blank">
+                            <i class="fa fa-print"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+            else
+            {
+                <tr>
+                    <td style="text-align: center !important" id="PurchaseOrder_ReqNo" ReqNo="@item.ReqNo">@item.ReqNo</td>
+                    <td style="text-align: center !important" id="PurchaseOrder_OrderNo" OrderNo="@item.OrderNo">@item.OrderNo</td>
+                    <td style="text-align: center !important" id="PurchaseOrder_TawreedNo" TawreedNo="@item.TawreedNo">@item.TawreedNo</td>
+                    <td style="text-align: center !important" id="PurchaseOrder_RefNo" RefNo="@item.RefNo">@item.RefNo</td>
+                    <td style="text-align:center !important">@Html.Translate(item.VenName, item.VenName_Eng)</td>
+                    <td style="text-align:center !important">@Html.Translate(item.OrderCloseDescAr, item.OrderCloseDescEn)</td>
+                    <td style="text-align:center !important">@Html.Translate(item.DlvState, item.DlvState_Eng)</td>
+                    <td style="text-align:center !important">@item.LevelApprv</td>
+                    @if (item.Approved == true)
+                    {
+                        <td style="text-align: center !important; background-color: lightgreen ">
+                            @Html.Translate(item.ApprovedDescAr, item.ApprovedDescEn)
+                        </td>
+                    }
+                    else
+                    {
+                        <td style="text-align: center !important; background-color: lightskyblue ">
+                            @Html.Translate(item.ApprovedDescAr, item.ApprovedDescEn)
+                        </td>
+                    }
+                    <td>
+                        @if (item.IsExport == true)
+                        {
+                            <input id="MRP_ChkPurchaseOrder_Action" type="checkbox" onchange="ChangeStutusAction(this,'@item.OrdYear','@item.OrderNo', '@item.TawreedNo')" checked>
+                        }
+                        else
+                        {
+                            <input id="MRP_ChkPurchaseOrder_Action" type="checkbox" onchange="ChangeStutusAction(this,'@item.OrdYear','@item.OrderNo', '@item.TawreedNo')" >
+                        }
+                        @if (item.Approved == false)
+                        {
+                            <button onclick="EditPurchaseOrder('@item.OrdYear','@item.OrderNo', '@item.TawreedNo')" type="button" class="btn btn-ed ex" title="@Html.Translate("تعديل امر شراء", "Edit Purchase Order")">
+                                <i class="fa fa-pencil-alt"></i>
+                            </button>
+                                <button id="ePurchaseOrder" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                                    @Html.Translate("تعديل امر شراء", "Edit Purchase Order")
+                                </button>
+                                <button class="btn-de" onclick="Delete_PurchaseOrder('@item.OrdYear','@item.OrderNo','@item.TawreedNo')">
+                                    <i class="fa fa-times-circle"></i>
+                                </button>
+                        }
+                        <button class="btn btn-default ex" title="@Html.Translate("عرض", "View")" href="/InqPurchaseOrder/InqPurchOrdDirect?OrdYear=@item.OrdYear&OrderNo=@item.OrderNo&TawreedNo=@item.TawreedNo" target="_blank">
+                            <i style="font-weight:100" class="fa fa-folder"></i>
+                            @item.TawreedNo
+                        </button>
+                        @if (item.Approved == false)
+                        {
+                            <button class="btn btn-info" id="btnReport" formenctype="multipart/form-data" formtarget="_blank" disabled>
+                                <i class="fa fa-print"></i>
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-info" id="btnReport" onclick="GetPrintReport('@item.OrdYear','@item.OrderNo', '@item.TawreedNo')" formenctype="multipart/form-data" formtarget="_blank">
+                                <i class="fa fa-print"></i>
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+<br />
+<div class="form-group">
+    <div class="col-md-12">
+        <div class="col-md-4">
+            <button style="width: 35%; height: 40px !important;" class="btn btn-primary btn-block" href="/PurchaseOrder/AddPurchaseOrder?OrdYear=@OrdYear" target="_blank">
+                <i class="fa fa-plus"></i>
+                @Html.Recource(32)
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    debugger
+    done();
+    $('#PurchaseOrderTable').DataTable({
+        "scrollY": 'calc( 100vh - 338px)',
+        "paging": true,
+        "pageLength": 10,
+        "order": [[0, "desc"]],
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+
+
+    function EditPurchaseOrder(OrdYear, OrderNo, TawreedNo) {
+        $('#ePurchaseOrder').attr("href", '/PurchaseOrder/EditPurchaseOrder?OrdYear=' + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo + '')
+        $('#ePurchaseOrder').click();
+    }
+
+    var _OrdYear = 0;
+    var _OrderNo = 0;
+    var _TawreedNo = "";
+
+    function GetPrintReport(OrdYear, OrderNo, TawreedNo) {
+        _OrdYear = OrdYear;
+        _OrderNo = OrderNo;
+        _TawreedNo = TawreedNo;
+        ReportManger.LoadReport();
+    }
+    var ReportManger = {
+
+        LoadReport: function () {
+            var jsonParam = "";
+            var ServiceUrl = "../InqPurchaseOrder/GenerateReport?OrdYear=" + _OrdYear + "&OrderNo=" + _OrderNo + "&TawreedNo=" + _TawreedNo;
+            ReportManger.GetReport(ServiceUrl, jsonParam, onFailed);
+            function onFailed(error) {
+                alert("Error");
+            }
+        },
+
+        GetReport: function (serviceUrl, jsonParams, errorCallback) {
+            jQuery.ajax({
+                url: serviceUrl,
+                async: false,
+                type: "POST",
+                data: "{" + jsonParams + "}",
+                contentType: "application/json; charset=utf-8",
+                success: function () {
+                    window.open('../Reports/CrystalViewer/ReportViewer.aspx', '_newtab');
+                },
+                error: errorCallback
+            });
+        }
+    }
+
+    function ChangeStutusAction(e, OrdYear, OrderNo, TawreedNo) {
+        if (confirm('@Resources.Resource.ConfirmStutusAction')) {
+            wait();
+            burn({ StutusAction: e.checked, OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo }, '../../../PurchaseOrder/ChangeStutusAction', '', ReloadStutusAction, false);
+        }
+    }
+    function ReloadStutusAction(r) {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        SerachPurchaseOrderInfo();
+    }
+</script>

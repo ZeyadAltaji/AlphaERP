@@ -1,0 +1,32 @@
+﻿@model IEnumerable<AlphaERP.Models.Acc>
+
+    <div class="form-group">
+        <div class="col-md-12">
+            <table class="table table-hover" id="OrdPO_AccTable">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">@Html.Recource(255)</th>
+                        <th style="width: 55%;">@Html.Recource(256)</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="OrdPO_AccTbody">
+                    @foreach (var item in Model)
+                    {
+                        <tr onclick="Select_finAcc(this)" ondblclick="Select_Acc(this)" deptid="@item.deptid" Acc_NUM="@item.AccId" AccDesc="@Html.Translate(item.AccDescAr,item.AccDescEn)">
+                            <td style="width: 20%;" id="PO_Acc_NUM">@item.AccId</td>
+                            <td style="width: 55%;" id="PO_AccDesc">@Html.Translate(item.AccDescAr, item.AccDescEn).ToString()</td>
+                            <td></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+<script>
+    $('#OrdPO_AccTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+</script>

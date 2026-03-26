@@ -1,0 +1,187 @@
+﻿@using AlphaERP.Models
+@{
+    User me = (User)Session["me"];
+}
+
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+            <label class="modal-title">@Html.Translate("التعديل", "Show")</label>
+        </div>
+
+        <div class="modal-body row">
+
+            <table class="table " style="width:100%">
+                <thead>
+                    <tr>
+                        <th>@Html.Translate("تسلسل", "Ser")</th>
+                        <th>@Html.Translate("عنصر", "Item")</th>
+                        <th>@Html.Translate("صانع", "Maker") </th>
+                        <th>@Html.Translate("قراءة القيمة", "Value Reading") </th>
+                        <th></th>
+                        <th> @Html.Translate("المدقق", "Checker")</th>
+                        <th>@Html.Translate("قراءة القيمة", "Value Reading") </th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="EevetBodyShowInProgress"></tbody>
+            </table>
+
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary pull-left" data-dismiss="modal">@Html.Translate("اغلق", "Close")</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .PostMaker {
+        color: black;
+    }
+
+    .PostChecker {
+        color: black;
+    }
+
+    #addValueDiv {
+        text-align: end;
+    }
+
+    .btncloses {
+        color: black;
+    }
+</style>
+<script>
+
+    // Modal Event Function /////////////////
+    function ShowListEventInProgress(dataevent, CompNo, OrderYear, OrderNo) {
+
+        // Function to handle AJAX request for saving changes
+
+        var eventBody = $("#EevetBodyShowInProgress");
+        eventBody.empty();
+        if (Array.isArray(dataevent)) {
+
+            $.each(dataevent, function (index, item) {
+                var mPostStatIsNull = item.MPostStat === null;
+                var CPostStatIsNull = item.CPostStat === null;
+
+
+
+                if ((item.MakerValue === 1 || item.MakerValue === 0) || (item.CheckerValue === 1 || item.CheckerValue === 0) ||
+                    (item.MakerValue === null || item.MakerValue === null) || (item.CheckerValue === null || item.CheckerValue === null)) {
+                    var row = $("<tr>");
+                    row.attr('data-qa-procno', item.Proc_SubNo);
+                    row.attr('data-qa-eventserial', item.Eventserial);
+                    row.attr('data-qa-procnoo', item.QA_ProcNo);
+
+                    row.append($("<td>").text(item.Proc_SubNo));
+                    row.append($("<td>").text(item.Description));
+                    var QAProcNo = item.QA_ProcNo;
+                    // Select Maker
+                    var select1 = $("<select name='MakerValue'>")
+                        .append($("<option>").text("Select").prop("disabled", true).prop("selected", item.MakerValue === null))
+                        .append($("<option>").text("Yes").prop("selected", item.MakerValue === 1))
+                        .append($("<option>").text("No").prop("selected", item.MakerValue === 0));
+                    if (!mPostStatIsNull) {
+                        select1.prop("disabled", true);
+                    }
+                    row.append($("<td>").append(select1));
+                    var MakerReadValue = item.MakerReadValue !== null ? item.MakerReadValue : "";
+
+                    var MakerRead = $("<input disabled input  type='text' id='MakerRead'   value='" + MakerReadValue + "'/>");
+                    row.append($("<td>").append(MakerRead));
+
+                    // Btn Maker
+                    var btnMaker = $("<button type='button' class='btn btn-dark PostMaker' value='" + item.Proc_SubNo + "'>Post</button>");
+
+                    row.append($("<td>").append(btnMaker));
+
+                    // Select Checker
+                    var select2 = $("<select name='CheckerValue'>")
+                        .append($("<option>").text("Select").attr("disabled", "disabled").attr("selected", item.CheckerValue === null))
+                        .append($("<option>").text("Yes").attr("selected", item.CheckerValue === 1))
+                        .append($("<option>").text("No").attr("selected", item.CheckerValue === 0));
+
+                    row.append($("<td>").append(select2));
+
+                    var CheckerReadValue = item.CheckerReadValue !== null ? item.CheckerReadValue : "";
+                    var CheckerRead = $("<input disabled type='text' id='CheckerRead'  value='" + CheckerReadValue + "'/>");
+                    row.append($("<td>").append(CheckerRead));
+                    // Btn Checker
+                    var btnChecker = $("<button type='button' class='btn btn-dark PostChecker' value='" + item.Proc_SubNo + "'>Post</button>");
+                    // Check if MakerValue contains only 0 and 1 values, then enable select Checker
+
+
+                    if (item.MakerValue !== null) {
+
+                        if (item.MakerValue === 1 || item.MakerValue === 0) {
+                            // Maker contains only 'Yes' or 'No', so disable Maker and enable Checker
+                            btnMaker.prop("disabled", true);
+                            select1.prop("disabled", true);
+                            select2.prop("disabled", true);
+                            btnChecker.prop("disabled", true);
+
+                            // Check if the current user is the one who entered MakerValue
+                            if (item.MUser === '@(me.UserID)' && (item.MakerValue === 1 || item.MakerValue === 0)) {
+                                select2.prop("disabled", true); // Disable Checker for other users
+                                btnChecker.prop("disabled", true);
+                            } else {
+                                select2.prop("disabled", true); // Enable Checker for other users
+                                btnChecker.prop("disabled", true);
+                            }
+                        } else {
+                            // MakerValue is not 0 or 1, disable the Checker
+                            btnChecker.prop("disabled", true);
+                            select2.prop("disabled", true);
+                        }
+                    } else {
+                        // MakerValue is null, enable Maker and disable Checker
+                        btnMaker.prop("disabled", true);
+                        select1.prop("disabled", true);
+                        btnChecker.prop("disabled", true);
+                        select2.prop("disabled", true);
+                    }
+
+                    // Disable Checker if both Maker and Checker are either "Yes" or "No"
+                    if (item.MPostStat === true || item.MPostStat == true) {
+
+                        if (
+                          (item.MakerValue === 1 || item.MakerValue === 0) &&
+                           (item.CPostStat === true || item.CPostStat === true)
+
+                        ) {
+                            select1.prop("disabled", true);
+                            btnMaker.prop("disabled", true);
+                            select2.prop("disabled", true);
+                            btnChecker.prop("disabled", true);
+                        }
+                        if (item.MPostStat !== null) {
+                            select1.prop("disabled", true);
+                            btnMaker.prop("disabled", true);
+                        } else {
+                            select2.prop("disabled", true);
+                            btnChecker.prop("disabled", true);
+                        }
+                    } else if (item.MPostStat === null) {
+                        select2.prop("disabled", true);
+                    } else {
+
+                    }
+
+
+
+                    row.append($("<td>").append(btnChecker));
+                    row.append($("<td>"));
+                    eventBody.append(row);
+                }
+            });
+        }
+    }
+
+
+
+</script>

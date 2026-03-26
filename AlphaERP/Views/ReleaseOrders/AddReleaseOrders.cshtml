@@ -1,0 +1,649 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    int OrdYear = ViewBag.OrdYear;
+    int OrderNo = ViewBag.OrderNo;
+    string TawreedNo = ViewBag.TawreedNo;
+    string InboundSer = ViewBag.InboundSer;
+    string srl = ViewBag.InboundGRN;
+    int StoreNo = ViewBag.StoreNo;
+
+    List<InvItemsMF> Mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+    DataTable Dt = new DataTable();
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+
+    List<Ord_InboundManagementDF> InboundManagementDF = new MDB().Ord_InboundManagementDF.Where(x => x.CompNo == company.comp_num && x.OrderYear == OrdYear
+    && x.OrderNo == OrderNo && x.TawreedNo == TawreedNo && x.InboundSer == InboundSer
+    && x.InboundGRN == srl).ToList();
+
+    InvStoresMF StoresMF = new MDB().InvStoresMFs.Where(x => x.CompNo == company.comp_num && x.StoreNo == StoreNo).FirstOrDefault();
+    List<InvDocType> DocType = new MDB().InvDocTypes.Where(x => x.CompNo == company.comp_num && x.VouchType == 22).ToList();
+    int Srial = 1;
+    List<int> ReleaseOrdId = new MDB().Ord_ReleaseOrdersHF.Where(x => x.CompNo == company.comp_num && x.OrderYear == OrdYear && x.OrderNo == OrderNo
+    && x.TawreedNo == TawreedNo && x.InboundSer == InboundSer && x.InboundGRN == srl).Select(o => o.ReleaseOrdId).ToList();
+    double RemainingQty = 0;
+
+}
+
+<style>
+
+    #Ord_ReleaseOrdersDF_DIV table th, #Ord_ReleaseOrdersDF_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+    .wrapperx {
+        padding:0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+
+    .sticky-col {
+        z-index:2;
+        position: sticky;
+        position: -webkit-sticky;
+        background-color: white;
+    }
+
+    .first-col {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        @Html.Translate("right: 0px;", "left: 0px;")
+    }
+
+    .second-col {
+        width: 80px;
+        min-width: 80px;
+        max-width: 80px;
+        @Html.Translate("right: 60px;", "left: 60px;")
+    }
+
+    .third-col {
+        width: 150px;
+        min-width: 150px;
+        max-width: 150px;
+        @Html.Translate("right: 125px;", "left: 125px;")
+    }
+
+    .four-col {
+        width: 50px;
+        min-width: 50px;
+        max-width: 50px;
+        @Html.Translate("right: 280px;", "left: 280px;")
+    }
+    .stickytooltip {
+        max-height: 80vh !important;
+        overflow: auto !important
+    }
+</style>
+
+<link href="~/Content/stickytooltip.css" rel="stylesheet" />
+<script src="~/Scripts/stickytooltip.js?s=15"></script>
+
+<style>
+    #Ord_ReleaseOrdersDFTable span.badge {
+        border: none;
+        position: static;
+        z-index: 20 !important;
+        box-sizing: content-box;
+        visibility: visible;
+        z-index: 9999999999 !important;
+        padding: 1px;
+        font-family: Arial, verdana, tahoma;
+        font-size: 13px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        text-shadow: 1px 1px 1px rgba(0,0,0,.3);
+        background: #ff3019;
+        background: -webkit-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Chrome10+,Safari5.1+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff3019), color-stop(100%, #cf0404)); /* Chrome,Safari4+ */
+        background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* FF3.6+ */
+        background: -ms-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* IE10+ */
+        background: -o-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Opera 11.10+ */
+        background: linear-gradient(to bottom, #ff3019 0%, #cf0404 100%); /* W3C */
+        width: 18px;
+        height: 18px;
+        line-height: 20px;
+        border-radius: 50%;
+        filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff3019', endColorstr='#cf0404', GradientType=0)"; /* IE6-9 */
+        filter: "progid:DXImageTransform.Microsoft.Shadow(direction=135, strength=2, color=ff0000)"; /* IE10 text shadows */
+        box-shadow: 0 2px 5px rgba(0,0,0,.4);
+    }
+</style>
+
+<style>
+    .modal-title {
+        width: calc(100% - 120px) !important;
+        text-align: center;
+        position: absolute;
+        font-weight: bold;
+    }
+     .modal-body{
+        max-height: 78vh !important;
+    }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(100vh - 210px) !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_ReleaseOrders_ReserveFreeYear">@Html.Recource(204) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="text" id="Ord_ReleaseOrders_ReserveFreeYear_@srl" value="@OrdYear" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_ReleaseOrders_ReserveFreeNo">@Html.Recource(205) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:90px !important;" type="text" id="Ord_ReleaseOrders_ReserveFreeNo_@srl" value="0" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_ReleaseOrders_StoreNo">@Html.Recource(1) </label>
+                    </div>
+                    <div class="col-md-4" style="margin-bottom: 5px;">
+                        <input required="false" id="Ord_ReleaseOrders_StoreNo_@srl" value="@StoresMF.StoreNo" hidden />
+                        <input required="false" style="width: 100% !important;" type="text" id="Ord_ReleaseOrders_StoreName_@srl" value="@Html.Translate(StoresMF.StoreName,StoresMF.StoreNameEng)" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_ReleaseOrders_CboDocType_@srl">@Html.Recource(4) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select  style="width: 85%" id="Ord_ReleaseOrders_CboDocType_@srl">
+                            @foreach (var v in DocType)
+                            {
+                                    <option value="@v.DocType">@Html.Translate(v.DocName, v.DocNameEng)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_ReleaseOrders_Notes">@Html.Recource(70)</label>
+                    </div>
+                    <div class="col-md-8">
+                        <textarea required="true" style="width: 96%; height: 25px !important; " id="Ord_ReleaseOrders_Notes_@srl" />
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary btn-block" onclick="AddReleaseOrdersDocuments()">
+                            @Html.Recource(7744)
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group" style="display: block; height: 125px;">
+                <div class="col-md-12 wrapperx" id="Ord_ReleaseOrdersDF_DIV">
+                    <table class="table table-hover Ord_ReleaseOrdersDF_Info" id="Ord_ReleaseOrdersDFTable">
+                        @if (Session["language"].ToString() == "en")
+                        {
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center; width: 100px; word-wrap: break-word; white-space: normal;">@Html.Recource(309)</th>
+                                    <th style="text-align: center; width: 350px; word-wrap: break-word; white-space: normal;">@Html.Recource(44)</th>
+                                    <th style="text-align: center; width: 990px; word-wrap: break-word; white-space: normal;">@Html.Recource(74)</th>
+                                    <th style="width: 205px; word-wrap: break-word; white-space: normal;">@Html.Recource(45)</th>
+                                    <th style="width: 205px; word-wrap: break-word; white-space: normal;">@Html.Recource(67)</th>
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(5432)</th>
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(243)</th>
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(5439)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            
+                            <tbody style="text-align: center;" id="OrdReleaseOrdersDFTBody_@srl">
+                                @foreach (Ord_InboundManagementDF DF in InboundManagementDF)
+                                {
+                                    string ItemDesc = Mf.Where(x => x.ItemNo == DF.ItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                                    if (ReleaseOrdId.Count != 0)
+                                    {
+                                        RemainingQty = new MDB().Ord_ReleaseOrdersDF.Where(x => x.CompNo == company.comp_num && x.ItemNo == DF.ItemNo && ReleaseOrdId.Contains(x.ReleaseOrdId)).Sum(o => o.FreeQty).Value;
+                                    }
+                                    else
+                                    {
+                                        RemainingQty = 0;
+                                    }
+
+                                    double RemaiQty = DF.InboundGRNQty.Value - RemainingQty;
+                                <tr style="height: 25px;" id="OrdRelease_@Srial">
+                                    <td class="second-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="OrdRelease_ItemSrl">@DF.ItemSrl</td>
+                                    <td class="second-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="OrdRelease_ItemNo">@DF.ItemNo</td>
+                                    <td class="third-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="OrdRelease_ItemDesc">@ItemDesc</td>
+                                    <td class="third-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="OrdRelease_batchNo">@DF.batchNo.ToString()</td>
+                                    <td class="third-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="OrdRelease_TUnit" unitSerial="@DF.InboundGRNUnitSerial">@DF.InboundGRNTUnit</td>
+                                    <td style="text-align:center !important">
+                                        <input id="OrdRelease_ReservedQty_@Srial" value="@DF.InboundGRNQty" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="OrdRelease_RemainingQty_@Srial" value="@RemaiQty" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="OrdRelease_FreeQty_@Srial" value="@RemaiQty" type="number" style="width:75px !important" onblur="CheckValueFreeQty(this,@srl)"  />
+                                    </td>
+                                    <td>
+                                        <input id="OrdRelease_batch_@Srial" value="@DF.batchNo.ToString()" type="text" style="width:75px !important" hidden />
+                                        <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                                    </td>
+                                </tr>
+                                }
+                            </tbody>
+                        }
+                        else
+                        {
+                            
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center; width: 100px; word-wrap: break-word; white-space: normal;">@Html.Recource(309)</th>
+                                    <th style="text-align: center; width: 350px; word-wrap: break-word; white-space: normal;">@Html.Recource(44)</th>
+                                    <th style="text-align: center; width: 990px; word-wrap: break-word; white-space: normal;">@Html.Recource(74)</th>
+                                    <th style="width: 205px; word-wrap: break-word; white-space: normal;">@Html.Recource(45)</th>
+                                    <th style="width: 205px; word-wrap: break-word; white-space: normal;">@Html.Recource(67)</th>
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(5432)</th>
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(243)</th>
+                                    <th style="width: 165px; word-wrap: break-word; white-space: normal;">@Html.Recource(5439)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody style="text-align: center;" id="OrdReleaseOrdersDFTBody_@srl">
+                                @foreach (Ord_InboundManagementDF DF in InboundManagementDF)
+                                {
+                                    string ItemDesc = Mf.Where(x => x.ItemNo == DF.ItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                                    if(ReleaseOrdId.Count != 0)
+                                    {
+                                        Ord_ReleaseOrdersDF ReleaseOrdersDF = new MDB().Ord_ReleaseOrdersDF.Where(x => x.CompNo == company.comp_num && x.OrderYear == OrdYear && x.OrderNo == OrderNo && x.TawreedNo == TawreedNo
+                                                        && x.InboundSer == InboundSer && x.InboundGRN == srl && ReleaseOrdId.Contains(x.ReleaseOrdId) && x.ItemNo == DF.ItemNo && x.ItemSrl == DF.ItemSrl).FirstOrDefault();
+
+                                        if(ReleaseOrdersDF != null)
+                                        {
+                                            RemainingQty = new MDB().Ord_ReleaseOrdersDF.Sum(o => o.FreeQty.Value);
+                                        }
+                                        else
+                                        {
+                                            RemainingQty = 0;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        RemainingQty = 0;
+                                    }
+
+                                    double RemaiQty = DF.InboundGRNQty.Value - RemainingQty;
+                                    <tr style="height: 25px;" id="OrdRelease_@Srial">
+                                    <td class="second-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="OrdRelease_ItemSrl">@DF.ItemSrl</td>
+                                    <td class="second-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="OrdRelease_ItemNo">@DF.ItemNo</td>
+                                    <td class="third-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="OrdRelease_ItemDesc">@ItemDesc</td>
+                                    <td class="third-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="OrdRelease_batchNo">@DF.batchNo.ToString()</td>
+                                    <td class="third-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="OrdRelease_TUnit" unitSerial="@DF.InboundGRNUnitSerial">@DF.InboundGRNTUnit</td>
+                                    <td style="text-align:center !important">
+                                        <input id="OrdRelease_ReservedQty_@Srial" value="@DF.InboundGRNQty" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="OrdRelease_RemainingQty_@Srial" value="@RemaiQty" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                    <td style="text-align:center !important">
+                                        <input id="OrdRelease_FreeQty_@Srial" value="@RemaiQty" type="number" style="width:75px !important" onblur="CheckValueFreeQty(this,@srl)" />
+                                    </td>
+                                    <td>
+                                        <input id="OrdRelease_batch_@Srial" value="@DF.batchNo.ToString()" type="text" style="width:75px !important" hidden />
+                                        <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                                    </td>
+                                </tr>
+                                }
+                            </tbody>
+                        }
+
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="ExcuteSave_ReleaseOrderInfo(@srl)" class="btn btn-primary">@Resources.Resource.Save</button>
+        </div>
+    </div>
+</div>
+
+@*-----------------------------Model Documents-------------------------------------*@
+<div class="modal fade" id="Model_ReleaseOrder_DocumentsArchive">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أرشفة الوثائق", "Archive Documents")</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <button onclick="Add_ReleaseOrder_DocumentArchive()" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="Ord_ReleaseOrder_DocumentArchiveTable">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(66)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5628)</th>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(5629)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5630)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5631)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5632)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5633)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="Ord_ReleaseOrder_DocumentArchiveTbody" style="border-top: 1px solid #ddd;"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SaveReleaseOrderDocumentArchive()" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var Count = 0;
+    $('#Model_ReleaseOrder_DocumentsArchive').draggable({
+        handle: ".modal-header",
+    });
+    function AddReleaseOrdersDocuments() {
+        $('#Model_ReleaseOrder_DocumentsArchive').modal('show');
+    }
+    function Add_ReleaseOrder_DocumentArchive() {
+        var table = $("#Ord_ReleaseOrder_DocumentArchiveTbody");
+        Count++;
+        var newarray = [];
+        newarray.push('<input id="Ord_ReleaseOrder_DocumentArchive_FileId" type="hidden" value="' + Count + '" />')
+        newarray.push('<input id="Ord_ReleaseOrder_DocumentArchive_Description_' + Count + '" type="text" style="width: 115px !important;text-align: center !important" />')
+        newarray.push('<div class="image-upload"><label for="file-input"><span class="glyphicon glyphicon-upload" onclick="OpenFileUpload(this)"></span></label><input type="file" name="uploadFile_7" style="display:none" id="Ord_ReleaseOrder_DocumentArchive_File_' + Count + '" onchange="uploadFile(this,' + Count + ')" /></div>')
+        newarray.push('')
+        newarray.push('<a id="Ord_ReleaseOrder_DownloadFile_' + Count + '" onclick="DownloadFile()"><span class="glyphicon glyphicon-download"></span></a>')
+        newarray.push('<input id="Ord_ReleaseOrder_DocumentArchive_FileName_' + Count + '" type="text" style="text-align: center !important" disabled />')
+        newarray.push('<input id="Ord_ReleaseOrder_DocumentArchive_UploadDate_' + Count + '" type="text" style="width: 95px;text-align: center !important" disabled />')
+        newarray.push('<input id="Ord_ReleaseOrder_DocumentArchive_FileSize_' + Count + '" type="text" style="width: 70px;text-align: center !important" disabled />')
+        newarray.push('<input id="Ord_ReleaseOrder_DocumentArchive_FileType_' + Count + '" type="text" style="width: 55px;text-align: center !important" disabled />')
+        newarray.push('<button class="btn-de" onclick="RemoveRowUpload(this,' + Count + ')" type="button"><i class= "fa fa-trash-alt"></i ></button>')
+        $(table).append(
+            GenRowDocumentArchive(newarray, 'Ord_ReleaseOrder_DocumentArchive_' + Count)
+        );
+    }
+    function GenRowDocumentArchive(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function OpenFileUpload(ID) {
+        var $td = $(ID).closest("td");
+        $($td).find("input[type=file]").click();
+    }
+    function uploadFile(Elem, Count) {
+        var uploadDate = new Date($.now());
+        var shortDate = moment(uploadDate).format('DD/MM/YYYY');
+        var InputID = $(Elem).attr("id");
+        var file_size = $(Elem)[0].files[0].size;
+
+        var table = $("#Ord_ReleaseOrder_DocumentArchiveTbody");
+        var tr = table.find('#Ord_ReleaseOrder_DocumentArchive_' + Count);
+
+        var fileName = tr.find("#Ord_ReleaseOrder_DocumentArchive_File_" + Count).val().replace(/C:\\fakepath\\/i, '');
+        var filetype = fileName.split('.').pop();
+
+        tr.find('#Ord_ReleaseOrder_DocumentArchive_FileName_' + Count)[0].value = fileName;
+        tr.find('#Ord_ReleaseOrder_DocumentArchive_UploadDate_' + Count)[0].value = shortDate;
+        tr.find('#Ord_ReleaseOrder_DocumentArchive_FileSize_' + Count)[0].value = file_size;
+        tr.find('#Ord_ReleaseOrder_DocumentArchive_FileType_' + Count)[0].value = "." + filetype;
+
+        var $file = document.getElementById(InputID);
+        $formData = new FormData();
+        if ($file.files.length > 0) {
+            for (var i = 0; i < $file.files.length; i++) {
+                $formData.append('file-' + i, $file.files[i]);
+            }
+
+            $formData.append('Id', Count);
+            $formData.append('OrderYear', @OrdYear);
+            $formData.append('OrderNo', @OrderNo);
+            $formData.append('TawreedNo', '@TawreedNo');
+            $formData.append('InboundSer', '@InboundSer');
+            $formData.append('InboundGRN', '@srl');
+            $formData.append('ReleaseOrdId', 0);
+        }
+
+        $.ajax({
+            url: '@Url.Action("InsertFile", "ReleaseOrders")',
+            type: 'POST',
+            data: $formData,
+            contentType: false,
+            processData: false,
+            success: function (r) {
+                var table = $("#Ord_ReleaseOrder_DocumentArchiveTbody");
+                var tr = table.find('#Ord_ReleaseOrder_DocumentArchive_' + Count);
+                tr.find('#Ord_ReleaseOrder_DownloadFile_' + Count)[0].setAttribute('onclick', 'DownloadFile("' + fileName + '","' + r + '")')
+            },
+            error: function (error) {
+            }
+        });
+    }
+    function RemoveRowUpload(e, Count) {
+        if (confirm('@Resources.Resource.DeleteConfirm')) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+
+            $.ajax({
+                type: "POST",
+                url:'@Url.Action("RemoveFile", "ReleaseOrders")',
+                data: { Id: Count, OrderYear: @OrdYear, OrderNo: @OrderNo, TawreedNo: '@TawreedNo', InboundSer: '@InboundSer', InboundGRN: '@srl', ReleaseOrdId: 0 },
+                success: function (response) {
+
+                },
+            });
+
+            return true;
+        }
+        return false;
+    }
+    function DownloadFile(FileName, base64) {
+        var binaryString = window.atob(base64);
+        var binaryLen = binaryString.length;
+        var bytes = new Uint8Array(binaryLen);
+        for (var i = 0; i < binaryLen; i++) {
+            var ascii = binaryString.charCodeAt(i);
+            bytes[i] = ascii;
+        }
+        saveByteArray(FileName, bytes)
+    }
+    function saveByteArray(reportName, byte) {
+        var blob = new Blob([byte], { type: "application/pdf" });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        var fileName = reportName;
+        link.download = fileName;
+        link.click();
+    }
+    function SaveReleaseOrderDocumentArchive() {
+        $('#Model_ReleaseOrder_DocumentsArchive').modal('hide');
+    }
+</script>
+@*--------------------------------END Model Documents -----------------------------*@
+
+
+
+
+<script>
+    $('#Ord_ReleaseOrders_CboDocType_' + @srl).select2();
+
+    function CheckValueFreeQty(e,srl) {
+         if (e.value < 0) {
+             e.value = 0;
+             e.focus();
+             alert('@Html.Translate("يجب أن تكون الكمية المحررة أكبر من صفر", "The Free Qty Must be Greater Than Zero")');
+        }
+         if (e.value == "") {
+             e.value = 0;
+        }
+    }
+    function CheckValueGrid(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt == 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+        else {
+            if (Amt == '' || Amt == null) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function ExcuteSave_ReleaseOrderInfo(id) {
+
+        var table = $("#OrdReleaseOrdersDFTBody_" + id);
+        var trs = table.find('tr');
+
+
+        var ReleaseOrdersHF = {
+            CompNo: '@company.comp_num',
+            OrderYear: '@OrdYear',
+            OrderNo: '@OrderNo',
+            TawreedNo: '@TawreedNo',
+            InboundSer: '@InboundSer',
+            InboundGRN: '@srl',
+            ReleaseOrdId: 0,
+            DocType: $('#Ord_ReleaseOrders_CboDocType_' + id).val(),
+            StoreNo: $('#Ord_ReleaseOrders_StoreNo_' + id).val(),
+            Notes: $('#Ord_ReleaseOrders_Notes_' + id).val(),
+            IsApproval: false
+        }
+        var count = 0
+        var ReleaseOrdersDF = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value
+            
+            if (Number($(trs[i]).closest('tr').find('#OrdRelease_FreeQty_' + InputSerial)[0].value) > Number($(trs[i]).closest('tr').find('#OrdRelease_RemainingQty_' + InputSerial)[0].value)) {
+                alert('@Html.Translate("لا يجوز ان تكون الكمية المحررة اكبر من الكميات المتبقية", "The Free Qty may not be greater than the Remaining Qty")');
+                $(trs[i]).closest('tr').find('#OrdRelease_FreeQty_' + InputSerial)[0].focus();
+                return;
+            }
+
+            if ($(trs[i]).closest('tr').find('#OrdRelease_FreeQty_' + InputSerial)[0].value > 0) {
+                count = count + 1;
+            }
+            ReleaseOrdersDF.push({
+                CompNo: '@company.comp_num',
+                ReleaseOrdId: 0,
+                ItemSrl: $(trs[i]).closest('tr').find('#OrdRelease_ItemSrl')[0].innerHTML,
+                ItemNo: $(trs[i]).closest('tr').find('#OrdRelease_ItemNo')[0].innerHTML,
+                //batchNo: $(trs[i]).closest('tr').find('#OrdRelease_batchNo')[0].innerHTML,
+                batchNo:$(trs[i]).closest('tr').find('#OrdRelease_batch_' + InputSerial)[0].value,
+                TUnit: $(trs[i]).closest('tr').find('#OrdRelease_TUnit')[0].innerHTML,
+                UnitSerial: $(trs[i]).closest('tr').find('#OrdRelease_TUnit')[0].getAttribute('unitSerial'),
+                ReservedQty: $(trs[i]).closest('tr').find('#OrdRelease_ReservedQty_' + InputSerial)[0].value,
+                FreeQty: $(trs[i]).closest('tr').find('#OrdRelease_FreeQty_' + InputSerial)[0].value
+            })
+        }
+        var DocumentArchivetable = $("#Ord_ReleaseOrder_DocumentArchiveTbody");
+        var trsDocumentArchive = DocumentArchivetable.find('tr');
+
+        var DocumentArchive = new Array();
+        
+        for (var i = 0; i < trsDocumentArchive.length; i++) {
+            var InputSerial = $(trsDocumentArchive[i]).closest('tr').find('#Ord_ReleaseOrder_DocumentArchive_FileId')[0].value;
+            DocumentArchive.push({
+                OrderYear: '@OrdYear',
+                OrderNo: '@OrderNo',
+                TawreedNo: '@TawreedNo',
+                InboundSer: '@InboundSer',
+                InboundGRN: '@srl',
+                ReleaseOrdId: 0,
+                FileId: InputSerial,
+                Description: $(trsDocumentArchive[i]).closest('tr').find('#Ord_ReleaseOrder_DocumentArchive_Description_' + InputSerial)[0].value,
+                DateUploded: $(trsDocumentArchive[i]).closest('tr').find('#Ord_ReleaseOrder_DocumentArchive_UploadDate_' + InputSerial)[0].value,
+                ContentType: $(trsDocumentArchive[i]).closest('tr').find('#Ord_ReleaseOrder_DocumentArchive_FileType_' + InputSerial)[0].value
+            })
+        }
+        if (count == 0) {
+            alert('@Html.Translate("يجب إدخال الكميات", "Quantities must be entered")');
+            return false;
+        }
+
+        wait();
+        burn({ ReleaseOrdersHF: ReleaseOrdersHF, ReleaseOrdersDF: ReleaseOrdersDF, FileArchive: DocumentArchive }, '../../../ReleaseOrders/Save_ReleaseOrders', '', ReloadReleaseOrdersInfo, false);
+    }
+    function ReloadReleaseOrdersInfo(r) {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        var TawreedNo = r.TawreedNo;
+        var InboundSer = r.InboundSer;
+        var InboundGRN = r.InboundGRN;
+
+
+        CloseWindow('/ReleaseOrders/AddReleaseOrders?OrdYear=' + r.OrdYear + '&OrderNo=' + r.OrdNo + '&TawreedNo=' + TawreedNo + '&InboundSer=' + InboundSer + '&InboundGRN=' + InboundGRN + '&StoreNo=' + @StoreNo + '');
+
+        var table = $("#ReleaseOrdersHFTable tbody");
+        var trs = table.find('tr');
+
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i])[0].getAttribute('OrdYear') == r.OrdYear && $(trs[i])[0].getAttribute('OrderNo') == r.OrdNo && $(trs[i])[0].getAttribute('TawreedNo') == TawreedNo && $(trs[i])[0].getAttribute('InboundSer') == InboundSer && $(trs[i])[0].getAttribute('InboundGRN') == InboundGRN) {
+                var nTr = $(trs[i])[0];
+                wait();
+                $(this).attr("opened", "details_close");
+                
+                var OrdYear = $(trs[i])[0].getAttribute('OrdYear');
+                var OrderNo = $(trs[i])[0].getAttribute('OrderNo');
+                var TawreedNo = $(trs[i])[0].getAttribute('TawreedNo');
+                var InboundSer = $(trs[i])[0].getAttribute('InboundSer');
+                var InboundGRN = $(trs[i])[0].getAttribute('InboundGRN');
+
+                $.get("../../../../ReleaseOrders/DetailsReleaseOrders?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo + '&InboundSer=' + InboundSer + '&InboundGRN=' + InboundGRN, function (data) {
+                    ReleaseOrdersHFTable.fnOpen(nTr, data, 'details');
+                    done();
+                });
+            }
+        }
+    }
+</script>

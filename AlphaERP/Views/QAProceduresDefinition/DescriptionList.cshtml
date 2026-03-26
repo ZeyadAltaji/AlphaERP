@@ -1,0 +1,43 @@
+﻿@model IEnumerable<AlphaERP.Models.ProdCost_QASetup>
+@{
+    int count = 1;
+}
+<style>
+    .selected-row {
+        background-color: #cfcfcf;
+    }
+</style>
+<div class="form-group">
+    <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+        <table class="table table-hover QCStageDetailsTable">
+            <thead>
+                <tr>
+                    <th>@Html.Translate("التسلسل", "Ser")</th>
+                    <th style="text-align:center !important">@Html.Translate("الوصف ", "Description")</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="QCStageDetailsTbody">
+                @foreach (var item in Model)
+                {
+                    <tr class="table-row" onclick="selectTableRow(this)" ondblclick="triggerSelectAction(this)">
+                        <td>
+                            @count
+
+                        </td>
+                        <td style="text-align:center !important">
+                            @Html.DisplayFor(modelItem => item.Description)
+                        </td>
+                        <td>
+                            <input type="hidden" class="qa-procno-hidden" value="@item.QA_ProcNo" />
+                        </td>
+
+                    </tr>
+                    count++;
+                }
+
+
+            </tbody>
+        </table>
+    </div>
+</div>

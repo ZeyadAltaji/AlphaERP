@@ -1,0 +1,119 @@
+﻿@model IEnumerable<AlphaERP.Models.ProdCost_QASetupHF>
+<style>
+    #QCStageDetailsTbody td:nth-child(2) {
+        max-width: 197px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: left !important;
+    }
+
+    .selected-row {
+        background-color: #cfcfcf;
+    }
+</style>
+
+<div class="form-group">
+    <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+        <table class="table table-hover QCStageDetailsTable">
+            <thead>
+                <tr>
+                    <th>@Html.Translate("رقم الأجراء", "Proc No")</th>
+                    <th>@Html.Translate("الوصف ", "Description")</th>
+                </tr>
+            </thead>
+            <tbody id="QCStageDetailsTbody">
+                @foreach (var item in Model)
+                {
+                    <tr class="table-row">
+                        <td>
+                            @Html.DisplayFor(modelItem => item.QA_ProcNo)
+
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.QA_Desc)
+                            <input type="hidden" class="description-input" value="@Html.Raw(item.QA_Desc)" />
+
+                        </td>
+                        <td>
+                            <input type="hidden" id="compNoInput" />
+                        </td>
+ 
+
+                        <td>
+                            <input type="hidden" id="stageCodeInput" />
+                        </td>
+
+ 
+                        <td>
+                            <input type="hidden" class="qaProcNoInput" />
+                        </td>
+                        <td>
+                            <input type="hidden" id="description" />
+                        </td>
+
+                    </tr>
+                }
+
+
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    var selectedRowData = {};
+     var compNo, qaProcNo, formulaCode, stageCode, stageSer;
+     $(".table-row").click(function () {
+        $(".table-row.selected-row").removeClass('selected-row');
+        $(this).addClass('selected-row');
+
+        var qaProcNo = $(this).find("td:first-child").text().trim();
+        var description = $(this).find("td:nth-child(2)").text().trim();
+        compNo = @ViewBag.Comp_no;
+        stageCode = @ViewBag.Stage_code;
+
+         selectedRowData.stageCode = stageCode;
+        selectedRowData.newQAProcNo = qaProcNo;
+
+        $(".selected-row .qaProcNoInput").val(qaProcNo);
+            $("#compNoInput").val(compNo);
+            $("#formulaCodeInput").val(formulaCode);
+            $("#stageCodeInput").val(stageCode);
+            $("#stageSerInput").val(stageCode);
+            $("#description").val(description);
+    });
+    $(".table-row").dblclick(function () {
+        var stageSerInput = $("#stageCodeInput").val();
+        var newQAProcNo = $(this).find(".qaProcNoInput").val();
+        var selectedDesc = $("#description").val();;
+
+        var matchingRow = $("#eProdItemStagesTBody tr, #ProdItemStagesTBody tr").filter(function () {
+            return $(this).find("#ProdItemStages_StageCode").attr("StageCode") === stageSerInput;
+        });
+
+        if (matchingRow.length > 0) {
+            // Update the QA Proc No and description
+            var qaProcNoInput = matchingRow.find("#qaProcNoInput_" + stageSerInput);
+            qaProcNoInput.val(newQAProcNo);
+
+            var qaButton = matchingRow.find("#qaButton_" + stageSerInput);
+            qaButton.text(selectedDesc);
+
+            var txtpopover = matchingRow.find("#txtpopoveer_" + stageSerInput);
+            txtpopover.text(selectedDesc);
+            var deleteButton = matchingRow.find("#btn-deQA_" + stageSerInput);
+            deleteButton.attr("title", "Delete "+selectedDesc);
+        }
+        doneBomDefinitionadd();
+    });
+    function doneBomDefinitionadd() {
+        done();
+
+        $('#Model_getProdCost_QASetupHFadd').modal('hide');
+    }
+</script>
+
+
+
+
+

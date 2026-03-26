@@ -1,0 +1,305 @@
+﻿@using AlphaERP.Models
+@{
+    User me = (User)Session["me"];
+}
+
+<style>
+    .menu-button {
+        width: 115px;
+        height: 85px;
+        padding: 11px;
+        background: transparent;
+        border-radius: 0px;
+        text-align: center;
+        float: right;
+        margin: 5px;
+        filter: drop-shadow(1px 1px 2px gray);
+        cursor: pointer;
+    }
+
+        .menu-button > img {
+            width: 35px;
+            height: 35px;
+            display: block;
+            margin: auto;
+            margin-bottom: 10px;
+        }
+
+        .menu-button > label {
+            font-weight: bold
+        }
+
+        .menu-button:hover {
+            filter: drop-shadow(-3px 3px 3px gray)
+        }
+
+    .MyProfile {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        background: #ffffffb3 !important;
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+</style>
+
+@if (Session["language"].ToString() == "en")
+{
+    <style>
+        .MyProfileD {
+            padding-left: 200px
+        }
+    </style>
+}
+else
+{
+    <style>
+        .MyProfileD {
+            direction: rtl;
+            padding-right: 200px
+        }
+    </style>
+}
+<div style="display: none" id="sss" onclick="hideD()">
+    <div class="MyProfile" style="background:#fff;z-index:10">
+        <div class="MyProfileD" style="margin:0 auto 0 auto">
+            <a class="menu-button" href="~/Account/Logout">
+                <img src="~/Images/menu/logout.png" />
+                <label>
+                    @Resources.Resource.Logout
+                </label>
+            </a>
+
+            <a class="menu-button" href="~/Permissions">
+                <img src="~/Images/menu/unlock.png" />
+                <label>
+                    @Html.Recource(493)
+                </label>
+            </a>
+
+
+            <a text="Menu" class="menu-button" href="/Menu">
+                <img src="~/Images/menu/check-box.png" />
+                <label>
+                    @Resources.Resource.Menu
+                </label>
+            </a>
+
+            <a class="menu-button" href="~/Home/Style">
+                <img src="~/Images/menu/palette.png" />
+                <label>
+                    @Resources.Resource.Style
+                </label>
+            </a>
+
+
+            <div class="menu-button" url="ChangePassword" onclick="CanIChangeMyPassword()">
+                <img src="~/Images/menu/password.png" />
+                <label>
+                    @Resources.Resource.ChangePassword
+                </label>
+            </div>
+            <div class="menu-button" onclick="ChangeLangauge()">
+                <img src="/Images/menu/translate.png">
+                <label>
+                    @Resources.Resource.Language
+                </label>
+            </div>
+
+
+
+        </div>
+
+
+    </div>
+
+</div>
+
+<div style="display:none" id="SearchResults" onclick="hideD()">
+    <div class="MyProfile" style="background:#eeeeeedb !important;width:100%;padding: 0px 20%;">
+        <ul style="list-style:none;width:100%;height:400px;overflow-y:auto" id="GeneralUL"></ul>
+    </div>
+</div>
+<script>
+
+    function StopMail() {
+        burn({ ReceiveMails: false }, '../../../Home/MailServices', '', StopMailDone, true);
+    }
+    function StopMailDone() {
+        MsgBox('@Html.Translate("تم إيقاف إشعارات البريد الإلكتروني!","Email notifications stopped !")', 'green');
+        location.reload();
+    }
+
+    function ReceiveMail() {
+        burn({ ReceiveMails: true }, '../../../Home/MailServices', '', ReceiveMailDone, true);
+    }
+    function ReceiveMailDone() {
+        MsgBox('@Html.Translate("تم تشغيل إشعارات البريد الإلكتروني!","Email notifications started !")','green');
+        location.reload();
+    }
+
+    function ExcuteChangePassword_save_ChangePassword() {
+        if (ChangePassword_save_Password.value == '') {
+            ChangePassword_save_Password.focus();
+            return;
+        }
+        if (ChangePassword_save_NewPassword.value == '') {
+            ChangePassword_save_NewPassword.focus();
+            return;
+        }
+        if (ChangePassword_save_RNewPassword.value == '') {
+            ChangePassword_save_RNewPassword.focus();
+            return;
+        }
+
+        if (ChangePassword_save_NewPassword.value != ChangePassword_save_RNewPassword.value) {
+            ChangePassword_save_RNewPassword.value = '';
+            MsgBox("@Resources.Resource.PasswordsNotMatch",'red');
+            ChangePassword_save_RNewPassword.focus()
+            return;
+        }
+        if (ChangePassword_save_NewPassword.value.length < 6) {
+            ChangePassword_save_NewPassword.focus();
+            MsgBox('@Resources.Resource.PasswordShort','red')
+            return;
+        }
+        burn({
+            old: ChangePassword_save_Password.value,
+            np: ChangePassword_save_NewPassword.value,
+            npr: ChangePassword_save_RNewPassword.value
+        }, '../../../Home/ChangePassword', '', ChangePasswordDone, true)
+
+    }
+
+    function CanIChangeMyPassword() {
+        ChangePassword_save_Password.value = '';
+        ChangePassword_save_NewPassword.value = '';
+        ChangePassword_save_RNewPassword.value = '';
+        $('#ChangePassword_save_ChangePassword').modal('show')
+    }
+
+    function ChangePasswordDone(r) {
+        MsgBox("@Resources.Resource.PasswordChanged", 'green')
+        $('#ChangePassword_save_ChangePassword').modal('hide')
+    }
+    $('.menu-button').click(function (e) {
+        return;
+        hideD();
+        if (this.getAttribute("url") == "ChangePassword") {
+
+            return;
+        }
+        window.location = '~/' + this.getAttribute("url")
+    });
+    function hideD() {
+        $("#sss").fadeOut(120, function () {
+        });
+        $("#SearchResults").fadeOut(120, function () {
+        });
+    }
+    function showD() {
+        $("#SearchResults").fadeOut(120, function () {
+        });
+        $("#sss").fadeIn(120, function () {
+            //ProgID.focus()
+        });
+    }
+    document.addEventListener("keydown", function (zEvent) {
+
+        //console.log(zEvent.key)
+        if (zEvent.key === "Escape") {  // case sensitive
+            hideD()
+        }
+        if (zEvent.ctrlKey && zEvent.key === "Meta") {  // case sensitive
+            showD()
+        }
+
+    });
+    function AddFavorite() {
+        var Caption = prompt("Please enter your link title", $(document).find("title").text());
+        if (Caption != null) {
+            var F = {
+                Link: window.location.href,
+                Caption: Caption
+            };
+            burn({ F: F }, 'Home/AddFavorite', '', InsertLi, true);
+        }
+    }
+
+
+    function InsertLi(F) {
+        //alert(F.F.Id)
+        var ul = document.getElementById("FavMenu");
+        var li = document.createElement("li");
+        var a = document.createElement("a");
+        a.href = F.F.Link;
+        a.text = F.F.Caption;
+        li.appendChild(a);
+        ul.appendChild(li);
+    }
+</script>
+<div class="modal fade" id="ChangePassword_save_ChangePassword">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Resources.Resource.ChangePassword</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ChangePassword_save_Password">@Html.Translate("كلمة المرور الحالية", "Current Password") </label>
+                    </div>
+                    <div class="col-md-8" style="margin-bottom: 5px;">
+                        <input required="false" type="password" id="ChangePassword_save_Password" placeholder="@Resources.Resource.Password" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ChangePassword_save_NewPassword">@Resources.Resource.NewPassword </label>
+                    </div>
+                    <div class="col-md-8" style="margin-bottom: 5px;">
+                        <input required="false" type="password" id="ChangePassword_save_NewPassword" placeholder="@Resources.Resource.NewPassword" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <label class="unselectable" for="ChangePassword_save_RNewPassword">@Resources.Resource.RNewPassword </label>
+                    </div>
+                    <div class="col-md-8" style="margin-bottom: 5px;">
+                        <input required="false" type="password" id="ChangePassword_save_RNewPassword" placeholder="@Resources.Resource.RNewPassword" />
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteChangePassword_save_ChangePassword()" class="btn btn-primary">@Resources.Resource.Update</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $('#ChangePassword_save_ChangePassword').draggable({
+        handle: '.modal-header'
+    });
+</script>
+
+@functions{
+    string ar(string ar, string en)
+    {
+        if (Session["language"].ToString() == "en")
+        {
+            return en;
+        }
+        else
+        {
+            return ar;
+        }
+    }
+}

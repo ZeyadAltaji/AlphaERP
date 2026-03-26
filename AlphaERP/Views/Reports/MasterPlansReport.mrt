@@ -1,0 +1,991 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<StiSerializer version="1.02" type="Net" application="StiReport">
+  <Dictionary Ref="1" type="Dictionary" isKey="true">
+    <BusinessObjects isList="true" count="0" />
+    <Databases isList="true" count="1">
+      <MS_x0020_SQL Ref="2" type="Stimulsoft.Report.Dictionary.StiSqlDatabase" isKey="true">
+        <Alias>MS SQL</Alias>
+        <ConnectionStringEncrypted>9NL3SM1No/lpb+WAykwiP9F4ZShFTNNt6BXoieopYHvDdNnJYlFRlW0Yucl3hPX/glR/AsZM01HMbPkIyxFiE+Nw2ShGa5PIRxWhjU0lYnr07mmjZ0zCyG9c/fBqASkPgHD7iUNc491/E+3xYw==</ConnectionStringEncrypted>
+        <Name>MS SQL</Name>
+      </MS_x0020_SQL>
+    </Databases>
+    <DataSources isList="true" count="3">
+      <header Ref="3" type="Stimulsoft.Report.Dictionary.StiSqlSource" isKey="true">
+        <Alias>header</Alias>
+        <Columns isList="true" count="8">
+          <value>CompNo,System.Int32</value>
+          <value>PlanYear,System.Int32</value>
+          <value>PlanNo,System.Int32</value>
+          <value>StartDate,System.DateTime</value>
+          <value>EndDate,System.DateTime</value>
+          <value>PlanNotes,System.String</value>
+          <value>daysNo,System.Int32</value>
+          <value>PlanActive,System.String</value>
+        </Columns>
+        <CommandTimeout>30</CommandTimeout>
+        <Dictionary isRef="1" />
+        <Key>060fa079c56240c7b534c3655a88b703</Key>
+        <Name>header</Name>
+        <NameInSource>MS SQL</NameInSource>
+        <Parameters isList="true" count="3">
+          <value>CompNo,CompNo,8,20</value>
+          <value>PlanYear,PlanYear,8,20</value>
+          <value>PlanNo,PlanNo,8,20</value>
+        </Parameters>
+        <SqlCommand>SELECT        CompNo, PlanYear, PlanNo,convert(date,StartDate) as StartDate,convert(date,EndDate) as EndDate, PlanNotes,DATEDIFF(DD, CONVERT(date,StartDate), convert(date,EndDate)) AS daysNo,
+	case when PlanActive = 1 then 'فعال' else 'غير فعال' end as PlanActive
+FROM          MRP_GeneralPlanInfoH
+WHere        (MRP_GeneralPlanInfoH.CompNo = @CompNo) AND (MRP_GeneralPlanInfoH.PlanYear = @PlanYear) AND (MRP_GeneralPlanInfoH.PlanNo = @PlanNo)</SqlCommand>
+      </header>
+      <Details Ref="4" type="Stimulsoft.Report.Dictionary.StiSqlSource" isKey="true">
+        <Alias>Details</Alias>
+        <Columns isList="true" count="9">
+          <value>CompNo,System.Int32</value>
+          <value>PlanYear,System.Int32</value>
+          <value>PlanNo,System.Int32</value>
+          <value>ItemNo,System.String</value>
+          <value>FormulaCode,System.String</value>
+          <value>UnitCode,System.String</value>
+          <value>ItemDesc,System.String</value>
+          <value>formula_desc,System.String</value>
+          <value>PQty,System.Decimal</value>
+        </Columns>
+        <CommandTimeout>30</CommandTimeout>
+        <Dictionary isRef="1" />
+        <Key>b3caa58f1ede4fa1b33af889a44fb2b5</Key>
+        <Name>Details</Name>
+        <NameInSource>MS SQL</NameInSource>
+        <Parameters isList="true" count="3">
+          <value>CompNo,CompNo,8,20</value>
+          <value>PlanYear,PlanYear,8,20</value>
+          <value>PlanNo,PlanNo,8,20</value>
+        </Parameters>
+        <SqlCommand>SELECT        MRP_GeneralPlanInfoD.CompNo, MRP_GeneralPlanInfoD.PlanYear, MRP_GeneralPlanInfoD.PlanNo, MRP_GeneralPlanInfoD.FormulaCode, MRP_GeneralPlanInfoD.ItemNo, MRP_GeneralPlanInfoD.PQty, 
+	CASE WHEN isnull(prod_formula_header_info_1.comp_no, 0) 
+                         = 0 THEN UnitC4 ELSE CASE WHEN prod_formula_header_info.UnitSerial = 1 THEN InvItemsMF.UnitC1 ELSE CASE WHEN prod_formula_header_info.UnitSerial = 2 THEN InvItemsMF.UnitC2 ELSE CASE WHEN prod_formula_header_info.UnitSerial
+                          = 3 THEN InvItemsMF.UnitC3 ELSE InvItemsMF.UnitC1 END END END END AS UnitCode, InvItemsMF.ItemDesc, InvItemsMF.ItemDesc_Ara, prod_formula_header_info.formula_desc
+FROM            MRP_GeneralPlanInfoD INNER JOIN
+                         InvItemsMF ON MRP_GeneralPlanInfoD.CompNo = InvItemsMF.CompNo AND MRP_GeneralPlanInfoD.ItemNo = InvItemsMF.ItemNo INNER JOIN
+                         prod_formula_header_info ON MRP_GeneralPlanInfoD.CompNo = prod_formula_header_info.comp_no AND MRP_GeneralPlanInfoD.FormulaCode = prod_formula_header_info.formula_code INNER JOIN
+                         MRP_GeneralPlanInfoH ON MRP_GeneralPlanInfoD.CompNo = MRP_GeneralPlanInfoH.CompNo AND MRP_GeneralPlanInfoD.PlanYear = MRP_GeneralPlanInfoH.PlanYear AND 
+                         MRP_GeneralPlanInfoD.PlanNo = MRP_GeneralPlanInfoH.PlanNo LEFT OUTER JOIN
+                         prod_formula_header_info AS prod_formula_header_info_1 ON MRP_GeneralPlanInfoD.ItemNo = prod_formula_header_info_1.formula_code AND 
+                         MRP_GeneralPlanInfoD.CompNo = prod_formula_header_info_1.comp_no
+WHERE        (MRP_GeneralPlanInfoD.CompNo = @CompNo) AND (MRP_GeneralPlanInfoD.PlanYear = @PlanYear) AND (MRP_GeneralPlanInfoD.PlanNo = @PlanNo)</SqlCommand>
+      </Details>
+      <Company Ref="5" type="Stimulsoft.Report.Dictionary.StiSqlSource" isKey="true">
+        <Alias>Company</Alias>
+        <Columns isList="true" count="9">
+          <value>comp_num,System.Int32</value>
+          <value>comp_name,System.String</value>
+          <value>comp_ename,System.String</value>
+          <value>comp_logo,System.Drawing.Image</value>
+          <value>comp_logo1,System.Drawing.Image</value>
+          <value>comp_logo2,System.Drawing.Image</value>
+          <value>comp_logo3,System.Drawing.Image</value>
+          <value>DateNow,System.DateTime</value>
+          <value>TimeNow,System.String</value>
+        </Columns>
+        <CommandTimeout>30</CommandTimeout>
+        <Dictionary isRef="1" />
+        <Key>811d6d27c557445cbf5f93bcefc90343</Key>
+        <Name>Company</Name>
+        <NameInSource>MS SQL</NameInSource>
+        <Parameters isList="true" count="1">
+          <value>CompNo,CompNo,8,20</value>
+        </Parameters>
+        <SqlCommand>SELECT     COMPANY.comp_num, COMPANY.comp_name, COMPANY.comp_ename,
+	COMPANY.comp_logo  As comp_logo
+	, COMPANY.comp_logo1 As comp_logo1
+	, COMPANY.comp_logo2 As comp_logo2
+	, COMPANY.comp_logo3 As comp_logo3
+	, Convert(date,GETDATE()) as DateNow
+    ,Convert(varchar,GETDATE(),108) as TimeNow
+	
+
+				
+	FROM         COMPANY LEFT OUTER JOIN
+                      GLCOMMF ON COMPANY.comp_num = GLCOMMF.GLCOM_COMNUM LEFT OUTER JOIN
+                      ClientsActive ON COMPANY.comp_num = ClientsActive.CompNo LEFT OUTER JOIN
+                      CurrType ON GLCOMMF.CurrType = CurrType.CurrType LEFT OUTER JOIN
+                      InvCompMF ON COMPANY.comp_num = InvCompMF.CompNo
+WHERE     (COMPANY.comp_num = @CompNo)</SqlCommand>
+      </Company>
+    </DataSources>
+    <Relations isList="true" count="0" />
+    <Report isRef="0" />
+    <Resources isList="true" count="0" />
+    <Variables isList="true" count="3">
+      <value>,CompNo,CompNo,,System.Int32,_x0031_,False,False,False,False</value>
+      <value>,PlanYear,PlanYear,,System.Int32,_x0032_020,False,False,False,False</value>
+      <value>,PlanNo,PlanNo,,System.Int32,_x0036_,False,False,False,False</value>
+    </Variables>
+  </Dictionary>
+  <EngineVersion>EngineV2</EngineVersion>
+  <GlobalizationStrings isList="true" count="0" />
+  <Key>b1ffffe99c2246d4b59ef9ba6c9ba505</Key>
+  <MetaTags isList="true" count="0" />
+  <Pages isList="true" count="1">
+    <Page1 Ref="6" type="Page" isKey="true">
+      <Border>None;Black;2;Solid;False;4;Black</Border>
+      <Brush>Transparent</Brush>
+      <Components isList="true" count="5">
+        <PageHeaderBand1 Ref="7" type="PageHeaderBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <ClientRectangle>0,0.2,8.05,1.05</ClientRectangle>
+          <Components isList="true" count="6">
+            <Text20 Ref="8" type="Text" isKey="true">
+              <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <ClientRectangle>2.4,0.4,3.1,0.2</ClientRectangle>
+              <ComponentStyle>Sea Foam_Report_Title1</ComponentStyle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,14,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text20</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>{Company.comp_name}</Text>
+              <TextBrush>[52:141:165]</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text20>
+            <Image1 Ref="9" type="Image" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>0.1,0.1,1.7,1</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <DataColumn>Company.comp_logo</DataColumn>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Image1</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <VertAlignment>Center</VertAlignment>
+            </Image1>
+            <Text28 Ref="10" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>7,0.2,0.9,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text28</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>: تاريخ الطباعة</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text28>
+            <Text29 Ref="11" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>5.9,0.2,1,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text29</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>{Company.DateNow}</Text>
+              <TextBrush>Black</TextBrush>
+              <TextFormat Ref="12" type="CustomFormat" isKey="true">
+                <StringFormat>yyyy/MM/dd</StringFormat>
+              </TextFormat>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text29>
+            <Text30 Ref="13" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>7,0.6,0.9,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8,Bold</Font>
+              <Guid>7b73f430078548229169c35764c0c689</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text30</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>: وقت الطباعة</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text30>
+            <Text31 Ref="14" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>5.9,0.6,1,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text31</Name>
+              <Page isRef="6" />
+              <Parent isRef="7" />
+              <Text>{Company.TimeNow}</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text31>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <Name>PageHeaderBand1</Name>
+          <Page isRef="6" />
+          <Parent isRef="6" />
+        </PageHeaderBand1>
+        <PageFooterBand1 Ref="15" type="PageFooterBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <ClientRectangle>0,10.99,8.05,0.5</ClientRectangle>
+          <Components isList="true" count="1">
+            <Text1 Ref="16" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>0,0,8.05,0.5</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <DockStyle>Fill</DockStyle>
+              <Font>Segoe UI,11</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text1</Name>
+              <Page isRef="6" />
+              <Parent isRef="15" />
+              <Text>{PageNumber}</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+            </Text1>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <Name>PageFooterBand1</Name>
+          <Page isRef="6" />
+          <Parent isRef="6" />
+        </PageFooterBand1>
+        <DataBand1 Ref="17" type="DataBand" isKey="true">
+          <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+          <Brush>Transparent</Brush>
+          <BusinessObjectGuid isNull="true" />
+          <ClientRectangle>0,1.65,8.05,1.4</ClientRectangle>
+          <Components isList="true" count="13">
+            <Text3 Ref="18" type="Text" isKey="true">
+              <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <ClientRectangle>5.8,0.15,1,0.2</ClientRectangle>
+              <ComponentStyle>Sea Foam_Data1</ComponentStyle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text3</Name>
+              <Page isRef="6" />
+              <Parent isRef="17" />
+              <Text>{header.PlanYear}</Text>
+              <TextBrush>[0:0:0]</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text3>
+            <Text2 Ref="19" type="Text" isKey="true">
+              <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <ClientRectangle>6.9,0.15,1,0.2</ClientRectangle>
+              <ComponentStyle>Sea Foam_Data1</ComponentStyle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text2</Name>
+              <Page isRef="6" />
+              <Parent isRef="17" />
+              <Text>: سنة الخطة</Text>
+              <TextBrush>[0:0:0]</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text2>
+            <Text4 Ref="20" type="Text" isKey="true">
+              <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <ClientRectangle>4.7,0.15,0.8,0.2</ClientRectangle>
+              <ComponentStyle>Sea Foam_Data1</ComponentStyle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <Guid>3337d336b8cf40daaa4c7616f2259b7b</Guid>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text4</Name>
+              <Page isRef="6" />
+              <Parent isRef="17" />
+              <Text>: رقم الخطة</Text>
+              <TextBrush>[0:0:0]</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text4>
+            <Text5 Ref="21" type="Text" isKey="true">
+              <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <ClientRectangle>3.1,0.15,1.5,0.2</ClientRectangle>
+              <ComponentStyle>Sea Foam_Data1</ComponentStyle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text5</Name>
+              <Page isRef="6" />
+              <Parent isRef="17" />
+              <Text>{header.PlanNo}</Text>
+              <TextBrush>[0:0:0]</TextBrush>
+              <TextFormat Ref="22" type="DateFormat" isKey="true" />
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text5>
+            <Text6 Ref="23" type="Text" isKey="true">
+              <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <ClientRectangle>2.3,0.15,0.7,0.2</ClientRectangle>
+              <ComponentStyle>Sea Foam_Data1</ComponentStyle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <Guid>6a2ac89b7fcc4a71ba92442d37395d27</Guid>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text6</Name>
+              <Page isRef="6" />
+              <Parent isRef="17" />
+              <Text>: مدة الخطة</Text>
+              <TextBrush>[0:0:0]</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text6>
+            <Text7 Ref="24" type="Text" isKey="true">
+              <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <ClientRectangle>0.2,0.15,2,0.2</ClientRectangle>
+              <ComponentStyle>Sea Foam_Data1</ComponentStyle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text7</Name>
+              <Page isRef="6" />
+              <Parent isRef="17" />
+              <Text>{header.daysNo}</Text>
+              <TextBrush>[0:0:0]</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text7>
+            <Text8 Ref="25" type="Text" isKey="true">
+              <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <ClientRectangle>6.9,1.15,1,0.2</ClientRectangle>
+              <ComponentStyle>Sea Foam_Data1</ComponentStyle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <Guid>7ff166092427426291f7be9287504603</Guid>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text8</Name>
+              <Page isRef="6" />
+              <Parent isRef="17" />
+              <Text>: ملاحظات الخطة</Text>
+              <TextBrush>[0:0:0]</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text8>
+            <Text9 Ref="26" type="Text" isKey="true">
+              <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <ClientRectangle>0.2,1.15,6.6,0.2</ClientRectangle>
+              <ComponentStyle>Sea Foam_Data1</ComponentStyle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text9</Name>
+              <Page isRef="6" />
+              <Parent isRef="17" />
+              <Text>{header.PlanNotes}</Text>
+              <TextBrush>[0:0:0]</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text9>
+            <Text12 Ref="27" type="Text" isKey="true">
+              <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <ClientRectangle>6.9,0.65,1,0.2</ClientRectangle>
+              <ComponentStyle>Sea Foam_Data1</ComponentStyle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <Guid>136d93164e5f44708fc77bf29ed6887d</Guid>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text12</Name>
+              <Page isRef="6" />
+              <Parent isRef="17" />
+              <Text>: تاريخ البداية</Text>
+              <TextBrush>[0:0:0]</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text12>
+            <Text13 Ref="28" type="Text" isKey="true">
+              <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <ClientRectangle>5.3,0.65,1.5,0.2</ClientRectangle>
+              <ComponentStyle>Sea Foam_Data1</ComponentStyle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text13</Name>
+              <Page isRef="6" />
+              <Parent isRef="17" />
+              <Text>{header.StartDate}</Text>
+              <TextBrush>[0:0:0]</TextBrush>
+              <TextFormat Ref="29" type="CustomFormat" isKey="true">
+                <StringFormat>yyyy/MM/dd</StringFormat>
+              </TextFormat>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text13>
+            <Text14 Ref="30" type="Text" isKey="true">
+              <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <ClientRectangle>4.5,0.65,0.7,0.2</ClientRectangle>
+              <ComponentStyle>Sea Foam_Data1</ComponentStyle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <Guid>11f40ed98e114b72841d9060713b2a22</Guid>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text14</Name>
+              <Page isRef="6" />
+              <Parent isRef="17" />
+              <Text>: تاريخ النهاية</Text>
+              <TextBrush>[0:0:0]</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text14>
+            <Text15 Ref="31" type="Text" isKey="true">
+              <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <ClientRectangle>2.4,0.65,2,0.2</ClientRectangle>
+              <ComponentStyle>Sea Foam_Data1</ComponentStyle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text15</Name>
+              <Page isRef="6" />
+              <Parent isRef="17" />
+              <Text>{header.EndDate}</Text>
+              <TextBrush>[0:0:0]</TextBrush>
+              <TextFormat Ref="32" type="CustomFormat" isKey="true">
+                <StringFormat>yyyy/MM/dd</StringFormat>
+              </TextFormat>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text15>
+            <Text10 Ref="33" type="Text" isKey="true">
+              <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+              <Brush>Transparent</Brush>
+              <ClientRectangle>0.2,0.65,2,0.2</ClientRectangle>
+              <ComponentStyle>Sea Foam_Data1</ComponentStyle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8</Font>
+              <Guid>f87fe8ac32e34bec85bbeb04f0672cac</Guid>
+              <HorAlignment>Right</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text10</Name>
+              <Page isRef="6" />
+              <Parent isRef="17" />
+              <Text>{header.PlanActive}</Text>
+              <TextBrush>[0:0:0]</TextBrush>
+              <Type>DataColumn</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text10>
+          </Components>
+          <ComponentStyle>Sea Foam_Data1</ComponentStyle>
+          <Conditions isList="true" count="0" />
+          <DataRelationName isNull="true" />
+          <DataSourceName>header</DataSourceName>
+          <Filters isList="true" count="0" />
+          <Name>DataBand1</Name>
+          <Page isRef="6" />
+          <Parent isRef="6" />
+          <Sort isList="true" count="0" />
+        </DataBand1>
+        <DataBand2 Ref="34" type="DataBand" isKey="true">
+          <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+          <Brush>Transparent</Brush>
+          <ClientRectangle>0,3.45,8.05,0.3</ClientRectangle>
+          <Components isList="true" count="6">
+            <Text27 Ref="35" type="Text" isKey="true">
+              <Border>All;[125:121:116];1;Solid;False;4;Black</Border>
+              <Brush>[242:242:242]</Brush>
+              <ClientRectangle>7.3,0.05,0.7,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Times New Roman,9,Bold</Font>
+              <Guid>ef67cd3d4b9b4812a7b5424e6966d9b4</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text27</Name>
+              <Page isRef="6" />
+              <Parent isRef="34" />
+              <Text>رمز المادة</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text27>
+            <Text16 Ref="36" type="Text" isKey="true">
+              <Border>All;[125:121:116];1;Solid;False;4;Black</Border>
+              <Brush>[242:242:242]</Brush>
+              <ClientRectangle>5,0.05,2.2,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Times New Roman,9,Bold</Font>
+              <Guid>2ebcbf08616d49d58ef2457bb8621398</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text16</Name>
+              <Page isRef="6" />
+              <Parent isRef="34" />
+              <Text>اسم المادة</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text16>
+            <Text17 Ref="37" type="Text" isKey="true">
+              <Border>All;[125:121:116];1;Solid;False;4;Black</Border>
+              <Brush>[242:242:242]</Brush>
+              <ClientRectangle>3.8,0.05,1.1,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Times New Roman,9,Bold</Font>
+              <Guid>a4c2d59f7470406db84119d44ee8b7d2</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text17</Name>
+              <Page isRef="6" />
+              <Parent isRef="34" />
+              <Text>المعادلة</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text17>
+            <Text18 Ref="38" type="Text" isKey="true">
+              <Border>All;[125:121:116];1;Solid;False;4;Black</Border>
+              <Brush>[242:242:242]</Brush>
+              <ClientRectangle>2.1,0.05,1.6,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Times New Roman,9,Bold</Font>
+              <Guid>98988f71705440198c6eddb2e7bff2d9</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text18</Name>
+              <Page isRef="6" />
+              <Parent isRef="34" />
+              <Text>اسم المعادلة</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text18>
+            <Text11 Ref="39" type="Text" isKey="true">
+              <Border>All;[125:121:116];1;Solid;False;4;Black</Border>
+              <Brush>[242:242:242]</Brush>
+              <ClientRectangle>1.1,0.05,0.9,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Times New Roman,9,Bold</Font>
+              <Guid>22b7b6fd68fc4adc8d29496f23a2c587</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text11</Name>
+              <Page isRef="6" />
+              <Parent isRef="34" />
+              <Text>الوحدة</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text11>
+            <Text19 Ref="40" type="Text" isKey="true">
+              <Border>All;[125:121:116];1;Solid;False;4;Black</Border>
+              <Brush>[242:242:242]</Brush>
+              <ClientRectangle>0.1,0.05,0.9,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Times New Roman,9,Bold</Font>
+              <Guid>691b0b25f08b4607857bdf0937639a3a</Guid>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text19</Name>
+              <Page isRef="6" />
+              <Parent isRef="34" />
+              <Text>العدد</Text>
+              <TextBrush>Black</TextBrush>
+              <TextOptions>,,,,WordWrap=True,A=0</TextOptions>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text19>
+          </Components>
+          <ComponentStyle>Sea Foam_Page_Header</ComponentStyle>
+          <Conditions isList="true" count="0" />
+          <DataRelationName isNull="true" />
+          <Filters isList="true" count="0" />
+          <Name>DataBand2</Name>
+          <Page isRef="6" />
+          <Parent isRef="6" />
+          <Sort isList="true" count="0" />
+        </DataBand2>
+        <DataBand3 Ref="41" type="DataBand" isKey="true">
+          <Brush>Transparent</Brush>
+          <BusinessObjectGuid isNull="true" />
+          <ClientRectangle>0,4.15,8.05,0.3</ClientRectangle>
+          <Components isList="true" count="6">
+            <Text21 Ref="42" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>7.3,0.05,0.7,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text21</Name>
+              <Page isRef="6" />
+              <Parent isRef="41" />
+              <Text>{Details.ItemNo}</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text21>
+            <Text22 Ref="43" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>5,0.05,2.2,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text22</Name>
+              <Page isRef="6" />
+              <Parent isRef="41" />
+              <Text>{Details.ItemDesc}</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text22>
+            <Text23 Ref="44" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>3.8,0.05,1.1,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text23</Name>
+              <Page isRef="6" />
+              <Parent isRef="41" />
+              <Text>{Details.FormulaCode}</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text23>
+            <Text24 Ref="45" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>2.1,0.05,1.6,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text24</Name>
+              <Page isRef="6" />
+              <Parent isRef="41" />
+              <Text>{Details.formula_desc}</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text24>
+            <Text25 Ref="46" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>1.1,0.05,0.9,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text25</Name>
+              <Page isRef="6" />
+              <Parent isRef="41" />
+              <Text>{Details.UnitCode}</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text25>
+            <Text26 Ref="47" type="Text" isKey="true">
+              <Brush>Transparent</Brush>
+              <ClientRectangle>0.1,0.05,0.9,0.2</ClientRectangle>
+              <Conditions isList="true" count="0" />
+              <Font>Arial,8,Bold</Font>
+              <HorAlignment>Center</HorAlignment>
+              <Margins>0,0,0,0</Margins>
+              <Name>Text26</Name>
+              <Page isRef="6" />
+              <Parent isRef="41" />
+              <Text>{Details.PQty}</Text>
+              <TextBrush>Black</TextBrush>
+              <Type>Expression</Type>
+              <VertAlignment>Center</VertAlignment>
+            </Text26>
+          </Components>
+          <Conditions isList="true" count="0" />
+          <DataSourceName>Details</DataSourceName>
+          <Filters isList="true" count="0" />
+          <Name>DataBand3</Name>
+          <Page isRef="6" />
+          <Parent isRef="6" />
+          <Sort isList="true" count="0" />
+        </DataBand3>
+      </Components>
+      <Conditions isList="true" count="0" />
+      <Guid>fce072667cc04ef0b87d25bd002186e9</Guid>
+      <Margins>0.11,0.11,0.2,0</Margins>
+      <Name>Page1</Name>
+      <PageHeight>11.69</PageHeight>
+      <PageWidth>8.27</PageWidth>
+      <PaperSize>A4</PaperSize>
+      <Report isRef="0" />
+    </Page1>
+  </Pages>
+  <ReferencedAssemblies isList="true" count="8">
+    <value>System.Dll</value>
+    <value>System.Drawing.Dll</value>
+    <value>System.Windows.Forms.Dll</value>
+    <value>System.Data.Dll</value>
+    <value>System.Xml.Dll</value>
+    <value>Stimulsoft.Controls.Dll</value>
+    <value>Stimulsoft.Base.Dll</value>
+    <value>Stimulsoft.Report.Dll</value>
+  </ReferencedAssemblies>
+  <ReportAlias>Report</ReportAlias>
+  <ReportChanged>4/10/2020 8:13:31 PM</ReportChanged>
+  <ReportCreated>9/17/2019 8:55:38 AM</ReportCreated>
+  <ReportFile>c:\users\fa5ri qarawi\desktop\masterplansreport.mrt</ReportFile>
+  <ReportGuid>b6c3b1aa4f754cf7948aaf80be4f35e1</ReportGuid>
+  <ReportName>Report</ReportName>
+  <ReportUnit>Inches</ReportUnit>
+  <ReportVersion>2019.3.1.0</ReportVersion>
+  <Script>using System;
+using System.Drawing;
+using System.Windows.Forms;
+using System.Data;
+using Stimulsoft.Controls;
+using Stimulsoft.Base.Drawing;
+using Stimulsoft.Report;
+using Stimulsoft.Report.Dialogs;
+using Stimulsoft.Report.Components;
+
+namespace Reports
+{
+    public class Report : Stimulsoft.Report.StiReport
+    {
+        public Report()        {
+            this.InitializeComponent();
+        }
+
+        #region StiReport Designer generated code - do not modify
+		#endregion StiReport Designer generated code - do not modify
+    }
+}
+</Script>
+  <ScriptLanguage>CSharp</ScriptLanguage>
+  <Styles isList="true" count="12">
+    <Sea_x0020_Foam_Report_Title1 Ref="48" type="Stimulsoft.Report.StiStyle" isKey="true">
+      <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+      <Brush>Transparent</Brush>
+      <CollectionName>Sea Foam</CollectionName>
+      <Conditions isList="true" count="1">
+        <Item44 Ref="49" type="Stimulsoft.Report.StiStyleCondition" isKey="true">
+          <ComponentType>Text, Primitive, Image</ComponentType>
+          <Placement>ReportTitle</Placement>
+          <Type>ComponentType, Placement, PlacementNestedLevel</Type>
+        </Item44>
+      </Conditions>
+      <Font>Arial,14,Bold</Font>
+      <Name>Sea Foam_Report_Title1</Name>
+      <NegativeTextBrush>Red</NegativeTextBrush>
+      <TextBrush>[52:141:165]</TextBrush>
+    </Sea_x0020_Foam_Report_Title1>
+    <Sea_x0020_Foam_Report_Title2 Ref="50" type="Stimulsoft.Report.StiStyle" isKey="true">
+      <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+      <Brush>Transparent</Brush>
+      <CollectionName>Sea Foam</CollectionName>
+      <Conditions isList="true" count="1">
+        <Item46 Ref="51" type="Stimulsoft.Report.StiStyleCondition" isKey="true">
+          <ComponentType>Text, Primitive, Image</ComponentType>
+          <OperationPlacementNestedLevel>GreaterThanOrEqualTo</OperationPlacementNestedLevel>
+          <Placement>ReportTitle</Placement>
+          <PlacementNestedLevel>2</PlacementNestedLevel>
+          <Type>ComponentType, Placement, PlacementNestedLevel</Type>
+        </Item46>
+      </Conditions>
+      <Font>Arial,10,Bold</Font>
+      <Name>Sea Foam_Report_Title2</Name>
+      <NegativeTextBrush>Red</NegativeTextBrush>
+      <TextBrush>[52:141:165]</TextBrush>
+    </Sea_x0020_Foam_Report_Title2>
+    <Sea_x0020_Foam_Report_Summary Ref="52" type="Stimulsoft.Report.StiStyle" isKey="true">
+      <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+      <Brush>Transparent</Brush>
+      <CollectionName>Sea Foam</CollectionName>
+      <Conditions isList="true" count="1">
+        <Item48 Ref="53" type="Stimulsoft.Report.StiStyleCondition" isKey="true">
+          <ComponentType>Text, Primitive, Image</ComponentType>
+          <Placement>ReportSummary</Placement>
+          <Type>ComponentType, Placement</Type>
+        </Item48>
+      </Conditions>
+      <Font>Arial,10,Bold</Font>
+      <Name>Sea Foam_Report_Summary</Name>
+      <NegativeTextBrush>Red</NegativeTextBrush>
+      <TextBrush>[52:141:165]</TextBrush>
+    </Sea_x0020_Foam_Report_Summary>
+    <Sea_x0020_Foam_Page_Header Ref="54" type="Stimulsoft.Report.StiStyle" isKey="true">
+      <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+      <Brush>Transparent</Brush>
+      <CollectionName>Sea Foam</CollectionName>
+      <Conditions isList="true" count="1">
+        <Item50 Ref="55" type="Stimulsoft.Report.StiStyleCondition" isKey="true">
+          <ComponentType>Text, Primitive, Image</ComponentType>
+          <Placement>PageHeader</Placement>
+          <Type>ComponentType, Placement</Type>
+        </Item50>
+      </Conditions>
+      <Font>Arial,10</Font>
+      <Name>Sea Foam_Page_Header</Name>
+      <NegativeTextBrush>Red</NegativeTextBrush>
+      <TextBrush>[52:141:165]</TextBrush>
+    </Sea_x0020_Foam_Page_Header>
+    <Sea_x0020_Foam_Page_Footer Ref="56" type="Stimulsoft.Report.StiStyle" isKey="true">
+      <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+      <Brush>Transparent</Brush>
+      <CollectionName>Sea Foam</CollectionName>
+      <Conditions isList="true" count="1">
+        <Item52 Ref="57" type="Stimulsoft.Report.StiStyleCondition" isKey="true">
+          <ComponentType>Text, Primitive, Image</ComponentType>
+          <Placement>PageFooter</Placement>
+          <Type>ComponentType, Placement</Type>
+        </Item52>
+      </Conditions>
+      <Font>Arial,10</Font>
+      <Name>Sea Foam_Page_Footer</Name>
+      <NegativeTextBrush>Red</NegativeTextBrush>
+      <TextBrush>[52:141:165]</TextBrush>
+    </Sea_x0020_Foam_Page_Footer>
+    <Sea_x0020_Foam_Group_Header1 Ref="58" type="Stimulsoft.Report.StiStyle" isKey="true">
+      <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+      <Brush>Transparent</Brush>
+      <CollectionName>Sea Foam</CollectionName>
+      <Conditions isList="true" count="1">
+        <Item54 Ref="59" type="Stimulsoft.Report.StiStyleCondition" isKey="true">
+          <ComponentType>Text, Primitive, Image</ComponentType>
+          <OperationPlacementNestedLevel>GreaterThanOrEqualTo</OperationPlacementNestedLevel>
+          <Placement>GroupHeader</Placement>
+          <Type>ComponentType, Placement, PlacementNestedLevel</Type>
+        </Item54>
+      </Conditions>
+      <Font>Arial,13,Bold</Font>
+      <Name>Sea Foam_Group_Header1</Name>
+      <NegativeTextBrush>Red</NegativeTextBrush>
+      <TextBrush>[52:141:165]</TextBrush>
+    </Sea_x0020_Foam_Group_Header1>
+    <Sea_x0020_Foam_Group_Footer1 Ref="60" type="Stimulsoft.Report.StiStyle" isKey="true">
+      <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+      <Brush>Transparent</Brush>
+      <CollectionName>Sea Foam</CollectionName>
+      <Conditions isList="true" count="1">
+        <Item56 Ref="61" type="Stimulsoft.Report.StiStyleCondition" isKey="true">
+          <ComponentType>Text, Primitive, Image</ComponentType>
+          <Placement>GroupFooter</Placement>
+          <Type>ComponentType, Placement, PlacementNestedLevel</Type>
+        </Item56>
+      </Conditions>
+      <Font>Arial,9.75,Bold,Point,False,204</Font>
+      <Name>Sea Foam_Group_Footer1</Name>
+      <NegativeTextBrush>Red</NegativeTextBrush>
+      <TextBrush>[52:141:165]</TextBrush>
+    </Sea_x0020_Foam_Group_Footer1>
+    <Sea_x0020_Foam_Header1 Ref="62" type="Stimulsoft.Report.StiStyle" isKey="true">
+      <Border>Bottom;White;3;Solid;False;4;Black;True</Border>
+      <Brush>[52:141:165]</Brush>
+      <CollectionName>Sea Foam</CollectionName>
+      <Conditions isList="true" count="1">
+        <Item58 Ref="63" type="Stimulsoft.Report.StiStyleCondition" isKey="true">
+          <ComponentType>Text, Primitive, Image</ComponentType>
+          <OperationPlacementNestedLevel>GreaterThanOrEqualTo</OperationPlacementNestedLevel>
+          <Placement>Header</Placement>
+          <Type>ComponentType, Placement, PlacementNestedLevel</Type>
+        </Item58>
+      </Conditions>
+      <Font>Arial,8,Bold</Font>
+      <Name>Sea Foam_Header1</Name>
+      <NegativeTextBrush>Red</NegativeTextBrush>
+      <TextBrush>White</TextBrush>
+    </Sea_x0020_Foam_Header1>
+    <Sea_x0020_Foam_Data1 Ref="64" type="Stimulsoft.Report.StiStyle" isKey="true">
+      <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+      <Brush>Transparent</Brush>
+      <CollectionName>Sea Foam</CollectionName>
+      <Conditions isList="true" count="1">
+        <Item60 Ref="65" type="Stimulsoft.Report.StiStyleCondition" isKey="true">
+          <ComponentType>Text, Primitive, Image, CheckBox</ComponentType>
+          <OperationPlacementNestedLevel>GreaterThanOrEqualTo</OperationPlacementNestedLevel>
+          <Placement>Data</Placement>
+          <Type>ComponentType, Placement, PlacementNestedLevel</Type>
+        </Item60>
+      </Conditions>
+      <Font>Arial,8</Font>
+      <Name>Sea Foam_Data1</Name>
+      <NegativeTextBrush>Red</NegativeTextBrush>
+      <TextBrush>[0:0:0]</TextBrush>
+    </Sea_x0020_Foam_Data1>
+    <Sea_x0020_Foam_Data1_Odd_x0020_Style Ref="66" type="Stimulsoft.Report.StiStyle" isKey="true">
+      <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+      <Brush>[253:233:217]</Brush>
+      <CollectionName>Sea Foam</CollectionName>
+      <Conditions isList="true" count="1">
+        <Item62 Ref="67" type="Stimulsoft.Report.StiStyleCondition" isKey="true">
+          <OperationPlacementNestedLevel>GreaterThanOrEqualTo</OperationPlacementNestedLevel>
+          <Placement>DataOddStyle</Placement>
+          <Type>Placement, PlacementNestedLevel</Type>
+        </Item62>
+      </Conditions>
+      <Font>Arial,8</Font>
+      <Name>Sea Foam_Data1_Odd Style</Name>
+      <NegativeTextBrush>Red</NegativeTextBrush>
+      <TextBrush>[0:0:0]</TextBrush>
+    </Sea_x0020_Foam_Data1_Odd_x0020_Style>
+    <Sea_x0020_Foam_Data1_Even_x0020_Style Ref="68" type="Stimulsoft.Report.StiStyle" isKey="true">
+      <Border>None;[2:91:115];1;Solid;False;4;Black</Border>
+      <Brush>[254:244:236]</Brush>
+      <CollectionName>Sea Foam</CollectionName>
+      <Conditions isList="true" count="1">
+        <Item64 Ref="69" type="Stimulsoft.Report.StiStyleCondition" isKey="true">
+          <OperationPlacementNestedLevel>GreaterThanOrEqualTo</OperationPlacementNestedLevel>
+          <Placement>DataEvenStyle</Placement>
+          <Type>Placement, PlacementNestedLevel</Type>
+        </Item64>
+      </Conditions>
+      <Font>Arial,8</Font>
+      <Name>Sea Foam_Data1_Even Style</Name>
+      <NegativeTextBrush>Red</NegativeTextBrush>
+      <TextBrush>[0:0:0]</TextBrush>
+    </Sea_x0020_Foam_Data1_Even_x0020_Style>
+    <Sea_x0020_Foam_Footer1 Ref="70" type="Stimulsoft.Report.StiStyle" isKey="true">
+      <Border>Top;[52:141:165];3;Solid;False;4;Black</Border>
+      <Brush>White</Brush>
+      <CollectionName>Sea Foam</CollectionName>
+      <Conditions isList="true" count="1">
+        <Item66 Ref="71" type="Stimulsoft.Report.StiStyleCondition" isKey="true">
+          <ComponentType>Text, Primitive, Image</ComponentType>
+          <Placement>Footer</Placement>
+          <Type>ComponentType, Placement, PlacementNestedLevel</Type>
+        </Item66>
+      </Conditions>
+      <Font>Arial,8</Font>
+      <Name>Sea Foam_Footer1</Name>
+      <NegativeTextBrush>Red</NegativeTextBrush>
+      <TextBrush>[52:141:165]</TextBrush>
+    </Sea_x0020_Foam_Footer1>
+  </Styles>
+</StiSerializer>

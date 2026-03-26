@@ -1,0 +1,78 @@
+﻿@using System.Data.SqlClient
+@{
+    //ProdCost_PackingRequestHF
+}
+
+<table id="PackingInformationDataTable" class="table table-hover dataTable">
+    <thead>
+        <tr>
+            <th>@Html.Recource(2064)</th>
+            <th>@Html.Translate("تسلسل التعبئة", "Packing serial")</th>
+            <th>@Html.Recource(44)</th>
+            <th>@Html.Recource(66)</th>
+            <th>@Html.Recource(49)</th>
+            <th>@Html.Recource(307)</th>
+            <th>@Html.Recource(70)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            string ItemDesc = "";
+
+            string query = string.Format("exec Sp_Search {0},' WHERE (dbo.prod_prepare_info.comp_no = {0}) ',331", Html.CompNo().ToString());
+            using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+            {
+                SqlCommand cmd = new SqlCommand(query, cn);
+                cn.Open();
+                SqlDataReader rdr = cmd.ExecuteReader();
+                if (rdr.HasRows)
+                {
+                    while (rdr.Read())
+                    {
+                <tr>
+                    <td>@rdr["prepare_code"]</td>
+                    <td>@rdr["Serial"]</td>
+                    <td>@rdr["item_no"]</td>
+                    <td>@rdr["ItemDesc"]</td>
+                    <td>@rdr["qty_prepare"]</td>
+                    @if (Convert.ToBoolean(rdr["ClosingStat"].ToString()))
+                    {
+                        <td>
+                            <i class="fa fa-check"></i>
+                        </td>
+                    }
+                    else
+                    {
+                <td>
+                </td>
+                    }
+
+                    <td>@rdr["Note"]</td>
+                    <td>
+                        <button class="btn-ed" onclick="EditMRP_PackingInformation('@rdr["prepare_year"]','@rdr["prepare_code"]','@rdr["Serial"]')">
+                            <i class="fa fa-pencil-alt"></i>
+                        </button>
+                        <button class="btn-de" onclick="DeleteMRP_PackingInformation('@rdr["prepare_year"]','@rdr["prepare_code"]','@rdr["Serial"]', this)">
+                            <i class="fa fa-trash-alt" aria-hidden="true"></i>
+                        </button>
+                    </td>
+                </tr>
+                    }
+                }
+            }
+
+
+        }
+    </tbody>
+</table>
+
+
+<script>
+    var table = $('#PackingInformationDataTable').DataTable({
+        "scrollY": '56vh',
+        "paging": true,
+        "pageLength": 100
+    });
+
+</script>

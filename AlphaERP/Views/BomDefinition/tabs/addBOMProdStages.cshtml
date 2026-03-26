@@ -1,0 +1,132 @@
+﻿@model IEnumerable<AlphaERP.Models.Prod_ItemStages>
+@using AlphaERP.Models
+@{
+    var sortedModel = Model.OrderBy(item => item.StageSer);
+
+}
+<style>
+    #eProdItemStagesTBody td:nth-child(1) {
+        border-right: 1px solid #ccc;
+    }
+</style>
+<div class="form-group">
+    <div class="col-md-12">
+        <label class="unselectable">@Html.Recource(2551) :</label>
+        <button onclick="Edit_ProdItemStages()" type="button" class="btn btn-default">@Html.Recource(2551)</button>
+    </div>
+    <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+        <table class="table table-hover" id="addProdItemStagesTable">
+            <thead>
+                <tr>
+                    <th style="width: 6%;">@Html.Translate("تسلسل", "Ser")</th>
+                    <th style="width: 14%;">@Html.Recource(2558)</th>
+                    <th style="width: 40%;">@Html.Recource(2559)</th>
+                    <th style="width: 10%;text-align: center;">@Html.Recource(2560)</th>
+                    <th style="width: 10%;text-align: center;">@Html.Recource(2561)</th>
+                    <th style="width: 10%;text-align: center;">@Html.Recource(9573)</th>
+                    <th style="width: 10%;text-align: center;">@Html.Recource(9574)</th>
+                    <th></th>
+
+                </tr>
+            </thead>
+            <tbody id="ProdItemStagesTBody">
+                @foreach (var item in sortedModel)
+                {
+                    string stage_desc = new MDB().prod_prodstage_info.Where(x => x.comp_no == item.Comp_no && x.stage_code == item.Stage_code).FirstOrDefault().stage_desc;
+                    var getdata = new MDB();
+                    string qaDesc = getdata.ProdCost_QASetupHF
+                    .Where(qa => qa.CompNo == item.Comp_no && qa.QA_ProcNo == item.QAProc)
+                    .Select(qa => qa.QA_Desc)
+                    .FirstOrDefault();
+
+
+                    <tr draggable="true" ondragstart="start()" ondragover="dragover()">
+                        <td style="width: 6%;" id="ProdItemStages_StageSer" StageSer="@item.StageSer">@item.StageSer</td>
+                        <td style="width: 14%;" id="ProdItemStages_StageCode" StageCode="@item.Stage_code">@item.Stage_code</td>
+                        <td style="width: 40%;">@stage_desc</td>
+                        <td style="width: 10%;text-align: center;">
+                            <input id="ProdItemStages_SatndardTimeHr" value="@item.Hr" type="number" style="width:75px !important" />
+                        </td>
+
+                        <td style="width: 10%;text-align: center;">
+                            <input id="ProdItemStages_SatndardTimeMin" value="@item.Min" type="number" style="width:75px !important" />
+                        </td>
+                        <td style="width: 10%;text-align: center;">
+                            <label class="unselectable">
+                                @if (@item.FixedTime == true)
+                                {
+                                    <input id="ProdItemStages_FixedTime" type="checkbox" checked />
+                                }
+                                else
+                                {
+                                    <input id="ProdItemStages_FixedTime" type="checkbox" />
+                                }
+                            </label>
+                        </td>
+                        <td style="width: 10%;text-align: center;">
+                            <label class="unselectable">
+                                @if (@item.ClosePStage == true)
+                                {
+                                    <input id="ProdItemStages_ClosePStage" type="checkbox" checked />
+                                }
+                                else
+                                {
+                                    <input id="ProdItemStages_ClosePStage" type="checkbox" />
+                                }
+                            </label>
+                        </td>
+                        <td style="display: none;">
+                            <input type="hidden" id="qaProcNoInput_@item.Stage_code" class="_qaProcNoInput" value="@item.QAProc" />
+                            <input type="hidden" id="oldValue_qaProcNoInput" value="@item.QAProc" />
+                            <input type="hidden" id="stageSerInput_@item.Stage_code" value="@item.Stage_code" />
+
+                        </td>
+                        <td style="display: none;">
+                            <input type="hidden" id="formulasCodeInput" />
+
+                        </td>
+                        <td>
+                            <button onclick="AddQCTestProd('@item.Formula_code','@item.Item_no','@item.Stage_code','@item.StageSer')" type="button" class="btn btn-primary">
+                                @Html.Recource(9576)
+                            </button>
+                        </td>
+                        <td>
+                            <button id="qaButton_@item.Stage_code" data-original-text="@Html.Translate("أختيار", "Select")" onclick="GetQASetBystage('@item.Comp_no','@item.Formula_code','@item.Stage_code','@item.StageSer')" type="button" class="btn btn-primary" value="">
+                                @if (@qaDesc != null)
+                                {
+                                    @qaDesc
+                                }
+                                else if (@qaDesc == null)
+                                {
+                                    @Html.Translate("أختيار", "Select")
+                                }
+                            </button>
+                        </td>
+                        <td class="empty-cell"></td>
+
+                        <td>
+                            <button class="btn-de" type="button" onclick="RemoveRowQCTest(this,'@item.Stage_code','@item.StageSer')"><i class="fa fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    var row;
+    function start() {
+        row = event.target;
+    }
+    function dragover() {
+        var e = event;
+        e.preventDefault();
+        let children = Array.from(e.target.parentNode.parentNode.children);
+        if (children.indexOf(e.target.parentNode) > children.indexOf(row)) {
+            e.target.parentNode.after(row);
+        } else {
+            e.target.parentNode.before(row);
+
+        }
+    }
+</script>

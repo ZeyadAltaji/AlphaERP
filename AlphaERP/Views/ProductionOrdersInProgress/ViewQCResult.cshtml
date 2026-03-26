@@ -1,0 +1,139 @@
+﻿@model List<AlphaERP.Models.LoadTestDetQcDfView>
+
+@using AlphaERP.Models;
+
+@{
+
+    ProdCost_QCInspHF getTestDetQcHF = ViewBag.getTestDetQcHF;
+}
+<style>
+    #NormalcolView {
+        border-right: 1px solid #ccc;
+        width: 20%;
+        height: 3rem;
+        font-size: 14px;
+        bottom: 33px;
+        background: #efefef;
+        position: inherit;
+        z-index: 2;
+        top: 0;
+        color: black;
+        height: 2rem;
+        padding-left: 8px !important;
+    }
+
+    #AlertcolView {
+        position: absolute;
+        width: 21.9%;
+        font-size: 13.6px;
+        background: #efefef;
+        z-index: 2;
+        top: 0;
+        color: black;
+        height: 2rem;
+        padding-left: 8px !important;
+    }
+
+    #StagesQcTestView thead #listQCResult th {
+        background-color: #e6e6fa;
+    }
+
+        #StagesQcTestView thead #listQCResult th:nth-child(4),
+        #StagesQcTestView tbody tr td:nth-child(4) {
+            border-right: 1px solid #ccc;
+        }
+
+        #StagesQcTestView thead #listQCResult th:nth-child(6),
+        #StagesQcTestView #StagesQcTestRTBView tr td:nth-child(6) {
+            border-right: 1px solid #ccc;
+        }
+
+    .alerttxtView {
+        padding-left: 8px !important;
+    }
+</style>
+
+<div class="form-group">
+    <div class="col-md-12">
+        <table class="table table-hover" style="width:100%" id="StagesQcTestView">
+            <thead>
+                <tr style="position:relative;">
+
+
+                    <th colspan="2" scope="colgroup"></th>
+                    <th colspan="2" scope="colgroup" id="NormalcolView">@Html.Translate("طبيعي", "Normal")</th>
+                    <th colspan="2" scope="colgroup" id="AlertcolView">@Html.Translate("تنبيه", "Alert")</th>
+                    <th colspan="2" scope="colgroup"></th>
+                    <th></th>
+                </tr>
+                <tr id="listQCResult">
+                    <th scope="col" style="width:10%">@Html.Recource(9259)</th>
+                    <th scope="col" style="width:20%">@Html.Recource(9260)</th>
+                    <th scope="col">@Html.Recource(1892)</th>
+                    <th scope="col" style="width: 12%;">@Html.Recource(2058)</th>
+                    <th scope="col" class="alerttxtView">@Html.Translate("من الرقم", "From No")</th>
+                    <th scope="col" style="width: 12%;">@Html.Translate("إلى  الرقم", "To No")</th>
+                    <th scope="col" class="alerttxtView">@Html.Recource(9261)</th>
+                    <th scope="col" style="width: 23%;">@Html.Recource(70)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="StagesQcTestRTBView">
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.TestNo</td>
+                        <td>@item.TestDesc</td>
+                        <td><input disabled type="number" style="width:100px" value="@item.FromNo"></td>
+                        <td><input disabled type="number" style="width:100px" value="@item.ToNo"></td>
+                        <td><input disabled type="number" style="width:100px" value="@item.AlertFromNo"></td>
+                        <td><input disabled type="number" style="width:100px" value="@item.AlertToNo"></td>
+                        <td><input disabled type="number" style="width:100px" value="@item.QCVal"></td>
+                        <td><input disabled type="text" style="width:150px" value="@item.Notes"></td>
+                        <td></td>
+                    </tr>
+
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<hr />
+<div class="form-group mt-2">
+    <div class="col-md-3">
+        <label class="unselectable">@Html.Recource(9271) </label>
+    </div>
+    <div class="col-md-3">
+        <label class="unselectable">
+            <input disabled style="width: 15px;" type="radio" name="StagesQcInProcessView" value="true"  @if(getTestDetQcHF.QCPassed == true) { <text>checked="checked"</text> }  />
+            @Html.Recource(9272)
+        </label>
+    </div>
+    <div class="col-md-3">
+        <label class="unselectable">
+            <input disabled  style="width: 15px;" type="radio" name="StagesQcInProcessView" value="false"  @if(getTestDetQcHF.QCPassed == false) { <text>checked="checked"</text> }  />
+            @Html.Recource(9273)
+        </label>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-3">
+        <label for="StagesQcInProcess_save_Notes_View" class="unselectable">@Html.Recource(70) </label>
+    </div>
+    <div class="col-md-9">
+        <input disabled id="StagesQcInProcess_save_Notes_View" value="@getTestDetQcHF.Notes" style="width:100%" type="text" />
+    </div>
+</div>
+
+
+
+
+<script>
+    StagesQcTestView = $('#StagesQcTestView').DataTable({
+        "searching": false,
+        "scrollY": '150px',
+        "pageLength": 100,
+    });
+</script>
+
+

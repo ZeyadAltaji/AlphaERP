@@ -1,0 +1,1737 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@{
+    Company company = (Company)Session["company"];
+    List<prod_prodstage_info> stage_info = new MDB().prod_prodstage_info.Where(x => x.comp_no == company.comp_num).ToList();
+}
+
+<style>
+    .wideBom {
+        width: 1055px !important;
+    }
+
+        .wideBom > .modal-dialog {
+            width: 100% !important;
+        }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-4 col-sm-2">
+                <button class="btn btn-primary btn-block" onclick="AddProd_BomDefinition()">
+                    <i class="fa fa-plus"></i> @Html.Recource(32)
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="Prod_BomDefinitionListDiv">
+        @Html.Partial("~/Views/BomDefinition/BomDefinitionList.cshtml")
+    </div>
+</div>
+
+<div class="modal fade wideBom" id="Prod_BomDefinition_Model" style="left: 205px !important; top: 121px !important;">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(475) >> @Html.Recource(6433)</label>
+            </div>
+            <div class="modal-body row" style="height: 430px !important;max-height: 72vh !important;">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item active">
+                        <a class="nav-link active" data-toggle="tab" href="#BOMInfo" role="tab">
+                            @Html.Recource(2549)
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#BOMByProducts" role="tab">
+                            @Html.Recource(2550)
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#BOMAddItems" role="tab">
+                            @Html.Recource(9313)
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#BOMProdStages" role="tab">
+                            @Html.Recource(2551)
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#BOMSpecification" role="tab">
+                            @Html.Recource(2564)
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#BOMNotes" role="tab">
+                            @Html.Recource(973)
+                        </a>
+                    </li>
+                </ul>
+                <div class="tab-content" style="height:300px;padding:10px">
+                    <div class="tab-pane active" id="BOMInfo" role="tabpanel">
+                        @Html.Partial("~/Views/BomDefinition/tabs/BOMInfo.cshtml")
+                    </div>
+                    <div class="tab-pane" id="BOMByProducts" role="tabpanel">
+                        @Html.Partial("~/Views/BomDefinition/tabs/BOMByProducts.cshtml")
+                    </div>
+                    <div class="tab-pane" id="BOMAddItems" role="tabpanel">
+                        @Html.Partial("~/Views/BomDefinition/tabs/BOMAddItems.cshtml")
+                    </div>
+                    <div class="tab-pane" id="BOMProdStages" role="tabpanel">
+                        @Html.Partial("~/Views/BomDefinition/tabs/BOMProdStages.cshtml")
+                    </div>
+                    <div class="tab-pane" id="BOMSpecification" role="tabpanel">
+                        @Html.Partial("~/Views/BomDefinition/tabs/BOMSpecification.cshtml")
+                    </div>
+                    <div class="tab-pane" id="BOMNotes" role="tabpanel">
+                        <div class="form-group">
+                            <div class="col-md-12">
+                                <textarea style="width: 104%;height:290px !important;" id="SAVE_BOMNotes" placeholder="@Html.Recource(973)" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteSaveProd_BomDefinition()" class="btn btn-primary">@Html.Recource(475)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade wide" id="Model_InvItemsMF" style="left: 20.5rem;top: 20rem;">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4756)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectItemRawMaterialTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(44)</th>
+                                    <th style="width: 55%;">@Html.Recource(74)</th>
+                                    <th style="width: 10%;">@Html.Recource(96)</th>
+                                    <th style="text-align: center;">@Html.Recource(312)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    int Comp_num = company.comp_num;
+                                    string query = string.Format("exec SP_Search {0},'WHERE (CompNo = {0}) AND (IsHalt Between Case When 2 = 2 Then 0 else 2 end And Case When 2 = 2 Then 1 else 2 end)',7", Comp_num);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                string ItemDesc = rdr["ItemDesc"].ToString();
+                                                string ItemDescEn = rdr["ItemDesc_Ara"].ToString();
+                                                string Desc = Html.Translate(ItemDesc, ItemDescEn).ToString();
+                                                <tr onclick="$(this).toggleClass('selected');" ondblclick="doubleClickInvItemsMF($(this).toggleClass('selected'))">
+                                                    <td style="width: 20%;" id="ItemNo">@rdr["ItemNo"]</td>
+                                                    <td style="width: 55%;" id="ItemDesca" title="@Desc">@Html.Trim(Desc, 50)</td>
+                                                    <td style="width: 10%;text-align: center;">@rdr["RefrenceNo"]</td>
+                                                    <td style="text-align: center !important;">@rdr["BarCode"]</td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingItemMaterial_InvItemsMF()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade wide" id="Model_finItems">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4756)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectfinItemsTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(44)</th>
+                                    <th style="width: 55%;">@Html.Recource(74)</th>
+                                    <th style="width: 10%;">@Html.Recource(96)</th>
+                                    <th style="text-align: center;">@Html.Recource(312)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    int Comp_num1 = company.comp_num;
+                                    string query1 = string.Format("exec SP_Search {0},'WHERE (CompNo = {0}) AND (IsHalt Between Case When 2 = 2 Then 0 else 2 end And Case When 2 = 2 Then 1 else 2 end)',7", Comp_num1);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query1, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                string ItemDesc = rdr["ItemDesc"].ToString();
+                                                string ItemDescEn = rdr["ItemDesc_Ara"].ToString();
+                                                string Desc = Html.Translate(ItemDesc, ItemDescEn).ToString();
+                                                <tr onclick="Select_finItems(this)" ondblclick="doubleClickSelect_finItems(this)" ItemNo="@rdr["ItemNo"]" ItemDesc="@Html.Trim(Desc,50)">
+                                                    <td style="width: 20%;">@rdr["ItemNo"]</td>
+                                                    <td style="width: 55%;" title="@Desc">@Html.Trim(Desc, 50)</td>
+                                                    <td style="width: 10%;text-align: center;">@rdr["RefrenceNo"]</td>
+                                                    <td style="text-align: center !important;">@rdr["BarCode"]</td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selectingfin_Items()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_ProdstageInfo" style="top: 19.8rem;left: 20.5rem;">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(5527)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectProdstageInfoTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(2558)</th>
+                                    <th style="width: 55%; ">@Html.Recource(2559)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    foreach (var item in stage_info)
+                                    {
+                                        <tr onclick="$(this).toggleClass('selected');" ondblclick="HandleSelect('@item.stage_code', '@item.stage_desc')">
+                                            <td style="width: 20%;" id="BOM_Stagecode">@item.stage_code</td>
+                                            <td style="width: 71%; text-align: center;" id="BOM_StageDesc">@item.stage_desc</td>
+                                            <td></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingProdstageInfo()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_BOMStageQCTest">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(9275)</label>
+            </div>
+            <div class="modal-body row" id="BOMStageQCTestDiv">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Save_QCTestBOM()" class="btn btn-primary">@Html.Recource(475)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div class="modal fade" id="Model_getProdCost_QASetupHF" style="left: 47.7rem;top: 25rem;">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أجراءات التأكيد", "QA Procedure")</label>
+            </div>
+            <div class="modal-body row" id="ProdCost_QASetupHF">
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="selectbtn()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal fade" id="Model_getProdCost_QASetupHFadd" style="left: 47.7rem;top: 25rem;">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أجراءات التأكيد", "QA Procedure")</label>
+            </div>
+            <div class="modal-body row" id="ProdCost_QASetupHFadd">
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="selectbtnadd()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div class="modal fade" id="Model_StageQCTest">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(9576)</label>
+            </div>
+            <div class="modal-body row" id="StageQCTestDiv">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover QC_TestStageTable" id="SelectStageQCTestTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(9259)</th>
+                                    <th style="width: 65%;" text-align="center;">@Html.Recource(9260)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="StageQCTestTBody" class="QC_TestStageTablebody">
+                                @{
+                                    int Comp_num2 = company.comp_num;
+                                    string query2 = string.Format("exec SP_Search {0},' WHERE (CompNo = {0} ) ',295", Comp_num);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query2, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                <tr onclick="$(this).toggleClass('selected');">
+                                                    <td style="width: 20%;" id="TestNo">@rdr["TestNo"]</td>
+                                                    <td style="width: 65%;" id="TestDesc" text-align="center;">@rdr["TestDesc"].ToString()</td>
+                                                    <td></td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selecting_StageQCTest()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div class="modal fade" id="Model_FormStageQCTest" style="left: 36.7rem; top: 25rem;">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(9577)</label>
+            </div>
+            <div class="modal-body row" id="FormStageQCTestDiv">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover QC_FormTestStageTable" id="SelectFormStageQCTestTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(391)</th>
+                                    <th style="width: 65%;" text-align="center;">@Html.Recource(9578)</th>
+                                    <th style="display:none"></th>
+                                    <th style="display:none"></th>
+                                    <th style="display:none"></th>
+
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="FormStageQCTestTBody" class="FormQC_TestStageTablebody">
+                                @{
+                                    int Comp_num3 = company.comp_num;
+                                    string query3 = string.Format("exec SP_Search {0},' WHERE (CompNo = {0} ) ',296", Comp_num);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query3, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                <tr onclick="Select_FormQCTest(this)" ondblclick="doubleClickFormStageQCTest(this)" FormNo="@rdr["FormNo"]" FormDesc="@rdr["FormDesc"].ToString()">
+                                                    <td style="width: 20%;" id="FormNo">@rdr["FormNo"]</td>
+                                                    <td style="width: 65%;" id="FormDesc" text-align="center;">@rdr["FormDesc"].ToString()</td>
+                                                    <td><input type="hidden" id="compNoInput" /></td>
+                                                    <td><input type="hidden" id="formulaCodeInput" /></td>
+                                                    <td><input type="hidden" id="stageCodeInput" /></td>
+                                                    <td></td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selecting_FormStageQCTest()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+
+<div class="modal fade wideBom" id="BomDefinition_PackingDefention_Model" style="left: 60px !important;">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4402)</label>
+            </div>
+            <div class="modal-body row" id="BomDefinition_PackingDefentionDiv">
+
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    var groupIDCounter = 1;
+    var itemType = 0;
+    var StageCode1 = 0;
+    var StageSer1 = 0;
+    var ethis = '';
+    var frmSatus = 1;
+    var maxIndex = $("#ProdItemStagesTBody tr").length;
+
+    var QCTest = $('#SelectStageQCTestTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    var RawMaterial = $('#SelectItemRawMaterialTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    var ProdstageInfo = $('#SelectProdstageInfoTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    var table = $('#SelectfinItemsTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    $('#Prod_BOMH_save_UnitCode').select2();
+    $('#Prod_BOMH_save_Group').select2();
+    $('#Prod_BomDefinition_Model').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_BOMStageQCTest').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_getProdCost_QASetupHF').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_getProdCost_QASetupHFadd').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_StageQCTest').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_FormStageQCTest').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_ProdstageInfo').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_InvItemsMF').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_finItems').draggable({
+        handle: ".modal-header",
+    });
+    $('#BomDefinition_PackingDefention_Model').draggable({
+        handle: ".modal-header",
+    });
+    function AddQCTestProd(Formula_code, Item_no, Stage_code, StageSer) {
+         var Item = {
+            Formula_code: Formula_code,
+            Item_no: Item_no,
+            Stage_code: Stage_code,
+            StageSer: StageSer
+        };
+        burn({ SubDetails: Item }, '../../../BomDefinition/ItemStageTestQC', '', LoadItemStageTestQC, true);
+    }
+    function LoadItemStageTestQC(r) {
+        BOMStageQCTestDiv.innerHTML = "";
+        $('#BOMStageQCTestDiv').html(r);
+        $('#Model_BOMStageQCTest').modal('show');
+    }
+
+
+    function AddQCTestProdnew(Stage_code) {
+        var Item = {
+            Stage_code: Stage_code,
+        };
+        burn({ SubDetails: Item }, '../../../BomDefinition/ItemStageTestQC', '', LoadItemStageTestQC, true);
+    }
+
+    function GetQASetBystage(Comp_no, Formula_code, Stage_code, StageSer) {
+
+             $('#ProdCost_QASetupHF').load("../../../BomDefinition/GetQASetupHFBystages?Comp_no=" + Comp_no
+                                  + "&Formula_code=" + encodeURIComponent(Formula_code)
+                                  + "&Stage_code=" + Stage_code
+                                  + "&StageSer=" + StageSer);
+            $('#Model_getProdCost_QASetupHF').modal('show');
+
+
+
+    }
+    function GetQASetBystagetoadd(Comp_no,Stage_code) {
+        $('#ProdCost_QASetupHFadd').load("../../../BomDefinition/GetQASetupHFBystagesadd?Comp_no=" + Comp_no
+                             + "&Stage_code=" + Stage_code
+       );
+        $('#Model_getProdCost_QASetupHFadd').modal('show');
+
+
+
+    }
+
+
+    function selectbtn() {
+          var stageSerInput = $("#stageCodeInput").val();
+        var newQAProcNo = $(".selected-row .qaProcNoInput").val();
+        var selectedDesc = $("#description").val();
+        if (!stageSerInput || !newQAProcNo || !selectedDesc) {
+            alert('@Html.Translate("يرجى اختيار أحد إجراءات ضمان الجودة", "Please select one of QA Procedure")');
+            return;
+        }
+        var matchingRow = $("#eProdItemStagesTBody tr, #ProdItemStagesTBody tr").filter(function () {
+            return $(this).find("#ProdItemStages_StageCode").attr("StageCode") === stageSerInput;
+        });
+
+        if (matchingRow.length > 0) {
+            // Update the QA Proc No and description
+            var qaProcNoInput = matchingRow.find("#qaProcNoInput_" + stageSerInput);
+            qaProcNoInput.val(newQAProcNo);
+
+            var qaButton = matchingRow.find("#qaButton_" + stageSerInput);
+            qaButton.text(selectedDesc);
+            var txtpopover = matchingRow.find("#txtpopoveer_" + stageSerInput);
+            txtpopover.text(selectedDesc);
+
+
+        }
+         doneBomDefinition()
+    }
+    function doneBomDefinition() {
+        done();
+
+        $('#Model_getProdCost_QASetupHF').modal('hide');
+
+
+    }
+    function selectbtnadd() {
+         var stageSerInput = $("#stageCodeInput").val();
+        var newQAProcNo = $(".selected-row .qaProcNoInput").val();
+        var selectedDesc = $("#description").val();
+        if (!stageSerInput || !newQAProcNo || !selectedDesc) {
+            alert('@Html.Translate("يرجى اختيار أحد إجراءات ضمان الجودة", "Please select one of QA Procedure")');
+            return;
+        }
+        var matchingRow = $("#eProdItemStagesTBody tr, #ProdItemStagesTBody tr").filter(function () {
+            return $(this).find("#ProdItemStages_StageCode").attr("StageCode") === stageSerInput;
+        });
+
+        if (matchingRow.length > 0) {
+            // Update the QA Proc No and description
+            var qaProcNoInput = matchingRow.find("#qaProcNoInput_" + stageSerInput);
+            qaProcNoInput.val(newQAProcNo);
+
+            var qaButton = matchingRow.find("#qaButton_" + stageSerInput);
+            qaButton.text(selectedDesc);
+            var txtpopover = matchingRow.find("#txtpopoveer_" + stageSerInput);
+            txtpopover.text(selectedDesc);
+
+
+        }
+        doneBomDefinitionadd()
+    }
+    function doneBomDefinitionadd() {
+        done();
+
+        $('#Model_getProdCost_QASetupHFadd').modal('hide');
+    }
+    function deleteSelectQA(stageCode) {
+         var qaProcNoInput = document.getElementById("qaProcNoInput_" + stageCode);
+        if (qaProcNoInput) {
+            qaProcNoInput.value = "";
+        }
+
+         var qaButton = document.getElementById("qaButton_" + stageCode);
+        if (qaButton) {
+            var originalText = qaButton.getAttribute("data-original-text");
+            qaButton.textContent = originalText;
+        }
+
+
+        var popoverContent = document.getElementById("txtpopoveer_" + stageCode);
+        if (popoverContent) {
+            var originalText = popoverContent.getAttribute("data-original-text");
+            popoverContent.textContent = originalText;
+
+        }
+
+    }
+
+    function deleteSelectQC(stageCode) {
+        var qaProcNoInput = document.getElementById("QCFromNoInput_" + stageCode);
+        if (qaProcNoInput) {
+            qaProcNoInput.value = "";
+        }
+        var qaButton = document.getElementById("NameTest_" + stageCode);
+        if (qaButton) {
+            var originalText = qaButton.getAttribute("data-original-Test");
+            qaButton.textContent = originalText;
+        }
+        var popoverContent = document.getElementById("txtpopover_" + stageCode);
+        if (popoverContent) {
+            var originalText = popoverContent.getAttribute("data-original-Test");
+            popoverContent.textContent = originalText;
+
+        }
+
+
+    }
+    function edeleteSelectQA(stageCode) {
+        // Clear the value of qaProcNoInput
+        var qaProcNoInput = document.getElementById("qaProcNoInput_" + stageCode);
+        if (qaProcNoInput) {
+            qaProcNoInput.value = "";
+        }
+
+        // Update the content of qaButton with its original text
+        var qaButton = document.getElementById("qaButton_" + stageCode);
+        if (qaButton) {
+            var originalText = qaButton.getAttribute("data-original-text");
+            qaButton.textContent = originalText;
+        }
+
+        // Any other logic you want to perform when deleting the values
+
+        // Optionally, you can remove the popover content
+        var popoverContent = document.getElementById("txtpopoveer_" + stageCode);
+        if (popoverContent) {
+            var originalText = popoverContent.getAttribute("data-original-text");
+            popoverContent.textContent = originalText;
+
+        }
+
+    }
+
+    function edeleteSelectQC(stageCode) {
+        var qaProcNoInput = document.getElementById("QCFromNoInput_" + stageCode);
+        if (qaProcNoInput) {
+            qaProcNoInput.value = "";
+        }
+        var qaButton = document.getElementById("NameTest_" + stageCode);
+        if (qaButton) {
+            var originalText = qaButton.getAttribute("data-original-Test");
+            qaButton.textContent = originalText;
+        }
+        var popoverContent = document.getElementById("txtpopover_" + stageCode);
+        if (popoverContent) {
+            var originalText = popoverContent.getAttribute("data-original-Test");
+            popoverContent.textContent = originalText;
+
+        }
+
+    }
+
+
+     function AddProd_BomDefinition() {
+        $('#ItemRawMaterialTBody').empty();
+        $('#ItemByProductTBody').empty();
+        $('#AdditiveItemsTBody').empty();
+        $('#PropertyTBody').empty();
+        $('#ProdItemStagesTBody').empty();
+        Prod_BOMH_save_formula_code.value = "";
+        Prod_BOMH_save_formula_codeDesc.value = "";
+        Prod_BOMH_save_Date.value = '@DateTime.Now.ToString("yyyy-MM-dd")';
+        Prod_BOMH_save_item_no.value = "";
+        Prod_BOMH_save_item_Desc.value = "";
+        Prod_BOMH_save_FormQty.value = 0;
+        Prod_BOMH_save_Passed.value = 0;
+        Prod_BOMH_save_Waste.value = 0;
+        Prod_BOMH_save_Rejected.value = 0;
+        Prod_BOMH_save_ExpiryDate.value = '@DateTime.Now.ToString("yyyy-MM-dd")';
+        SAVE_BOMNotes.value = ""
+        $('.nav-tabs a[href="#BOMInfo"]').tab('show')
+        $('#Prod_eBomDefinition_Model').modal('hide')
+        $('#Prod_BomDefinition_Model').modal('show')
+    }
+    function Add_InvItemsMF(type) {
+        itemType = type;
+        frmSatus = 1;
+        $('#SelectItemRawMaterialTable tr').removeClass("selected");
+        $('#Model_InvItemsMF').modal('show')
+    }
+    function Edit_InvItemsMF(type) {
+        itemType = type;
+        frmSatus = 2;
+        $('#SelectItemRawMaterialTable tr').removeClass("selected");
+        $('#Model_InvItemsMF').modal('show')
+    }
+    function SelectingItemMaterial_InvItemsMF() {
+        var data = RawMaterial.rows('.selected').data();
+        if (data.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة واحدة على الاقل", "Select one item at least")');
+            return;
+        }
+        if (frmSatus == 1) {
+            if (itemType == 1) {
+                var table_ = $("#ItemRawMaterialTBody");
+                var item = new Array();
+                for (var i = 0; i < data.length; i++) {
+                    var Added = false;
+                    if (table_.find("tr").length != 0) {
+                        table_.find("tr").each(function () {
+                            var ItemNo_ = $(this).find("td:first-child").text();
+                            if (ItemNo_ == data[i][0]) {
+                                Added = true;
+                                return false;
+                            }
+                            else {
+                                Added = false;
+                            }
+                        });
+                        if (!Added) {
+                            item.push({
+                                ItemNo: data[i][0],
+                                ItemDesc: data[i][1]
+                            });
+                        }
+                    }
+                    else {
+                        item.push({
+                            ItemNo: data[i][0],
+                            ItemDesc: data[i][1]
+                        });
+                    }
+                }
+                if (item.length != 0) {
+                    burn({ items: item }, '../../../BomDefinition/ItemRawMaterial', '', LoadItemRawMaterial, true);
+                }
+                else {
+                    $('#Model_InvItemsMF').modal('hide')
+                }
+            }
+            else if (itemType == 2) {
+                var table_ = $("#ItemByProductTBody");
+                var item = new Array();
+                for (var i = 0; i < data.length; i++) {
+                    var Added = false;
+                    if (table_.find("tr").length != 0) {
+                        table_.find("tr").each(function () {
+                            var ItemNo_ = $(this).find("td:first-child").text();
+                            if (ItemNo_ == data[i][0]) {
+                                Added = true;
+                                return false;
+                            }
+                            else {
+                                Added = false;
+                            }
+                        });
+                        if (!Added) {
+                            item.push({
+                                ItemNo: data[i][0],
+                                ItemDesc: data[i][1]
+                            });
+                        }
+                    }
+                    else {
+                        item.push({
+                            ItemNo: data[i][0],
+                            ItemDesc: data[i][1]
+                        });
+                    }
+                }
+                if (item.length != 0) {
+                    burn({ items: item }, '../../../BomDefinition/ItemByProduct', '', LoadItemByProduct, true);
+                }
+                else {
+                    $('#Model_InvItemsMF').modal('hide')
+                }
+            }
+            else if (itemType == 3) {
+                var table_ = $("#AdditiveItemsTBody");
+                var item = new Array();
+                for (var i = 0; i < data.length; i++) {
+                    var Added = false;
+                    if (table_.find("tr").length != 0) {
+                        table_.find("tr").each(function () {
+                            var ItemNo_ = $(this).find("td:first-child").text();
+                            if (ItemNo_ == data[i][0]) {
+                                Added = true;
+                                return false;
+                            }
+                            else {
+                                Added = false;
+                            }
+                        });
+                        if (!Added) {
+                            item.push({
+                                ItemNo: data[i][0],
+                                ItemDesc: data[i][1]
+                            });
+                        }
+                    }
+                    else {
+                        item.push({
+                            ItemNo: data[i][0],
+                            ItemDesc: data[i][1]
+                        });
+                    }
+                }
+                if (item.length != 0) {
+                    burn({ items: item }, '../../../BomDefinition/AdditiveItems', '', LoadAdditiveItems, true);
+                }
+                else {
+                    $('#Model_InvItemsMF').modal('hide')
+                }
+            }
+        }
+        else if (frmSatus == 2) {
+            if (itemType == 1) {
+                var table_ = $("#eItemRawMaterialTBody");
+                var item = new Array();
+                for (var i = 0; i < data.length; i++) {
+                    var Added = false;
+                    if (table_.find("tr").length != 0) {
+                        table_.find("tr").each(function () {
+                            var ItemNo_ = $(this).find("td:first-child").text();
+                            if (ItemNo_ == data[i][0]) {
+                                Added = true;
+                                return false;
+                            }
+                            else {
+                                Added = false;
+                            }
+                        });
+                        if (!Added) {
+                            item.push({
+                                ItemNo: data[i][0],
+                                ItemDesc: data[i][1]
+                            });
+                        }
+                    }
+                    else {
+                        item.push({
+                            ItemNo: data[i][0],
+                            ItemDesc: data[i][1]
+                        });
+                    }
+                }
+                if (item.length != 0) {
+                    burn({ items: item }, '../../../BomDefinition/ItemRawMaterial', '', LoadItemRawMaterial, true);
+                }
+                else {
+                    $('#Model_InvItemsMF').modal('hide')
+                }
+            }
+            else if (itemType == 2) {
+                var table_ = $("#eItemByProductTBody");
+                var item = new Array();
+                for (var i = 0; i < data.length; i++) {
+                    var Added = false;
+                    if (table_.find("tr").length != 0) {
+                        table_.find("tr").each(function () {
+                            var ItemNo_ = $(this).find("td:first-child").text();
+                            if (ItemNo_ == data[i][0]) {
+                                Added = true;
+                                return false;
+                            }
+                            else {
+                                Added = false;
+                            }
+                        });
+                        if (!Added) {
+                            item.push({
+                                ItemNo: data[i][0],
+                                ItemDesc: data[i][1]
+                            });
+                        }
+                    }
+                    else {
+                        item.push({
+                            ItemNo: data[i][0],
+                            ItemDesc: data[i][1]
+                        });
+                    }
+                }
+                if (item.length != 0) {
+                    burn({ items: item }, '../../../BomDefinition/ItemByProduct', '', LoadItemByProduct, true);
+                }
+                else {
+                    $('#Model_InvItemsMF').modal('hide')
+                }
+            }
+            else if (itemType == 3) {
+                var table_ = $("#eAdditiveItemsTBody");
+                var item = new Array();
+                for (var i = 0; i < data.length; i++) {
+                    var Added = false;
+                    if (table_.find("tr").length != 0) {
+                        table_.find("tr").each(function () {
+                            var ItemNo_ = $(this).find("td:first-child").text();
+                            if (ItemNo_ == data[i][0]) {
+                                Added = true;
+                                return false;
+                            }
+                            else {
+                                Added = false;
+                            }
+                        });
+                        if (!Added) {
+                            item.push({
+                                ItemNo: data[i][0],
+                                ItemDesc: data[i][1]
+                            });
+                        }
+                    }
+                    else {
+                        item.push({
+                            ItemNo: data[i][0],
+                            ItemDesc: data[i][1]
+                        });
+                    }
+                }
+                if (item.length != 0) {
+                    burn({ items: item }, '../../../BomDefinition/AdditiveItems', '', LoadAdditiveItems, true);
+                }
+                else {
+                    $('#Model_InvItemsMF').modal('hide')
+                }
+            }
+        }
+    }
+    function doubleClickInvItemsMF() {
+        SelectingItemMaterial_InvItemsMF()
+    }
+    function LoadItemRawMaterial(r) {
+        if (frmSatus == 1) {
+            $('#ItemRawMaterialTBody').append(r);
+        }
+        else {
+            $('#eItemRawMaterialTBody').append(r);
+        }
+        $('#Model_InvItemsMF').modal('hide')
+    }
+    function LoadItemByProduct(r) {
+        if (frmSatus == 1) {
+            $('#ItemByProductTBody').append(r);
+        }
+        else {
+            $('#eItemByProductTBody').append(r);
+        }
+        $('#Model_InvItemsMF').modal('hide')
+    }
+    function LoadAdditiveItems(r) {
+        if (frmSatus == 1) {
+            $('#AdditiveItemsTBody').append(r);
+        }
+        else {
+            $('#eAdditiveItemsTBody').append(r);
+        }
+        $('#Model_InvItemsMF').modal('hide')
+    }
+    function SearchProd_item_no() {
+        $('#SelectfinItemsTable tr').removeClass("selected");
+        $('#fin_Itemsmodal').html('');
+        $('#fin_Itemsmodal').load('BomDefinition/GetItemsData', function () {
+            $('#Model_finItems').modal('show')
+
+        });
+    }
+    function Select_finItems(e) {
+        var table = $('#SelectfinItemsTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+
+    }
+    function Selectingfin_Items() {
+        var table = $('#SelectfinItemsTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة واحدة على الاقل", "Select one item at least")');
+            return;
+        }
+        Prod_BOMH_save_item_no.value = trs[0].getAttribute('ItemNo');
+        Prod_BOMH_save_item_Desc.value = trs[0].getAttribute('ItemDesc');
+
+        burn({ ItemNo: Prod_BOMH_save_item_no.value }, '../../../BomDefinition/LoadUnitItem', '', LoadUnitItem, true);
+
+        $('#Model_finItems').modal('hide')
+    }
+    function doubleClickSelect_finItems() {
+        Selectingfin_Items()
+    }
+    function LoadUnitItem(r) {
+        $('#Prod_BOMH_save_UnitCode').empty().trigger("change");
+        for (var i = 0; i < r.unit.length; i++) {
+            var newOption = new Option(r.unit[i].UnitName, r.unit[i].VSUnitCode, false, false);
+            $('#Prod_BOMH_save_UnitCode').append(newOption).trigger('change');
+        }
+    }
+    function Add_ProdItemStages() {
+        frmSatus = 1;
+        $('#SelectProdstageInfoTable tr').removeClass("selected");
+        $('#Model_ProdstageInfo').modal('show')
+    }
+    function Edit_ProdItemStages() {
+        frmSatus = 2;
+        $('#SelectProdstageInfoTable tr').removeClass("selected");
+        $('#Model_ProdstageInfo').modal('show')
+    }
+    function calculateStartIndex(lastStageSerValue, tageSerValue) {
+        if (lastStageSerValue) {
+            return parseInt(lastStageSerValue) + 1;
+        } else {
+            return parseInt(tageSerValue) + 1;
+        }
+    }
+    function HandleSelect(stageCodeToAdd, stageDescToAdd) {
+        var lastRowIndex = $("#eProdItemStagesTable tbody tr").length - 1;
+        var lastStageSerValue = $("#eProdItemStagesTable tbody tr:eq(" + lastRowIndex + ") td#ProdItemStages_StageSer").attr("StageSer");
+        var lastRow = $("#eProdItemStagesTable tbody tr").length - 1;
+        var tageSerValue = $("#eProdItemStagesTable tbody tr:eq(" + lastRowIndex + ") td#ProdItemStages_Stag______srl").attr("StageSer");
+        if (!tageSerValue || isNaN(parseInt(tageSerValue))) {
+            tageSerValue = 0;
+        } else {
+            tageSerValue = parseInt(tageSerValue);
+        }
+
+         var table_;
+        if (frmSatus == 1) {
+            table_ = $("#ProdItemStagesTBody");
+        } else if (frmSatus == 2) {
+            table_ = $("#eProdItemStagesTBody");
+        }
+
+         var alreadyAdded = false;
+        table_.find("tr").each(function () {
+            var stageCode_ = $(this).find("td:nth-child(2)").text();
+            if (stageCode_ === stageCodeToAdd) {
+                alert('@Html.Translate("المرحلة بفعل موجودة مسبقاً ", "Stage by Pre-Existing Action")');
+                alreadyAdded = true;
+                return false; // Exit the loop
+            }
+        });
+
+
+        if (!alreadyAdded) {
+            var newIndex = calculateStartIndex(lastStageSerValue, tageSerValue);
+            var data = [{
+                stage_code: stageCodeToAdd,
+                stage_desc: stageDescToAdd,
+                GroupID: newIndex  // Set the GroupID to the current value
+            }];
+
+
+
+            if (data.length !== 0) {
+                 burn({ stage: data }, '../../../BomDefinition/ProdstageInfo', '', LoadProdstageInfo, true);
+            } else {
+                $('#Model_ProdstageInfo').modal('hide');
+            }
+        }
+    }
+    function SelectingProdstageInfo() {
+         var lastRowIndex = $("#eProdItemStagesTable tbody tr").length - 1;
+        var lastStageSerValue = $("#eProdItemStagesTable tbody tr:eq(" + lastRowIndex + ") td#ProdItemStages_StageSer").attr("StageSer");
+          var lastRow = $("#eProdItemStagesTable tbody tr").length - 1;
+          var tageSerValue = $("#eProdItemStagesTable tbody tr:eq(" + lastRowIndex + ") td#ProdItemStages_Stag______srl").attr("StageSer");
+          if (!tageSerValue || isNaN(parseInt(tageSerValue))) {
+              tageSerValue = 0;
+          } else {
+              tageSerValue = parseInt(tageSerValue);
+          }
+               var data = ProdstageInfo.rows('.selected').data();
+        if (data.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مرحلة واحدة على الاقل", "Select one stage at least")');
+            return;
+        }
+        var table_ = ""
+        var item = new Array();
+         if (frmSatus == 1) {
+            table_ = $("#ProdItemStagesTBody");
+        }
+        else if (frmSatus == 2) {
+            table_ = $("#eProdItemStagesTBody");
+        }
+          for (var i = 0; i < data.length; i++) {
+            var stageCodeToAdd = data[i][0];
+            var stageDescToAdd = data[i][1];
+
+            var alreadyAdded = false;
+
+              var get
+            table_.find("tr").each(function () {
+                var stageCode_ = $(this).find("td:nth-child(2)").text();
+                if (stageCode_ === stageCodeToAdd) {
+                    alert('@Html.Translate("المرحلة بفعل موجودة مسبقاً ", "Stage by Pre-Existing Action")');
+                    alreadyAdded = true;
+                    return false; // Exit the loop
+                }
+            });
+
+              if (!alreadyAdded) {
+                  var newIndex = calculateStartIndex(lastStageSerValue, tageSerValue);
+
+                item.push({
+                    stage_code: stageCodeToAdd,
+                    stage_desc: stageDescToAdd,
+                    GroupID: newIndex, // Set the GroupID to the current value
+
+                });
+
+                lastStageSerValue = newIndex;
+
+            }
+        }
+        if (item.length != 0) {
+             burn({ stage: item }, '../../../BomDefinition/ProdstageInfo', '', LoadProdstageInfo, true);
+        }
+        else {
+            $('#Model_ProdstageInfo').modal('hide')
+        }
+    }
+    function DeleteRow(buttonElement, groupID) {
+        var row = $(buttonElement).closest('tr');
+        var rowIndex = row.index();
+         if (rowIndex === maxIndex) {
+             maxIndex--;
+        }
+        row.remove();
+        renumberRows();
+    }
+    function renumberRows() {
+        var tableBody = $("#ProdItemStagesTBody");
+        tableBody.find('tr').each(function (index, row) {
+            $(row).find('td:first-child').text(index + 1);
+        });
+    }
+
+    function LoadProdstageInfo(r) {
+        if (frmSatus == 1) {
+            $('#ProdItemStagesTBody').append(r);
+            renumberRows()
+        }
+        else {
+            $('#eProdItemStagesTBody').append(r);
+            renumberRows()
+        }
+        $('#Model_ProdstageInfo').modal('hide')
+    }
+    function Add_Property() {
+        var newarray = [];
+        newarray.push('<input id="BOMProperty_PropertyName" type="text" style="width:102% !important" />')
+        newarray.push('<input id="BOMProperty_Qty" type="number" value ="0" style="width:95% !important;text-align: center !important;" />')
+        newarray.push('<button class="btn-de" onclick="RemoveRow(this)"><i class= "fa fa-trash-alt"></i ></button>')
+        $("#PropertyTBody").append(
+            GenRow(newarray)
+        );
+    }
+    function Edit_Property() {
+        var newarray = [];
+        newarray.push('<input id="BOMProperty_PropertyName" type="text" style="width:102% !important" />')
+        newarray.push('<input id="BOMProperty_Qty" type="number" value ="0" style="width:95% !important;text-align: center !important;" />')
+        newarray.push('<button class="btn-de" onclick="RemoveRow(this)"><i class= "fa fa-trash-alt"></i ></button>')
+        $("#ePropertyTBody").append(
+            GenRow(newarray)
+        );
+    }
+    function CheckValue(ID) {
+        if (document.getElementById(ID).getAttribute('required') == 'true') {
+            if (document.getElementById(ID).value == '') {
+                document.getElementById(ID).focus();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    function CheckValueGrid(NotEqualZero, Amt) {
+        if (NotEqualZero == '1')
+        {
+            if (Amt == '' || Amt == null || Amt ==0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+            return false;
+        }
+        else
+        {
+            if (Amt == '' || Amt == null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+            return false;
+        }
+    }
+    function ExcuteSaveProd_BomDefinition() {
+        if (CheckValue('Prod_BOMH_save_formula_code')) { alert('@Html.Translate("يرجى ادخال رمز الصيغة", "Please enter Formula Code")'); return; }
+        var Prod_BOMH_save_formula_code = document.getElementById('Prod_BOMH_save_formula_code');
+        var formula_code = Prod_BOMH_save_formula_code.value
+        if (parseInt(formula_code) === 0 || formula_code === 0) {alert('@Html.Translate("قيمة رمز الصيغة غير صالحة", "Formula Code value is invalid ")'); return;}
+        if (CheckValue('Prod_BOMH_save_formula_codeDesc')) { alert('@Html.Translate("يرجى ادخال وصف الصيغة", "Please enter Formula Description")'); return; }
+        if (CheckValue('Prod_BOMH_save_item_no')) { alert('@Html.Translate("الرجاء تحديد المنتج النهائي", "Please select the final product")'); return; }
+        var formQtyElement = document.getElementById('Prod_BOMH_save_FormQty');
+        if (formQtyElement.value == 0 || formQtyElement.value === '') {alert('@Html.Translate("يرجى ادخال الكمية !", "Please enter the quantity!")'); formQtyElement.focus(); return;}
+        if (CheckValue('Prod_BOMH_save_FormQty')) { alert('@Html.Translate("الرجاء إدخال القيمة لكمية الصيغة", "Please enter the value for the form quantity")'); return; }
+        if (CheckValue('Prod_BOMH_save_Passed')) { alert('@Html.Translate("الرجاء إدخال قيمة تمرير", "Please enter the value for the Passed ")'); return; }
+        if (CheckValue('Prod_BOMH_save_Waste')) { alert('@Html.Translate("الرجاء إدخال القيمة للنفايات", "Please enter the value for the Waste")'); return; }
+        if (CheckValue('Prod_BOMH_save_Rejected')) { alert('@Html.Translate("الرجاء إدخال القيمة لكمية للرفض", "Please enter the value for the Rejected")'); return; }
+
+
+
+
+        var Total = 0;
+        Total = Number(Prod_BOMH_save_Passed.value) + Number(Prod_BOMH_save_Waste.value) + Number(Prod_BOMH_save_Rejected.value);
+        Total = Number(Total).toFixed(3);
+        if (Total != Number(Prod_BOMH_save_FormQty.value).toFixed(3)) {
+            alert('@Html.Translate("يجب ان تكون كمية المعادلة مساوية لمجموع الكمية الموزعة معياريا", "Bom Qty Should Be Equal To the standard Qty Distribution")');
+            return false;
+        }
+
+        if (Prod_BOMH_save_Date.value > Prod_BOMH_save_ExpiryDate.value) {
+            alert('@Html.Translate("لا يجوز ان يكون التاريخ اكبر من تاريخ نهاية صلاحية المعادلة", "The date may not be greater than the date of the end of the equation validity")');
+            return false;
+        }
+
+        var table = $('#ItemRawMaterialTBody tr');
+        var trs = table;
+        if (trs.length == 0) {
+            alert('@Html.Translate("يجب أدخال المواد الاولية", "Raw materials must be entered")');
+            return false;
+        }
+        var BomDefH = {
+            comp_no: '@company.comp_num',
+            formula_code: Prod_BOMH_save_formula_code.value,
+            formula_desc: Prod_BOMH_save_formula_codeDesc.value,
+            FormLevel: 0,
+            formula_date: Prod_BOMH_save_Date.value,
+            item_no: Prod_BOMH_save_item_no.value,
+            UnitSerial: Prod_BOMH_save_UnitCode.value,
+            best_qty: Prod_BOMH_save_FormQty.value,
+            Qty1: Prod_BOMH_save_Passed.value,
+            Qty2: Prod_BOMH_save_Waste.value,
+            Qty3: Prod_BOMH_save_Rejected.value,
+            GroupId: Prod_BOMH_save_Group.value,
+            ExpiryDate: Prod_BOMH_save_ExpiryDate.value,
+            StandardCost: Prod_BOMH_save_StdCost.checked,
+            SusFlag: Prod_BOMH_save_Hult.checked,
+            BomNotes: SAVE_BOMNotes.value
+        };
+        var BomDefD = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#BOMInfo_Qty')[0].value)) {
+                alert('@Html.Translate("يجب ادخال الكمية في ملف المواد الاولية ", "You Must Enter Qty in the raw materials file ")');
+                return;
+            }
+            if (CheckValueGrid(0, $(trs[i]).closest('tr').find('#BOMInfo_LossPerc')[0].value)) {
+                alert('@Html.Translate("يجب ادخال نسبة الفاقد في ملف المواد الاولية", "The percentage of waste must be entered in the raw materials file")');
+                return;
+            }
+
+            BomDefD.push({
+                comp_no: '@company.comp_num',
+                formula_code: Prod_BOMH_save_formula_code.value,
+                item_no: Prod_BOMH_save_item_no.value,
+                rawmaterial_no: $(trs[i]).closest('tr').find('#BOMInfo_ItemNo')[0].innerHTML,
+                best_qty: $(trs[i]).closest('tr').find('#BOMInfo_Qty')[0].value,
+                LossPerc: $(trs[i]).closest('tr').find('#BOMInfo_LossPerc')[0].value,
+                UnitSerial: $(trs[i]).closest('tr').find('.ItemRawMaterial_Unit')[0].value,
+                lowest_qty: ($(trs[i]).closest('tr').find('#BOMInfo_Qty')[0].value) / (Prod_BOMH_save_FormQty.value),
+            });
+        }
+        var BomDefProduct = new Array();
+        var BomDefAdditiveItems = new Array();
+        var BomDefProperty = new Array();
+        var BomDefStage = new Array();
+        var table1 = $('#ItemByProductTBody tr');
+        var trs1 = table1;
+        var PerCostTot = 0;
+        if (trs1.length != 0) {
+            for (var i = 0; i < trs1.length; i++) {
+                if (CheckValueGrid(0, $(trs1[i]).closest('tr').find('#ItemByProduct_PQty')[0].value)) {
+                    alert('@Html.Translate("يجب ادخال الكمية  في ملف المنتجات الفرعية ", "You Must Enter quantity in the Sub-products file ")');
+                    return;
+                }
+                if (CheckValueGrid(0, $(trs1[i]).closest('tr').find('#ItemByProduct_WQty')[0].value)) {
+                    alert('@Html.Translate("يجب ادخال ك.تالف  في ملف المنتجات الفرعية", "You Must Enter wast quantity in the Sub-products file")');
+                    return;
+                }
+                if (CheckValueGrid(0, $(trs1[i]).closest('tr').find('#ItemByProduct_RQty')[0].value)) {
+                    alert('@Html.Translate("يجب ادخال ك.مرفوض  في ملف المنتجات الفرعية", "You Must Enter Reject quantity in the Sub-products file")');
+                    return;
+                }
+                if (CheckValueGrid(0, $(trs1[i]).closest('tr').find('#ItemByProduct_PerCost')[0].value)) {
+                    alert('@Html.Translate("يجب ادخال نسبة التحمل%  في ملف المنتجات الفرعية", "You Must Enter Cost Share% in the Sub-products file")');
+                    return;
+                }
+                BomDefProduct.push({
+                    comp_no: '@company.comp_num',
+                    formula_code: Prod_BOMH_save_formula_code.value,
+                    item_no: $(trs1[i]).closest('tr').find('#ItemByProduct_ItemNo')[0].innerHTML,
+                    itemdesc: $(trs1[i]).closest('tr').find('#ItemByProduct_ItemDesc')[0].innerHTML,
+                    Qty1: $(trs1[i]).closest('tr').find('#ItemByProduct_PQty')[0].value,
+                    Qty2: $(trs1[i]).closest('tr').find('#ItemByProduct_WQty')[0].value,
+                    Qty3: $(trs1[i]).closest('tr').find('#ItemByProduct_RQty')[0].value,
+                    PerCost: $(trs1[i]).closest('tr').find('#ItemByProduct_PerCost')[0].value,
+                    UnitSerial: $(trs1[i]).closest('tr').find('.ItemByProduct_Unit')[0].value
+                });
+                PerCostTot = PerCostTot + Number($(trs1[i]).closest('tr').find('#ItemByProduct_PerCost')[0].value);
+            }
+            if (PerCostTot > 100) {
+                  alert('@Html.Translate(" يجب ادخال نسبة التحمل اقل او تساوي 100  في ملف المنتجات الفرعية", "You Must Enter Cost Share Less than or equal 100 in the Sub-products file")');
+                    return;
+            }
+        }
+
+        var table2 = $('#AdditiveItemsTBody tr');
+        var trs2 = table2;
+        if (trs2.length != 0) {
+            for (var i = 0; i < trs2.length; i++) {
+                 if (CheckValueGrid(1,  $(trs2[i]).closest('tr').find('#AdditiveItems_Qty')[0].value)) {
+                alert('@Html.Translate("يجب ادخال الكمية  في ملف المواد المضافة ", "You Must Enter quantity in the additional-Items file ")');
+                return;
+                }
+                BomDefAdditiveItems.push({
+                    CompNo: '@company.comp_num',
+                    BOMCode: Prod_BOMH_save_formula_code.value,
+                    RMCode: $(trs2[i]).closest('tr').find('#AdditiveItems_ItemNo')[0].innerHTML,
+                    UnitSerial: $(trs2[i]).closest('tr').find('.AdditiveItems_Unit')[0].value,
+                    QTY: $(trs2[i]).closest('tr').find('#AdditiveItems_Qty')[0].value,
+                    Notes: $(trs2[i]).closest('tr').find('#AdditiveItems_Notes')[0].value
+                });
+            }
+        }
+
+        var table3 = $('#PropertyTBody tr');
+        var trs3 = table3;
+        if (trs3.length != 0) {
+            for (var i = 0; i < trs3.length; i++) {
+                var x = i;
+                BomDefProperty.push({
+                    CompNo: '@company.comp_num',
+                    FormulaCode: Prod_BOMH_save_formula_code.value,
+                    PropertName: $(trs3[i]).closest('tr').find('#BOMProperty_PropertyName')[0].value,
+                    PropertValue: $(trs3[i]).closest('tr').find('#BOMProperty_Qty')[0].value
+                });
+            }
+        }
+
+        var table4 = $('#ProdItemStagesTBody tr');
+        var trs4 = table4;
+        if (trs4.length != 0) {
+            for (var i = 0; i < trs4.length; i++) {
+                var stageCode = $(trs4[i]).closest('tr').find('#ProdItemStages_StageCode')[0].innerHTML;
+                var qaProcNoInput = $(trs4[i]).find('#qaProcNoInput_' + stageCode).val();
+                var QCFromNoInput = $(trs4[i]).find('#QCFromNoInput_' + stageCode).val();
+
+                var hr = $(trs4[i]).closest('tr').find('#ProdItemStages_SatndardTimeHr')[0].value;
+                var min = $(trs4[i]).closest('tr').find('#ProdItemStages_SatndardTimeMin')[0].value;
+                var fixedTime = $(trs4[i]).closest('tr').find('#ProdItemStages_FixedTime')[0].checked;
+                var closePStage = $(trs4[i]).closest('tr').find('#ProdItemStages_ClosePStage')[0].checked;
+
+
+                BomDefStage.push({
+                    Comp_no: '@company.comp_num',
+                    Formula_code: Prod_BOMH_save_formula_code.value,
+                    Item_no: Prod_BOMH_save_item_no.value,
+                    Stage_code:stageCode,
+                    Hr: hr,
+                    Min: min,
+                    FixedTime: fixedTime,
+                    ClosePStage: closePStage,
+                    QAProc: qaProcNoInput,
+                    QCFromNo: QCFromNoInput
+
+                });
+            }
+            console.log(BomDefStage);
+        }
+
+        wait();
+        if (confirm('@Resources.Resource.ConfirmBOMDef')) {
+             burn({ BomDefH: BomDefH, BomDefD: BomDefD, BomDefProduct: BomDefProduct, BomDefAdditiveItems: BomDefAdditiveItems, Prod_ItemStages: BomDefStage, BomDefProperty: BomDefProperty}, '../../../BomDefinition/Save_BomDefinition', '', ReloadBomDefinition, false);
+        }
+        else {
+            done();
+        }
+     }
+    function ReloadBomDefinition() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#ItemRawMaterialTBody').empty();
+        $('#ItemByProductTBody').empty();
+        $('#AdditiveItemsTBody').empty();
+        $('#PropertyTBody').empty();
+        $('#ProdItemStagesTBody').empty();
+        $('#Prod_BomDefinition_Model').modal('hide');
+        $('#Prod_BomDefinitionListDiv').load('../../../BomDefinition/BomDefinitionList');
+    }
+    function SelectQCTest() {
+        $('#SelectStageQCTestTable tr').removeClass("selected");
+        $('#Model_StageQCTest').modal('show')
+    }
+    function SelectFormQCTest(Comp_no, Formula_code, Stage_code) {
+         $("#compNoInput").val(Comp_no);
+        $("#formulaCodeInput").val(Formula_code);
+        $("#stageCodeInput").val(Stage_code);
+        $('#SelectFormStageQCTestTable tr').removeClass("selected");
+        $('#Model_FormStageQCTest').modal('show')
+    }
+    function Selecting_StageQCTest() {
+        var data = QCTest.rows('.selected').data();
+        if (data.length == 0) {
+            alert('@Html.Translate("يرجى اختيار فحص واحدة على الاقل", "Select one Test at least")');
+            return;
+        }
+        var table_ = ""
+        var item = new Array();
+        table_ = $("#QCStageDetailsTbody");
+        for (var i = 0; i < data.length; i++) {
+            var Added = false;
+            if (table_.find("tr").length != 0) {
+                table_.find("tr").each(function () {
+                    var TestCode_ = $(this).find("td:first-child").text();
+                    if (TestCode_ == data[i][0]) {
+                        Added = true;
+                        return false;
+                    }
+                    else {
+                        Added = false;
+                    }
+                });
+                if (!Added) {
+                     var newarray = [];
+                    newarray.push('<label id="QCStageTestCode" style="width:125px !important" >' + data[i][0] +'</label>')
+                    newarray.push('<label id="QCStageTestDesc" style="width:125px !important" >' + data[i][1] +'</label>')
+                    newarray.push('<input id="QCFromNo" type="number" style="width:75px !important;text-align: center !important;" value="0" />')
+                    newarray.push('<input id="QCToNo" type="number" style="width:75px !important;text-align: center !important;" value="0" />')
+                    newarray.push('<button class="btn-de" onclick="RemoveRow(this)"><i class= "fa fa-trash-alt"></i ></button>')
+                    $("#QCStageDetailsTbody").append(
+                        GenRow(newarray)
+                    );
+                }
+            }
+            else {
+                var newarray = [];
+                newarray.push('<label id="QCStageTestCode" style="width:125px !important" >' + data[i][0] + '</label>')
+                newarray.push('<label id="QCStageTestDesc" style="width:125px !important" >' + data[i][1] + '</label>')
+                newarray.push('<input id="QCFromNo" type="number" style="width:75px !important;text-align: center !important;" value="0" />')
+                newarray.push('<input id="QCToNo" type="number" style="width:75px !important;text-align: center !important;" value="0" />')
+                newarray.push('<button class="btn-de" onclick="RemoveRow(this)"><i class= "fa fa-trash-alt"></i ></button>')
+                $("#QCStageDetailsTbody").append(
+                    GenRow(newarray)
+                );
+            }
+        }
+        $('#Model_StageQCTest').modal('hide')
+    }
+    function Select_FormQCTest(e) {
+        var table = $('#SelectFormStageQCTestTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Selecting_FormStageQCTest() {
+             var table = $('#SelectFormStageQCTestTable');
+            var oTable = table.dataTable();
+            var trs = oTable.$('tr[name=selected]');
+            if (trs.length == 0) {
+                alert('@Html.Translate("يرجى اختيار نموذج واحد على الاقل", "Select one Form at least")');
+                return;
+            }
+        var FormNo = trs[0].getAttribute('FormNo')
+        var GetNameTest = trs[0].getAttribute('FormDesc')
+        var compNoInput = $("#compNoInput").val();
+        var formulaCodeInput = $("#formulaCodeInput").val();
+        var stageCodeInput = $("#stageCodeInput").val();
+        var matchingRow = $("#eProdItemStagesTBody tr, #ProdItemStagesTBody tr").filter(function () {
+            return $(this).find("#ProdItemStages_StageCode").attr("StageCode") === stageCodeInput;
+        });
+        if (matchingRow.length > 0) {
+             //Update the QA Proc No and description
+            var qaProcNoInput = matchingRow.find("#QCFromNoInput_" + stageCodeInput);
+            qaProcNoInput.val(FormNo);
+
+            var qaButton = matchingRow.find("#NameTest_" + stageCodeInput);
+            qaButton.text(GetNameTest);
+            var txtpopover = matchingRow.find("#txtpopover_" + stageCodeInput);
+            txtpopover.text(GetNameTest);
+
+        }
+        doneSelect_FormQCTest()
+}
+
+    function doneSelect_FormQCTest() {
+        done();
+
+        $('#Model_FormStageQCTest').modal('hide');
+
+
+    }
+    function doubleClickFormStageQCTest(row) {
+         Selecting_FormStageQCTest();
+    }
+
+
+    function LoadQCTestRelatedToForm(r) {
+        $('#QCStageDetailsTbody').empty();
+        for (var i = 0; i < r.FormQC.length; i++) {
+            var newarray = [];
+            newarray.push('<label id="QCStageTestCode" style="width:125px !important" >' + r.FormQC[i].TestNo + '</label>')
+            newarray.push('<label id="QCStageTestDesc" style="width:125px !important" >' + @Html.Translate("r.FormQC[i].LocalDesc","r.FormQC[i].EngDesc") + '</label>')
+            newarray.push('<input id="QCFromNo" type="number" style="width:75px !important;text-align: center !important;"/ value="' + r.FormQC[i].FromNo + '">')
+            newarray.push('<input id="QCToNo" type="number" style="width:75px !important;text-align: center !important;" value="' + r.FormQC[i].ToNo + '">')
+            newarray.push('<button class="btn-de" onclick="RemoveRow(this)"><i class= "fa fa-trash-alt"></i ></button>')
+            $("#QCStageDetailsTbody").append(
+                GenRow(newarray)
+            );
+        }
+        $('#Model_FormStageQCTest').modal('hide')
+    }
+    function Save_QCTestBOM() {
+         var BomQCTest = new Array();
+        var table1 = $('#QCStageDetailsTbody tr');
+        var trs1 = table1;
+        if (trs1.length == 0) {
+            alert('@Html.Translate("لم يتم ادخال بيانات الفحص", "No test data was entered")');
+            return false;
+        }
+        for (var i = 0; i < trs1.length; i++) {
+            if (CheckValueGrid(0, $(trs1[i]).closest('tr').find('#QCFromNo')[0].value)) {
+                alert('@Html.Translate("يجب ان لا تكون بداية الفحص فارغة", "The start of the examination must not be Empty")');
+                return;
+            }
+            if (CheckValueGrid(0, $(trs1[i]).closest('tr').find('#QCToNo')[0].value)) {
+                alert('@Html.Translate("يجب ان لا تكون نهاية الفحص فارغة", "The end of the examination must not be Empty")');
+                return;
+            }
+            if (CheckValueGrid(1, $(trs1[i]).closest('tr').find('#QCToNo')[0].value)) {
+                alert('@Html.Translate("يحب ان لا تكون نهاية الفحص 0", "It should not be the end of the examination 0")');
+                return;
+            }
+            if (Number($(trs1[i]).closest('tr').find('#QCFromNo')[0].value) >= Number($(trs1[i]).closest('tr').find('#QCToNo')[0].value)) {
+                alert('@Html.Translate("يحب ان يكون نهاية الفحص اكبر من بداية الفحص", "The end of the examination should be greater than the beginning of the examination")');
+                return;
+            }
+            var stageSerInput = $('#Prod_BOMH_save_formula_code').val();
+            var Prod_BOMH_save_item_no = $('#Prod_BOMH_save_item_no').val();
+
+            if (stageSerInput == "") {
+                BomQCTest.push({
+                    CompNo: '@company.comp_num',
+                    Formula_code: Prod_BOMH_Edit_formula_code.value,
+                    Item_no: Prod_BOMH_Edit_item_no.value,
+                    Stage_code: SAVE_ItemStage_StageCode.innerHTML,
+                    StageSer: SAVE_ItemStage_StageCode.getAttribute('StageSer'),
+                    TestNo: $(trs1[i]).closest('tr').find('#QCStageTestCode')[0].innerHTML,
+                    FromNo: $(trs1[i]).closest('tr').find('#QCFromNo')[0].value,
+                    ToNo: $(trs1[i]).closest('tr').find('#QCToNo')[0].value,
+                    Serial1: SAVE_ItemStage_StageCode.getAttribute('StageSer')
+                });
+                console.log(BomQCTest)
+            } else if (stageSerInput != "") {
+                BomQCTest.push({
+                    CompNo: '@company.comp_num',
+                    Formula_code: stageSerInput,
+                    Item_no: Prod_BOMH_save_item_no,
+                    Stage_code: SAVE_ItemStage_StageCode.innerHTML,
+                    StageSer: SAVE_ItemStage_StageCode.getAttribute('StageSer'),
+                    TestNo: $(trs1[i]).closest('tr').find('#QCStageTestCode')[0].innerHTML,
+                    FromNo: $(trs1[i]).closest('tr').find('#QCFromNo')[0].value,
+                    ToNo: $(trs1[i]).closest('tr').find('#QCToNo')[0].value,
+                    Serial1: SAVE_ItemStage_StageCode.getAttribute('StageSer')
+                });
+                console.log(BomQCTest)
+            }
+
+        }
+
+        wait();
+        if (confirm('@Resources.Resource.ConfirmQCTest')) {
+            burn({ BomQCTest: BomQCTest }, '../../../BomDefinition/Save_QCTestBOM', '', ReloadQCTestBOM, false);
+        }
+        else {
+            done();
+        }
+    }
+    function ReloadQCTestBOM() {
+        done();
+        $('#Model_BOMStageQCTest').modal('hide');
+    }
+    function RemoveRowQCTest(e, StageCode, StageSer) {
+        ethis = e;
+        StageCode1 = StageCode;
+        StageSer1 = StageSer;
+        var item = {
+            Formula_code: Prod_BOMH_Edit_formula_code.value,
+            Item_no: Prod_BOMH_Edit_item_no.value,
+            Stage_code: StageCode,
+            StageSer: StageSer,
+        }
+        burn({ itemQCTest: item }, '../../../BomDefinition/GetDataQCTestBOM', '', RemoveRowQCTestBOM, false);
+    }
+    function RemoveRowQCTestBOM(r) {
+        if (r.d == 'NotDelete') {
+            if (confirm('@Resources.Resource.DeleteConfirmQCTest')) {
+                var item = {
+                    Formula_code: Prod_BOMH_Edit_formula_code.value,
+                    Item_no: Prod_BOMH_Edit_item_no.value,
+                    Stage_code: StageCode1,
+                    StageSer: StageSer1,
+                }
+                burn({ itemQCTest: item }, '../../../BomDefinition/RemoveDataQCTestBOM', '', RemDataQCTestBOM, false);
+            }
+        }
+        else {
+            RemoveRow(ethis);
+        }
+    }
+    function RemDataQCTestBOM() {
+        var p = ethis.parentNode.parentNode;
+        p.parentNode.parentNode.deleteRow(p.rowIndex);
+        return true;
+    }
+    function OpenPacking() {
+        wait();
+        burn({ CompNo: '@company.comp_num', formula_code: Prod_BOMH_Edit_formula_code.value }, '../../../PackingDefention/InqPackDef_FormulaHead', '', LoadFormulaHeaderInfoBOm, true);
+    }
+    function LoadFormulaHeaderInfoBOm(r) {
+        BomDefinition_PackingDefentionDiv.innerHTML = "";
+        $('#BomDefinition_PackingDefentionDiv').append(r);
+        $('#BomDefinition_PackingDefention_Model').modal('show')
+        done();
+    }
+</script>

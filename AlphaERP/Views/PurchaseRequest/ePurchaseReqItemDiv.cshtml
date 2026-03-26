@@ -1,0 +1,304 @@
+﻿@model IEnumerable<AlphaERP.Models.Ord_RequestDF>
+@using AlphaERP.Models;
+@using System.Data.SqlClient;
+@using System.Data;
+@{ 
+    Company company = (Company)Session["company"];
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    List<InvItemsMF> Mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+    DataTable Dt = new DataTable();
+    int Srial = 1;
+    double LastRecCost = 0;
+    double QtyOH = 0;
+    double ResQty = 0;
+    double QtyInOrder = 0;
+}
+
+<label class="unselectable">@Html.Recource(4756) :</label>
+<button onclick="Edit_InvItemsMF(1)" type="button" class="btn btn-default">@Html.Recource(4756)</button>
+<div class="col-md-12" style="height:calc(100vh - 480px) !important;overflow-y:auto">
+    <table class="table table-hover" id="EditPurchaseReqItemTable">
+        <thead>
+            <tr>
+                <th style="width: 10%; text-align: center !important;">@Html.Recource(44)</th>
+                <th style="width: 20%; text-align: center !important;">@Html.Recource(74)</th>
+                <th style="text-align: center !important;">@Html.Recource(67)</th>
+                <th style="width: 90px !important; text-align: center !important;">@Html.Recource(3773)</th>
+                <th style="width: 90px !important; text-align: center !important;">@Html.Recource(5432)</th>
+                <th style="width: 90px !important; text-align: center !important;">@Html.Recource(3273)</th>
+                @if (CActive.ClientNo == 335)
+                {
+                    <th style="text-align: center !important;">@Html.Recource(5693)</th>
+                }
+                else
+                {
+                    <th style="text-align: center !important;">@Html.Recource(49)</th>
+                }
+                @if (compMF.UseQty2 == true)
+                {
+                    if (CActive.ClientNo == 335)
+                    {
+                        <th style="text-align: center !important;">@Html.Recource(442)</th>
+                    }
+                    else
+                    {
+                        <th style="text-align: center !important;">@Html.Recource(72)</th>
+                    }
+                }
+                else
+                {
+                    <th style="text-align: center !important;" hidden>@Html.Recource(72)</th>
+                }
+                <th style="text-align: center !important;">@Html.Translate("السعر المبدئي", "Budgetary Price")</th>
+                <th style="text-align: center !important;">@Html.Recource(68)</th>
+                <th style="text-align: center !important;">@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</th>
+                <th style="text-align: center !important;">@Html.Recource(70)</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tfoot>
+            <tr>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+                @if (compMF.UseQty2 == true)
+                {
+                    <th style="text-align: center !important;"></th>
+                }
+                else
+                {
+                    <th style="text-align: center !important;" hidden></th>
+                }
+                <th style="text-align: center !important;">Total</th>
+                <th style="text-align: center !important;" id="eTotalAll">0</th>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+            </tr>
+        </tfoot>
+        <tbody id="ePurchaseReqItemTBody">
+            @foreach (Ord_RequestDF item in Model)
+            {
+                {
+                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                    {
+                        Dt = new DataTable();
+                        cn.Open();
+                        using (SqlCommand cmd = new SqlCommand())
+                        {
+                            cmd.Connection = cn;
+                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                            cmd.CommandText = "Ord_GetItemUnitCost";
+                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                            cmd.Parameters.Add(new SqlParameter("@ItemNo", System.Data.SqlDbType.VarChar, 20)).Value = item.ItemNo;
+                            cmd.Parameters.Add(new SqlParameter("@UnitSerial", System.Data.SqlDbType.SmallInt, 4)).Value = item.UnitSerial;
+                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                            {
+                                DA.Fill(Dt);
+                            }
+                        }
+                    }
+                    foreach (DataRow row in Dt.Rows)
+                    {
+                        LastRecCost = Convert.ToDouble(row["LastRecCost"]);
+                        QtyOH = Convert.ToDouble(row["AvlQty"]);
+                        ResQty = Convert.ToDouble(row["ResQty"]);
+                        QtyInOrder = Convert.ToDouble(row["QtyInOrder"]);
+                    }
+                }
+                string ItemDesc = Mf.Where(x => x.ItemNo == item.ItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                <tr id="ePurchaseRequest_Serial_@Srial">
+                    <td style="width: 10%; word-wrap: break-word; white-space: normal; text-align: center !important;">
+                        <input id="ePurchaseRequest_ItemNo" value="@item.ItemNo" type="text" style="width: 90px !important" disabled />
+                    </td>
+                    <td style="width: 20%; word-wrap: break-word; white-space: normal; text-align: center !important;">@ItemDesc</td>
+                    <td style="text-align: center;">
+                        <select style="width:100%" class="ePurchaseRequest_Item_Unit" onchange="eGetchangeCost('@item.ItemNo',this.value,@Srial)">
+                            @{
+                                using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                {
+                                    Dt = new DataTable();
+                                    cn.Open();
+                                    using (SqlCommand cmd = new SqlCommand())
+                                    {
+                                        cmd.Connection = cn;
+                                        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                        cmd.CommandText = "InvT_LoadItemUnits";
+                                        cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                        cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = item.ItemNo;
+                                        using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                        {
+                                            DA.Fill(Dt);
+                                        }
+                                    }
+                                }
+                            }
+                            @foreach (DataRow row in Dt.Rows)
+                            {
+                                if (item.UnitSerial.ToString() == row["UnitSerial"].ToString())
+                                {
+                                    <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()" selected>
+                                        @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                    </option>
+                                }
+                                else
+                                {
+                                    <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()">
+                                        @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </td>
+                    <td style="text-align: center;">
+                        <input id="ePurchaseRequest_QtyOH_@Srial" value="@QtyOH.ToString("n2")" type="text" style="width: 90px !important" disabled />
+                        <input id="ePurchaseRequest_QtyOHth_@Srial" value="@QtyOH.ToString("0.000")" type="text" style="width: 90px !important" hidden />
+                    </td>
+                    <td style="text-align: center;">
+                        <input id="ePurchaseRequest_ResQty_@Srial" value="@ResQty.ToString("n2")" type="text" style="width: 90px !important" disabled />
+                    </td>
+                    <td style="text-align: center;">
+                        <input id="ePurchaseRequest_QtyInOrder_@Srial" value="@QtyInOrder.ToString("n2")" type="text" style="width: 90px !important" disabled />
+                    </td>
+                    <td style="text-align: center;">
+                        <input id="ePurchaseRequest_Qty_@Srial" value="@item.Qty.Value.ToString("n2")" type="text" style="width:75px !important" onblur="GetValuebestqty(this,'@Srial')" />
+                        <input id="ePurchaseRequest_Qtyth_@Srial" hidden value="@item.Qty.Value" type="text" style="width:75px !important" onblur="GetValuebestqty(this,'@Srial')" />
+                    </td>
+                    @if (compMF.UseQty2 == true)
+                    {
+                        <td style="text-align: center;">
+                            <input id="ePurchaseRequest_Qty2_@Srial" value="@item.Qty2.Value" type="number" style="width:75px !important" onblur="GetValuebestqty2(this,'@Srial')" />
+                        </td>
+                    }
+                    else
+                    {
+                        if (item.Qty2 == null)
+                        {
+                            <td style="text-align: center;" hidden>
+                                <input id="ePurchaseRequest_Qty2_@Srial" value="0" type="number" style="width:75px !important" onblur="GetValuebestqty2(this,'@Srial')" />
+                            </td>
+                        }
+                        else
+                        {
+                            <td style="text-align: center;" hidden>
+                                <input id="ePurchaseRequest_Qty2_@Srial" value="@item.Qty2.Value" type="number" style="width:75px !important" onblur="GetValuebestqty2(this,'@Srial')" />
+                            </td>
+                        }
+                    }
+                    <td style="text-align: center;">
+                        <input id="ePurchaseRequest_Price_@Srial" value="@item.Price.Value" type="text" style="width:75px !important" onblur="GetValuePrice(this,'@Srial')" />
+                        <input id="ePurchaseRequest_Priceth_@Srial" hidden value="@item.Price.Value" type="text" style="width:75px !important" onblur="GetValuebestqty(this,'@Srial')" />
+                    </td>
+                    <td style="width: 8%; text-align: center !important;">
+                        <input id="ePurchaseRequest_Total_@Srial" value="@item.TotalValue.Value.ToString("n2")" type="text" style="width:75px !important;background-color: cornsilk;" disabled />
+                        <input id="ePurchaseReques_Totalth_@Srial" value="@item.TotalValue.Value" type="text" style="width:75px !important;background-color: cornsilk;" hidden />
+                    </td>
+                    <td style="text-align: center;">
+                        <input type="date" required="true" style="width: 115px !important;" id="ePurchaseRequest_RequestedDeliveryDate_@Srial" value="@item.ReqDeliveryDate.ToString("yyyy-MM-dd")" />
+                    </td>
+                    <td style="width: 35%;text-align: center;">
+                        <textarea required="true" style="width: 100%;height:35px !important;" id="ePurchaseReques_Notes_@Srial">@item.Note</textarea>
+                    </td>
+                    <td>
+                        <button class="btn-de" onclick="RemoveRow(this)"><i class="fa fa-trash-alt"></i></button>
+                        <input type="hidden" id="eInputSerial" value="@(Srial++)" />
+                    </td>
+                </tr>
+              }
+        </tbody>
+    </table>
+</div>
+
+<script>
+    sumTotalAll()
+    function validDigits(n, dec) {
+        n = n.replace(/[^\d\.]+/g, '');
+        var ax1 = n.indexOf('.'), ax2 = -1;
+        if (ax1 != -1) {
+            ++ax1;
+            ax2 = n.indexOf('.', ax1);
+            if (ax2 > ax1) n = n.substring(0, ax2);
+            if (typeof dec === 'number') n = n.substring(0, ax1 + dec);
+        }
+        return n;
+    }
+    function addCommas(n) {
+        var rx = /(\d+)(\d{3})/;
+        return String(n).replace(/^\d+/, function (w) {
+            while (rx.test(w)) {
+                w = w.replace(rx, '$1,$2');
+            }
+            return w;
+        });
+    }
+    function GetValuebestqty(e, IdSerial) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون الكمية اقل من 0", "The value of the Qty may not be less than 0")');
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+        $('#ePurchaseRequest_Qtyth_' + IdSerial)[0].value = e.value
+        var temp = parseFloat(validDigits(e.value));
+        var temp1 = addCommas(temp.toFixed(3))
+        $('#ePurchaseRequest_Qty_' + IdSerial)[0].value = temp1
+        SumTotal(IdSerial)
+    }
+    function GetValuebestqty2(e, IdSerial) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون الكمية 2 اقل من 0", "The value of the Qty 2 may not be less than 0")');
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+    }
+    function GetValuePrice(e, IdSerial) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون السعر اقل من 0", "The value of the Price may not be less than 0")');
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+        $('#ePurchaseRequest_Priceth_' + IdSerial)[0].value = e.value
+        var temp = parseFloat(validDigits(e.value));
+        var temp1 = addCommas(temp.toFixed(3))
+        $('#ePurchaseRequest_Price_' + IdSerial)[0].value = temp1
+
+        SumTotal(IdSerial)
+    }
+    function SumTotal(IdSerial) {
+        var Total = 0
+        var Qty = 'ePurchaseRequest_Qtyth_' + IdSerial
+        var Price = 'ePurchaseRequest_Priceth_' + IdSerial
+        var PurchTotal = 'ePurchaseRequest_Total_' + IdSerial
+
+        //var Qty = 'ePurchaseRequest_Qty_' + IdSerial
+        //var Price = 'ePurchaseRequest_Price_' + IdSerial
+        //var PurchTotal = 'ePurchaseRequest_Total_' + IdSerial
+
+        Total = Number(document.getElementById(Qty).value) * Number(document.getElementById(Price).value);
+        $('#ePurchaseReques_Totalth_' + IdSerial)[0].value = Number(Total.toFixed(3));
+        var z = addCommas(Total.toFixed(3))
+        document.getElementById(PurchTotal).value = z;
+        sumTotalAll()
+    }
+    function sumTotalAll() {
+        var table = $('#ePurchaseReqItemTBody tr');
+        var trs = table;
+        var Totals = 0
+
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#eInputSerial')[0].value
+            Totals += Number($(trs[i]).closest('tr').find('#ePurchaseReques_Totalth_' + InputSerial)[0].value);
+        }
+
+        var z = addCommas(Totals.toFixed(3))
+
+        $('#eTotalAll').html(z);
+    }
+</script>

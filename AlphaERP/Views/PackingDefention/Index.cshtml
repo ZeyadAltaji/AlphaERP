@@ -1,0 +1,584 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@{
+    Company company = (Company)Session["company"];
+}
+
+<style>
+    .wideBom {
+        width: 1055px !important;
+    }
+
+        .wideBom > .modal-dialog {
+            width: 100% !important;
+        }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="Prod_PackingDefentionListDiv">
+        @Html.Partial("~/Views/PackingDefention/PackingDefentionList.cshtml")
+    </div>
+</div>
+
+<div class="modal fade wideBom" id="Prod_PackingDefention_Model" style="left: 60px !important;">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4402)</label>
+            </div>
+            <div class="modal-body row" id="PackingDefentionDiv">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="ExcuteSaveProd_PackingDefention()" class="btn btn-primary">@Html.Recource(475)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade wide" id="Model_PackingDefention_InvItemsMF">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4756)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectPackingDefentionTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(44)</th>
+                                    <th style="width: 55%;">@Html.Recource(74)</th>
+                                    <th style="width: 10%;">@Html.Recource(96)</th>
+                                    <th style="text-align: center;">@Html.Recource(312)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    int Comp_num = company.comp_num;
+                                    string query = string.Format("exec SP_Search {0},'WHERE (CompNo = {0}) AND (IsHalt Between Case When 2 = 2 Then 0 else 2 end And Case When 2 = 2 Then 1 else 2 end)',7", Comp_num);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                <tr onclick="$(this).toggleClass('selected');">
+                                                    <td style="width: 20%;" id="ItemNo">@rdr["ItemNo"]</td>
+                                                    <td style="width: 55%;" id="ItemDesca" title="@rdr["ItemDesc"].ToString()">@rdr["ItemDesc_Ara"].ToString()</td>
+                                                    <td style="width: 10%;text-align: center;">@rdr["RefrenceNo"]</td>
+                                                    <td style="text-align: center !important;">@rdr["BarCode"]</td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingPackingDefention_InvItemsMF()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade wide" id="Model_PackingDef_finItems">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4756)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectPackingDef_finItemsTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(44)</th>
+                                    <th style="width: 55%;">@Html.Recource(74)</th>
+                                    <th style="width: 10%;">@Html.Recource(96)</th>
+                                    <th style="text-align: center;">@Html.Recource(312)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    int Comp_num1 = company.comp_num;
+                                    string query1 = string.Format("exec SP_Search {0},'WHERE (CompNo = {0}) AND (IsHalt Between Case When 2 = 2 Then 0 else 2 end And Case When 2 = 2 Then 1 else 2 end)',7", Comp_num1);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query1, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                <tr onclick="Select_PackingDef_finItems(this)" ItemNo="@rdr["ItemNo"]" ItemDesc="@rdr["ItemDesc_Ara"].ToString()">
+                                                    <td style="width: 20%;">@rdr["ItemNo"]</td>
+                                                    <td style="width: 55%;" title="@rdr["ItemDesc"].ToString()">@rdr["ItemDesc_Ara"].ToString()</td>
+                                                    <td style="width: 10%;text-align: center;">@rdr["RefrenceNo"]</td>
+                                                    <td style="text-align: center !important;">@rdr["BarCode"]</td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selecting_PackingDeffinItems()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_PackingAccessors">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(9585)</label>
+            </div>
+            <div class="modal-body row" id="PackingAccessorsDiv">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Save_PackingAccessors()" class="btn btn-primary">@Html.Recource(475)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_PackAccessItemsMF">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(9585)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectItemPackAccessTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(44)</th>
+                                    <th style="width: 55%;">@Html.Recource(74)</th>
+                                    <th style="width: 10%;">@Html.Recource(96)</th>
+                                    <th style="text-align: center;">@Html.Recource(312)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="PackAccessDetailsTbody">
+                                @{
+                                    int Comp_num3 = company.comp_num;
+                                    string query3 = string.Format("exec SP_Search {0},'WHERE (CompNo = {0}) AND (IsHalt Between Case When 2 = 2 Then 0 else 2 end And Case When 2 = 2 Then 1 else 2 end)',7", Comp_num);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                <tr onclick="$(this).toggleClass('selected');">
+                                                    <td style="width: 20%;" id="ItemNo">@rdr["ItemNo"]</td>
+                                                    <td style="width: 55%;" id="ItemDesca" title="@rdr["ItemDesc"].ToString()">@rdr["ItemDesc_Ara"].ToString()</td>
+                                                    <td style="width: 10%;text-align: center;">@rdr["RefrenceNo"]</td>
+                                                    <td style="text-align: center !important;">@rdr["BarCode"]</td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingPackingAccess_InvItemsMF()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    var ethis = '';
+    var thisValue = '';
+    var FormCode1 = '';
+    var FinItem1 = '';
+    var PackItem1 = '';
+    var items = $('#SelectPackingDefentionTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    var finItems = $('#SelectPackingDef_finItemsTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+     var PackAccessItem = $('#SelectItemPackAccessTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    $('#Prod_PackingDefention_Model').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_PackingDefention_InvItemsMF').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_PackingDef_finItems').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_PackingAccessors').draggable({
+        handle: ".modal-header",
+       });
+    $('#Model_PackAccessItemsMF').draggable({
+        handle: ".modal-header",
+    });
+    function EditProd_PackingDefInfo(CompNo, formulacode) {
+        wait();
+        burn({ CompNo: CompNo, formula_code: formulacode }, '../../../PackingDefention/PackDef_FormulaHead', '', LoadFormulaHeaderInfo, true);
+    }
+    function LoadFormulaHeaderInfo(r) {
+        PackingDefentionDiv.innerHTML = "";
+        $('#PackingDefentionDiv').append(r);
+        $('#Prod_PackingDefention_Model').modal('show')
+        done();
+    }
+    function Add_PackingItems() {
+        $('#SelectPackingDefentionTable tr').removeClass("selected");
+        $('#Model_PackingDefention_InvItemsMF').modal('show')
+    }
+    function SelectingPackingDefention_InvItemsMF() {
+        var data = items.rows('.selected').data();
+        if (data.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة واحدة على الاقل", "Select one item at least")');
+            return;
+        }
+        var table_ = $("#PackingItemTBody");
+        var item = new Array();
+        for (var i = 0; i < data.length; i++) {
+            var Added = false;
+            if (table_.find("tr").length != 0) {
+                table_.find("tr").each(function () {
+                    var ItemNo_ = $(this).find("td:first-child").text();
+                    if (ItemNo_ == data[i][0]) {
+                        Added = true;
+                        return false;
+                    }
+                    else {
+                        Added = false;
+                    }
+                });
+                if (!Added) {
+                    item.push({
+                        ItemNo: data[i][0],
+                        ItemDesc: data[i][1]
+                    });
+                }
+            }
+            else {
+                item.push({
+                    ItemNo: data[i][0],
+                    ItemDesc: data[i][1]
+                });
+            }
+        }
+        if (item.length != 0) {
+            burn({ items: item }, '../../../PackingDefention/PackingDefItem', '', LoadPackingDefItem, true);
+        }
+        else {
+            $('#Model_PackingDefention_InvItemsMF').modal('hide')
+        }
+    }
+    function LoadPackingDefItem(r) {
+        $('#PackingItemTBody').append(r);
+        $('#Model_PackingDefention_InvItemsMF').modal('hide')
+    }
+    function AddFinCode(e) {
+        thisValue = e;
+        $('#SelectPackingDef_finItemsTable tr').removeClass("selected");
+        $('#Model_PackingDef_finItems').modal('show')
+    }
+    function Select_PackingDef_finItems(e) {
+        var trs = finItems.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Selecting_PackingDeffinItems() {
+        var trs = finItems.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة واحدة على الاقل", "Select one item at least")');
+            return;
+        }
+        var tr = $("#PackingItemTBody " + thisValue + "");
+
+        var table = $('#PackingItemTBody tr');
+        var trs1 = table;
+        for (var i = 0; i < trs1.length; i++) {
+                var id = tr[0].getAttribute('id')
+                var trid = trs1[i].getAttribute('id')
+                if (id != trid) {
+                    if ($(trs1[i]).closest('tr').find('#PackDef_FinCode')[0].value == trs[0].getAttribute('ItemNo')) {
+                        alert('@Html.Translate("لا يجوز تكرار المادة الجاهزة","Item No Is Duplecated")');
+                        return false;
+                    }
+                }
+
+        }
+
+        tr.find('#PackDef_FinCode')[0].value = trs[0].getAttribute('ItemNo');
+        tr.find('#PackDef_FinItemDesc')[0].value = trs[0].getAttribute('ItemDesc');
+        $('#Model_PackingDef_finItems').modal('hide');
+    }
+    function CheckValueGrid(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt == 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+        else {
+            if (Amt == '' || Amt == null) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function ExcuteSaveProd_PackingDefention() {
+        var table = $('#PackingItemTBody tr');
+        var trs = table;
+        if (trs.length == 0) {
+            alert('@Html.Translate("يجب أدخال مواد التعبئة", "packing materials must be entered")');
+            return false;
+        }
+        var PackDefD = new Array();
+        for (var i = 0; i < trs.length; i++) {
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#PackDef_Capacity')[0].value)) {
+                alert('@Html.Translate("يجب أدخال السعة", "Capacity must be entered")');
+                return false;
+            }
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#PackDef_FinCode')[0].value)) {
+                alert('@Html.Translate("يجب أدخال رمز المادة الجاهزة ", "Fin Code must be entered")');
+                return false;
+            }
+            PackDefD.push({
+                CompNo: '@company.comp_num',
+                FormCode: Prod_PackingDef_formula_code.innerHTML,
+                FinItem: $(trs[i]).closest('tr').find('#PackDef_FinCode')[0].value,
+                PackItem: $(trs[i]).closest('tr').find('#PackDef_ItemNo')[0].innerHTML,
+                Capacity: $(trs[i]).closest('tr').find('#PackDef_Capacity')[0].value,
+                IsLiter: $(trs[i]).closest('tr').find('#PackDef_Ltr_Kg')[0].checked
+            });
+        }
+
+        wait();
+        if (confirm('@Resources.Resource.ConfirmPackDef')) {
+            burn({ PackDefD: PackDefD }, '../../../PackingDefention/Save_PackingDefention', '', ReloadPackingDefention, true);
+        }
+        else {
+            done();
+        }
+    }
+    function ReloadPackingDefention() {
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#Prod_PackingDefention_Model').modal('hide');
+        $('#Prod_PackingDefentionListDiv').load('../../../PackingDefention/PackingDefentionList');
+        done();
+    }
+    function Add_PackingAccessories() {
+        $('#SelectItemPackAccessTable tr').removeClass("selected");
+        $('#Model_PackAccessItemsMF').modal('show')
+    }
+    function AddPackingAccessories(FormCode, FinItem, PackItem) {
+        var Item = {
+            CompNo: '@company.comp_num',
+            FormCode: FormCode,
+            FinItem: FinItem,
+            PackItem: PackItem
+        };
+        burn({ SubDetails: Item }, '../../../PackingDefention/PackingAccessories', '', LoadItemPackingAccessoris, true);
+    }
+    function LoadItemPackingAccessoris(r) {
+        PackingAccessorsDiv.innerHTML = "";
+        $('#PackingAccessorsDiv').html(r);
+        $('#Model_PackingAccessors').modal('show');
+    }
+    function SelectingPackingAccess_InvItemsMF() {
+        var data = PackAccessItem.rows('.selected').data();
+        if (data.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة واحدة على الاقل", "Select one item at least")');
+            return;
+        }
+        var table_ = $("#PackAccessTbody");
+        var item = new Array();
+        for (var i = 0; i < data.length; i++) {
+            var Added = false;
+            if (table_.find("tr").length != 0) {
+                table_.find("tr").each(function () {
+                    var ItemNo_ = $(this).find("td:first-child").text();
+                    if (ItemNo_ == data[i][0]) {
+                        Added = true;
+                        return false;
+                    }
+                    else {
+                        Added = false;
+                    }
+                });
+                if (!Added) {
+                    item.push({
+                        ItemNo: data[i][0],
+                        ItemDesc: data[i][1]
+                    });
+                }
+            }
+            else {
+                item.push({
+                    ItemNo: data[i][0],
+                    ItemDesc: data[i][1]
+                });
+            }
+        }
+        if (item.length != 0) {
+            burn({ SubDetails: item }, '../../../PackingDefention/GetItemPackAccessories', '', LoadItemPackingAccess, true);
+        }
+        else {
+            $('#Model_PackAccessItemsMF').modal('hide')
+        }
+    }
+    function LoadItemPackingAccess(r) {
+        $('#PackAccessTbody').append(r);
+        $('#Model_PackAccessItemsMF').modal('hide')
+    }
+    function Save_PackingAccessors() {
+        var table = $('#PackAccessTbody tr');
+        var trs = table;
+        if (trs.length == 0) {
+            alert('@Html.Translate("يجب أدخال ملحقات التعبئة", "packing Access must be entered")');
+            return false;
+        }
+
+        var PackAcc = new Array();
+
+        for (var i = 0; i < trs.length; i++) {
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#PackingAccess_Qty')[0].value)) {
+                alert('@Html.Translate("يجب أدخال الكمية", "_Qty must be entered")');
+                return false;
+            }
+            PackAcc.push({
+                CompNo: '@company.comp_num',
+                FormCode: Prod_PackingDef_formula_code.innerHTML,
+                FinItem: SAVE_ItemNoFinPack_Accesoris.innerHTML,
+                PackItem: SAVE_ItemNoPack_Accesoris.innerHTML,
+                RMCode: $(trs[i]).closest('tr').find('#PackingAccess_ItemNo')[0].innerHTML,
+                UnitSerial: $(trs[i]).closest('tr').find('.ItemPackingAccess_Unit')[0].value,
+                Qty: $(trs[i]).closest('tr').find('#PackingAccess_Qty')[0].value,
+            });
+        }
+
+        wait();
+        burn({ PackAcc: PackAcc }, '../../../PackingDefention/Save_PackingAccessors', '', ReloadPackingAccessors, true);
+    }
+    function ReloadPackingAccessors() {
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#Model_PackingAccessors').modal('hide');
+        done();
+    }
+    function RemoveRowPackDef(e, FormCode, FinItem, PackItem) {
+        ethis = e;
+        FormCode1 = FormCode;
+        FinItem1 = FinItem;
+        PackItem1 = PackItem;
+        var item = {
+            FormCode: FormCode,
+            PackItem: PackItem,
+            FinItem: FinItem,
+        }
+        burn({ itemPack: item }, '../../../PackingDefention/GetDataPackingInfo', '', RemoveRowPackingInfo, false);
+    }
+    function RemoveRowPackingInfo(r) {
+        if (r.d == 'NotDelete') {
+            if (confirm('@Resources.Resource.DeleteConfirmPackingAccessors')) {
+                var item = {
+                    FormCode: FormCode1,
+                    PackItem: PackItem1,
+                    FinItem: FinItem1,
+                }
+                burn({ itemPack: item }, '../../../PackingDefention/RemoveDataPackingInfo', '', RemDataPackingInfo, false);
+            }
+        }
+        else {
+            RemoveRow(ethis);
+        }
+    }
+    function RemDataPackingInfo() {
+        var p = ethis.parentNode.parentNode;
+        p.parentNode.parentNode.deleteRow(p.rowIndex);
+        return true;
+    }
+</script>

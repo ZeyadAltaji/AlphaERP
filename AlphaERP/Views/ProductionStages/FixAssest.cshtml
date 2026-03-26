@@ -1,0 +1,48 @@
+﻿@using AlphaERP.Models;
+@using System.Data.SqlClient;
+@{
+    Company company = (Company)Session["company"];
+}
+
+<table id="FixAssestTable" class="table table-hover">
+    <thead>
+        <tr>
+            <th>@Html.Recource(117)</th>
+            <th>@Html.Recource(66)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            int Comp_num = company.comp_num;
+            string query = string.Format("exec SP_Search {0},'WHERE (comp_num = {0})',73", Comp_num);
+            using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+            {
+                SqlCommand cmd = new SqlCommand(query, cn);
+                cn.Open();
+                SqlDataReader rdr = cmd.ExecuteReader();
+                if (rdr.HasRows)
+                {
+                    while (rdr.Read())
+                    {
+                        string desc = Html.Translate(rdr["Item_Name"].ToString(), rdr["Item_EName"].ToString()).ToString();
+                        <tr onclick="Select_FixAssest(this)" Item_Num="@rdr["Item_Num"]">
+                            <td style="width: 20%;" id="Item_Num">@rdr["Item_Num"]</td>
+                            <td style="width: 55%;" id="ItemDesca" title="@desc">@desc</td>
+                            <td></td>
+                        </tr>
+                    }
+                }
+            }
+        }
+    </tbody>
+</table>
+
+
+<script>
+    $('#FixAssestTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 10
+    });
+</script>

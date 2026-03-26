@@ -1,0 +1,78 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+
+@{
+    DataSet DSArch = ViewBag.Arch;
+    var Count = 1;
+}
+<table class="table table-hover" id="InboundsManagement_DocumentArchiveTable">
+    <thead>
+        <tr>
+            <th style="width: 115px !important;text-align: center !important">@Html.Recource(66)</th>
+            <th style="text-align: center !important">@Html.Recource(5629)</th>
+            <th style="width: 180px !important;text-align: center !important">@Html.Recource(5630)</th>
+            <th style="width: 115px !important;text-align: center !important">@Html.Recource(5631)</th>
+            <th style="width: 115px !important;text-align: center !important">@Html.Recource(5632)</th>
+            <th style="width: 115px !important;text-align: center !important">@Html.Recource(5633)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="InboundsManagement_DocumentArchiveTbody" style="border-top: 1px solid #ddd;">
+        @foreach (DataRow row in DSArch.Tables["Arch"].Rows)
+        {
+            DateTime date = Convert.ToDateTime(row["DataUpload"].ToString());
+            <tr>
+                <td>
+                    <input type="text" style="text-align: center !important" id="OrdPR_EditDocumentArchive_Description_@Count" value="@row["Description"].ToString()" disabled />
+                </td>
+                <td style="text-align: center !important">
+                    <a id="ConvertToPurchOrd_AddDownloadFile_@Count" onclick="DownloadFile('@row["FileName"].ToString()','@Convert.ToBase64String((byte[])row["ArchiveData"])')"><span class="glyphicon glyphicon-download"></span></a>
+                </td>
+                <td>
+                    <input id="ConvertToPurchOrd_EditAttachmentFiles_FileName_@Count" type="text" style="width: 180px;text-align: center !important" value="@row["FileName"].ToString()" disabled />
+                </td>
+                <td>
+                    <input id="ConvertToPurchOrd_EditDocumentArchive_UploadDate_@Count" type="text" style="width: 115px; text-align: center !important" value="@date.ToShortDateString()" disabled />
+                </td>
+                <td>
+                    <input id="ConvertToPurchOrd_EditDocumentArchive_FileSize_@Count" type="text" style="width: 115px; text-align: center !important" value="@row["FileSize"].ToString()" disabled />
+                </td>
+                <td>
+                    <input id="ConvertToPurchOrd_EditDocumentArchive_FileType_@Count" type="text" style="width: 115px; text-align: center !important" value="@row["ContentType"].ToString()" disabled />
+                </td>
+                <td>
+                    <input type="hidden" id="InputSerial" value="@(Count++)" />
+                </td>
+            </tr>
+        }
+        @*@foreach (DataRow row in DtAttachment.Rows)
+        {
+            DateTime date = Convert.ToDateTime(row["DataUpload"].ToString());
+            <tr>
+                <td>
+                    <input type="text" style="text-align: center !important" id="OrdPR_EditDocumentArchive_Description_@Count" value="@row["Description"].ToString()" disabled />
+                </td>
+                <td style="text-align: center !important">
+                    <a id="ConvertToPurchOrd_AddDownloadFile_@Count" onclick="DownloadFile('@row["FileName"].ToString()','@Convert.ToBase64String((byte[])row["ArchiveData"])')"><span class="glyphicon glyphicon-download"></span></a>
+                </td>
+                <td>
+                    <input id="ConvertToPurchOrd_EditAttachmentFiles_FileName_@Count" type="text" style="width: 180px;text-align: center !important" value="@row["FileName"].ToString()" disabled />
+                </td>
+                <td>
+                    <input id="ConvertToPurchOrd_EditDocumentArchive_UploadDate_@Count" type="text" style="width: 115px; text-align: center !important" value="@date.ToShortDateString()" disabled />
+                </td>
+                <td>
+                    <input id="ConvertToPurchOrd_EditDocumentArchive_FileSize_@Count" type="text" style="width: 115px; text-align: center !important" value="@row["FileSize"].ToString()" disabled />
+                </td>
+                <td>
+                    <input id="ConvertToPurchOrd_EditDocumentArchive_FileType_@Count" type="text" style="width: 115px; text-align: center !important" value="@row["ContentType"].ToString()" disabled />
+                </td>
+                <td>
+                    <input type="hidden" id="InputSerial" value="@(Count++)" />
+                </td>
+            </tr>
+        }*@
+    </tbody>
+</table>

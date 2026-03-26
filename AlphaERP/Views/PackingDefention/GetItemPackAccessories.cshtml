@@ -1,0 +1,59 @@
+﻿@model IEnumerable<AlphaERP.Models.InvItemsMF>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    DataTable Dt = new DataTable();
+}
+
+
+@foreach (InvItemsMF item in Model)
+{
+    string Catg = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == item.ItemNo).FirstOrDefault().Categ;
+    <tr>
+        <td style="width: 14%;" id="PackingAccess_ItemNo">@item.ItemNo</td>
+        <td style="width: 45%;" id="ItemByProduct_ItemDesc">@item.ItemDesc</td>
+        <td style="width: 10%;text-align: center;">
+            <select style="width:100%" class="ItemPackingAccess_Unit">
+                @{
+                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                    {
+                        Dt = new DataTable();
+                        cn.Open();
+                        using (SqlCommand cmd = new SqlCommand())
+                        {
+                            cmd.Connection = cn;
+                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                            cmd.CommandText = "InvT_LoadItemUnits";
+                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                            cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = item.ItemNo;
+                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                            {
+                                DA.Fill(Dt);
+                            }
+                        }
+                    }
+                }
+                @foreach (DataRow row in Dt.Rows)
+                {
+                    <option value="@row["UnitSerial"].ToString()">
+                        @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                    </option>
+                }
+            </select>
+        </td>
+        <td style="width: 10%;text-align: center;">
+            <input id="PackingAccess_Qty" value="0" type="number" style="width:75px !important" />
+        </td>
+        <td>
+            <button class="btn-de" onclick="RemoveRow(this)"><i class="fa fa-trash-alt"></i></button>
+        </td>
+    </tr>
+}
+
+
+<script>
+    $('.ItemPackingAccess_Unit').select2();
+</script>

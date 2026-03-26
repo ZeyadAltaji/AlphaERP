@@ -1,0 +1,696 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@{
+    Company company = (Company)Session["company"];
+    List<ProdCost_ProductionShift> Shift = new MDB().ProdCost_ProductionShift.Where(x => x.CompNo == company.comp_num).ToList();
+}
+
+<div class="box box-primary">
+    <div class="box-body box-profile">
+        <div>
+            <div class="col-md-7" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2">
+                <label class="unselectable" for="Serach_DailyProduction_Year">@Resources.Resource.Year </label>
+                <input onblur="Checkyear()" type="number" id="Prod_DailyProduction_Year" value="@DateTime.Now.Year" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" />
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-success btn-block" onclick="SerachDailyProduction()">
+                    @Html.Recource(975)
+                </button>
+                <button class="btn btn-primary btn-block" onclick="AddProd_DailyProduction()">
+                    <i class="fa fa-plus"></i> @Html.Recource(32)
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="Prod_DailyProductionListDiv">
+        @Html.Partial("~/Views/DailyProduction/DailyProdList.cshtml")
+    </div>
+</div>
+
+
+<div class="modal fade wide" id="Prod_DailyProduction_Model">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(475)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Prod_DailyProd_Add_Year">@Html.Recource(59) </label>
+                    </div>
+                    <div class="col-md-2">
+                        <input required="true" onblur="GetDailyProd_Checkyear()" type="number" id="Prod_DailyProd_Add_Year" value="@DateTime.Now.Year" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Prod_DailyProd_Add_DailyProdNo">@Html.Recource(1222) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:100%;" type="text" id="Prod_DailyProd_Add_DailyProdNo" value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Prod_DailyProd_Add_Date">@Html.Recource(58)</label>
+                    </div>
+                    <div class="col-md-2">
+                        <input value="@DateTime.Now.ToString("yyyy-MM-dd")" type="date" id="Prod_DailyProd_Add_Date" required="true" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Prod_DailyProd_Add_WorkOrderYear">@Html.Recource(371) </label>
+                    </div>
+                    <div class="col-md-2">
+                        <input onblur="GetDailyProd_WorkOrderYear()" type="number" id="Prod_DailyProd_Add_WorkOrderYear" value="@DateTime.Now.Year" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Prod_DailyProd_Add_ProdOrderNo">@Html.Recource(227) </label>
+                    </div>
+                    <div class="col-md-2">
+                        <input style="width:100%;" type="text" id="Prod_DailyProd_Add_ProdOrderNo" placeholder="@Html.Recource(227)" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-success btn-block" onclick="SearchDailyProd_ProdOrderNo(1)">
+                            @Html.Recource(975)
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Prod_DailyProd_Add_ShiftNo">@Html.Recource(4330) </label>
+                    </div>
+                    <div class="col-md-2">
+                        <select style="width: 120% !important;" id="Prod_DailyProd_Add_ShiftNo" required="true">
+                            @foreach (var item in Shift)
+                            {
+                                <option value="@item.ShiftNo">@Html.Translate(item.ShiftDesc, item.EngDesc) </option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Prod_DailyProd_Add_Stage">@Html.Recource(4482) </label>
+                    </div>
+                    <div class="col-md-2">
+                        <input style="width:100%;" type="text" id="Prod_DailyProd_Add_StageCode" placeholder="@Html.Recource(2558)" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <input style="width:245%;" type="text" id="Prod_DailyProd_Add_StageDesc" placeholder="@Html.Recource(2559)" disabled />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Prod_DailyProd_Add_StoreNo">@Html.Recource(1) </label>
+                    </div>
+                    <div class="col-md-2">
+                        <input style="width: 120% !important;" required="true" type="text" id="Prod_DailyProd_Add_StoreNo" placeholder="@Html.Recource(41)" disabled />
+                    </div>
+                    <div class="col-md-8">
+                        <input style="width: 288px !important;" required="true" type="text" id="Prod_DailyProd_Add_StoreDesc" placeholder="@Html.Recource(31)" disabled />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <button onclick="AddDailyProd_InvItemsMF(1)" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                    </div>
+                    <div class="col-md-12" style="height:200px;max-height:200px;overflow-y:auto">
+                        <table class="table table-hover" id="DailyProductionTable">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center !important;width: 14%;">@Html.Recource(44)</th>
+                                    <th style="text-align: center !important;width: 45%;">@Html.Recource(74)</th>
+                                    <th style="text-align: center !important;">@Html.Recource(49)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="DailyProductionTBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <label  class="unselectable">@Html.Recource(9240) : </label>
+                <label id="OrderQty"  class="unselectable" style="margin: 0px 45px 0px 45px;">0.00</label>
+                <label  class="unselectable">@Html.Recource(9595) : </label>
+                <label id="ProdQty" class="unselectable" style="margin: 0px 45px 0px 45px;">0.00</label>
+                <button type="button" onclick="ExcuteSaveProd_DailyProduction()" class="btn btn-primary">@Html.Recource(475)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade wide" id="Prod_eDailyProduction_Model">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(475)</label>
+            </div>
+            <div class="modal-body row" id="eDailyProductionDiv">
+              
+            </div>
+            <div class="modal-footer">
+                <label class="unselectable">@Html.Recource(9240) : </label>
+                <label id="eOrderQty" class="unselectable" style="margin: 0px 45px 0px 45px;">0.00</label>
+                <label class="unselectable">@Html.Recource(9595) : </label>
+                <label id="eProdQty" class="unselectable" style="margin: 0px 45px 0px 45px;">0.00</label>
+                <button type="button" onclick="ExcuteEditProd_DailyProduction()" class="btn btn-primary">@Html.Recource(475)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade wide" id="Model_DailyProd_ProdOrder">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4286)</label>
+            </div>
+            <div class="modal-body row" id="DailyProd_ProdOrderDiv">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingDailyProd_ProdOrder()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="Model_DailyProd_InvItems">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4756)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectDailyProdInvItems">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(44)</th>
+                                    <th style="width: 55%;">@Html.Recource(74)</th>
+                                    <th style="width: 10%;">@Html.Recource(96)</th>
+                                    <th style="text-align: center;">@Html.Recource(312)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    string query2 = string.Format("exec SP_Search {0},'WHERE (CompNo = {0}) AND (IsHalt Between Case When 2 = 2 Then 0 else 2 end And Case When 2 = 2 Then 1 else 2 end)',7", company.comp_num);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query2, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                string ItemDesc = rdr["ItemDesc"].ToString();
+                                                string ItemDescEn = rdr["ItemDesc_Ara"].ToString();
+                                                string Desc = Html.Translate(ItemDesc, ItemDescEn).ToString();
+                                                <tr onclick="SelectDailyProd_InvItems(this)" ItemNo="@rdr["ItemNo"]" ItemDesc="@Html.Trim(Desc,50)">
+                                                    <td style="width: 20%;">@rdr["ItemNo"]</td>
+                                                    <td style="width: 55%;" title="@Desc">@Html.Trim(Desc, 50)</td>
+                                                    <td style="width: 10%;text-align: center;">@rdr["RefrenceNo"]</td>
+                                                    <td style="text-align: center !important;">@rdr["BarCode"]</td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingDailyProd_InvItems()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    var Count = 0;
+    var thisValue = 0;
+    var Total = 0;
+    var thisStaus = 0;
+    var thisItemSatus = 0;
+    $('#Prod_DailyProduction_Model').draggable({
+        handle: ".modal-header",
+    });
+    $('#Prod_eDailyProduction_Model').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_DailyProd_ProdOrder').draggable({
+        handle: ".modal-header",
+    });
+    $('#Model_DailyProd_InvItems').draggable({
+        handle: ".modal-header",
+    });
+    $('#SelectDailyProdInvItems').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25
+    });
+    function Checkyear() {
+        if (Prod_DailyProduction_Year.value < 2000) {
+            Prod_DailyProduction_Year.value = "@DateTime.Now.Year"
+            Prod_DailyProduction_Year.focus();
+        }
+    }
+    function GetDailyProd_Checkyear() {
+        if (Prod_DailyProd_Add_Year.value < 2000) {
+            Prod_DailyProd_Add_Year.value = '@DateTime.Now.Year';
+            Prod_DailyProd_Add_Year.focus();
+        }
+    }
+    function GetDailyProd_WorkOrderYear() {
+        if (Prod_DailyProd_Add_WorkOrderYear.value < 2000) {
+            Prod_DailyProd_Add_WorkOrderYear.value = '@DateTime.Now.Year';
+            Prod_DailyProd_Add_WorkOrderYear.focus();
+        }
+    }
+    function AddProd_DailyProduction() {
+        Prod_DailyProd_Add_Year.value = '@DateTime.Now.Year';
+        Prod_DailyProd_Add_DailyProdNo.value = "0";
+        Prod_DailyProd_Add_Date.value = '@DateTime.Now.ToString("yyyy-MM-dd")';
+        Prod_DailyProd_Add_WorkOrderYear.value = '@DateTime.Now.Year';
+        Prod_DailyProd_Add_ProdOrderNo.value = "";
+        Prod_DailyProd_Add_StageCode.value = "";
+        Prod_DailyProd_Add_StageDesc.value = "";
+        Prod_DailyProd_Add_StoreNo.value = "";
+        Prod_DailyProd_Add_StoreDesc.value = "";
+        $('#Prod_DailyProduction_Model').modal('show')
+    }
+    function SearchDailyProd_ProdOrderNo(staus) {
+        thisStaus = staus;
+        DailyProd_ProdOrderDiv.innerHTML = "";
+        $('#DailyProd_ProdOrderDiv').load('../../../DailyProduction/ProdOrder?year=' + Prod_DailyProd_Add_WorkOrderYear.value);
+        $('#Model_DailyProd_ProdOrder').modal('show')
+    }
+    function SelectDailyProd_ProdOrders(e) {
+        var table = $('#SelectDailyProd_ProdOrdersTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function SelectingDailyProd_ProdOrder() {
+        var table = $('#SelectDailyProd_ProdOrdersTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار امر تجهيز واحد على الاقل", "Select one Prod Order at least")');
+            return;
+        }
+        trsitem = trs[0];
+        wait();
+        var item = "";
+        if (thisStaus == 1) {
+            Prod_DailyProd_Add_ProdOrderNo.value = trs[0].cells[1].innerHTML
+            Prod_DailyProd_Add_StageCode.value = trs[0].getAttribute('stage_code');
+            Prod_DailyProd_Add_StageDesc.value = trs[0].getAttribute('stge_Desc');
+            Prod_DailyProd_Add_StoreNo.value = trs[0].cells[6].getAttribute('storeNo');
+            Prod_DailyProd_Add_StoreDesc.value = trs[0].cells[6].innerHTML;
+            OrderQty.innerHTML = trs[0].cells[5].innerHTML
+            ProdQty.innerHTML = trs[0].cells[5].innerHTML
+
+            item = {
+                prepare_year: Prod_DailyProd_Add_WorkOrderYear.value,
+                prepare_code: Prod_DailyProd_Add_ProdOrderNo.value,
+                item_no: trs[0].cells[3].innerHTML,
+                ItemDesc: trs[0].cells[4].innerHTML,
+                Qty: trs[0].cells[5].innerHTML,
+                UnitSerial: trs[0].getAttribute('unitSerial'),
+                TUnit: trs[0].getAttribute('tunit'),
+            }
+        }
+        else {
+            Prod_DailyProd_Edit_ProdOrderNo.value = trs[0].cells[1].innerHTML
+            Prod_DailyProd_Edit_StageCode.value = trs[0].getAttribute('stage_code');
+            Prod_DailyProd_Edit_StageDesc.value = trs[0].getAttribute('stge_Desc');
+            Prod_DailyProd_Edit_StoreNo.value = trs[0].cells[6].getAttribute('storeNo');
+            Prod_DailyProd_Edit_StoreDesc.value = trs[0].cells[6].innerHTML;
+            eOrderQty.innerHTML = trs[0].cells[5].innerHTML
+            eProdQty.innerHTML = trs[0].cells[5].innerHTML
+
+            item = {
+                prepare_year: Prod_DailyProd_Edit_WorkOrderYear.value,
+                prepare_code: Prod_DailyProd_Edit_ProdOrderNo.value,
+                item_no: trs[0].cells[3].innerHTML,
+                ItemDesc: trs[0].cells[4].innerHTML,
+                Qty: trs[0].cells[5].innerHTML,
+                UnitSerial: trs[0].getAttribute('unitSerial'),
+                TUnit: trs[0].getAttribute('tunit'),
+            }
+        }
+
+        burn({ ItemOrder: item }, '../../../DailyProduction/ItemProdOrder', '', ReloadItemProdOrder, true);
+
+    }
+    function ReloadItemProdOrder(r) {
+        if (thisStaus == 1) {
+            DailyProductionTBody.innerHTML = "";
+            $('#DailyProductionTBody').append(r);
+        }
+        else {
+            eDailyProductionTBody.innerHTML = "";
+            $('#eDailyProductionTBody').append(r);
+        }
+        sumTotalProdQty();
+        $('#Model_DailyProd_ProdOrder').modal('hide')
+        done();
+    }
+    function AddDailyProd_InvItemsMF(ItemSatus) {
+        thisItemSatus = ItemSatus;
+        var tr = "";
+        var CountRow = 0;
+        if (ItemSatus == 1) {
+            tr = $("#DailyProductionTBody tr");
+        }
+        else {
+            tr = $("#eDailyProductionTBody tr");
+        }
+        if (Count == 0) {
+            Count = tr.length;
+        }
+        CountRow = tr.length;
+        var i = CountRow;
+        i--;
+        var trs = tr[i];
+        Count++;
+        InsertRowItem(trs.cells[0].innerHTML, trs.cells[1].innerHTML, trs.getAttribute('unitSerial'), trs.getAttribute('tunit'), Count)
+    }
+    function InsertRowItem(itemno, itemdesc, unitSerial, tunit, Ser) {
+        var newarray = [];
+        newarray.push('<td style="text-align:center;" id="ItemDailyProd_ItemNo">' + itemno +'</td>')
+        newarray.push('<td style="text-align:center;">' + itemdesc +'</td>')
+        newarray.push('<td style="text-align: center;"><input style="width: 75px; text-align:center;" id="ItemDailyProd_Qty" value="0" type="number" onblur="GetCheckValueSumTotal(this)" /></td>')
+        newarray.push('<td><button class="btn-de" id="removeButton" onclick="RemoveRowDailyProdItem(this)" type="button"><i class="fa fa-trash-alt"></i></button></td>')
+        newarray.push('<td id="PostFlag" hidden></td>')
+        newarray.push('<td id="ProdRecYear" hidden></td>')
+        newarray.push('<td id="ProdRecNo" hidden></td>')
+        newarray.push('<td id="TransferFlag" hidden></td>')
+        newarray.push('<td id="ConsVouYear" hidden></td>')
+        newarray.push('<td id="ConsVouNo" hidden></td>')
+        newarray.push('<td id="TransNoIn" hidden></td>')
+        newarray.push('<td id="TransNoOut" hidden></td>')
+        newarray.push('<td id="TransDateIn" hidden></td>')
+        newarray.push('<td id="TransDateOut" hidden></td>')
+        newarray.push('<td id="TransUserIn" hidden></td>')
+        newarray.push('<td id="TransUserOut" hidden></td>')
+        newarray.push('<td id="Batch" hidden></td>')
+        newarray.push('<td id="ManDate" hidden></td>')
+        newarray.push('<td id="ExpDate" hidden></td>')
+        newarray.push('<td id="ConsQty" hidden></td>')
+
+        if (thisItemSatus == 1) {
+            $("#DailyProductionTBody").append(
+                GenRowMas(newarray, 'ItemDailyProd_' + Ser, unitSerial, tunit)
+            );
+        }
+        else {
+            $("#eDailyProductionTBody").append(
+                GenRowMas(newarray, 'ItemDailyProd_' + Ser, unitSerial, tunit)
+            );
+        }
+    }
+    function GenRowMas(tds, Id, Att1, Att2) {
+        var row = '';
+        row = '<tr Id = ' + Id + ' unitserial="' + Att1 + '" tunit="' + Att2 + '">';
+        row += tds
+        row += '</tr>'
+        return row;
+    }
+    function RemoveRowDailyProdItem(e) {
+        if (confirm('@Resources.Resource.DeleteConfirm')) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+            return true;
+            Count++;
+        }
+        return false;
+    }
+    function EditItemProdOrder(val) {
+        thisValue = val;
+        $('#SelectDailyProdInvItems tr').removeClass("selected");
+        $('#Model_DailyProd_InvItems').modal('show')
+    }
+    function SelectDailyProd_InvItems(e) {
+        var trs = $('#SelectDailyProdInvItems tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function SelectingDailyProd_InvItems() {
+        var trs = $('#SelectDailyProdInvItems tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة", "Select one Item")');
+            return;
+        }
+        var tr = "";
+        if (thisItemSatus == 1) {
+            tr = $("#DailyProductionTBody #ItemDailyProd_" + thisValue + "");
+        }
+        else {
+            tr = $("#eDailyProductionTBody #ItemDailyProd_" + thisValue + "");
+        }
+
+
+        tr[0].cells[0].innerHTML = trs[0].getAttribute('ItemNo');
+        tr[0].cells[1].innerHTML = trs[0].getAttribute('ItemDesc');
+
+        $('#Model_DailyProd_InvItems').modal('hide')
+    }
+    function GetCheckValueSumTotal(e) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون الكمية اقل من 0", "The value of the Rejected may not be less than 0")');
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+        sumTotalProdQty();
+    }
+    function sumTotalProdQty() {
+        Total = 0;
+        var table = "";
+        if (thisItemSatus == 1) {
+            table = $('#DailyProductionTBody tr');
+        }
+        else {
+            table = $('#eDailyProductionTBody tr');
+        }
+        var trs = table;
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i]).closest('tr').find('#PostFlag')[0].innerHTML == "True") {
+                Total = Number(Total) + Number($(trs[i]).closest('tr').find('#ItemDailyProd_Qty')[0].innerHTML);
+            }
+            else {
+                Total = Number(Total) + Number($(trs[i]).closest('tr').find('#ItemDailyProd_Qty')[0].value);
+            }
+        }
+        if (thisItemSatus == 1) {
+            ProdQty.innerHTML = Number(Total).toFixed(0);
+        }
+        else {
+            eProdQty.innerHTML = Number(Total).toFixed(0);
+        }
+    }
+    function CheckValue(ID) {
+        if (document.getElementById(ID).getAttribute('required') == 'true') {
+            if (document.getElementById(ID).value == '') {
+                document.getElementById(ID).focus();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    function ExcuteSaveProd_DailyProduction() {
+        if (CheckValue('Prod_DailyProd_Add_Year')) { return; }
+        if (CheckValue('Prod_DailyProd_Add_WorkOrderYear')) { return; }
+        if (CheckValue('Prod_DailyProd_Add_ProdOrderNo')) { return; }
+        if (CheckValue('Prod_DailyProd_Add_StoreNo')) { return; }
+
+        var Total = 0;
+        const date = new Date(Prod_DailyProd_Add_Date.value);
+        var year = date.getFullYear();
+        if (year != Prod_DailyProd_Add_Year.value) {
+            alert('@Html.Translate("سنة يجب أن تساوي سنة التاريخ", "Year Should Equal Date Year")');
+            return false;
+        }
+
+        var DailyProdHF = {
+            CompNo: '@company.comp_num',
+            ReportYear: Prod_DailyProd_Add_Year.value,
+            ReportNo: 0,
+            Prod_Date: Prod_DailyProd_Add_Date.value,
+            ShiftNo: Prod_DailyProd_Add_ShiftNo.value,
+            Prod_stage: Prod_DailyProd_Add_StageCode.value
+        };
+
+        var DailyProdDF = new Array();
+        var table = $('#DailyProductionTBody tr');
+        var trs = table;
+        if (trs.length == 0) {
+            alert('@Html.Translate("يجب ادخال مواد", "Items must be entered")');
+            return false;
+        }
+
+        for (var i = 0; i < trs.length; i++) {
+            DailyProdDF.push({
+                CompNo: '@company.comp_num',
+                ReportYear: Prod_DailyProd_Add_Year.value,
+                ReportNo: 0,
+                ProdPrepYear: Prod_DailyProd_Add_WorkOrderYear.value,
+                ProdPrepNo: Prod_DailyProd_Add_ProdOrderNo.value,
+                FinCode: $(trs[i]).closest('tr').find('#ItemDailyProd_ItemNo')[0].innerHTML,
+                Prod_Qty: $(trs[i]).closest('tr').find('#ItemDailyProd_Qty')[0].value,
+                UnitSerial: trs[i].getAttribute('unitSerial'),
+                TUnit: trs[i].getAttribute('tunit')
+            });
+        }
+
+
+        wait();
+        if (confirm('@Resources.Resource.ConfirmDailyProd')) {
+            burn({ DailyProductionH: DailyProdHF, DailyProductionDF: DailyProdDF }, '../../../DailyProduction/Save_DailyProduction', '', ReloadDailyProd, true);
+        }
+        else {
+            done();
+        }
+    }
+    function ReloadDailyProd() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#Prod_DailyProduction_Model').modal('hide');
+        $('#Prod_DailyProductionListDiv').load('../../../DailyProduction/DailyProdList?Year=' + Prod_DailyProduction_Year.value);
+    }
+    function SerachDailyProduction() {
+        wait();
+        $('#Prod_DailyProductionListDiv').load('../../../DailyProduction/DailyProdList?Year=' + Prod_DailyProduction_Year.value, function () {
+            done();
+        });
+    }
+    function ExcuteEditProd_DailyProduction() {
+        if (CheckValue('Prod_DailyProd_Edit_Year')) { return; }
+        if (CheckValue('Prod_DailyProd_Edit_WorkOrderYear')) { return; }
+        if (CheckValue('Prod_DailyProd_Edit_ProdOrderNo')) { return; }
+        if (CheckValue('Prod_DailyProd_Edit_StoreNo')) { return; }
+
+        var Total = 0;
+        const date = new Date(Prod_DailyProd_Edit_Date.value);
+        var year = date.getFullYear();
+        if (year != Prod_DailyProd_Edit_Year.value) {
+            alert('@Html.Translate("سنة يجب أن تساوي سنة التاريخ", "Year Should Equal Date Year")');
+            return false;
+        }
+
+        var DailyProdHF = {
+            CompNo: '@company.comp_num',
+            ReportYear: Prod_DailyProd_Edit_Year.value,
+            ReportNo: Prod_DailyProd_Edit_DailyProdNo.value,
+            Prod_Date: Prod_DailyProd_Edit_Date.value,
+            ShiftNo: Prod_DailyProd_Edit_ShiftNo.value,
+            Prod_stage: Prod_DailyProd_Edit_StageCode.value
+        };
+
+        var DailyProdDF = new Array();
+        var table = $('#eDailyProductionTBody tr');
+        var trs = table;
+        if (trs.length == 0) {
+            alert('@Html.Translate("يجب ادخال مواد", "Items must be entered")');
+            return false;
+        }
+
+        for (var i = 0; i < trs.length; i++) {
+            
+            var ProdQty = 0;
+            if ($(trs[i]).closest('tr').find('#PostFlag')[0].innerHTML == "True") {
+                ProdQty = $(trs[i]).closest('tr').find('#ItemDailyProd_Qty')[0].innerHTML;
+            }
+            else {
+                ProdQty = $(trs[i]).closest('tr').find('#ItemDailyProd_Qty')[0].value;
+            }
+            
+            DailyProdDF.push({
+                CompNo: '@company.comp_num',
+                ReportYear: Prod_DailyProd_Edit_Year.value,
+                ReportNo: Prod_DailyProd_Edit_DailyProdNo.value,
+                ProdPrepYear: Prod_DailyProd_Edit_WorkOrderYear.value,
+                ProdPrepNo: Prod_DailyProd_Edit_ProdOrderNo.value,
+                FinCode: $(trs[i]).closest('tr').find('#ItemDailyProd_ItemNo')[0].innerHTML,
+                Prod_Qty: ProdQty,
+                UnitSerial: trs[i].getAttribute('unitSerial'),
+                TUnit: trs[i].getAttribute('tunit'),
+                PostFlag: $(trs[i]).closest('tr').find('#PostFlag')[0].innerHTML,
+                ProdRecYear: $(trs[i]).closest('tr').find('#ProdRecYear')[0].innerHTML,
+                ProdRecNo: $(trs[i]).closest('tr').find('#ProdRecNo')[0].innerHTML,
+                TransferFlag: $(trs[i]).closest('tr').find('#TransferFlag')[0].innerHTML,
+                ConsVouYear: $(trs[i]).closest('tr').find('#ConsVouYear')[0].innerHTML,
+                ConsVouNo: $(trs[i]).closest('tr').find('#ConsVouNo')[0].innerHTML,
+                TransNoIn: $(trs[i]).closest('tr').find('#TransNoIn')[0].innerHTML,
+                TransNoOut: $(trs[i]).closest('tr').find('#TransNoOut')[0].innerHTML,
+                TransDateIn : $(trs[i]).closest('tr').find('#TransDateIn')[0].innerHTML,
+                TransDateOut: $(trs[i]).closest('tr').find('#TransDateOut')[0].innerHTML,
+                TransUserIn: $(trs[i]).closest('tr').find('#TransUserIn')[0].innerHTML,
+                TransUserOut: $(trs[i]).closest('tr').find('#TransUserOut')[0].innerHTML,
+                Batch: $(trs[i]).closest('tr').find('#Batch')[0].innerHTML,
+                ManDate: $(trs[i]).closest('tr').find('#ManDate')[0].innerHTML,
+                ExpDate: $(trs[i]).closest('tr').find('#ExpDate')[0].innerHTML,
+                ConsQty: $(trs[i]).closest('tr').find('#ConsQty')[0].innerHTML,
+            });
+        }
+        
+        wait();
+        if (confirm('@Resources.Resource.ConfirmDailyProd')) {
+            burn({ DailyProductionH: DailyProdHF, DailyProductionDF: DailyProdDF }, '../../../DailyProduction/Edit_DailyProduction', '', eReloadDailyProd, true);
+        }
+        else {
+            done();
+        }
+    }
+    function eReloadDailyProd() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        $('#Prod_eDailyProduction_Model').modal('hide');
+        $('#Prod_DailyProductionListDiv').load('../../../DailyProduction/DailyProdList?Year=' + Prod_DailyProduction_Year.value);
+    }
+    function DelReloadDailyProd() {
+        MsgBox('@Html.Recource(2598)', 'red');
+        $('#Prod_DailyProductionListDiv').load('../../../DailyProduction/DailyProdList?Year=' + Prod_DailyProduction_Year.value);
+    }
+</script>

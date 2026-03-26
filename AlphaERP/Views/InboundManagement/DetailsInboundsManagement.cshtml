@@ -1,0 +1,239 @@
+﻿@using System.Data.SqlClient;
+@using AlphaERP.Models
+
+@{
+    int OrdYear = ViewBag.OrdYear;
+    int OrderNo = ViewBag.OrderNo;
+    string TawreedNo = ViewBag.TawreedNo;
+    string InboundSer = ViewBag.InboundSer;
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    List<Ord_InboundManagementHF> InboundManagementHF = new MDB().Ord_InboundManagementHF.Where(x => x.CompNo == company.comp_num && x.OrderYear == OrdYear
+&& x.OrderNo == OrderNo && x.TawreedNo == TawreedNo && x.InboundSer == InboundSer).ToList();
+    int Srial = 1;
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    Ord_UserActions OrdUserActions = new MDB().Ord_UserActions.Where(x => x.CompNo == company.comp_num && x.UserID == me.UserID).FirstOrDefault();
+}
+
+
+<style>
+    tr.details {
+        max-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    tr.details {
+        background-color: gray !important;
+        border-style: solid !important;
+    }
+</style>
+
+<div id="InboundManagementHFTable_@InboundSer">
+    <div style="width: 100%; padding: 1px; background: #fff !important ">
+        <table class="table table-hover" id="InboundManagementHFTable_@InboundSer" style="background:lightgray;width:100%">
+            <thead>
+                <tr>
+                    <th style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center !important;">@Html.Recource(3229)</th>
+                    <th style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center !important;">@Html.Recource(206)</th>
+                    <th style="width: 15%; text-align: center !important;">@Html.Recource(1)</th>
+                    <th>@Html.Recource(3231)</th>
+                    <th style="width: 15%; text-align: center !important;">@Html.Recource(70)</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (Ord_InboundManagementHF item in InboundManagementHF)
+                {
+                    InvStoresMF StoreM = new MDB().InvStoresMFs.Where(x => x.CompNo == item.CompNo && x.StoreNo == item.InboundGRNStoreNo).FirstOrDefault();
+                <tr id="InboundManagement_@Srial">
+                    <td style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center;direction:ltr;" id="InboundManagement_InboundNo_@Srial">@item.InboundGRN</td>
+                    <td style="word-wrap: break-word; white-space: normal; width: 10%; text-align: center;" id="InboundManagement_InboundDate_@Srial">@item.InboundGRNDate.Value.ToString("yyyy-MM-dd")</td>
+                    <td style="width: 15%; text-align: center; word-wrap: break-word; white-space: normal;" id="InboundManagement_InboundStores_@Srial">@Html.Translate(StoreM.StoreName, StoreM.StoreNameEng)</td>
+                   <td>@item.InvNo</td>
+                     <td style="word-wrap: break-word; white-space: normal; width: 20%; text-align: center;">@item.InboundGRNNotes</td>
+                     <td>
+                         @if (item.IsApproval == false)
+                         {
+                             <button onclick="EditInboundsManagement('@item.OrderYear', '@item.OrderNo', '@item.TawreedNo', '@item.InboundSer', '@item.InboundGRN')" type="button" class="btn btn-ed ex" title="@Html.Translate("تعديل إدارة الواردة", "Edit Inbounds Management")">
+                                 <i class="fa fa-pencil-alt"></i>
+                             </button>
+                             <button id="eInboundsManagement" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                                 @Html.Translate("تعديل إدارة الواردة", "Edit Inbounds Management")
+                             </button>
+                             <button type="button" class="btn-de" onclick="DeleteInboundsManagement('@item.OrderYear','@item.OrderNo', '@item.TawreedNo','@item.InboundSer', '@item.InboundGRN')" title="@Html.Translate("حذف إدارة الواردة", "Delete Inbounds Management")">
+                                 <i class="fa fa-trash-alt" aria-hidden="true"></i>
+                             </button>
+                             if (item.IsApprovalQty == true)
+                             {
+                                 if (CActive.ClientNo == 343)
+                                 {
+                                     if (OrdUserActions != null)
+                                     {
+                                         if (OrdUserActions.UserActionPosted == true)
+                                         {
+                                             <button class="btn btn-primary ex" title="ترحيل" onclick="PostedInboundsManagement('@item.OrderYear','@item.OrderNo', '@item.TawreedNo','@item.InboundSer','@item.InboundGRN')">
+                                                 <i style="font-weight:100" class="fa fa-folder"></i>
+                                                 @Html.Translate("ترحيل", "Posted")
+                                             </button>
+                                         }
+                                     }
+                                 }
+                                 else
+                                 {
+                                     <button class="btn btn-primary ex" title="ترحيل" onclick="PostedInboundsManagement('@item.OrderYear','@item.OrderNo', '@item.TawreedNo','@item.InboundSer','@item.InboundGRN')">
+                                         <i style="font-weight:100" class="fa fa-folder"></i>
+                                         @Html.Translate("ترحيل", "Posted")
+                                     </button>
+                                 }
+                             }
+                             <button class="btn btn-info" id="btnReport" formenctype="multipart/form-data" formtarget="_blank" disabled>
+                                 <i class="fa fa-print"></i>
+                             </button>
+                         }
+                         else
+                         {
+                             <button disabled type="button" class="btn btn-ed ex" title="@Html.Translate("تعديل المعلومات الواردة", "Edit Inbounds Info")">
+                                 <i class="fa fa-pencil-alt"></i>
+                             </button>
+                             <button id="eInboundsManagement" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                                 @Html.Translate("تعديل المعلومات الواردة", "Edit Inbounds Info")
+                             </button>
+                             <button type="button" class="btn btn-de ex" disabled title="@Html.Translate("حذف المعلومات الواردة", "Delete Inbounds Info")">
+                                 <i class="fa fa-trash-alt" aria-hidden="true"></i>
+                             </button>
+                             if (item.IsReserveFreeReleaseOrder == false)
+                             {
+                                 <button class="btn btn-info" id="btnReport" formenctype="multipart/form-data" formtarget="_blank" disabled>
+                                     <i class="fa fa-print"></i>
+                                 </button>
+                             }
+                             else
+                             {
+                                 <button class="btn btn-info" id="btnReport" onclick="GetPrintReport('@item.OrderYear','@item.OrderNo', '@item.TawreedNo','@item.InboundGRN','@item.InboundSer')" formenctype="multipart/form-data" formtarget="_blank">
+                                     <i class="fa fa-print"></i>
+                                 </button>
+                             }
+                         }
+                         <button class="btn btn-primary ex" title="ترحيل" onclick="PostedInboundsManagement('@item.OrderYear','@item.OrderNo', '@item.TawreedNo','@item.InboundSer','@item.InboundGRN')">
+                             <i style="font-weight:100" class="fa fa-folder"></i>
+                             @Html.Translate("ترحيل", "Posted")
+                         </button>
+                         <button class="btn btn-default ex" title="عرض" href="/InboundManagement/ViewInboundManagement?OrdYear=@item.OrderYear&OrderNo=@item.OrderNo&TawreedNo=@item.TawreedNo&InboundSer=@item.InboundSer&InboundGRN=@item.InboundGRN" target="_blank">
+                             <i style="font-weight:100" class="fa fa-folder"></i>
+                             @Html.Translate("عرض", "View")
+                         </button>
+
+                         <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                     </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function EditInboundsManagement(OrdYear, OrdNo, TawreedNo, InboundSer, InboundGRN) {
+        $('#eInboundsManagement').attr("href", '/InboundManagement/EditInboundsManagement?OrdYear=' + OrdYear + '&OrderNo=' + OrdNo + '&TawreedNo=' + TawreedNo + '&InboundSer=' + InboundSer + '&InboundGRN=' + InboundGRN + '');
+        $('#eInboundsManagement').click();
+    }
+
+    var _OrdYear = 0;
+    var _OrderNo = 0;
+    var _TawreedNo = "";
+    var _InboundGRN = "";
+    var _InboundSer = "";
+
+    function GetPrintReport(OrdYear, OrderNo, TawreedNo, InboundGRN, InboundSer) {
+        _OrdYear = OrdYear;
+        _OrderNo = OrderNo;
+        _TawreedNo = TawreedNo;
+        _InboundGRN = InboundGRN;
+        _InboundSer = InboundSer;
+
+        ReportManger.LoadReport();
+    }
+    var ReportManger = {
+
+        LoadReport: function () {
+            var jsonParam = "";
+            var ServiceUrl = "../InboundManagement/GenerateReport?OrdYear=" + _OrdYear + "&OrderNo=" + _OrderNo + "&TawreedNo=" + _TawreedNo + "&InboundGRN=" + _InboundGRN + "&InboundSer=" + _InboundSer;
+            ReportManger.GetReport(ServiceUrl, jsonParam, onFailed);
+            function onFailed(error) {
+                alert("Error");
+            }
+        },
+
+        GetReport: function (serviceUrl, jsonParams, errorCallback) {
+            jQuery.ajax({
+                url: serviceUrl,
+                async: false,
+                type: "POST",
+                data: "{" + jsonParams + "}",
+                contentType: "application/json; charset=utf-8",
+                success: function () {
+                    window.open('../Reports/CrystalViewer/ReportViewer.aspx', '_newtab');
+                },
+                error: errorCallback
+            });
+        }
+    }
+</script>
+
+
+
+<div class="modal fade" id="Model_InboundsManagement_DocumentsArchive">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أرشفة الوثائق", "Archive Documents")</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto" id="InboundsManagement_DocumentsArchiveDiv">
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_InboundsManagement_DocumentsArchive').draggable({
+        handle: ".modal-header",
+    });
+    function Attach_InboundsManagement(OrdYear, OrderNo, TawreedNo, InboundSer, InboundGRN) {
+        InboundsManagement_DocumentsArchiveDiv.innerHTML = "";
+        $('#InboundsManagement_DocumentsArchiveDiv').load('../../../ConvertToPurchOrd/AttachPurchaseRequest?ReqYear=' + ReqYear + '&ReqNo=' + ReqNo);
+        $('#Model_InboundsManagement_DocumentsArchive').modal('show');
+    }
+
+    function DownloadFile(FileName, base64) {
+        var binaryString = window.atob(base64);
+        var binaryLen = binaryString.length;
+        var bytes = new Uint8Array(binaryLen);
+        for (var i = 0; i < binaryLen; i++) {
+            var ascii = binaryString.charCodeAt(i);
+            bytes[i] = ascii;
+        }
+        saveByteArray(FileName, bytes)
+    }
+    function saveByteArray(reportName, byte) {
+        var blob = new Blob([byte], { type: "application/pdf" });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        var fileName = reportName;
+        link.download = fileName;
+        link.click();
+    }
+
+</script>

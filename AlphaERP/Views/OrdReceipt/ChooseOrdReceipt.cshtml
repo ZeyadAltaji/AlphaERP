@@ -1,0 +1,107 @@
+﻿@using System.Data.SqlClient;
+@using AlphaERP.Models
+
+@{
+    int OrdYear = ViewBag.OrdYear;
+    int OrderNo = ViewBag.OrderNo;
+    string TawreedNo = ViewBag.TawreedNo;
+    string ShipSer = ViewBag.ShipSer;
+
+    Company company = (Company)Session["company"];
+    List<Ord_OrdReceiptHF> OrdRecHF = new MDB().Ord_OrdReceiptHF.Where(x => x.CompNo == company.comp_num && x.OrderYear == OrdYear 
+    && x.OrderNo == OrderNo && x.TawreedNo == TawreedNo && x.ShipSer == ShipSer).ToList();
+    int Srial = 1;
+}
+
+
+
+<div class="box box-primary">
+    <div class="box-body box-profile">
+        <div class="modal-body row">
+            <div class="form-group">
+                <div class="col-md-3">
+                    <button class="btn btn-primary btn-block" href="/OrdReceipt/AddOrdReceipt?OrdYear=@OrdYear&OrderNo=@OrderNo&TawreedNo=@TawreedNo&ShipSer=@ShipSer">
+                        @Html.Translate("اضافة محضر استلام", "Add Order Receipt")
+                    </button>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group">
+                <div class="col-md-12 wrapperx" id="Ord_OrdReceipt_Div">
+                    <table class="table table-hover Ord_OrdReceiptInfo" id="Ord_OrdReceiptInfoTable">
+                        <thead>
+                            <tr>
+                                <th>@Html.Recource(3229)</th>
+                                <th>@Html.Recource(3197)</th>
+                                <th>@Html.Recource(3797)</th>
+                                <th>@Html.Recource(696)</th>
+                                <th>@Html.Recource(3230)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody style="text-align: center;" id="Ord_OrdReceiptInfoTBody">
+                            @foreach (Ord_OrdReceiptHF item in OrdRecHF)
+                            {
+                                Ord_OrdReceiptDF df = new MDB().Ord_OrdReceiptDF.Where(x => x.CompNo == company.comp_num && x.OrderYear == item.OrderYear && x.OrderNo == item.OrderNo
+                                && x.TawreedNo == item.TawreedNo && x.ShipSer == item.ShipSer && x.RecNo == item.RecNo).FirstOrDefault();
+                            <tr id="OrdRecHF_@Srial">
+                                <td id="OrdRecHF_RecNo_@Srial">@item.RecNo</td>
+                                <td id="OrdRecHF_OrderNo_@Srial">@item.OrderNo</td>
+                                <td id="OrdRecHF_TawreedNo_@Srial">@item.TawreedNo</td>
+                                <td style="direction: ltr;" id="OrdRecHF_ShipSer_@Srial">@item.ShipSer</td>
+                                <td id="OrdRecHF_ReceiptDate_@Srial">@item.RecDate.Value.ToString("yyyy-MM-dd")</td>
+                                <td>
+
+                                    @if (item.IsApproval == false && (df.RecQty != null || df.RecQty != 0))
+                                    {
+                                        <button class="btn btn-ed ex" href="/OrdReceipt/EditOrdReceipt?OrdYear=@item.OrderYear&OrderNo=@item.OrderNo&TawreedNo=@item.TawreedNo&ShipSer=@item.ShipSer&RecNo=@item.RecNo" target="_blank">
+                                            <i class="fa fa-pencil-alt"></i>
+                                        </button>
+                                        <button class="btn-de" onclick="DeleteOrdReceipt('@item.OrderYear','@item.OrderNo', '@item.TawreedNo','@item.ShipSer','@item.RecNo')">
+                                            <i class="fa fa-trash-alt" aria-hidden="true"></i>
+                                        </button>
+                                        <button class="btn btn-primary ex" title="ترحيل" onclick="PostedOrdReceipt('@item.OrderYear','@item.OrderNo', '@item.TawreedNo','@item.ShipSer','@item.RecNo')">
+                                            <i style="font-weight:100" class="fa fa-folder"></i>
+                                            @Html.Translate("ترحيل", "Posted")
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-ed ex" href="/OrdReceipt/EditOrdReceipt?OrdYear=@item.OrderYear&OrderNo=@item.OrderNo&TawreedNo=@item.TawreedNo&ShipSer=@item.ShipSer&RecNo=@item.RecNo" disabled target="_blank">
+                                            <i class="fa fa-pencil-alt"></i>
+                                        </button>
+                                        <button class="btn-de" onclick="DeleteOrdReceipt('@item.OrderYear','@item.OrderNo', '@item.TawreedNo','@item.ShipSer','@item.RecNo')" disabled>
+                                            <i class="fa fa-trash-alt" aria-hidden="true"></i>
+                                        </button>
+                                        <button class="btn btn-primary ex" title="ترحيل" onclick="PostedOrdReceipt('@item.OrderYear','@item.OrderNo', '@item.TawreedNo','@item.ShipSer','@item.RecNo')" disabled>
+                                            <i style="font-weight:100" class="fa fa-folder"></i>
+                                            @Html.Translate("ترحيل", "Posted")
+                                        </button>
+                                    }
+                                    <button class="btn btn-default ex" title="عرض" href="/OrdReceipt/ViewOrdReceipt?OrdYear=@item.OrderYear&OrderNo=@item.OrderNo&TawreedNo=@item.TawreedNo&ShipSer=@item.ShipSer&RecNo=@item.RecNo" target="_blank">
+                                        <i style="font-weight:100" class="fa fa-folder"></i>
+                                        @Html.Translate("عرض", "View")
+                                    </button>
+                                    <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $('#Ord_OrdReceiptInfoTable').DataTable({
+        "scrollY": 'calc( 100vh - 415px)',
+        "paging": false,
+        "pageLength": 10,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        },
+    });
+</script>
+
+

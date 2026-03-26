@@ -1,0 +1,55 @@
+﻿<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-4">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-1">
+                <label class="unselectable" for="MRP_InqPurchaseOrder_OrdYear">@Resources.Resource.Year </label>
+            </div>
+            <div class="col-md-2">
+                <input onblur="Checkyear()" type="number" id="MRP_InqPurchaseOrder_OrdYear" value="@DateTime.Now.Year" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" />
+            </div>
+            <div class="col-md-1">
+                <label class="unselectable" for="MRP_InqPurchaseOrder_PurchaseType">@Resources.Resource.PurchaseType </label>
+            </div>
+            <div class="col-md-2">
+                <select style="width:100%" id="MRP_InqPurchaseOrder_PurchaseType" onchange="SerachInqPurchaseOrder()">
+                    <option value="0">@Resources.Resource.Direct</option>
+                    <option value="1">@Resources.Resource.InDirect</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-success btn-block" onclick="SerachInqPurchaseOrder()">
+                    @Resources.Resource.Search
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="MRP_InqPurchaseOrderDiv">
+
+    </div>
+</div>
+
+<script>
+    function Checkyear() {
+        if (MRP_InqPurchaseOrder_OrdYear.value < 2000) {
+            MRP_InqPurchaseOrder_OrdYear.value = "@DateTime.Now.Year"
+            MRP_InqPurchaseOrder_OrdYear.focus();
+        }
+    }
+    SerachInqPurchaseOrder();
+    function SerachInqPurchaseOrder() {
+        wait();
+        burn({ OrdYear: MRP_InqPurchaseOrder_OrdYear.value, PurchaseType: MRP_InqPurchaseOrder_PurchaseType.value }, '../../../InqPurchaseOrder/InqPurchaseOrderList', '', LoadInqPurchaseOrder, true);
+    }
+
+    function LoadInqPurchaseOrder(r) {
+        MRP_InqPurchaseOrderDiv.innerHTML = "";
+        $('#MRP_InqPurchaseOrderDiv').html(r);
+        done();
+    }
+</script>

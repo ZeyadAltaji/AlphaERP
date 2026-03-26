@@ -1,0 +1,104 @@
+﻿@model IEnumerable<AlphaERP.Models.InvItemsMF>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    DataTable Dt = new DataTable();
+    int Srial = 0;
+    if (ViewBag.Serial != 0)
+    {
+        Srial = ViewBag.Serial + 1;
+    }
+    else
+    {
+        Srial  = 1;
+    }
+    int id = ViewBag.id;
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+}
+
+
+@foreach (InvItemsMF item in Model)
+{
+<tr id="OrderItems_Serial_@Srial">
+    <td style="width: 10%;" id="OrderItems_ItemNo">@item.ItemNo</td>
+    <td style="width: 35%;">@item.ItemDesc</td>
+    <td style="text-align: center; width: 10%;">
+        <select style="width:100%" class="OrderItems_Unit">
+            @{
+                using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                {
+                    Dt = new DataTable();
+                    cn.Open();
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        cmd.Connection = cn;
+                        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                        cmd.CommandText = "InvT_LoadItemUnits";
+                        cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                        cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = item.ItemNo;
+                        using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                        {
+                            DA.Fill(Dt);
+                        }
+                    }
+                }
+            }
+            @foreach (DataRow row in Dt.Rows)
+            {
+                <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()">
+                    @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                </option>
+            }
+        </select>
+    </td>
+    <td style="text-align: center;">
+        <input id="OrderItems_Qty_@Srial" value="0" type="number" style="width:75px !important" onblur="GetValuebestqty(this,'@id')" />
+    </td>
+    @if (compMF.UseQty2 == true)
+    {
+        <td style="text-align: center;">
+            <input id="OrderItems_Qty2_@Srial" value="0" type="number" style="width:75px !important" onblur="GetValuebestqty2(this,'@id')" />
+        </td>
+    }
+    else
+    {
+        <td style="text-align: center;" hidden>
+            <input id="OrderItems_Qty2_@Srial" value="0" type="number" style="width:75px !important" onblur="GetValuebestqty2(this,'@id')" />
+        </td>
+    }
+    <td>
+        <button class="btn-de" onclick="RemoveRowPayment(this,@id)"><i class="fa fa-trash-alt"></i></button>
+        <input type="hidden" id="InputSerial" value="@(Srial++)" />
+    </td>
+</tr>
+}
+
+<script>
+    $('.OrderItems_Unit').select2();
+    function GetValuebestqty(e,srl) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون الكمية اقل من 0", "The value of the Qty may not be less than 0")');
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+        SumTotalQty(srl)
+    }
+    function GetValuebestqty2(e, srl) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون الكمية 2 اقل من 0", "The value of the Qty 2 may not be less than 0")');
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+        SumTotalQty(srl)
+    }
+    
+</script>

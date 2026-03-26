@@ -1,0 +1,38 @@
+﻿@using AlphaERP.Models;
+@model List<AlphaERP.Controllers.ProductionOrdersInProgressController.DailyProductionH>
+@{
+     short OrderYear = ViewBag.OrderYear;
+    int OrderNo = ViewBag.OrderNo;
+    Company company = (Company)Session["company"];
+
+}
+ 
+         @foreach (var item in Model)
+        {
+            <tr style="height: 26px;" onclick="DailProdSelect(this)" ondblclick="DoubleClickSelect(this)">
+
+                <td></td>
+                <td  id="ReportYear" style="display:none;">@item.ReportYear</td>
+                <td style="text-align:center !important;" id="ReportNo">@item.ReportNo</td>
+                <td style="text-align:center !important;">@item.Prod_Date.ToString("yyyy-MM-dd")</td>
+                <td style="text-align:center !important;">
+                    @if (item.Closed == true)
+                    {
+                      
+                        <span style="background-color: #0b9f0b !important;" class="badge badge-success">@Html.Translate("مغلقة", "Closed")</span>
+
+                    }
+                    else
+                    {
+                        <span class="badge badge-danger">@Html.Translate("غير مغلقة", "Non Closed")</span>
+                    }
+                    
+                </td>
+                <td></td>
+            </tr>
+        }
+
+ 
+
+
+    

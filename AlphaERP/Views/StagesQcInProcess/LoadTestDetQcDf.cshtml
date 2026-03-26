@@ -1,0 +1,341 @@
+﻿@model List<AlphaERP.Models.LoadTestDetQcDfView>
+
+@using AlphaERP.Models;
+
+
+@{ 
+
+
+    int orderno = ViewBag.orderno;
+    short orderyear = ViewBag.orderyear;
+    bool anyQCPassed = Model.Any(x => x.QCPassed ==true || x.QCPassed ==false);
+    string generalQcNotes = Model.FirstOrDefault()?.GeneralQcNotes;
+    ProdCost_QCInspHF getTestDetQcHF = ViewBag.getTestDetQcHF;
+
+
+}
+<style>
+    #eNormalcolQC
+     {
+        border-right: 1px solid #ccc;
+        width: 20%;
+        height: 3rem;
+        font-size: 14px;
+        bottom: 33px;
+        background: #efefef;
+        position: inherit;
+        z-index: 2;
+        top: 0;
+        color: black;
+        height: 2rem;
+        padding-left:8px !important;
+     
+
+    }
+    #eAlertcolQC
+     {
+        position: absolute;
+        width: 21.6%;
+        font-size: 13.6px;
+        background: #efefef;
+        z-index: 2;
+        top: 0;
+        color: black;
+        height: 2rem;
+        padding-left:8px !important;
+
+
+    }
+    #StagesQcDetQcTestRs thead #Subheader-list-editstageQC th{
+        background-color:#e6e6fa;
+    }
+    #StagesQcDetQcTestRs thead #Subheader-list-editstageQC th:nth-child(4),
+    #StagesQcDetQcTestRs tbody tr td:nth-child(4)
+    {
+      border-right: 1px solid #ccc;
+
+    }
+      #StagesQcDetQcTestRs thead #Subheader-list-editstageQC th:nth-child(6),
+      #StagesQcDetQcTestRs tbody tr td:nth-child(6){
+        border-right: 1px solid #ccc;
+        position: relative;
+     }
+      .ealerttxtQCC{
+          padding-left:8px !important;
+      }
+   
+</style>
+
+<div class="form-group">
+    <div class="col-md-12">
+        <table class="table table-hover" style="width:100%" id="StagesQcDetQcTestRs">
+            <thead>
+                <tr style="position:relative;">
+                    <th colspan="2" scope="colgroup"></th>
+                    <th colspan="2"  id="eNormalcolQC">@Html.Translate("طبيعي", "Normal")</th>
+                    <th colspan="2"  id="eAlertcolQC">@Html.Translate("تنبيه", "Alert")</th>
+                    <th></th>
+                    <th></th>
+                    <th style="display:none"></th>
+
+                </tr>
+                <tr id="Subheader-list-editstageQC">
+                   <th scope="col" style="width:10%">@Html.Recource(9259)</th>
+                    <th scope="col" style="width:20%">@Html.Recource(9260)</th>
+                    <th scope="col">@Html.Recource(1892)</th>
+                    <th scope="col" style="width: 12%;">@Html.Recource(2058)</th>
+                    <th scope="col" class="ealerttxtQCC">@Html.Recource(1892)</th>
+                    <th scope="col" style="width: 12%;">@Html.Recource(2058)</th>
+                    <th scope="col" class="ealerttxtQCC">@Html.Recource(9261)</th>
+                    <th scope="col" style="width: 23%;">@Html.Recource(70)</th>
+                    <th  style="display:none ;width: 23%;" scope="col">@Html.Recource(70)</th>
+                </tr>
+            </thead>
+            <tbody id="StagesQcDetQcTestRsTB">
+              @foreach (var item in Model)
+                {
+                  <tr orderyear="@orderno" orderno="@orderyear" RefNo="@item.RefNo">
+                      <td>@item.TestNo</td>
+                      <td>@item.TestDesc</td>
+                      <td><input disabled type="number" style="width:100px" value="@item.ValFrom"></td>
+                      <td><input disabled type="number" style="width:100px" value="@item.ValTo"></td>
+                      <td><input disabled type="number" style="width:100px" value="@item.AlertFromNo"></td>
+                      <td><input disabled type="number" style="width:100px" value="@item.AlertToNo"></td>
+                      <td><input type="number" style="width:100px" value="@item.QCVal" class="actual-result-input" oninput="CalcActual()"></td>
+                      <td><input type="text" style="width:190px;max-width: 190px!important;" value="@item.Notes"></td>
+                      <td style="display:none"><input id="QCPassed" type="text"  name="QCPassed" /></td>
+
+
+
+                    </tr>
+
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<hr />
+ <div class="form-group mt-2">
+    <div class="col-md-3">
+        <label class="unselectable">@Html.Recource(9271) </label>
+    </div>
+     <div class="col-md-3">
+         <label class="unselectable">
+             <input  id="OptSuccess1" style="width: 15px;" type="radio" name="StagesQcInProcess0" value="true"   @if(getTestDetQcHF.QCPassed == true) { <text>checked="checked"</text> }  />
+             @Html.Translate("نجح", "Succeeded")
+         </label>
+     </div>
+     <div class="col-md-3">
+         <label class="unselectable">
+             <input id="OptFail0" style="width: 15px;" type="radio" name="StagesQcInProcess0" value="false"  @if(getTestDetQcHF.QCPassed == false) { <text>checked="checked"</text> }  />
+             @Html.Translate("فشل", "Failed")
+         </label>
+     </div>
+
+</div>
+<div class="form-group">
+    <div class="col-md-3">
+        <label for="StagesQcInProcess_save_Notes0" class="unselectable">@Html.Recource(70) </label>
+    </div>
+    <div class="col-md-9">
+        <input id="StagesQcInProcess_save_Notes0" value="@getTestDetQcHF.Notes" style="width:100%" type="text" />
+    </div>
+</div>
+
+
+<button id="consentRequestButton" style="display: none;">Consent Request</button>
+
+
+
+<script>
+    StagesQcDetQcTestRs = $('#StagesQcDetQcTestRs').DataTable({
+        "searching": false,
+        "scrollY": '150px',
+        "pageLength": 100,
+        "paging": false,
+        "bInfo": false
+
+
+    });
+   
+    function CalcActual() {
+        var actualResultInputs = document.querySelectorAll('.actual-result-input');
+        var hasAnyRowExceededRanges = false;
+        var hasAnyRowIncludRangesAlert = false;
+        var hasAnyRowIncludRangesNormal = false;
+
+        var $consentRequestButton = $("#consentRequestButton");
+        var CloseQualityControl = $("#CloseQualityControl");
+        var $failedRadio = $("#OptFail0");
+        var $succeededRadio = $("#OptSuccess1");
+
+        //actualResultInputs.forEach(function (input) {
+        //    var $row = $(this).closest("tr");
+        //    // Get the current input value
+        //    var inputValue = parseFloat(input.value);
+        //    //var $QCPassedCell = $('td:last-child input[name="QCPassed"]');
+        //    //var $QCPassedCell = $row.find('td:last-child input[name="QCPassed"]');
+        //    var $QCPassedCell = $row.find('td:last-child input');
+
+        //    $failedRadio.prop("checked", true);
+        //    $succeededRadio.prop("checked", false);
+        //    // Find the corresponding "Normal From" and "Normal To Num" inputs in the same row
+        //    var normalFromInput = input.closest('tr').querySelector('td:nth-child(3) input');
+        //    var normalToNumInput = input.closest('tr').querySelector('td:nth-child(4) input');
+              
+        //    // Get the values of "Normal From" and "Normal To Num"
+        //    var normalFromValue = parseFloat(normalFromInput.value);
+        //    var normalToNumValue = parseFloat(normalToNumInput.value);
+
+        //    // Find the corresponding "Alert From" and "Alert To Num" inputs in the same row
+        //    var alertFromInput = input.closest('tr').querySelector('td:nth-child(5) input');
+        //    var alertToNumInput = input.closest('tr').querySelector('td:nth-child(6) input');
+
+        //    // Get the values of "Alert From" and "Alert To Num"
+        //    var alertFromValue = parseFloat(alertFromInput.value);
+        //    var alertToNumValue = parseFloat(alertToNumInput.value);
+        //    debugger
+        //    // Check if the input is within the "Normal" range
+        //    if (inputValue >= normalFromValue && inputValue <= normalToNumValue) {
+        //        $QCPassedCell.attr('value', 'true')
+        //        $consentRequestButton.hide(); // Hide the consent request button
+        //        $succeededRadio.prop("checked", true);
+        //        $succeededRadio.prop("disabled", false);
+        //        CloseQualityControl.prop("disabled", false);
+        //        if (inputValue >= normalFromValue && inputValue <= normalToNumValue) {
+        //            hasAnyRowIncludRangesNormal = true;
+        //        }
+
+        //    }
+        //        // Check if the input is within the "Alert" range
+        //    else if (inputValue >= alertFromValue && inputValue <= alertToNumValue) {
+                 
+        //        $consentRequestButton.show();
+        //        $failedRadio.prop("checked", true);
+        //        $succeededRadio.prop("disabled", true);
+        //        CloseQualityControl.prop("disabled", true);
+        //        if (inputValue >= alertFromValue && inputValue <= alertToNumValue) {
+        //            hasAnyRowIncludRangesAlert = true;
+        //         }
+
+             
+
+        //    }
+        //    else {
+        //        $consentRequestButton.hide();
+        //        $QCPassedCell.attr('value', 'false')
+        //         $failedRadio.prop("checked", true);
+        //        $succeededRadio.prop("disabled", true);
+        //        CloseQualityControl.prop("disabled", false);
+ 
+        //        if ((inputValue > normalToNumValue && inputValue > alertToNumValue) || inputValue < normalToNumValue && inputValue < alertToNumValue) {
+        //            hasAnyRowExceededRanges = true;
+        //         }
+        //    }
+
+        //});
+        for (var i = 0; i < actualResultInputs.length; i++) {
+            var input = actualResultInputs[i];
+            var $row = $(input).closest("tr");
+            var inputValue = parseFloat(input.value);
+           
+
+            var $QCPassedCell = $row.find('td:last-child input');
+            var normalFromInput = $row.find('td:nth-child(3) input').get(0);
+            var normalToNumInput = $row.find('td:nth-child(4) input').get(0);
+            var normalFromValue = parseFloat(normalFromInput.value);
+            var normalToNumValue = parseFloat(normalToNumInput.value);
+            var alertFromInput = $row.find('td:nth-child(5) input').get(0);
+            var alertToNumInput = $row.find('td:nth-child(6) input').get(0);
+            var alertFromValue = parseFloat(alertFromInput.value);
+            var alertToNumValue = parseFloat(alertToNumInput.value);
+
+            if (inputValue >= normalFromValue && inputValue <= normalToNumValue) {
+                $QCPassedCell.attr('value','true');
+                $consentRequestButton.hide();
+                $succeededRadio.prop("checked", true);
+                $succeededRadio.prop("disabled", false);
+                CloseQualityControl.prop("disabled", false);
+                hasAnyRowIncludRangesNormal = true;
+            } else if (inputValue >= alertFromValue && inputValue <= alertToNumValue) {
+                $QCPassedCell.removeAttr('value', 'false');
+                $consentRequestButton.show();
+                $failedRadio.prop("checked", true);
+                $succeededRadio.prop("disabled", true);
+                CloseQualityControl.prop("disabled", true);
+                hasAnyRowIncludRangesAlert = true;
+            } else {
+                $consentRequestButton.hide();
+                $QCPassedCell.attr('value', 'false');
+                $failedRadio.prop("checked", true);
+                $succeededRadio.prop("disabled", true);
+                CloseQualityControl.prop("disabled", false);
+                if ((inputValue > normalToNumValue && inputValue > alertToNumValue) || inputValue < normalFromValue && inputValue < alertFromValue) {
+                    hasAnyRowExceededRanges = true;
+                }
+            }
+        }
+
+        if (hasAnyRowExceededRanges) {
+            $consentRequestButton.hide();
+            $failedRadio.prop("checked", true);
+            $succeededRadio.prop("disabled", true);
+            CloseQualityControl.prop("disabled", false);
+            console.log("Out Ranges");
+        } else if (hasAnyRowIncludRangesAlert) {
+            $consentRequestButton.show();
+            $failedRadio.prop("checked", true);
+            $succeededRadio.prop("disabled", true);
+            CloseQualityControl.prop("disabled", true);
+            console.log("Range Alert");
+        } else if (hasAnyRowIncludRangesNormal) {
+            $consentRequestButton.hide();
+            $succeededRadio.prop("checked", true);
+            $succeededRadio.prop("disabled", false);
+            CloseQualityControl.prop("disabled", false);
+            console.log("Range Normal");
+        }
+    //});
+    //    if (hasAnyRowExceededRanges) {
+          
+    //        $consentRequestButton.hide();
+    //        $failedRadio.prop("checked", true);
+    //        $succeededRadio.prop("disabled", true);
+    //        CloseQualityControl.prop("disabled", false);
+    //        console.log("Out Ranges")
+    //        return false
+
+
+    //    }
+    //    else if(hasAnyRowIncludRangesAlert)
+    //    {
+    //         $consentRequestButton.show();
+    //        $failedRadio.prop("checked", true);
+    //        $succeededRadio.prop("disabled", true);
+    //        CloseQualityControl.prop("disabled", true);
+    //        console.log("Range Alert")
+    //        return false
+
+    //    }
+    //    else if (hasAnyRowIncludRangesNormal) {
+    //        $consentRequestButton.hide(); // Hide the consent request button
+    //        $succeededRadio.prop("checked", true);
+    //        $succeededRadio.prop("disabled", false);
+    //        CloseQualityControl.prop("disabled", false);
+    //        console.log("Range Normal")
+    //        return false
+
+    //    }
+     }
+     
+    $(document).ready(function () {
+        debugger
+     
+        CalcActual()
+    });
+   
+     
+</script>
+
+
+ 

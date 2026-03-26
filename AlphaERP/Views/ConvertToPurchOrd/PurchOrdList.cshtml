@@ -1,0 +1,90 @@
+﻿@using System.Data.SqlClient;
+@using AlphaERP.Models
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+
+    List<OrdRequestDF> OrdReqtDF = new MDB().Database.SqlQuery<OrdRequestDF>(string.Format("SELECT Ord_RequestHF.ReqYear as ReqYear ,Ord_RequestHF.ReqNo as ReqNo  " +
+    "from Ord_RequestHF INNER JOIN  Ord_RequestDF ON Ord_RequestDF.CompNo = Ord_RequestHF.CompNo AND Ord_RequestDF.ReqYear = Ord_RequestHF.ReqYear AND Ord_RequestDF.ReqNo = Ord_RequestHF.ReqNo " +
+    "where Ord_RequestHF.CompNo = '{0}' AND bPurchaseOrder = 0 AND bRequestforQuotation = 0 AND Ord_RequestHF.ReqStatus In(1,4)  Group by Ord_RequestHF.ReqYear,Ord_RequestHF.ReqNo Order by Ord_RequestHF.ReqYear,Ord_RequestHF.ReqNo ", company.comp_num)).ToList();
+
+}
+
+<table class="table" id="PurchOrdInfoTable">
+    <thead>
+        <tr>
+            <th>@Html.Recource(3196)</th>
+            <th>@Html.Recource(3197)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="PurchOrdTbody">
+        @foreach (OrdRequestDF P in OrdReqtDF)
+        {
+            <tr onclick="SelectPurchOrdInfo(this)" ondblclick="GetPurchOrdInfoDiv()"  ReqYear="@P.ReqYear" ReqNo="@P.ReqNo">
+                <td>@P.ReqYear</td>
+                <td>@P.ReqNo</td>
+                <td></td>
+            </tr>
+        }
+    </tbody>
+</table>
+<div class="modal-footer">
+    <button type="button" onclick="SelectionPurchOrdInfoDiv()" class="btn btn-primary">@Resources.Resource.Choose</button>
+    <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+</div>
+
+<script>
+    $('#PurchOrdInfoTable').DataTable({
+        "scrollY": TableHeight2(400),
+        "paging": true,
+        "pageLength": 25,
+    });
+
+    function SelectPurchOrdInfo(e) {
+        var table = $('#PurchOrdInfoTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+
+    function GetPurchOrdInfoDiv() {
+        
+        var table = $('#PurchOrdInfoTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+
+        var ReqYear = trs[0].getAttribute('ReqYear');
+        var ReqNo = trs[0].getAttribute('ReqNo');
+
+        AddPurchOrdInDirect(ReqYear, ReqNo);
+    }
+
+    function SelectionPurchOrdInfoDiv() {
+        var table = $('#PurchOrdInfoTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+
+        if (trs.length == 0) {
+            MsgBox('@Resources.Resource.NoPlanWasChosen', 'red');
+            done();
+            return false
+        }
+
+        var ReqYear = trs[0].getAttribute('ReqYear');
+        var ReqNo = trs[0].getAttribute('ReqNo');
+
+        AddPurchOrdInDirect(ReqYear, ReqNo);
+    }
+</script>
+
+
+
+
+
+

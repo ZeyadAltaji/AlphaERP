@@ -1,0 +1,50 @@
+﻿@model IEnumerable<AlphaERP.Models.InvItemsMF>
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    DataTable Dt = new DataTable();
+}
+
+
+@foreach (InvItemsMF item in Model)
+{
+    <tr id="PackDef_ItemNo_@item.ItemNo">
+        <td style="width:75px !important;" id="PackDef_ItemNo" title="@item.ItemNo">@item.ItemNo</td>
+        <td style="width: 152px !important;" title="@item.ItemDesc">@Html.Trim(item.ItemDesc,30)</td>
+        <td>
+            <input id="PackDef_LastPrice" value="0" type="text" style="width:40px !important"  disabled/>
+        </td>
+        <td>
+            <input id="PackDef_Ltr_Kg" type="checkbox" />
+        </td>
+        <td>
+            <input id="PackDef_Capacity" value="0" type="number" style="width:40px !important" />
+        </td>
+        <td>
+            <input id="PackDef_FinCode" type="text"  disabled />
+        </td>
+        <td>
+            <input id="PackDef_FinItemDesc" type="text"  disabled />
+        </td>
+        <td>
+            <button onclick="AddFinCode('#PackDef_ItemNo_@item.ItemNo')" type="button" class="btn btn-primary">
+                @Html.Recource(306)
+            </button>
+        </td>
+        <td>
+            <input id="PackDef_SellPrice" value="0" type="text" style="width:60px !important" disabled />
+        </td>
+        <td>
+            <button type="button" class="btn btn-primary" disabled style="width:100px !important" >
+                @Html.Recource(9585)
+            </button>
+        </td>
+        <td>
+            <button class="btn-de" onclick="RemoveRow(this)" type="button"><i class="fa fa-trash-alt"></i></button>
+        </td>
+    </tr>
+}
+

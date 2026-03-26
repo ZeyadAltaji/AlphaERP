@@ -1,0 +1,14 @@
+﻿
+@model List<AlphaERP.Models.ProdCost_EmpWorkHoursD_WebView>
+
+@foreach (var Emp in Model)
+{
+    <tr>
+        <td></td>
+        <td  id="EmpNo">@Emp.EmpNo</td>
+        <td>@Html.Translate(Emp.EmpName, Emp.EmpName)</td>
+         <td><input type="text" value="@Emp.ActualWorkHours" id="ActualWorkHours" oninput="calculateTotal(this)" /></td>
+
+        <td></td>
+    </tr>
+}

@@ -1,0 +1,59 @@
+﻿<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-10">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-success btn-block" onclick="SerachPriceOffersApproval()">
+                    @Resources.Resource.Search
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" id="MRP_PriceOffersApprovalDiv">
+
+    </div>
+</div>
+
+<div class="modal fade" id="Model_PriceOffersApproval">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="box-body box-profile" id="PriceOffersApprovalDiv">
+
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $('#Model_PriceOffersApproval').draggable({
+        handle: ".modal-header",
+    });
+
+    function SerachPriceOffersApproval() {
+        PriceOffersApprovalDiv.innerHTML = "";
+        MRP_PriceOffersApprovalDiv.innerHTML = "";
+        $('#PriceOffersApprovalDiv').load('../../../PriceOffersApproval/PriceOffersApprovalList');
+        $('#Model_PriceOffersApproval').modal('show');
+    }
+    function SelectionPriceOffersApproval(ReqforQuotyear,ReqforQuotNo) {
+        wait();
+        burn({ ReqforQuotyear: ReqforQuotyear, ReqforQuotNo: ReqforQuotNo }, '../../../PriceOffersApproval/ChoosePriceOffersApproval', '', LoadChoosePriceOffersApproval, true);
+    }
+    function LoadChoosePriceOffersApproval(r) {
+        MRP_PriceOffersApprovalDiv.innerHTML = "";
+        $('#MRP_PriceOffersApprovalDiv').html(r);
+        $('#Model_PriceOffersApproval').modal('hide');
+        done();
+    }
+</script>

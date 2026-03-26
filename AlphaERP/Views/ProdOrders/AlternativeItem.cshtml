@@ -1,0 +1,14 @@
+﻿@model IEnumerable<AlphaERP.Controllers.ProdOrdersController.ItemProduct>
+
+
+
+@foreach (var item in Model)
+{
+    <tr onclick="$(this).toggleClass('selected');">
+        <td style="text-align: center;" id="Alternative_ItemNo">@item.item_no</td>
+        <td style="text-align: center;" id="Alternative_ItemDesc">@item.ItemDesc</td>
+        <td style="text-align: center;" id="Alternative_IUnit">@item.IUnit</td>
+        <td style="text-align: center;" id="Alternative_Qty" title="@item.AvlQty.ToString("0.000")">@item.AvlQty.ToString("0.000")</td>
+        <td></td>
+    </tr>
+}

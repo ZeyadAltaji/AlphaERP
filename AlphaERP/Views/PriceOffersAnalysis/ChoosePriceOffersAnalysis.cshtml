@@ -1,0 +1,158 @@
+﻿@model IEnumerable<AlphaERP.Models.MRP_Web_OrdCopyInfo>
+@using System.Data.SqlClient;
+@using AlphaERP.Models
+
+@{
+    int ReqforQuotyear = ViewBag.ReqforQuotyear;
+    int ReqforQuotNo = ViewBag.ReqforQuotNo;
+    Company company = (Company)Session["company"];
+    List<BusunisUnit> Venders = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("select VendorNo as VenderId ,name as DescAr,Eng_Name as DescEn from Vendors where (comp = '{0}') AND (IsHalt = 0)", company.comp_num)).ToList();
+    List<InvItemsMF> Mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+    List<InvUnitCode> UnitC = new MDB().InvUnitCodes.Where(x => x.CompNo == company.comp_num).ToList();
+    int Srial = 1;
+    MRP_Web_OrdCopyInfo OrdCopyInfo = new MDB().MRP_Web_OrdCopyInfo.Where(x => x.CompNo == company.comp_num && x.ReqforQuotyear == ReqforQuotyear && x.ReqforQuotNo == ReqforQuotNo).FirstOrDefault();
+}
+
+<style>
+    #MRP_PriceOffersAnalysis_Div table th, #MRP_PriceOffersAnalysis_Div table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+    .wrapperx {
+        padding:0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+
+    .sticky-col {
+        z-index:2;
+        position: sticky;
+        position: -webkit-sticky;
+        background-color: white;
+    }
+
+    .first-col {
+        width: 100px;
+        min-width: 100px;
+        max-width: 100px;
+        @Html.Translate("right: 0px;", "left: 0px;")
+    }
+
+    .second-col {
+        width: 150px;
+        min-width: 150px;
+        max-width: 150px;
+     @Html.Translate("right: 100px;", "left: 100px;")
+    }
+
+    .third-col {
+        width: 40px;
+        min-width: 40px;
+        max-width: 40px;
+        @Html.Translate("right: 250px;", "left: 250px;")
+    }
+    .stickytooltip {
+        max-height: 80vh !important;
+        overflow: auto !important;
+    }
+    
+</style>
+<style>
+    .modal-body {
+        max-height: 78vh !important;
+    }
+</style>
+<div class="box box-primary">
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(92vh - 185px) !important; ">
+            <div class="form-group" id="DataBestOfferDiv" style="display:block;height:calc(92vh - 260px) !important;">
+            </div>
+            <div class="form-group">
+                <div class="col-md-2">
+                    <label class="unselectable" for="MRP_PriceOffersAnalysis_BestOfferByQuantity">
+                        <input id="MRP_PriceOffersAnalysis_BestOfferByQuantity" type="radio" name="MRP_PriceOffersAnalysisRadio" onchange="GetDataBestOffer()" checked>
+                        @Resources.Resource.BestOfferByQuantity
+                    </label>
+                </div>
+                <div class="col-md-2">
+                    <label class="unselectable" for="MRP_PriceOffersAnalysis_BestOfferByPrice">
+                        <input name="MRP_PriceOffersAnalysisRadio" type="radio" id="MRP_PriceOffersAnalysis_BestOfferByPrice" onchange="GetDataBestOffer()" />
+                        @Resources.Resource.BestOfferByPrice
+                    </label>
+                </div>
+                <div class="col-md-2" style="left: 20px;">
+                    <label class="unselectable" for="MRP_PriceOffersAnalysis_BestOfferByDeliveryDate">
+                        <input name="MRP_PriceOffersAnalysisRadio" type="radio" id="MRP_PriceOffersAnalysis_BestOfferByDeliveryDate" onchange="GetDataBestOffer()" />
+                        @Resources.Resource.BestOfferByDeliveryDate
+                    </label>
+                </div>
+                <div class="col-md-3"></div>
+                <div class="col-md-3">
+
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <button class="btn btn-primary btn-block" onclick="NominationBestOffer()">
+                            @Resources.Resource.Save
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    GetDataBestOffer()
+    function GetDataBestOffer() {
+        var BestOffer = 0;
+        if (MRP_PriceOffersAnalysis_BestOfferByQuantity.checked == true) {
+            BestOffer = 1;
+        }
+        if (MRP_PriceOffersAnalysis_BestOfferByPrice.checked == true) {
+            BestOffer = 2;
+        }
+        if (MRP_PriceOffersAnalysis_BestOfferByDeliveryDate.checked == true) {
+            BestOffer = 3;
+        }
+        
+        burn({ ReqforQuotyear: @ReqforQuotyear,ReqforQuotNo: @ReqforQuotNo, BestOffer: BestOffer }, '../../../PriceOffersAnalysis/DataBestOffer', '', ReloadtDataBestOffer, true);
+    }
+    function ReloadtDataBestOffer(r) {
+        DataBestOfferDiv.innerHTML = "";
+        $('#DataBestOfferDiv').html(r);
+    }
+
+    function NominationBestOffer() {
+        var table = $('.MRP_DataBestOffer #DataBestOfferTBody tr');
+        var trs = table;
+
+        var VendorNo = "";
+
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i]).closest('tr').find('#MRP_PriceOffersAnalysis_Approval')[0].checked == true) {
+                var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value
+                var vendor = $(trs[i]).closest('tr').find('#EnterVendorOffer_vendor_' + InputSerial)[0].getAttribute('vendor');
+                if (VendorNo != "") {
+                    continue;
+                }
+                VendorNo = $(trs[i]).closest('tr').find('#PriceOffersAnalysis_VendorNo_' + vendor)[0].value;
+            }
+        }
+
+        wait();
+        burn({ ReqforQuotyear: @ReqforQuotyear , ReqforQuotNo: @ReqforQuotNo, VendorNo: VendorNo }, '../../../PriceOffersAnalysis/NominationBestOffer', '', ReloadNominationBestOffer, true);
+
+    }
+    function ReloadNominationBestOffer() {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        PriceOffersAnalysisDiv.innerHTML = "";
+        MRP_PriceOffersAnalysisDiv.innerHTML = "";
+    }
+</script>

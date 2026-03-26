@@ -1,0 +1,2834 @@
+@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    int OrdYear = ViewBag.OrdYear;
+    int OrdNo = ViewBag.OrdNo;
+    string TawreedNo = ViewBag.TawreedNo;
+    double QtyOH = 0;
+
+    OrderHF ordHf = new MDB().OrderHFs.Where(x => x.CompNo == company.comp_num && x.OrdYear == OrdYear && x.OrderNo == OrdNo && x.TawreedNo == TawreedNo).FirstOrDefault();
+    List<OrderDF> OrdDFs = new MDB().OrderDFs.Where(x => x.CompNo == company.comp_num && x.OrdYear == OrdYear && x.OrderNo == OrdNo && x.TawreedNo == TawreedNo).ToList();
+
+    List<int> Deptid = new List<int>();
+    List<GLN_UsersDept> UsersDept = new MDB().GLN_UsersDept.Where(x => x.CompNo == company.comp_num && x.UserID == me.UserID && x.Permission == true).ToList();
+    Deptid = UsersDept.Select(o => o.DeptID).ToList();
+    List<GLDEPMF> GLDEPMF = new MDB().GLDEPMFs.Where(x => x.DEP_COMP == company.comp_num && Deptid.Contains(x.DEP_NUM)).ToList();
+
+    GLDEPMF GLDEPMFs = new MDB().GLDEPMFs.Where(x => x.DEP_COMP == company.comp_num && x.DEP_NUM == ordHf.Vend_Dept).FirstOrDefault();
+    Vendor Vend = new MDB().Vendors.Where(x => x.comp == company.comp_num && x.VendorNo == ordHf.VendorNo).FirstOrDefault();
+    List<InvItemsMF> MF = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+    List<PayCodes> Currency = new MDB().Database.SqlQuery<PayCodes>("select CurrType as Id ,CurrName as DescAr,isnull(CurrNameE,'No Desc.') as DescEn from CurrType").ToList();
+    List<PayCodes> ShipMethod = new MDB().Database.SqlQuery<PayCodes>(string.Format("select sys_minor as sys_minor ,sys_adesc as DescAr,isnull(sys_edesc,'No Desc.') as DescEn from SysCodes where (CompNo = '{0}') and sys_major='0f'", company.comp_num)).ToList();
+    List<PayCodes> Source = new MDB().Database.SqlQuery<PayCodes>(string.Format("select sys_minor as sys_minor ,sys_adesc as DescAr,isnull(sys_edesc,'No Desc.') as DescEn from SysCodes where (CompNo = '{0}') and sys_major='91k'", company.comp_num)).ToList();
+    List<BusunisUnit> PaymentM = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("select MCode as Id ,[Desc] as DescAr,isnull([EngDesc],'No Desc.') as DescEn from PayMethods where (Comp = '{0}')", company.comp_num)).ToList();
+    List<PayCodes> DlivPlace = new MDB().Database.SqlQuery<PayCodes>(string.Format("select PlaceCode as Id ,Place as DescAr from OrdDlivPlace where (CompNo = '{0}')", company.comp_num)).ToList();
+    OrdPreOrderHF PreOrderHF = new MDB().OrdPreOrderHFs.Where(x => x.CompNo == company.comp_num && x.Year == OrdYear && x.OrderNo == OrdNo).FirstOrDefault();
+    BusunisUnit BU = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("SELECT Alpha_BusinessUnitDef.BusUnitID as Id,BusUnitDescAr as DescAr,BusUnitDescEng as DescEn  " +
+"from Alpha_BusinessUnitDef  " +
+"where Alpha_BusinessUnitDef.CompNo = '{0}' AND Alpha_BusinessUnitDef.BusUnitID = '{1}' ", company.comp_num, PreOrderHF.BusUnitID)).FirstOrDefault();
+    int Srial = 1;
+    DataTable Dt = new DataTable();
+    DataTable DtAttach = new DataTable();
+    DataTable DtAttachment = new DataTable();
+    DataTable DtConds = new DataTable();
+    DataTable DtUnits = new DataTable();
+    var Count = 1;
+    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+    {
+        DtAttach = new DataTable();
+        cn.Open();
+        using (SqlCommand cmd = new SqlCommand())
+        {
+            cmd.Connection = cn;
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+            cmd.CommandText = "Ord_GetAttach";
+            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+            cmd.Parameters.Add(new SqlParameter("@TawreedNo", SqlDbType.VarChar)).Value = TawreedNo;
+            cmd.Parameters.Add(new SqlParameter("@OrderNo", SqlDbType.BigInt)).Value = OrdNo;
+            cmd.Parameters.Add(new SqlParameter("@OrdYear", SqlDbType.SmallInt)).Value = OrdYear;
+            cmd.Parameters.Add(new SqlParameter("@RptLang", SqlDbType.Int)).Value = 1;
+            cmd.Parameters.Add(new SqlParameter("@FrmStat", SqlDbType.SmallInt)).Value = 2;
+            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+            {
+                DA.Fill(DtAttach);
+            }
+        }
+    }
+
+    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+    {
+        DtAttachment = new DataTable();
+        cn.Open();
+        using (SqlCommand cmd = new SqlCommand())
+        {
+            cmd.Connection = cn;
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+            cmd.CommandText = "Ord_GetAttachmentFiles";
+            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+            cmd.Parameters.Add(new SqlParameter("@TawreedNo", SqlDbType.VarChar)).Value = TawreedNo;
+            cmd.Parameters.Add(new SqlParameter("@OrderNo", SqlDbType.BigInt)).Value = OrdNo;
+            cmd.Parameters.Add(new SqlParameter("@OrdYear", SqlDbType.SmallInt)).Value = OrdYear;
+            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+            {
+                DA.Fill(DtAttachment);
+            }
+        }
+    }
+    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+    {
+        DtConds = new DataTable();
+        cn.Open();
+        using (SqlCommand cmd = new SqlCommand())
+        {
+            cmd.Connection = cn;
+            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+            cmd.CommandText = "Ord_Web_GetCondsGuaranties";
+            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+            cmd.Parameters.Add(new SqlParameter("@OrdYear", SqlDbType.SmallInt)).Value = OrdYear;
+            cmd.Parameters.Add(new SqlParameter("@OrderNo", SqlDbType.BigInt)).Value = OrdNo;
+            cmd.Parameters.Add(new SqlParameter("@TwareedNo", SqlDbType.VarChar)).Value = TawreedNo;
+            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+            {
+                DA.Fill(DtConds);
+            }
+        }
+    }
+    List<PayCodes> PaymentConditions = new MDB().Database.SqlQuery<PayCodes>(string.Format("select sys_minor as sys_minor ,sys_adesc as DescAr,isnull(sys_edesc,'No Desc.') as DescEn from SysCodes where (CompNo = '{0}') and sys_major='91u'", company.comp_num)).ToList();
+    List<PayCodes> Guaranty = new MDB().Database.SqlQuery<PayCodes>(string.Format("select sys_minor as sys_minor ,sys_adesc as DescAr,isnull(sys_edesc,'No Desc.') as DescEn from SysCodes where (CompNo = '{0}') and sys_major='91v'", company.comp_num)).ToList();
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+
+}
+
+<style>
+    #Ord_ePOItemTable span.badge {
+        border: none;
+        position: static;
+        z-index: 20 !important;
+        box-sizing: content-box;
+        visibility: visible;
+        z-index: 9999999999 !important;
+        padding: 1px;
+        font-family: Arial, verdana, tahoma;
+        font-size: 13px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        text-shadow: 1px 1px 1px rgba(0,0,0,.3);
+        background: #ff3019;
+        background: -webkit-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Chrome10+,Safari5.1+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff3019), color-stop(100%, #cf0404)); /* Chrome,Safari4+ */
+        background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* FF3.6+ */
+        background: -ms-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* IE10+ */
+        background: -o-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Opera 11.10+ */
+        background: linear-gradient(to bottom, #ff3019 0%, #cf0404 100%); /* W3C */
+        width: 18px;
+        height: 18px;
+        line-height: 20px;
+        border-radius: 50%;
+        filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff3019', endColorstr='#cf0404', GradientType=0)"; /* IE6-9 */
+        filter: "progid:DXImageTransform.Microsoft.Shadow(direction=135, strength=2, color=ff0000)"; /* IE10 text shadows */
+        box-shadow: 0 2px 5px rgba(0,0,0,.4);
+    }
+</style>
+
+<style>
+    #Ord_ePOItem_DIV table th, #Ord_ePOItem_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+
+    .wrapperx {
+        padding: 0;
+        position: relative;
+        white-space: nowrap;
+    }
+
+    .wrapperxOld {
+        padding: 0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+</style>
+
+<style>
+    .modal-body{
+            max-height: 78vh !important;
+    }
+    .modal-title {
+        width: calc(100% - 120px) !important;
+        text-align: center;
+        position: absolute;
+        font-weight: bold;
+    }
+
+    .form-group {
+        margin-bottom: 1px !important;
+    }
+
+    .col-md-12 {
+        margin-bottom: 3px !important;
+    }
+
+    hr {
+        margin-top: 3px !important;
+        margin-bottom: 5px !important;
+    }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(130vh - 210px) !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1">
+                        <label class="unselectable" for="Ord_ePurchaseOrder_OrdYear_@TawreedNo">@Html.Recource(3196) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:80px !important;" type="text" id="Ord_ePurchaseOrder_OrdYear_@TawreedNo" value="@ordHf.OrdYear" disabled />
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="Ord_ePurchaseOrder_OrdNo_@TawreedNo">@Html.Recource(3197) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:90px !important;" type="text" id="Ord_ePurchaseOrder_OrdNo_@TawreedNo" value="@ordHf.OrderNo" disabled />
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="Ord_ePurchaseOrder_TawreedNo_@TawreedNo">@Html.Recource(3797) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:90px !important;" type="text" id="Ord_ePurchaseOrder_TawreedNo_@TawreedNo" value="@ordHf.TawreedNo" disabled />
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_ePurchaseOrder_CboSupplySource">@Html.Recource(3798)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:80%" id="Ord_ePurchaseOrder_CboSupplySource_@TawreedNo" onchange="ChangeSupplySource('@TawreedNo')">
+                            @foreach (var v in Source)
+                            {
+                                if (ordHf.SourceType.ToString() == v.sys_minor)
+                                {
+                                    <option value="@v.sys_minor" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                                else
+                                {
+                                    <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_ePurchaseOrder_DeptNo_@TawreedNo">@Html.Recource(220)</label>
+                    </div>
+                    <div class="col-md-5" style="margin-bottom: 5px;">
+                        <input hidden id="Ord_ePurchaseOrder_OldDeptNo_@TawreedNo" value="@ordHf.Vend_Dept" />
+                        <input required="true" style="width: 125px !important;" type="text" id="Ord_ePurchaseOrder_DeptNo_@TawreedNo" value="@ordHf.Vend_Dept" onblur="GetDeptName(this.value,'@TawreedNo')" />
+                        <input required="false" style="width: 225px !important;" type="text" id="Ord_ePurchaseOrder_DeptName_@TawreedNo" value="@Html.Translate(GLDEPMFs.DEP_NAME,GLDEPMFs.DEP_ENAME)" disabled />
+                        <button onclick="Serach_eDept('@TawreedNo')" type="button" class="btn btn-primary">
+                            <i class="fa fa-search" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_ePurchaseOrder_TermsOfShipment_@TawreedNo">@Html.Recource(3800)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important;" type="text" id="Ord_ePurchaseOrder_TermsOfShipment_@TawreedNo" value="@ordHf.ShipTerms" />
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_ePurchaseOrder_DestinationPort_@TawreedNo">@Html.Recource(3830)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 185px !important;" type="text" id="Ord_ePurchaseOrder_DestinationPort_@TawreedNo" value="@ordHf.Port" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_ePurchaseOrder_VendorNo_@TawreedNo">@Html.Recource(3087)</label>
+                    </div>
+                    <div class="col-md-5" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 125px !important;" type="text" id="Ord_ePurchaseOrder_VendorNo_@TawreedNo" value="@ordHf.VendorNo" onblur="GetVendorName(this.value,'@TawreedNo')" />
+                        <input required="false" style="width: 225px !important;" type="text" id="Ord_ePurchaseOrder_VendorName_@TawreedNo" value="@Html.Translate(Vend.Name,Vend.Eng_Name)" disabled />
+                        <button onclick="Serach_eVendor('@TawreedNo')" type="button" class="btn btn-primary">
+                            <i class="fa fa-search" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_ePurchaseOrder_ConfDate_@TawreedNo">@Html.Recource(3205)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important;" type="date" id="Ord_ePurchaseOrder_ConfDate_@TawreedNo" value="@ordHf.ConfDate.Value.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_ePurchaseOrder_ETDate_@TawreedNo">@Html.Recource(3832)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 185px !important;" type="date" id="Ord_ePurchaseOrder_ETDate_@TawreedNo" value="@ordHf.ExpShDate.Value.ToString("yyyy-MM-dd")" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_ePurchaseOrder_VendorAddressc_@TawreedNo">@Html.Recource(3204) </label>
+                    </div>
+                    <div class="col-md-5" style="margin-bottom: 5px;">
+                        <input style="width:88%" type="text" id="Ord_ePurchaseOrder_VendorAddress_@TawreedNo" value="@Vend.Address" disabled />
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_ePurchaseOrder_ETADate_@TawreedNo">@Html.Recource(3833)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important;" type="date" id="Ord_ePurchaseOrder_ETADate_@TawreedNo" value="@ordHf.ETA.Value.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_ePurchaseOrder_QutationRef_@TawreedNo">@Html.Recource(3209)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 185px !important;" type="text" id="Ord_ePurchaseOrder_QutationRef_@TawreedNo" value="@ordHf.QutationRef" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(1671) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="Ord_ePurchaseOrder_CboCurrCode_@TawreedNo">
+                            @foreach (var v in Currency)
+                            {
+                                if (ordHf.CurType == v.Id)
+                                {
+                                    <option value="@v.Id" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                                else
+                                {
+                                    <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3206) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:85%" id="Ord_ePurchaseOrder_CboShipMethod_@TawreedNo">
+                            @foreach (var s in ShipMethod)
+                            {
+                                if (ordHf.ShipWay.ToString() == s.sys_minor)
+                                {
+                                    <option value="@s.sys_minor" selected>@Html.Translate(s.DescAr, s.DescEn)</option>
+                                }
+                                else
+                                {
+                                    <option value="@s.sys_minor">@Html.Translate(s.DescAr, s.DescEn)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(3207) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:85%" id="Ord_ePurchaseOrder_CboDeliveryPlace_@TawreedNo">
+                            @foreach (var s in DlivPlace)
+                            {
+                                if (ordHf.DlvryPlace == s.Id.ToString())
+                                {
+                                    <option value="@s.Id" selected>@s.DescAr</option>
+                                }
+                                else
+                                {
+                                    <option value="@s.Id">@s.DescAr</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(1874) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:87%" id="Ord_ePurchaseOrder_CboPaymentType_@TawreedNo">
+                            @foreach (var v in PaymentM)
+                            {
+                                if (ordHf.PayWay == v.Id)
+                                {
+                                    <option value="@v.Id" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                                else
+                                {
+                                    <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(5667) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="Ord_ePurchaseOrder_CboBU_@TawreedNo">
+                            @Html.MyBusinessUnits()
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="Ord_ePurchaseOrder_ContactPerson_@TawreedNo">@Html.Recource(1166) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important;" type="text" id="Ord_ePurchaseOrder_ContactPerson_@TawreedNo" value="@ordHf.PInCharge" />
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="Ord_ePurchaseOrder_DeliveryDays_@TawreedNo">@Html.Recource(3208) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important;" type="text" id="Ord_ePurchaseOrder_DeliveryDays_@TawreedNo" value="@ordHf.DlvDays" />
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="Ord_ePurchaseOrder_MaintPeriod_@TawreedNo">@Html.Recource(3210) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 185px !important;" type="text" id="Ord_ePurchaseOrder_MaintPeriod_@TawreedNo" value="@ordHf.MainPeriod" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-1">
+                        <button class="btn btn-primary btn-block" onclick="EditPONotes('@TawreedNo')">
+                            @Html.Recource(70)
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary btn-block" onclick="EditPODocuments('@TawreedNo')">
+                            @Html.Recource(7744)
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary btn-block" onclick="EditPOAttachments('@TawreedNo')">
+                            @Html.Recource(7743)
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary btn-block" onclick="EditPOConditionsAndGuaranties('@TawreedNo')">
+                            @Html.Recource(3161)
+                        </button>
+                    </div>
+                    <div class="col-md-1" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(96) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px; display: flex; gap: 5px;">
+                        <input style="width:77%" type="text" id="Ord_ePurchaseOrder_RefNo_@TawreedNo" value="@ordHf.RefNo" readonly="readonly" />
+                        <button type="button" class="btn btn-default btn-sm" onclick="ShowRevisions(this, '')">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-1">
+                        <label class="unselectable" for="Ord_ePurchaseOrder_IsLC_@TawreedNo">
+                            @if (ordHf.SourceType == 2)
+                            {
+                                <input name="Ord_ePurchaseOrder_IsLC_@TawreedNo" type="checkbox" id="Ord_ePurchaseOrder_IsLC_@TawreedNo" checked="@ordHf.IsLC" disabled />
+                            }
+                            else
+                            {
+                                <input name="Ord_ePurchaseOrder_IsLC_@TawreedNo" type="checkbox" id="Ord_ePurchaseOrder_IsLC_@TawreedNo" checked="@ordHf.IsLC" />
+                            }
+                            @Html.Recource(7136)
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group">
+                <div class="col-md-12">
+                    <label class="unselectable">@Html.Recource(4756) :</label>
+                    <button onclick="Edit_InvItemsMF(1,'@TawreedNo')" type="button" class="btn btn-default">@Html.Recource(4756)</button>
+                </div>
+            </div>
+            <div class="form-group" style="display: block; height:calc(100vh - 604px) !important;overflow-x: scroll;">
+                <div class="col-md-12 wrapperx" id="Ord_ePOItem_DIV">
+                    <table class="table table-hover Ord_ePOItem" id="Ord_ePOItemItemTable">
+                        <thead>
+                            <tr>
+                                <th class="first-col">@Html.Recource(4216)</thclass="headcol">
+                                <th class="second-col">@Html.Recource(44)</th>
+                                <th class="third-col">@Html.Recource(74)</th>
+                                <th class="four-col">@Html.Recource(67)</th>
+                                <th class="four-col">@Html.Recource(3773)</th>
+                                @if (CActive.ClientNo == 335)
+                                {
+                                    <th>@Html.Recource(5693)</th>
+                                }
+                                else
+                                {
+                                    <th>@Html.Recource(49)</th>
+                                }
+                                @if (compMF.UseQty2 == true)
+                                {
+                                    if (CActive.ClientNo == 335)
+                                    {
+                                        <th>@Html.Recource(442)</th>
+                                    }
+                                    else
+                                    {
+                                        <th>@Html.Recource(72)</th>
+                                    }
+                                }
+                                else
+                                {
+                                    <th hidden>@Html.Recource(72)</th>
+                                }
+                                <th>@Html.Recource(3200)</th>
+                                <th>@Html.Recource(213)</th>
+                                <th>@Html.Recource(215)</th>
+                                <th>@Html.Recource(9100)</th>
+                                <th>@Html.Recource(96)</th>
+                                <th>@Html.Recource(68)</th>
+                                <th style="text-align: center !important;">@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody style="text-align: center;" id="ePOItemTBody_@TawreedNo">
+                            @foreach (OrderDF OrdDF in OrdDFs)
+                            {
+                                {
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        Dt = new DataTable();
+                                        cn.Open();
+                                        using (SqlCommand cmd = new SqlCommand())
+                                        {
+                                            cmd.Connection = cn;
+                                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                            cmd.CommandText = "Ord_GetItemUnitCost";
+                                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                            cmd.Parameters.Add(new SqlParameter("@ItemNo", System.Data.SqlDbType.VarChar, 20)).Value = OrdDF.ItemNo;
+                                            cmd.Parameters.Add(new SqlParameter("@UnitSerial", System.Data.SqlDbType.SmallInt, 4)).Value = OrdDF.UnitSerial;
+                                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                            {
+                                                DA.Fill(Dt);
+                                            }
+                                        }
+                                    }
+                                    foreach (DataRow row in Dt.Rows)
+                                    {
+                                        QtyOH = Convert.ToDouble(row["AvlQty"]);
+                                    }
+                                }
+                                InvItemsMF M =  new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == OrdDF.ItemNo).FirstOrDefault();
+
+                                 <tr style="height: 25px;" itemNo="@OrdDF.ItemNo" id="ePODF_Serial_@Srial">
+                                    <td class="first-col" style="text-align: center !important" id="ePODF_ItemSr">@OrdDF.ItemSr</td>
+                                    <td class="second-col" style="text-align: center !important; word-wrap: break-word; white-space: normal; " id="ePODF_ItemNo">@OrdDF.ItemNo</td>
+                                     <td class="third-col" style="text-align: center !important; word-wrap: break-word; white-space: normal;" id="ePODF_ItemDesc">@Html.Translate(M.ItemDesc,M.ItemDesc)</td>
+                                    <td class="four-col" style="text-align: center !important">
+                                        <select class="ePODF_Item_Unit" onchange="eGetchangeCost('@OrdDF.ItemNo',this.value,@Srial,'@TawreedNo')">
+                                            @{
+                                                using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                                {
+                                                    DtUnits = new DataTable();
+                                                    cn.Open();
+                                                    using (SqlCommand cmd = new SqlCommand())
+                                                    {
+                                                        cmd.Connection = cn;
+                                                        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                                                        cmd.CommandText = "InvT_LoadItemUnits";
+                                                        cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                                                        cmd.Parameters.Add(new SqlParameter("@ItemCode", System.Data.SqlDbType.VarChar, 20)).Value = OrdDF.ItemNo;
+                                                        using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                                                        {
+                                                            DA.Fill(DtUnits);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            @foreach (DataRow row in DtUnits.Rows)
+                                            {
+                                                if (OrdDF.UnitSerial.ToString() == row["UnitSerial"].ToString())
+                                                {
+                                                    <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()" selected>
+                                                        @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                    </option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@row["UnitSerial"].ToString()" unitCode="@row["UnitCode"].ToString()">
+                                                        @Html.Translate(row["UnitName"].ToString(), row["UnitNameEng"].ToString())
+                                                    </option>
+                                                }
+                                            }
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input id="ePODF_QtyOH_@Srial" value="@QtyOH.ToString("0.000")" type="number" style="width:75px !important" disabled />
+                                    </td>
+                                    <td>
+                                        <input id="ePODF_Qty_@Srial" value="@OrdDF.Qty.Value.ToString("0.000")" type="number" style="width:75px !important" onblur="CheckValueQty(@Srial,'@TawreedNo')" />
+                                    </td>
+                                    @if (compMF.UseQty2 == true)
+                                    {
+                                        <td>
+                                            <input id="ePODF_Qty2_@Srial" value="@OrdDF.Qty2.Value.ToString("0.000")" type="number" style="width:75px !important" onblur="CheckValueQty2(@Srial,'@TawreedNo')" />
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td hidden>
+                                            <input id="ePODF_Qty2_@Srial" value="@OrdDF.Qty2.Value.ToString("0.000")" type="number" style="width:75px !important" onblur="CheckValueQty2(@Srial,'@TawreedNo')" />
+                                        </td>
+                                    }
+                                    <td>
+                                        <input id="ePODF_Bonus_@Srial" value="@OrdDF.Bonus" type="number" style="width:75px !important" onblur="CheckValueBouns(@Srial,'@TawreedNo')" />
+                                    </td>
+                                    <td>
+                                        <input id="ePODF_DiscPer_@Srial" value="@OrdDF.PerDiscount" type="number" style="width:75px !important" onblur="CheckValuePerDiscount(@Srial,'@TawreedNo')" />
+                                    </td>
+                                    <td>
+                                        <input id="ePODF_OldPrice_@Srial" value="@OrdDF.Price" type="number" style="width:75px !important" hidden />
+                                        <input id="ePODF_Price_@Srial" value="@OrdDF.Price" type="number" style="width:75px !important" onblur="CheckValuePrice(@Srial,'@TawreedNo')" />
+                                    </td>
+                                    <td>
+                                        <input id="ePODF_STax_Perc_@Srial" value="@OrdDF.ItemTaxPer" type="number" style="width:75px !important" onblur="CheckValueSTaxPerc(@Srial,'@TawreedNo')" />
+                                    </td>
+                                                            <td style="display: flex; gap: 2px; align-items: center;">
+                                         <input id="ePODF_RefNo_@Srial" value="@OrdDF.RefNo" type="text" style="width:75px !important" readonly="readonly" />
+                                         <button type="button" class="btn btn-default btn-xs" onclick="ShowRevisions(this, '@OrdDF.ItemNo')">
+                                             <i class="fa fa-search"></i>
+                                         </button>
+                                     </td>
+                                    <td style="width: 8%;" id="ePODF_Total_@Srial">@OrdDF.ordamt</td>
+                                    <td style="text-align: center;">
+                                        @if (OrdDF.ReqDeliveryDate != null)
+                                        {
+                                            <input type="date" required="true" style="width: 115px !important;" id="ePODF_RequestedDeliveryDate_@Srial" value="@OrdDF.ReqDeliveryDate.Value.ToString("yyyy-MM-dd")" />
+                                        }
+                                        else
+                                        {
+                                            <input type="date" required="true" style="width: 115px !important;" id="ePODF_RequestedDeliveryDate_@Srial" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                                        }
+                                    </td>
+                                    <td style="width: 45%;text-align: center;">
+                                        <button onclick="ePOItemNote(@Srial,'@TawreedNo')" type="button" class="btn btn-primary">@Html.Recource(3799)</button>
+                                        <input type="text" id="ePODF_ItemNote_@Srial" value="@OrdDF.Note" style="display:none;" />
+                                    </td>
+                                    <td>
+                                        <button onclick="ePODetailedNotes(@Srial,'@TawreedNo')" type="button" class="btn btn-primary">@Html.Translate("الملاحظات التفصيلية", "Detailed Notes")</button>
+                                        <input type="text" id="ePODF_DetailedNotes_@Srial" value="@OrdDF.NoteDtl" style="display:none;" />
+                                    </td>
+                                    <td>
+                                        <button class="btn-de" onclick="RemoveRow(this)"><i class="fa fa-trash-alt"></i></button>
+                                        <input type="hidden" id="eInputSerial" value="@(Srial++)" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_ePO_DisPersTotal_@TawreedNo">@Html.Recource(221) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="number" id="Ord_ePO_DisPersTotal_@TawreedNo" value="@ordHf.PerDiscount" onblur="sumPersTotal(0)" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_ePO_DisTotal_@TawreedNo">@Html.Recource(222) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="number" id="Ord_ePO_DisTotal_@TawreedNo" value="@ordHf.VouDiscount" onblur="sumPersTotal(1)" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_ePO_FreightCost_@TawreedNo">@Html.Recource(7637) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="number" id="Ord_ePO_FreightCost_@TawreedNo" value="@ordHf.FreightExpense" onblur="sumTotalAll()" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_ePO_Amount_@TawreedNo">@Html.Recource(972) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="text" id="Ord_ePO_Amount_@TawreedNo" value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_ePO_Discount_@TawreedNo">@Html.Recource(213) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="number" id="Ord_ePO_Discount_@TawreedNo" value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_ePO_ExtraExp_@TawreedNo">@Html.Recource(9588) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="number" id="Ord_ePO_ExtraExp_@TawreedNo" value="@ordHf.ExtraExpenses" onblur="sumTotalAll()" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_ePO_TaxAmount_@TawreedNo">@Html.Recource(3211) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="text" id="Ord_ePO_TaxAmount_@TawreedNo" value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_ePO_TotalQty_@TawreedNo">@Html.Recource(4706) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="text" id="Ord_ePO_TotalQty_@TawreedNo" value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_ePO_NetAmount_@TawreedNo">@Html.Recource(3212) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="text" id="Ord_ePO_NetAmount_@TawreedNo" value="0" disabled />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="ExcuteEdit_PurchOrd('@TawreedNo')" class="btn btn-primary">@Resources.Resource.Save</button>
+        </div>
+    </div>
+</div>
+
+@*----------------------Dept-----------------------*@
+<div class="modal fade" id="Model_eOrdPO_GLDEPMFs_@TawreedNo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(1867)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="Select_eOrd_GLDEPMFsTable_@TawreedNo">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(110)</th>
+                                    <th style="width: 55%;">@Html.Recource(109)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    foreach (var item in GLDEPMF)
+                                    {
+                                        <tr onclick="Select_efinGLDEPMFs(this)" ondblclick="Select_eGLDEPMFs(this)" DEP_NUM="@item.DEP_NUM" DepDesc="@Html.Translate(item.DEP_NAME, item.DEP_ENAME).ToString()">
+                                            <td style="width: 20%;" id="ePurchOrder_DEPNUM">@item.DEP_NUM</td>
+                                            <td style="width: 55%;" id="ePurchOrder_DEPNAME">@Html.Translate(item.DEP_NAME, item.DEP_ENAME).ToString()</td>
+                                            <td></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selecting_eOrdPO_GLDEPMFs('@TawreedNo')" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var Serial = 0;
+    var deptId = 0;
+    var GLDEPMFs = $('#Select_eOrd_GLDEPMFsTable_' + @TawreedNo).DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    function Serach_eDept(Id) {
+        Serial = Id;
+        var table = $("#Select_eOrd_GLDEPMFsTable_" + Id);
+        table.find('tr').removeClass("selected");
+
+        $('#Model_eOrdPO_GLDEPMFs_' + Id).draggable({
+            handle: ".modal-header",
+        });
+
+        $('#Model_eOrdPO_GLDEPMFs_' + Id).modal('show');
+    }
+    function Select_efinGLDEPMFs(e) {
+        var table = $('#Select_eOrd_GLDEPMFsTable_' + Serial);
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Select_eGLDEPMFs(e) {
+        $('#Ord_ePurchaseOrder_DeptNo_' + Serial).val(e.getAttribute('DEP_NUM'));
+        $('#Ord_ePurchaseOrder_DeptName_' + Serial).val(e.getAttribute('DepDesc'));
+
+        $('#Ord_ePurchaseOrder_OldDeptNo_' + Serial).val(e.getAttribute('DEP_NUM'));
+
+        $('#Ord_ePurchaseOrder_VendorNo_' + Serial).val(null)
+        $('#Ord_ePurchaseOrder_VendorName_' + Serial).val(null)
+        $('#Ord_ePurchaseOrder_VendorAddress_' + Serial).val(null);
+
+        $('#Model_eOrdPO_GLDEPMFs_' + Serial).modal('hide');
+    }
+    function Selecting_eOrdPO_GLDEPMFs() {
+        var table = $('#Select_eOrd_GLDEPMFsTable_' + Serial);
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار دائرة", "Select one Dept")');
+            return;
+        }
+
+        $('#Ord_ePurchaseOrder_DeptNo_' + Serial).val(trs[0].getAttribute('DEP_NUM'));
+        $('#Ord_ePurchaseOrder_DeptName_' + Serial).val(trs[0].getAttribute('DepDesc'));
+
+        $('#Ord_ePurchaseOrder_OldDeptNo_' + Serial).val(trs[0].getAttribute('DEP_NUM'));
+        $('#Ord_ePurchaseOrder_VendorNo_' + Serial).val(null)
+        $('#Ord_ePurchaseOrder_VendorName_' + Serial).val(null)
+
+        $('#Model_eOrdPO_GLDEPMFs_' + Serial).modal('hide');
+    }
+    function GetDeptName(e, id) {
+        Serial = id;
+        if (CheckValue('Ord_ePurchaseOrder_DeptNo_' + id)) {
+            $('#Ord_ePurchaseOrder_DeptNo_' + id).val(null);
+            $('#Ord_ePurchaseOrder_DeptName_' + id).val(null);
+            $('#Ord_ePurchaseOrder_VendorNo_' + id).val(null);
+            $('#Ord_ePurchaseOrder_VendorName_' + id).val(null);
+            $('#Ord_ePurchaseOrder_VendorAddress_' + id).val(null);
+            return;
+        }
+
+        Serial = id;
+        if ($('#Ord_ePurchaseOrder_OldDeptNo_' + id).val() != e) {
+            $('#Ord_ePurchaseOrder_OldDeptNo_' + id).val(e);
+            burn({ DeptNo: e }, '../../../PurchaseOrder/GetDeptName', '', LoadDeptName, true);
+        }
+    }
+    function LoadDeptName(r) {
+        if (r.DeptName == "") {
+            $('#Ord_ePurchaseOrder_DeptNo_' + Serial).val(null);
+            $('#Ord_ePurchaseOrder_DeptName_' + Serial).val(null);
+        }
+        else {
+            $('#Ord_ePurchaseOrder_DeptName_' + Serial).val(r.DeptName);
+        }
+        $('#Ord_ePurchaseOrder_VendorNo_' + Serial).val(null)
+        $('#Ord_ePurchaseOrder_VendorName_' + Serial).val(null)
+        $('#Ord_ePurchaseOrder_VendorAddress_' + Serial).val(null);
+    }
+</script>
+@*----------------------ENDDept-----------------------*@
+
+@*----------------------Acc-----------------------*@
+<div class="modal fade" id="Model_eOrdPO_Acc_@TawreedNo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(1867)</label>
+            </div>
+            <div class="modal-body row" id="eOrdPO_Accbody_@TawreedNo">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selecting_eOrdPO_Acc('@TawreedNo')" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var SerialAcc = 0;
+    function CheckValue(ID) {
+        if (document.getElementById(ID).getAttribute('required') == 'true') {
+            if (document.getElementById(ID).value == '') {
+                document.getElementById(ID).focus();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    function Serach_eVendor(Id) {
+        SerialAcc = Id;
+        if (CheckValue('Ord_ePurchaseOrder_DeptNo_' + Id)) {
+            alert('@Html.Translate("يجب ادخال الدائرة", "You must enter the Dept")');
+            return;
+        }
+
+        $('#Model_eOrdPO_Acc_' + Id).draggable({
+            handle: ".modal-header",
+        });
+
+        burn({ DeptId: $('#Ord_ePurchaseOrder_DeptNo_' + Id).val(), Id: Id }, '../../../PurchaseOrder/eAccount', '', ReloadteAcc, true);
+    }
+    function ReloadteAcc(r) {
+        $('#eOrdPO_Accbody_' + SerialAcc).innerHTML = "";
+        $('#eOrdPO_Accbody_' + SerialAcc).html(r);
+        $('#Model_eOrdPO_Acc_' + SerialAcc).modal('show');
+    }
+    function Select_finAcc(e) {
+        var table = $('#eOrdPO_AccTable_' + SerialAcc);
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Selecting_eOrdPO_Acc(Id) {
+        var table = $('#eOrdPO_AccTable_' + Id);
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار حساب", "Select one Acc")');
+            return;
+        }
+
+        $('#Ord_ePurchaseOrder_VendorNo_' + Serial).val(trs[0].getAttribute('acc_num'))
+        $('#Ord_ePurchaseOrder_VendorName_' + Serial).val(trs[0].getAttribute('AccDesc'))
+
+        $('#Model_eOrdPO_Acc_' + Id).modal('hide');
+    }
+    function Select_Acc(e) {
+        var table = $('#eOrdPO_AccTable_' + SerialAcc);
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+
+        $('#Ord_ePurchaseOrder_VendorNo_' + SerialAcc).val(trs[0].getAttribute('acc_num'))
+        $('#Ord_ePurchaseOrder_VendorName_' + SerialAcc).val(trs[0].getAttribute('AccDesc'))
+        $('#Ord_ePurchaseOrder_VendorAddress_' + SerialAcc).val(trs[0].getAttribute('VendAdrees'))
+        $('#Ord_ePurchaseOrder_CboCurrCode_' + SerialAcc).val(trs[0].getAttribute('Curr')).change();
+        $('#Ord_ePurchaseOrder_CboPaymentType_' + SerialAcc).val(trs[0].getAttribute('PaymentType')).change();
+
+
+        $('#Model_eOrdPO_Acc_' + SerialAcc).modal('hide');
+    }
+    function GetVendorName(e, id) {
+        SerialAcc = id;
+        if (CheckValue('Ord_ePurchaseOrder_DeptNo_' + id)) {
+            alert('@Html.Translate("يجب ادخال الدائرة", "You must enter the Dept")');
+            return;
+        }
+        burn({ DeptNo: $('#Ord_ePurchaseOrder_DeptNo_' + SerialAcc).val(), AccNo: e }, '../../../PurchaseOrder/GetVendorName', '', LoadVendorName, true);
+    }
+    function LoadVendorName(r) {
+        if (r.VendorName == "") {
+            alert('@Html.Translate("الحساب غير مربوط بالدائرة", "The Account Is Not Linked To The Department")');
+
+            $('#Ord_ePurchaseOrder_VendorNo_' + SerialAcc).focus();
+            $('#Ord_ePurchaseOrder_VendorNo_' + SerialAcc).val(null)
+            $('#Ord_ePurchaseOrder_VendorName_' + SerialAcc).val(null)
+            $('#Ord_ePurchaseOrder_VendorAddress_' + SerialAcc).val(null);
+        }
+        else {
+            $('#Ord_ePurchaseOrder_VendorName_' + SerialAcc).val(r.VendorName);
+            $('#Ord_ePurchaseOrder_VendorAddress_' + SerialAcc).val(r.VendAdrees);
+            $('#Ord_ePurchaseOrder_CboCurrCode_' + SerialAcc).val(r.Curr).change();
+            $('#Ord_ePurchaseOrder_CboPaymentType_' + SerialAcc).val(r.PaymentType).change();
+        }
+    }
+</script>
+@*----------------------ENDAcc-----------------------*@
+
+
+@*----------------------InvItems-----------------------*@
+<div class="modal fade wide" id="Model_ePurchaseOrder_InvItemsMF_@TawreedNo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4756)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="SelectePurchaseOrderItemTable_@TawreedNo">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:center !important;">@Html.Recource(44)</th>
+                                    <th style="text-align:center !important;">@Html.Recource(74)</th>
+                                    <th style="text-align:center !important;">@Html.Recource(96)</th>
+                                    <th style="text-align:center !important;">@Html.Recource(312)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    int Comp_num = company.comp_num;
+                                    string query = string.Format("exec SP_Search {0},'WHERE (CompNo = {0}) AND (IsHalt = 0)',7", Comp_num);
+                                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                                    {
+                                        SqlCommand cmd = new SqlCommand(query, cn);
+                                        cn.Open();
+                                        SqlDataReader rdr = cmd.ExecuteReader();
+                                        if (rdr.HasRows)
+                                        {
+                                            while (rdr.Read())
+                                            {
+                                                string ItemDesc = rdr["ItemDesc"].ToString();
+                                                string ItemDescEn = rdr["ItemDesc_Ara"].ToString();
+                                                string Desc = Html.Translate(ItemDesc, ItemDescEn).ToString();
+                                                <tr onclick="$(this).toggleClass('selected');" ondblclick="GetItemNo(this,'@TawreedNo')" ItemNo="@rdr["ItemNo"]" ItemDesc="@Html.Translate(ItemDesc, ItemDescEn)">
+                                                    <td style="text-align:center !important; word-wrap: break-word; white-space: normal;" id="ItemNo">@rdr["ItemNo"]</td>
+                                                    <td style="text-align:center !important; word-wrap: break-word; white-space: normal;" id="ItemDesca" title="@Desc">@Html.Translate(ItemDesc, ItemDescEn)</td>
+                                                    <td style="text-align:center !important;">@rdr["RefrenceNo"]</td>
+                                                    <td style="text-align: center !important;">@rdr["BarCode"]</td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingePurchaseOrder_InvItemsMF('@TawreedNo')" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var itemType = 0;
+    var frmSatus = 1;
+    var SerialItem = 0;
+
+    var RawMaterial = $('#SelectePurchaseOrderItemTable_' + @TawreedNo).DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 25,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+    function Edit_InvItemsMF(type,Id) {
+        itemType = type;
+        frmSatus = 1;
+        SerialItem = Id;
+        var table = $("#SelectePurchaseOrderItemTable_" + Id);
+        table.find('tr').removeClass("selected");
+
+        $('#Model_ePurchaseOrder_InvItemsMF_' + Id).draggable({
+            handle: ".modal-header",
+        });
+
+        $('#Model_ePurchaseOrder_InvItemsMF_' + Id).modal('show');
+    }
+    function GetItemNo(e, Id) {
+        SerialItem = Id;
+
+        if (frmSatus == 1) {
+            if (itemType == 1) {
+                var table_ = $("#ePOItemTBody_" + Id);
+                var item = new Array();
+                var Added = false;
+                if (table_.find("tr").length != 0) {
+                    table_.find("tr").each(function () {
+
+                        var ItemNo_ = $(this).find("#ePODF_ItemNo").text();
+                        if (ItemNo_ == e.getAttribute('ItemNo')) {
+                            Added = true;
+                            return false;
+                        }
+                        else {
+                            Added = false;
+                        }
+                    });
+                    if (!Added) {
+                        item.push({
+                            ItemNo: e.getAttribute('ItemNo'),
+                            ItemDesc: e.getAttribute('ItemDesc')
+                        });
+                    }
+                }
+                else {
+                    item.push({
+                        ItemNo: e.getAttribute('ItemNo'),
+                        ItemDesc: e.getAttribute('ItemDesc')
+                    });
+                }
+
+                if (item.length != 0) {
+                    burn({ items: item, srl: table_.find("tr").length, Id: Id}, '../../../PurchaseOrder/ePurchaseOrderItems', '', LoadeItemRawMaterial, true);
+                }
+                else {
+                    $('#Model_ePurchaseOrder_InvItemsMF_' + Id).modal('hide');
+                }
+            }
+        }
+    }
+    function SelectingePurchaseOrder_InvItemsMF(Id) {
+        SerialItem = Id;
+        var table = $('#SelectePurchaseOrderItemTable_' + Id);
+        var oTable = table.dataTable();
+        var data = oTable.$('.selected');
+
+        if (data.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مادة واحدة على الاقل", "Select one item at least")');
+            return;
+        }
+        if (frmSatus == 1) {
+            if (itemType == 1) {
+                var table_ = $("#ePOItemTBody_" + Id);
+                var item = new Array();
+                for (var i = 0; i < data.length; i++) {
+                    var Added = false;
+                    if (table_.find("tr").length != 0) {
+                        table_.find("tr").each(function () {
+                            var ItemNo_ = $(this).find("#ePODF_ItemNo").text();
+                            if (ItemNo_ == data[i].getAttribute('itemno')) {
+                                Added = true;
+                                return false;
+                            }
+                            else {
+                                Added = false;
+                            }
+                        });
+                        if (!Added) {
+                            item.push({
+                                ItemNo: data[i].getAttribute('itemno'),
+                                ItemDesc: data[i].getAttribute('itemdesc')
+                            });
+                        }
+                    }
+                    else {
+                        item.push({
+                            ItemNo: data[i].getAttribute('itemno'),
+                            ItemDesc: data[i].getAttribute('itemdesc')
+                        });
+                    }
+                }
+                if (item.length != 0) {
+                    burn({ items: item, srl: table_.find("tr").length, Id: Id }, '../../../PurchaseOrder/ePurchaseOrderItems', '', LoadeItemRawMaterial, true);
+                }
+                else {
+                    $('#Model_ePurchaseOrder_InvItemsMF').modal('hide')
+                }
+            }
+        }
+    }
+    function LoadeItemRawMaterial(r) {
+        if (frmSatus == 1) {
+            $('#ePOItemTBody_' + SerialItem).append(r);
+        }
+        else {
+            $('#ePOItemTBody_' + SerialItem).append(r);
+        }
+        $('#Model_ePurchaseOrder_InvItemsMF_' + SerialItem).modal('hide');
+    }
+    function eGetchangeCost(item, e, srl, Id) {
+        SerialItem = Id;
+        burn({ itemNo: item, Unitserial: e, srl: srl }, '../../../PurchaseOrder/LoadUnitCost', '', LoadCost, true);
+    }
+    function LoadCost(r) {
+        var table = $("#ePOItemTBody_" + SerialItem);
+        var tr = table.find('#ePODF_Serial_' + r.srl);
+
+
+        tr.find('#ePODF_QtyOH_' + r.srl)[0].value = r.QtyOH;
+    }
+</script>
+@*----------------------END InvItems-----------------------*@
+
+
+
+
+@*--------------------------------Model PO Notes -------------------------------------------*@
+<div class="modal fade" id="Model_ePONotes_@TawreedNo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(70)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2">
+                            <label class="unselectable" for="Ord_ePurchaseOrder_Notes">@Html.Recource(70)</label>
+                        </div>
+                        <div class="col-md-10">
+                            <textarea required="true" style="width: 100%;height:80px !important;" id="Ord_ePurchaseOrder_Notes_@TawreedNo">@ordHf.Notes</textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2">
+                            <label class="unselectable" for="Ord_ePurchaseOrder_RequistionNotes">@Html.Recource(5668)</label>
+                        </div>
+                        <div class="col-md-10">
+                            <textarea required="true" style="width: 100%; height: 80px !important;" id="Ord_ePurchaseOrder_RequistionNotes_@TawreedNo">@ordHf.GenNote</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SavePONotes('@TawreedNo')" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    function EditPONotes(Id) {
+        $('#Model_ePONotes_' + Id).draggable({
+            handle: ".modal-header",
+        });
+        $('#Model_ePONotes_' + Id).modal('show');
+    }
+    function SavePONotes(Id) {
+        $('#Model_ePONotes_' + Id).modal('hide');
+    }
+</script>
+@*--------------------------------END Model PurchOrd Notes -------------------------------------------*@
+
+@*-----------------------------Model Documents-------------------------------------*@
+<div class="modal fade" id="Model_ePODocumentsArchive_@TawreedNo">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("أرشفة الوثائق", "Archive Documents")</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <button onclick="AddePODocumentArchive('@TawreedNo')" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="ePODocumentArchiveTable_@TawreedNo">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(66)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5628)</th>
+                                    <th></th>
+                                    <th style="text-align: center !important">@Html.Recource(5629)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5630)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5631)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5632)</th>
+                                    <th style="text-align: center !important">@Html.Recource(5633)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="ePODocumentArchiveTbody_@TawreedNo" style="border-top: 1px solid #ddd;">
+                                @foreach (DataRow row in DtAttachment.Rows)
+                                {
+                                    DateTime date = Convert.ToDateTime(row["DateUploded"].ToString());
+                                    <tr id="ePODocumentArchive_@Count">
+                                        <td>
+                                            <input id="Ord_ePurchaseOrder_FileId" type="hidden" value="@Count" />
+                                        </td>
+                                        <td>
+                                            <input type="text" style="width: 115px !important; text-align: center !important" id="Ord_ePurchaseOrder_Description_@Count" value="@row["Description"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <div class="image-upload"><label for="file-input"><span class="glyphicon glyphicon-upload" onclick="OpenFileUpload(this)"></span></label><input type="file" name="uploadFile_7" style="display:none" id="Ord_ePurchaseOrder_File_@Count" onchange="uploadFile(this,@Count,'@TawreedNo')" /></div>
+                                        </td>
+                                        <td></td>
+                                        <td>
+                                            <a id="Ord_ePurchaseOrder_AddDownloadFile_@Count" onclick="DownloadFile('@row["FileName"].ToString()','@Convert.ToBase64String((byte[])row["FileData"])')"><span class="glyphicon glyphicon-download"></span></a>
+                                        </td>
+                                        <td>
+                                            <input id="Ord_ePurchaseOrder_FileName_@Count" type="text" style="text-align: center !important" value="@row["FileName"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="Ord_ePurchaseOrder_UploadDate_@Count" type="text" style="width: 95px; text-align: center !important" value="@date.ToShortDateString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="Ord_ePurchaseOrder_FileSize_@Count" type="text" style="width: 70px; text-align: center !important" value="@row["FileSize"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <input id="Ord_ePurchaseOrder_FileType_@Count" type="text" style="width: 55px; text-align: center !important" value="@row["ContentType"].ToString()" disabled />
+                                        </td>
+                                        <td>
+                                            <button class="btn-de" onclick="RemoveRowUpload(this,@Count,'@TawreedNo')" type="button"><i class="fa fa-trash-alt"></i></button>
+                                            <input type="hidden" id="eInputSerialUpload" value="@(Count++)" />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SaveePODocumentArchive('@TawreedNo')" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    function EditPODocuments(Id) {
+        $('#Model_ePODocumentsArchive_' + Id).draggable({
+            handle: ".modal-header",
+        });
+        $('#Model_ePODocumentsArchive_' + Id).modal('show');
+
+        var table = $("#ePODocumentArchiveTbody_" + Id);
+        var trs = table.find('tr');
+        Count = trs.length;
+    }
+    function AddePODocumentArchive(Id) {
+        var table = $("#ePODocumentArchiveTbody_" + Id);
+        Count++;
+        var newarray = [];
+        newarray.push('<input id="Ord_ePurchaseOrder_FileId" type="hidden" value="' + Count + '" />')
+        newarray.push('<input id="Ord_ePurchaseOrder_Description_' + Count + '" type="text" style="width: 115px !important;text-align: center !important" />')
+        newarray.push('<div class="image-upload"><label for="file-input"><span class="glyphicon glyphicon-upload" onclick="OpenFileUpload(this)"></span></label><input type="file" name="uploadFile_7" style="display:none" id="Ord_ePurchaseOrder_File_' + Count + '" onchange="uploadFile(this,' + Count + ',' + Id + ')" /></div>')
+        newarray.push('')
+        newarray.push('<a id="Ord_ePurchaseOrder_AddDownloadFile_' + Count + '" onclick="DownloadFile()"><span class="glyphicon glyphicon-download"></span></a>')
+        newarray.push('<input id="Ord_ePurchaseOrder_FileName_' + Count + '" type="text" style="text-align: center !important" disabled />')
+        newarray.push('<input id="Ord_ePurchaseOrder_UploadDate_' + Count + '" type="text" style="width: 95px;text-align: center !important" disabled />')
+        newarray.push('<input id="Ord_ePurchaseOrder_FileSize_' + Count + '" type="text" style="width: 70px;text-align: center !important" disabled />')
+        newarray.push('<input id="Ord_ePurchaseOrder_FileType_' + Count + '" type="text" style="width: 55px;text-align: center !important" disabled />')
+        newarray.push('<button class="btn-de" onclick="RemoveRowUpload(this,' + Count + ',' + Id + ')" type="button"><i class= "fa fa-trash-alt"></i ></button>')
+        $(table).append(
+            GenRowDocumentArchive(newarray, 'ePODocumentArchive_' + Count)
+        );
+    }
+    function GenRowDocumentArchive(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function OpenFileUpload(ID) {
+        var $td = $(ID).closest("td");
+        $($td).find("input[type=file]").click();
+    }
+    function uploadFile(Elem, Count, Id) {
+        var uploadDate = new Date($.now());
+        var shortDate = moment(uploadDate).format('DD/MM/YYYY');
+        var InputID = $(Elem).attr("id");
+        var file_size = $(Elem)[0].files[0].size;
+
+        var table = $("#ePODocumentArchiveTbody_" + Id);
+        var tr = table.find('#ePODocumentArchive_' + Count);
+
+        var fileName = tr.find("#Ord_ePurchaseOrder_File_" + Count).val().replace(/C:\\fakepath\\/i, '');
+        var filetype = fileName.split('.').pop();
+
+        tr.find('#Ord_ePurchaseOrder_FileName_' + Count)[0].value = fileName;
+        tr.find('#Ord_ePurchaseOrder_UploadDate_' + Count)[0].value = shortDate;
+        tr.find('#Ord_ePurchaseOrder_FileSize_' + Count)[0].value = file_size;
+        tr.find('#Ord_ePurchaseOrder_FileType_' + Count)[0].value = "." + filetype;
+
+        var $file = document.getElementById(InputID);
+        $formData = new FormData();
+        if ($file.files.length > 0) {
+            for (var i = 0; i < $file.files.length; i++) {
+                $formData.append('file-' + i, $file.files[i]);
+            }
+
+            var OrderYear = $('#Ord_ePurchaseOrder_OrdYear_' + Id).val();
+            var OrderNo = $('#Ord_ePurchaseOrder_OrdNo_' + Id).val();
+            var TawreedNo = $('#Ord_ePurchaseOrder_TawreedNo_' + Id).val();
+
+            $formData.append('Id', Count);
+            $formData.append('Ordyear', OrderYear);
+            $formData.append('OrdNo', OrderNo);
+            $formData.append('TawreedNo', TawreedNo);
+        }
+
+        $.ajax({
+            url: '@Url.Action("InsertFile", "PurchaseOrder")',
+            type: 'POST',
+            data: $formData,
+            contentType: false,
+            processData: false,
+            success: function (r) {
+                var table = $("#ePODocumentArchiveTbody_" + Id);
+                var tr = table.find('#ePODocumentArchive_' + Count);
+                tr.find('#Ord_ePurchaseOrder_AddDownloadFile_' + Count)[0].setAttribute('onclick', 'DownloadFile("' + fileName + '","' + r + '")')
+            },
+            error: function (error) {
+
+            }
+        });
+    }
+    function RemoveRowUpload(e, Count, Id) {
+        if (confirm('@Resources.Resource.DeleteConfirm')) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+            var OrderYear = $('#Ord_ePurchaseOrder_OrdYear_' + Id).val();
+            var OrderNo = $('#Ord_ePurchaseOrder_OrdNo_' + Id).val();
+            var TawreedNo = $('#Ord_ePurchaseOrder_TawreedNo_' + Id).val();
+
+            $.ajax({
+                type: "POST",
+                url:'@Url.Action("RemoveFile", "PurchaseOrder")',
+                data: { Id: Count, Ordyear: OrderYear, OrdNo: OrderNo, TawreedNo: TawreedNo },
+                success: function (response) {
+
+                },
+            });
+
+            return true;
+        }
+        return false;
+    }
+    function DownloadFile(FileName, base64) {
+        var binaryString = window.atob(base64);
+        var binaryLen = binaryString.length;
+        var bytes = new Uint8Array(binaryLen);
+        for (var i = 0; i < binaryLen; i++) {
+            var ascii = binaryString.charCodeAt(i);
+            bytes[i] = ascii;
+        }
+        saveByteArray(FileName, bytes)
+    }
+    function saveByteArray(reportName, byte) {
+        var blob = new Blob([byte], { type: "application/pdf" });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        var fileName = reportName;
+        link.download = fileName;
+        link.click();
+    }
+    function SaveePODocumentArchive(Id) {
+        $('#Model_ePODocumentsArchive_' + Id).modal('hide');
+    }
+</script>
+@*--------------------------------END Model Documents -----------------------------*@
+
+
+@*-----------------------------Model Attachments-------------------------------------*@
+<div class="modal fade" id="Model_ePOAttachments_@TawreedNo">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(7743)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-10">
+                        <button onclick="AddePOAttachmentsTables('@TawreedNo')" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" style="overflow-y:auto">
+                        <table class="table table-hover" id="ePOAttachmentsTable_@TawreedNo">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center !important">@Html.Recource(66)</th>
+                                    <th style="text-align: center !important">@Html.Recource(118)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="ePOAttachmentsTbody_@TawreedNo" style="border-top: 1px solid #ddd;">
+                                @foreach (DataRow row in DtAttach.Rows)
+                                {
+                                    <tr>
+                                        <td>
+                                            <textarea style="width: 100%;height:50px !important;" id="Ord_ePO_AttachDescAr">@row["Description"].ToString()</textarea>
+                                        </td>
+                                        <td>
+                                            <textarea style="width: 100%;height:50px !important;" id="Ord_ePO_AttachDescEn">@row["DescriptionEng"].ToString()</textarea>
+                                        </td>
+                                        <td>
+                                            <button class="btn-de" onclick="RemoveRow(this)" type="button"><i class="fa fa-trash-alt"></i></button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SaveePOAttachments('@TawreedNo')" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var Count = 0;
+    var SerialAttac = 0;
+
+    function EditPOAttachments(Id) {
+        SerialAttac = Id;
+        $('#Model_ePOAttachments_' + Id).draggable({
+            handle: ".modal-header",
+        });
+
+        $('#Model_ePOAttachments_' + Id).modal('show');
+    }
+    function AddePOAttachmentsTables(Id) {
+        var table = $("#ePOAttachmentsTbody_" + Id);
+        SerialAttac = Id;
+        Count++;
+        var newarray = [];
+        newarray.push('<textarea style="width: 100%;height:50px !important;" id="Ord_ePO_AttachDescAr" />')
+        newarray.push('<textarea style="width: 100%;height:50px !important;" id="Ord_ePO_AttachDescEn" />')
+        newarray.push('<button class="btn-de" onclick="RemoveRow(this)" type="button"><i class= "fa fa-trash-alt"></i ></button>')
+        $(table).append(
+            GenRowAttach(newarray, 'ePOAttach_' + Count)
+        );
+    }
+    function GenRowAttach(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td>' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function SaveePOAttachments(Id) {
+        $('#Model_ePOAttachments_' + Id).modal('hide');
+    }
+</script>
+@*--------------------------------END Model Attachments -----------------------------*@
+
+@*-----------------------------Model CondsGuaranty-------------------------------------*@
+<div class="modal fade" id="Model_ePOCondsGuaranty_@TawreedNo">
+    <div class="modal-dialog" style="width:800px; ">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(66)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="modal-title">@Html.Recource(3162)</label>
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="modal-title">@Html.Recource(3164)</label>
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                </div>
+                <br />
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3165) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentCond1_@TawreedNo" onblur="PaymentCond1Change('@TawreedNo')" value="@DtConds.Rows[0][4]" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtPaymentCond1_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboPaymentCond1_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in PaymentConditions)
+                                    {
+                                        if (v.sys_minor == Convert.ToString(DtConds.Rows[0][4]))
+                                        {
+                                            <option value="@v.sys_minor" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentPerc1_@TawreedNo" value="@DtConds.Rows[0][7]" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentCond1_@TawreedNo" onblur="PaymentCond1Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtPaymentCond1_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboPaymentCond1_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in PaymentConditions)
+                                    {
+                                        <option value="@v.sys_minor" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentPerc1_@TawreedNo" value="0" />
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3166) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentCond2_@TawreedNo" value="@DtConds.Rows[0][8]" onblur="PaymentCond2Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtPaymentCond2_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboPaymentCond2_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in PaymentConditions)
+                                    {
+                                        if (v.sys_minor == Convert.ToString(DtConds.Rows[0][8]))
+                                        {
+                                            <option value="@v.sys_minor" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentPerc2_@TawreedNo" value="@DtConds.Rows[0][11]" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentCond2_@TawreedNo" onblur="PaymentCond2Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtPaymentCond2_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboPaymentCond2_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in PaymentConditions)
+                                    {
+                                        <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentPerc2_@TawreedNo" value="0" />
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3167) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentCond3_@TawreedNo" value="@DtConds.Rows[0][12]" onblur="PaymentCond3Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtPaymentCond3_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboPaymentCond3_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in PaymentConditions)
+                                    {
+                                        if (v.sys_minor == Convert.ToString(DtConds.Rows[0][12]))
+                                        {
+                                            <option value="@v.sys_minor" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentPerc3_@TawreedNo" value="@DtConds.Rows[0][15]" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentCond3_@TawreedNo" onblur="PaymentCond3Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtPaymentCond3_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboPaymentCond3_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in PaymentConditions)
+                                    {
+                                        <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentPerc3_@TawreedNo" value="0" />
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3168) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentCond4_@TawreedNo" value="@DtConds.Rows[0][16]" onblur="PaymentCond4Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtPaymentCond4_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboPaymentCond4_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in PaymentConditions)
+                                    {
+                                        if (v.sys_minor == Convert.ToString(DtConds.Rows[0][16]))
+                                        {
+                                            <option value="@v.sys_minor" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentPerc4_@TawreedNo" value="@DtConds.Rows[0][19]" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentCond4_@TawreedNo" onblur="PaymentCond4Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtPaymentCond4_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboPaymentCond4_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in PaymentConditions)
+                                    {
+                                        <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentPerc4_@TawreedNo" value="0" />
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3169) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentCond5_@TawreedNo" value="@DtConds.Rows[0][20]" onblur="PaymentCond5Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtPaymentCond5_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboPaymentCond5_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in PaymentConditions)
+                                    {
+                                        if (v.sys_minor == Convert.ToString(DtConds.Rows[0][20]))
+                                        {
+                                            <option value="@v.sys_minor" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentPerc5_@TawreedNo" value="@DtConds.Rows[0][23]" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentCond5_@TawreedNo" onblur="PaymentCond5Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtPaymentCond5_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboPaymentCond5_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in PaymentConditions)
+                                    {
+                                        <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3170) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtPaymentPerc5_@TawreedNo" value="0" />
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <br />
+                <hr />
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label class="modal-title">@Html.Recource(3163)</label>
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="modal-title">@Html.Recource(3164)</label>
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-2">
+                    </div>
+                </div>
+                <br />
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3171) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuaranty1_@TawreedNo" value="@DtConds.Rows[0][24]" onblur="Guaranty1Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtGuaranty1_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboGuaranty1_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in Guaranty)
+                                    {
+                                        if (v.sys_minor == Convert.ToString(DtConds.Rows[0][24]))
+                                        {
+                                            <option value="@v.sys_minor" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuarantyPerc1_@TawreedNo" value="@DtConds.Rows[0][27]" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuaranty1_@TawreedNo" onblur="Guaranty1Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtGuaranty1_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboGuaranty1_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in Guaranty)
+                                    {
+                                        <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuarantyPerc1_@TawreedNo" value="0" />
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3172) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuaranty2_@TawreedNo" value="@DtConds.Rows[0][28]" onblur="Guaranty2Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtGuaranty2_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboGuaranty2_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in Guaranty)
+                                    {
+                                        if (v.sys_minor == Convert.ToString(DtConds.Rows[0][28]))
+                                        {
+                                            <option value="@v.sys_minor" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuarantyPerc2_@TawreedNo" value="@DtConds.Rows[0][31]" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuaranty2_@TawreedNo" onblur="Guaranty2Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtGuaranty2_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboGuaranty2_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in Guaranty)
+                                    {
+                                        <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuarantyPerc2_@TawreedNo" value="0" />
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3173) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuaranty3_@TawreedNo" value="@DtConds.Rows[0][32]" onblur="Guaranty3Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtGuaranty3_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboGuaranty3_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in Guaranty)
+                                    {
+                                        if (v.sys_minor == Convert.ToString(DtConds.Rows[0][32]))
+                                        {
+                                            <option value="@v.sys_minor" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuarantyPerc3_@TawreedNo" value="@DtConds.Rows[0][35]" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuaranty3_@TawreedNo" onblur="Guaranty3Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtGuaranty3_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboGuaranty3_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in Guaranty)
+                                    {
+                                        <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuarantyPerc3_@TawreedNo" value="0" />
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3174) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuaranty4_@TawreedNo" value="@DtConds.Rows[0][36]" onblur="Guaranty4Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtGuaranty4_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboGuaranty4_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in Guaranty)
+                                    {
+                                        if (v.sys_minor == Convert.ToString(DtConds.Rows[0][36]))
+                                        {
+                                            <option value="@v.sys_minor" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuarantyPerc4_@TawreedNo" value="@DtConds.Rows[0][39]" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuaranty4_@TawreedNo" onblur="Guaranty4Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtGuaranty4_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboGuaranty4_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in Guaranty)
+                                    {
+                                        <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuarantyPerc4_@TawreedNo" value="0" />
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <div class="col-md-2" style="margin-bottom: 5px;">
+                            <label class="unselectable">@Html.Recource(3175) </label>
+                        </div>
+                        @if (DtConds.Rows.Count != 0)
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuaranty5_@TawreedNo" value="@DtConds.Rows[0][40]" onblur="Guaranty5Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtGuaranty5_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboGuaranty5_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in Guaranty)
+                                    {
+                                        if (v.sys_minor == Convert.ToString(DtConds.Rows[0][40]))
+                                        {
+                                            <option value="@v.sys_minor" selected>@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuarantyPerc5_@TawreedNo" value="@DtConds.Rows[0][43]" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuaranty5_@TawreedNo" onblur="Guaranty5Change('@TawreedNo')" />
+                            </div>
+                            <div class="col-md-4" style="margin-bottom: 5px;">
+                                <select onchange="$('#Ord_ePO_txtGuaranty5_' + @TawreedNo).val(this.value)" style="width:100%" id="Ord_ePO_CboGuaranty5_@TawreedNo">
+                                    <option></option>
+                                    @foreach (var v in Guaranty)
+                                    {
+                                        <option value="@v.sys_minor">@Html.Translate(v.DescAr, v.DescEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <label class="unselectable">@Html.Recource(3176) </label>
+                            </div>
+                            <div class="col-md-2" style="margin-bottom: 5px;">
+                                <input style="width:100%" type="number" id="Ord_ePO_txtGuarantyPerc5_@TawreedNo" value="0" />
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SaveePOCondsGuaranty('@TawreedNo')" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+
+    var SerialCan = 0;
+    function EditPOConditionsAndGuaranties(Id) {
+        SerialCan = Id;
+
+        $('#Model_ePOCondsGuaranty_' + Id).draggable({
+            handle: ".modal-header",
+        });
+
+        $('#Model_ePOCondsGuaranty_' + Id).modal('show');
+    }
+    function PaymentCond1Change(Id) {
+        SerialCan = Id;
+        var v = $('#Ord_ePO_txtPaymentCond1_' + Id).val();
+        $('#Ord_ePO_CboPaymentCond1_' + Id).val(v)
+        if (document.getElementById('Ord_ePO_CboPaymentCond1_' + Id).value == '') {
+            $('#Ord_ePO_txtPaymentCond1_' + Id).val('')
+            return;
+        }
+    }
+    function PaymentCond2Change(Id) {
+        SerialCan = Id;
+        var v = $('#Ord_ePO_txtPaymentCond2_' + Id).val();
+        $('#Ord_ePO_CboPaymentCond2_' + Id).val(v)
+        if (document.getElementById('Ord_ePO_CboPaymentCond2_' + Id).value == '') {
+            $('#Ord_ePO_txtPaymentCond2_' + Id).val('')
+            return;
+        }
+    }
+    function PaymentCond3Change(Id) {
+        SerialCan = Id;
+        var v = $('#Ord_ePO_txtPaymentCond3_' + Id).val();
+        $('#Ord_ePO_CboPaymentCond3_' + Id).val(v)
+        if (document.getElementById('Ord_ePO_CboPaymentCond3_' + Id).value == '') {
+            $('#Ord_ePO_txtPaymentCond3_' + Id).val('')
+            return;
+        }
+    }
+    function PaymentCond4Change(Id) {
+        SerialCan = Id;
+        var v = $('#Ord_ePO_txtPaymentCond4_' + Id).val();
+        $('#Ord_ePO_CboPaymentCond4_' + Id).val(v)
+        if (document.getElementById('Ord_ePO_CboPaymentCond4_' + Id).value == '') {
+            $('#Ord_ePO_txtPaymentCond4_' + Id).val('')
+            return;
+        }
+    }
+    function PaymentCond5Change(Id) {
+        SerialCan = Id;
+        var v = $('#Ord_ePO_txtPaymentCond5_' + Id).val();
+        $('#Ord_ePO_CboPaymentCond5_' + Id).val(v)
+        if (document.getElementById('Ord_ePO_CboPaymentCond5_' + Id).value == '') {
+            $('#Ord_ePO_txtPaymentCond5_' + Id).val('')
+            return;
+        }
+    }
+
+    function Guaranty1Change(Id) {
+        SerialCan = Id;
+        var v = $('#Ord_ePO_txtGuaranty1_' + Id).val();
+        $('#Ord_ePO_CboGuaranty1_' + Id).val(v)
+        if (document.getElementById('Ord_ePO_CboGuaranty1_' + Id).value == '') {
+            $('#Ord_ePO_txtGuaranty1_' + Id).val('')
+            return;
+        }
+    }
+    function Guaranty2Change(Id) {
+        SerialCan = Id;
+        var v = $('#Ord_ePO_txtGuaranty2_' + Id).val();
+        $('#Ord_ePO_CboGuaranty2_' + Id).val(v)
+        if (document.getElementById('Ord_ePO_CboGuaranty2_' + Id).value == '') {
+            $('#Ord_ePO_txtGuaranty2_' + Id).val('')
+            return;
+        }
+    }
+    function Guaranty3Change(Id) {
+        SerialCan = Id;
+        var v = $('#Ord_ePO_txtGuaranty3_' + Id).val();
+        $('#Ord_ePO_CboGuaranty3_' + Id).val(v)
+        if (document.getElementById('Ord_ePO_CboGuaranty3_' + Id).value == '') {
+            $('#Ord_ePO_txtGuaranty3_' + Id).val('')
+            return;
+        }
+    }
+    function Guaranty4Change(Id) {
+        SerialCan = Id;
+        var v = $('#Ord_ePO_txtGuaranty4_' + Id).val();
+        $('#Ord_ePO_CboGuaranty4_' + Id).val(v)
+        if (document.getElementById('Ord_ePO_CboGuaranty4_' + Id).value == '') {
+            $('#Ord_ePO_txtGuaranty4_' + Id).val('')
+            return;
+        }
+    }
+    function Guaranty5Change(Id) {
+        SerialCan = Id;
+        var v = $('#Ord_ePO_txtGuaranty5_' + Id).val();
+        $('#Ord_ePO_CboGuaranty5_' + Id).val(v)
+        if (document.getElementById('Ord_ePO_CboGuaranty5_' + Id).value == '') {
+            $('#Ord_ePO_txtGuaranty5_' + Id).val('')
+            return;
+        }
+    }
+
+    function SaveePOCondsGuaranty(Id) {
+        $('#Model_ePOCondsGuaranty_' + Id).modal('hide');
+    }
+</script>
+@*--------------------------------END Model CondsGuaranty -----------------------------*@
+
+@*--------------------------------Model ItemNote -------------------------------------------*@
+<div class="modal fade" id="Model_ePOItemNote_@TawreedNo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(3799)</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <textarea required="true" style="width: 100%; height: 200px !important;" id="Ord_ePO_ItemNote_@TawreedNo" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SaveePOItemNote('@TawreedNo')" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var ItemNoteValue = 0;
+    var SerialItemNote = 0;
+
+    function ePOItemNote(val, Id) {
+        ItemNoteValue = val;
+        SerialItemNote = Id;
+
+        $('#Model_ePOItemNote_' + Id).draggable({
+            handle: ".modal-header",
+        });
+
+        var table = $("#ePOItemTBody_" + Id);
+        var tr = table.find('#ePODF_Serial_' + ItemNoteValue);
+
+        $('#Ord_ePO_ItemNote_' + Id)[0].value = tr.find('#ePODF_ItemNote_' + ItemNoteValue)[0].value
+        $('#Model_ePOItemNote_' + Id).modal('show');
+    }
+    function SaveePOItemNote(Id) {
+
+        var table = $("#ePOItemTBody_" + Id);
+        var tr = table.find('#ePODF_Serial_' + ItemNoteValue);
+
+        tr.find('#ePODF_ItemNote_' + ItemNoteValue)[0].value = $('#Ord_ePO_ItemNote_' + Id)[0].value;
+
+        $('#Model_ePOItemNote_' + Id).modal('hide');
+    }
+</script>
+@*--------------------------------END Model ItemNote -------------------------------------------*@
+
+
+@*--------------------------------Model DetailedNotes -------------------------------------------*@
+<div class="modal fade" id="Model_ePODetailedNotes_@TawreedNo">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("الملاحظات التفصيلية", "Detailed Notes")</label>
+            </div>
+            <div class="modal-body row">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <textarea required="true" style="width: 100%; height: 200px !important;" id="Ord_ePO_DetailedNotes_@TawreedNo" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SaveePODetailedNotes('@TawreedNo')" class="btn btn-primary">@Resources.Resource.Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var DetailedNotesValue = 0;
+    var SerialDetailedNotes = 0;
+
+    $('#Model_ePODetailedNotes').draggable({
+        handle: ".modal-header",
+    });
+    function ePODetailedNotes(val,Id) {
+        DetailedNotesValue = val;
+        SerialDetailedNotes = Id;
+
+        var table = $("#ePOItemTBody_" + Id);
+        var tr = table.find('#ePODF_Serial_' + DetailedNotesValue);
+
+        $('#Ord_ePO_DetailedNotes_' + Id)[0].value = tr.find('#ePODF_DetailedNotes_' + DetailedNotesValue)[0].value;
+        $('#Model_ePODetailedNotes_' + Id).modal('show');
+    }
+    function SaveePODetailedNotes(Id) {
+        var table = $("#ePOItemTBody_" + Id);
+        var tr = table.find('#ePODF_Serial_' + DetailedNotesValue);
+
+        tr.find('#ePODF_DetailedNotes_' + DetailedNotesValue)[0].value = $('#Ord_ePO_DetailedNotes_' + Id)[0].value;
+        $('#Model_ePODetailedNotes_' + Id).modal('hide');
+    }
+</script>
+@*--------------------------------END Model DetailedNotes -------------------------------------------*@
+
+
+
+
+
+<script>
+    $('#Ord_ePurchaseOrder_CboCurrCode_' + @TawreedNo).select2();
+    $('#Ord_ePurchaseOrder_CboShipMethod_' + @TawreedNo).select2();
+    $('#Ord_ePurchaseOrder_CboDeliveryPlace_' + @TawreedNo).select2();
+    $('#Ord_ePurchaseOrder_CboPaymentType_' + @TawreedNo).select2();
+    $('#Ord_ePurchaseOrder_CboBU_' + @TawreedNo).val(@PreOrderHF.BusUnitID);
+    $('#Ord_ePurchaseOrder_CboBU_' + @TawreedNo).select2();
+
+    var SerialId = 0;
+    SerialId = '@TawreedNo';
+    function CheckValueQty(Serial, Id) {
+        SerialId = Id;
+        if ($('#ePODF_Qty_' + Serial)[0].value < 0) {
+            $('#ePODF_Qty_' + Serial)[0].value = 0;
+            $('#ePODF_Qty_' + Serial)[0].focus();
+            if(@CActive.ClientNo == 335){
+                alert('@Html.Translate("يجب أن يكون العدد أكبر من صفر", "The Number Must be Greater Than Zero")');
+            }
+            else{
+                alert('@Html.Translate("يجب أن تكون الكمية أكبر من صفر", "The Qty Must be Greater Than Zero")');
+            }
+        }
+        if ($('#ePODF_Qty_' + Serial)[0].value == "") {
+            $('#ePODF_Qty_' + Serial)[0].value = 0;
+        }
+        sumPersTotal();
+    }
+
+    function CheckValueQty2(Serial, Id) {
+        SerialId = Id;
+        if ($('#ePODF_Qty2_' + Serial)[0].value < 0) {
+            $('#ePODF_Qty2_' + Serial)[0].value = 0;
+            $('#ePODF_Qty2_' + Serial)[0].focus();
+            if(@CActive.ClientNo == 335){
+                alert('@Html.Translate("يجب أن تكون الوزن أكبر من صفر", "The Weight Must be Greater Than Zero")');
+            }
+            else{
+                alert('@Html.Translate("يجب أن تكون الكمية 2 أكبر من صفر", "The Qty 2 Must be Greater Than Zero")');
+            }
+        }
+        if ($('#ePODF_Qty2_' + Serial)[0].value == "") {
+            $('#ePODF_Qty2_' + Serial)[0].value = 0;
+        }
+    }
+
+    function CheckValueBouns(Serial, Id) {
+        SerialId = Id;
+        if ($('#ePODF_Bonus_' + Serial)[0].value < 0) {
+            $('#ePODF_Bonus_' + Serial)[0].value = 0;
+            $('#ePODF_Bonus_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن تكون الكمية الاضافية أكبر من صفر", "The Bonus Must be Greater Than Zero")');
+        }
+        if ($('#ePODF_Bonus_' + Serial)[0].value == "") {
+            $('#ePODF_Bonus_' + Serial)[0].value = 0;
+        }
+        sumPersTotal();
+    }
+    function CheckValuePerDiscount(Serial, Id) {
+        SerialId = Id;
+        if ($('#ePODF_DiscPer_' + Serial)[0].value < 0) {
+            $('#ePODF_DiscPer_' + Serial)[0].value = 0;
+            $('#ePODF_DiscPer_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن يكون الخصم أكبر من صفر", "The Discount Must be Greater Than Zero")');
+        }
+        if ($('#ePODF_DiscPer_' + Serial)[0].value == "") {
+            $('#ePODF_DiscPer_' + Serial)[0].value = 0;
+        }
+        sumPersTotal();
+    }
+    function CheckValuePrice(Serial, Id) {
+        SerialId = Id;
+        if ($('#ePODF_Price_' + Serial)[0].value.replace(/,/g, '') < 0) {
+            $('#ePODF_Price_' + Serial)[0].value = 0;
+            $('#ePODF_Price_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن يكون السعر أكبر من صفر", "The Price Must be Greater Than Zero")');
+        }
+        if ($('#ePODF_Price_' + Serial)[0].value == "") {
+            $('#ePODF_Price_' + Serial)[0].value = 0;
+        }
+        sumPersTotal();
+    }
+    function CheckValueSTaxPerc(Serial, Id) {
+        SerialId = Id;
+        if ($('#ePODF_STax_Perc_' + Serial)[0].value < 0) {
+            $('#ePODF_STax_Perc_' + Serial)[0].value = 0;
+            $('#ePODF_STax_Perc_' + Serial)[0].focus();
+            alert('@Html.Translate("يجب أن تكون الضريبة أكبر من صفر", "The Tax Must be Greater Than Zero")');
+        }
+        if ($('#ePODF_STax_Perc_' + Serial)[0].value == "") {
+            $('#ePODF_STax_Perc_' + Serial)[0].value = 0;
+        }
+        sumPersTotal();
+    }
+
+    function ChangeSupplySource(Serial){
+        if (document.getElementById('Ord_ePurchaseOrder_CboSupplySource_' + Serial).value == 2) {
+            $('#Ord_ePurchaseOrder_IsLC_' + Serial).attr("disabled", true);
+            $('#Ord_ePurchaseOrder_IsLC_' + Serial)[0].checked = true
+        }
+        else{
+            $('#Ord_ePurchaseOrder_IsLC_' + Serial).attr("disabled", false);
+            $('#Ord_ePurchaseOrder_IsLC_' + Serial)[0].checked = false
+        }
+    }
+
+    function sumPersTotal(val) {
+        if (val == 0) {
+            var TotDiscPer = (Number($('#Ord_ePO_DisPersTotal_' + SerialId).val()) / 100) * ($('#Ord_ePO_Amount_' + SerialId).val() - $('#Ord_ePO_Discount_' + SerialId).val());
+            $('#Ord_ePO_DisTotal_' + SerialId).val(Number(TotDiscPer));
+        }
+        else {
+            var TotDiscPer = (Number($('#Ord_ePO_DisTotal_' + SerialId).val()) / ($('#Ord_ePO_Amount_' + SerialId).val() - $('#Ord_ePO_Discount_' + SerialId).val())) * 100;
+            $('#Ord_ePO_DisPersTotal_' + SerialId).val(Number(TotDiscPer).toFixed(3));
+        }
+        sumTotalAll(SerialId)
+    }
+
+    sumTotalAll('@TawreedNo')
+    function sumTotalAll(Id) {
+        var table = $("#ePOItemTBody_" + Id);
+        var trs = table.find('tr');
+
+        var itemTotal = 0;
+        var itemTotalqty = 0;
+        var totalAmount = 0;
+        var vouDiscountPer = Number($('#Ord_ePO_DisPersTotal_' + Id).val()) / 100;
+        var vouDiscountPerItem = 0;
+        var itemDiscVal = 0;
+        var totalDiscVal = 0;
+        var ItemTaxVal = 0;
+        var totalTaxVal = 0;
+        var TotalNetAmount = 0;
+        var Total = 0;
+        var FreightCost = 0;
+        var ExtraExp = 0;
+        var Totals = 0
+
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#eInputSerial')[0].value
+            itemTotalqty += Number($(trs[i]).closest('tr').find('#ePODF_Qty_' + InputSerial)[0].value.replace(/,/g, ''));
+            itemTotal = Number($(trs[i]).closest('tr').find('#ePODF_Qty_' + InputSerial)[0].value.replace(/,/g, '')) * Number($(trs[i]).closest('tr').find('#ePODF_Price_' + InputSerial)[0].value.replace(/,/g, ''));
+            itemDiscVal = (Number($(trs[i]).closest('tr').find('#ePODF_Qty_' + InputSerial)[0].value.replace(/,/g, '')) * Number($(trs[i]).closest('tr').find('#ePODF_Price_' + InputSerial)[0].value.replace(/,/g, '')) * Number($(trs[i]).closest('tr').find('#ePODF_DiscPer_' + InputSerial)[0].value.replace(/,/g, ''))) / 100;
+            vouDiscountPerItem = (Number(itemTotal) - Number(itemDiscVal)) * Number(vouDiscountPer);
+            ItemTaxVal = (Number($(trs[i]).closest('tr').find('#ePODF_Qty_' + InputSerial)[0].value.replace(/,/g, '')) * Number($(trs[i]).closest('tr').find('#ePODF_Price_' + InputSerial)[0].value.replace(/,/g, '')) - Number(itemDiscVal) - Number(vouDiscountPerItem)) * (Number($(trs[i]).closest('tr').find('#ePODF_STax_Perc_' + InputSerial)[0].value.replace(/,/g, '')) / 100);
+            totalAmount += Number(itemTotal)
+            totalDiscVal += Number(itemDiscVal);
+            totalTaxVal += Number(ItemTaxVal);
+            Total = (Number(itemTotal).toFixed(3) - Number(vouDiscountPerItem).toFixed(3) - Number(itemDiscVal).toFixed(3));
+            $(trs[i]).closest('tr').find('#ePODF_Total_' + InputSerial)[0].innerHTML = Number(Total).toFixed(3)
+            TotalNetAmount += Number($(trs[i]).closest('tr').find('#ePODF_Total_' + InputSerial)[0].innerHTML);
+        }
+
+        FreightCost = Number($('#Ord_ePO_FreightCost_' + Id).val());
+        ExtraExp = Number($('#Ord_ePO_ExtraExp_' + Id).val());
+
+        TotalNetAmount = Number(TotalNetAmount) + Number(totalTaxVal) + Number(FreightCost) + Number(ExtraExp);
+        $('#Ord_ePO_Amount_' + Id).val(Number(totalAmount).toFixed(3));
+        $('#Ord_ePO_Discount_' + Id).val(Number(totalDiscVal).toFixed(3));
+        $('#Ord_ePO_TaxAmount_' + Id).val(Number(totalTaxVal).toFixed(3));
+        $('#Ord_ePO_TotalQty_' + Id).val(Number(itemTotalqty).toFixed(3));
+        $('#Ord_ePO_NetAmount_' + Id).val(Number(TotalNetAmount).toFixed(3));
+
+        var TotDiscPer = (Number($('#Ord_ePO_DisPersTotal_' + Id).val()) / 100) * ($('#Ord_ePO_Amount_' + Id).val() - $('#Ord_ePO_Discount_' + Id).val());
+
+        $('#Ord_ePO_DisTotal_' + Id).val(Number(TotDiscPer).toFixed(3));
+    }
+
+
+    function CheckValueGrid(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt == 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+        else {
+            if (Amt == '' || Amt == null) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function CheckValueGridTotlal(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt <= 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function ExcuteEdit_PurchOrd(id) {
+
+        if ($('#Ord_ePurchaseOrder_DeptNo_' + id).val() == "") {
+            alert('@Html.Translate("يجب إدخال الدائرة", "You Must Enter Dept")');
+            return;
+        }
+
+        if ($('#Ord_ePurchaseOrder_VendorNo_' + id).val() == "") {
+            alert('@Html.Translate("يجب إدخال المورد", "You Must Enter Vendor")');
+            return;
+        }
+        var table = $("#ePOItemTBody_" + id);
+        var trs = table.find('tr');
+
+        if (trs.length == 0) {
+            alert('@Html.Translate("يجب إدخال مواد الشراء", "Raw Item P.O must be entered")');
+            return false;
+        }
+
+        var OrdHF = {
+            CompNo: '@company.comp_num',
+            OrdYear: $('#Ord_ePurchaseOrder_OrdYear_' + id).val(),
+            OrderNo: $('#Ord_ePurchaseOrder_OrdNo_' + id).val(),
+            TawreedNo: $('#Ord_ePurchaseOrder_TawreedNo_' + id).val(),
+            OfferNo: 0,
+            Vend_Dept: $('#Ord_ePurchaseOrder_DeptNo_' + id).val(),
+            VendorNo: $('#Ord_ePurchaseOrder_VendorNo_' + id).val(),
+            EnterDate: '@DateTime.Now.ToShortDateString()',
+            ExpShDate: $('#Ord_ePurchaseOrder_ETDate_' + id).val(),
+            ConfDate: $('#Ord_ePurchaseOrder_ConfDate_' + id).val(),
+            CurType: $('#Ord_ePurchaseOrder_CboCurrCode_' + id).val(),
+            PayWay: $('#Ord_ePurchaseOrder_CboPaymentType_' + id).val(),
+            ShipWay: $('#Ord_ePurchaseOrder_CboShipMethod_' + id).val(),
+            StoreNo: 0,
+            DlvryPlace: $('#Ord_ePurchaseOrder_CboDeliveryPlace_' + id).val(),
+            Notes: $('#Ord_ePurchaseOrder_Notes_' + id).val(),
+            QutationRef: $('#Ord_ePurchaseOrder_QutationRef_' + id).val(),
+            DlvDays: $('#Ord_ePurchaseOrder_DeliveryDays_' + id).val(),
+            MainPeriod: $('#Ord_ePurchaseOrder_MaintPeriod_' + id).val(),
+            Vou_Tax: $('#Ord_ePO_TaxAmount_' + id).val(),
+            Per_Tax: 0,
+            TotalAmt: $('#Ord_ePO_Amount_' + id).val(),
+            NetAmt: $('#Ord_ePO_NetAmount_' + id).val(),
+            OrderClose: false,
+            DlvState: 0,
+            PInCharge: $('#Ord_ePurchaseOrder_ContactPerson_' + id).val(),
+            ApprovalDate: $('#Ord_ePurchaseOrder_ConfDate_' + id).val(),
+            UnitKind: 'Each',
+            LcDept: 0,
+            LcAccNo: 0,
+            VouDiscount: $('#Ord_ePO_DisTotal_' + id).val().replace(/,/g, ''),
+            PerDiscount: $('#Ord_ePO_DisPersTotal_' + id).val(),
+            SourceType: $('#Ord_ePurchaseOrder_CboSupplySource_' + id).val(),
+            GenNote: $('#Ord_ePurchaseOrder_RequistionNotes' + id).val(),
+            Approved: false,
+            ETA: $('#Ord_ePurchaseOrder_ETADate_' + id).val(),
+            ShipTerms: $('#Ord_ePurchaseOrder_TermsOfShipment_' + id).val(),
+            ContactNo: 0,
+            Port: $('#Ord_ePurchaseOrder_DestinationPort_' + id).val(),
+            IsLC: $('#Ord_ePurchaseOrder_IsLC_' + id)[0].checked,
+            FreightExpense: $('#Ord_ePO_FreightCost_' + id).val(),
+            ExtraExpenses: $('#Ord_ePO_ExtraExp_' + id).val(),
+            LastCost: 0,
+            RefNo: $('#Ord_ePurchaseOrder_RefNo_' + id).val(),
+        };
+
+        var OrdDF = new Array();
+        var Ord_POAttachments = new Array();
+        var DocumentArchive = new Array();
+
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#eInputSerial')[0].value
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#ePODF_Qty_' + InputSerial)[0].value)) {
+                alert('@Html.Translate("يجب إدخال الكمية", "You Must Enter Qty")');
+                return;
+            }
+            if (CheckValueGrid(1, $(trs[i]).closest('tr').find('#ePODF_Price_' + InputSerial)[0].value.replace(/,/g, ''))) {
+                alert('@Html.Translate("يجب إدخال السعر", "ou Must Enter Price")');
+                return;
+            }
+
+            if (CheckValueGridTotlal(1, $(trs[i]).closest('tr').find('#ePODF_Total_' + InputSerial)[0].innerHTML)) {
+                alert('@Html.Translate("يجب أن يكون المجموع أكبر من صفر", "The Total Must be Greater Than Zero")');
+                return;
+            }
+            
+            if($(trs[i]).closest('tr').find('#ePODF_Price_' + InputSerial)[0].value.replace(/,/g, '') > $(trs[i]).closest('tr').find('#ePODF_OldPrice_' + InputSerial)[0].value.replace(/,/g, '')){
+                if (!confirm('@Resources.Resource.ConfirmEditPOPrice')) {
+                    return;
+                }
+            }
+
+            var vouDiscountPer = Number($('#Ord_ePO_DisPersTotal_' + id).val()) / 100;
+            var vouDiscountPerItem = 0;
+            var itemDiscVal = 0;
+            var totalDiscVal = 0;
+            var ItemTaxVal = 0;
+            var itemTotal = 0;
+
+            itemTotal = Number($(trs[i]).closest('tr').find('#ePODF_Qty_' + InputSerial)[0].value.replace(/,/g, '')) * Number($(trs[i]).closest('tr').find('#ePODF_Price_' + InputSerial)[0].value.replace(/,/g, ''));
+            itemDiscVal = (Number($(trs[i]).closest('tr').find('#ePODF_Qty_' + InputSerial)[0].value.replace(/,/g, '')) * Number($(trs[i]).closest('tr').find('#ePODF_Price_' + InputSerial)[0].value.replace(/,/g, '')) * Number($(trs[i]).closest('tr').find('#ePODF_DiscPer_' + InputSerial)[0].value.replace(/,/g, ''))) / 100;
+            vouDiscountPerItem = (Number(itemTotal) - Number(itemDiscVal)) * Number(vouDiscountPer);
+            ItemTaxVal = (Number($(trs[i]).closest('tr').find('#ePODF_Qty_' + InputSerial)[0].value.replace(/,/g, '')) * Number($(trs[i]).closest('tr').find('#ePODF_Price_' + InputSerial)[0].value.replace(/,/g, '')) - Number(itemDiscVal) - Number(vouDiscountPerItem)) * (Number($(trs[i]).closest('tr').find('#ePODF_STax_Perc_' + InputSerial)[0].value.replace(/,/g, '')) / 100);
+
+            OrdDF.push({
+                CompNo: '@company.comp_num',
+                OrdYear: $('#Ord_ePurchaseOrder_OrdYear_' + id).val(),
+                OrderNo: $('#Ord_ePurchaseOrder_OrdNo_' + id).val(),
+                TawreedNo: $('#Ord_ePurchaseOrder_TawreedNo_' + id).val(),
+                ItemNo: $(trs[i]).closest('tr').find('#ePODF_ItemNo')[0].innerHTML,
+                ItemSr: $(trs[i]).closest('tr').find('#ePODF_ItemSr')[0].innerHTML,
+                PerDiscount: $(trs[i]).closest('tr').find('#ePODF_DiscPer_' + InputSerial)[0].value,
+                Bonus: $(trs[i]).closest('tr').find('#ePODF_Bonus_' + InputSerial)[0].value,
+                Qty: $(trs[i]).closest('tr').find('#ePODF_Qty_' + InputSerial)[0].value.replace(/,/g, ''),
+                Qty2: $(trs[i]).closest('tr').find('#ePODF_Qty2_' + InputSerial)[0].value.replace(/,/g, ''),
+                Price: $(trs[i]).closest('tr').find('#ePODF_Price_' + InputSerial)[0].value.replace(/,/g, ''),
+                ordamt: $(trs[i]).closest('tr').find('#ePODF_Total_' + InputSerial)[0].innerHTML,
+                RefNo: $(trs[i]).closest('tr').find('#ePODF_RefNo_' + InputSerial)[0].value,
+                PUnit: $(trs[i]).closest('tr').find('.ePODF_Item_Unit option:Selected')[0].getAttribute('unitCode'),
+                ItemTaxVal: ItemTaxVal,
+                ItemTaxPer: $(trs[i]).closest('tr').find('#ePODF_STax_Perc_' + InputSerial)[0].value,
+                ItemTaxType: 1,
+                VouDiscount: vouDiscountPerItem,
+                UnitSerial: $(trs[i]).closest('tr').find('.ePODF_Item_Unit')[0].value,
+                Note: $(trs[i]).closest('tr').find('#ePODF_ItemNote_' + InputSerial)[0].value,
+                NoteDtl: $(trs[i]).closest('tr').find('#ePODF_DetailedNotes_' + InputSerial)[0].value,
+                ReqDeliveryDate:$(trs[i]).closest('tr').find('#ePODF_RequestedDeliveryDate_' + InputSerial)[0].value
+            });
+        }
+        var OrdCondsGuaranty = {};
+        if ($('#Ord_ePO_txtPaymentCond1_' + id).val() == 0 && $('#Ord_ePO_txtPaymentCond2_' + id).val() == 0 && $('#Ord_ePO_txtPaymentCond3_' + id).val() == 0
+            && $('#Ord_ePO_txtPaymentCond4_' + id).val() == 0 && $('#Ord_ePO_txtPaymentCond5_' + id).val() == 0 && $('#Ord_ePO_txtGuaranty1_' + id).val() == 0
+            && $('#Ord_ePO_txtGuaranty2_' + id).val() == 0 && $('#Ord_ePO_txtGuaranty3_' + id).val() == 0 && $('#Ord_ePO_txtGuaranty4_' + id).val() == 0 && $('#Ord_ePO_txtGuaranty5_' + id).val() == 0){
+            OrdCondsGuaranty = null;
+        }
+        else{
+            var OrdCondsGuaranty = {
+                CompNo: '@company.comp_num',
+                OrdYear: $('#Ord_ePurchaseOrder_OrdYear_' + id).val(),
+                OrderNo: $('#Ord_ePurchaseOrder_OrdNo_' + id).val(),
+                TwareedNo: $('#Ord_ePurchaseOrder_TawreedNo_' + id).val(),
+                PayCond1: $('#Ord_ePO_txtPaymentCond1_' + id).val(),
+                PayCond2: $('#Ord_ePO_txtPaymentCond2_' + id).val(),
+                PayCond3: $('#Ord_ePO_txtPaymentCond3_' + id).val(),
+                PayCond4: $('#Ord_ePO_txtPaymentCond4_' + id).val(),
+                PayCond5: $('#Ord_ePO_txtPaymentCond5_' + id).val(),
+                CondPerc1: $('#Ord_ePO_txtPaymentPerc1_' + id).val(),
+                CondPerc2: $('#Ord_ePO_txtPaymentPerc2_' + id).val(),
+                CondPerc3: $('#Ord_ePO_txtPaymentPerc3_' + id).val(),
+                CondPerc4: $('#Ord_ePO_txtPaymentPerc4_' + id).val(),
+                CondPerc5: $('#Ord_ePO_txtPaymentPerc5_' + id).val(),
+                Guaranty1: $('#Ord_ePO_txtGuaranty1_' + id).val(),
+                Guaranty2: $('#Ord_ePO_txtGuaranty2_' + id).val(),
+                Guaranty3: $('#Ord_ePO_txtGuaranty3_' + id).val(),
+                Guaranty4: $('#Ord_ePO_txtGuaranty4_' + id).val(),
+                Guaranty5: $('#Ord_ePO_txtGuaranty5_' + id).val(),
+                GuarantyPerc1: $('#Ord_ePO_txtGuarantyPerc1_' + id).val(),
+                GuarantyPerc2: $('#Ord_ePO_txtGuarantyPerc2_' + id).val(),
+                GuarantyPerc3: $('#Ord_ePO_txtGuarantyPerc3_' + id).val(),
+                GuarantyPerc4: $('#Ord_ePO_txtGuarantyPerc4_' + id).val(),
+                GuarantyPerc5: $('#Ord_ePO_txtGuarantyPerc5_' + id).val()
+            };
+        }
+     
+
+        var Attachmentstable = $("#ePOAttachmentsTbody_" + id);
+        var trsAttachments = Attachmentstable.find('tr');
+
+        for (var i = 0; i < trsAttachments.length; i++) {
+            Ord_POAttachments.push({
+                CompNo: '@company.comp_num',
+                OrdYear: $('#Ord_ePurchaseOrder_OrdYear_' + id).val(),
+                OrderNo: $('#Ord_ePurchaseOrder_OrdNo_' + id).val(),
+                TawreedNo: $('#Ord_ePurchaseOrder_TawreedNo_' + id).val(),
+                Description: $(trsAttachments[i]).closest('tr').find('#Ord_ePO_AttachDescAr')[0].value,
+                DescriptionEng: $(trsAttachments[i]).closest('tr').find('#Ord_ePO_AttachDescEn')[0].value
+            });
+        }
+
+
+        var DocumentArchivetable = $("#ePODocumentArchiveTbody_" + id);
+        var trsDocumentArchive = DocumentArchivetable.find('tr');
+
+
+        for (var i = 0; i < trsDocumentArchive.length; i++) {
+            var InputSerial = $(trsDocumentArchive[i]).closest('tr').find('#Ord_ePurchaseOrder_FileId')[0].value;
+            DocumentArchive.push({
+                OrderYear: $('#Ord_ePurchaseOrder_OrdYear_' + id).val(),
+                OrderNo: $('#Ord_ePurchaseOrder_OrdNo_' + id).val(),
+                TawreedNo: $('#Ord_ePurchaseOrder_TawreedNo_' + id).val(),
+                FileId: InputSerial,
+                Description: $(trsDocumentArchive[i]).closest('tr').find('#Ord_ePurchaseOrder_Description_' + InputSerial)[0].value ,
+                DateUploded: $(trsDocumentArchive[i]).closest('tr').find('#Ord_ePurchaseOrder_UploadDate_' + InputSerial)[0].value,
+                ContentType: $(trsDocumentArchive[i]).closest('tr').find('#Ord_ePurchaseOrder_FileType_' + InputSerial)[0].value
+            })
+        }
+
+        wait();
+        burn({ BU: $('#Ord_ePurchaseOrder_CboBU_' + id).val(), OrdHF: OrdHF, OrdDF: OrdDF, OrdCondsGuaranty: OrdCondsGuaranty, Ord_POAttachments: Ord_POAttachments, DocumentArchive: DocumentArchive }, '../../../PurchaseOrder/Edit_PurchaseOrder', '', ReloadePurchaseOrder, false);
+    }
+    function ReloadePurchaseOrder(r) {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        var TawreedNo = r.TawreedNo;
+        CloseWindow('/PurchaseOrder/EditPurchaseOrder?OrdYear=' + r.OrdYear + '&OrderNo=' + r.OrdNo + '&TawreedNo=' + TawreedNo + '');
+        SerachPurchaseOrderInfo();
+    }
+
+</script>
+
+<div class="modal fade" id="Model_Revisions" style="left: 47.7rem;top: 25rem;">
+    <div class="modal-dialog">
+        <div class="modal-content" id="RevisionsModalContent">
+        </div>
+    </div>
+</div>
+
+<script>
+    function ShowRevisions(btn, itemNo) {
+        var url = '/PurchaseOrder/GetItemRevisions';
+        window.currentRevisionInput = $(btn).parent().find('input[type="text"]');
+        
+        $('#RevisionsModalContent').load(url + '?itemNo=' + encodeURIComponent(itemNo), function() {
+            $('#Model_Revisions').modal('show');
+        });
+    }
+
+    function SelectRevision(revNo) {
+        if (window.currentRevisionInput) {
+            window.currentRevisionInput.val(revNo);
+            window.currentRevisionInput.trigger('change');
+        }
+        $('#Model_Revisions').modal('hide');
+    }
+</script>

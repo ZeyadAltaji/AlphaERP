@@ -1,0 +1,589 @@
+﻿ 
+@using AlphaERP.Models;
+@using System.Data
+ 
+@{
+    Company company = (Company)Session["company"];
+    User me = (User)Session["me"];
+
+    List<Alpha_BusinessUnitDef> BU = new MDB().Database.SqlQuery<Alpha_BusinessUnitDef>("SELECT CompNo , BusUnitID, BusUnitDescAr, BusUnitDescEng  FROM Alpha_BusinessUnitDef  WHERE CompNo = {0}  AND BusUnitID IN (SELECT BusUnit From Alpha_BusUnitUserPermissions  WHERE (CompNo = {1} ) AND (UserID = {2} ) AND ((AllPerm = 1) OR (ItemIssueOrder = 1)))", company.comp_num, company.comp_num, me.UserID).ToList();
+    List<ProdCost_EmpWorkHoursD_WebView> lProdCost_EmpWorkHoursD_WebView = ViewBag.ListTestDF;
+    InvStoresMFView lInvStoresMFView = ViewBag.ListData;
+    List<BOM_GetFormStagesView> LoadStage = ViewBag.LoadStage;
+
+    string FormCode = ViewBag.FormCode;
+    int StoreNo = ViewBag.StoreNo;
+    List<ViewWarehouseData> ListData = new MDB().Database.SqlQuery<ViewWarehouseData>("SELECT StoreNo, StoreName, StoreNameEng FROM InvStoresMF WHERE(CompNo = {0}) ORDER BY StoreNo", company.comp_num).ToList();
+    int OrderYear = ViewBag.OrderYear;
+    int OrderNo = ViewBag.OrderNo;
+    bool? IsApproved =ViewBag.IsApproved;
+
+
+}
+<div class="form-group" style="margin-bottom: 2rem;">
+    <div class="row">
+        <div class="col-sm-1">
+            <label for="Year" class="col-form-label col-form-label-sm">@Html.Translate("السنة", "Year")</label>
+        </div>
+        <div class="col-sm-2">
+            <input type="number" class="form-control form-control-sm" id="Year" min="1999" max="2050" style="width: 100%;" disabled>
+        </div>
+        <div class="col-sm-2" style="width: 16rem;">
+            <label for="ExchangeOrderNumber" style="width: 88rem;" class="col-form-label col-form-label-sm">@Html.Translate("رقم أمر الصرف", "Exchange Order Number")</label>
+        </div>
+        <div class="col-sm-1">
+ 
+                <input class="form-control form-control-sm" required id="ExchangeOrderNumber" value="@lInvStoresMFView.OrdNo" disabled />
+    
+       
+            </div>
+        <div class="col-sm-2" style="width: 10rem;">
+            <label for="DocumentNo" style="width: 88rem;" class="col-form-label col-form-label-sm">@Html.Translate("رقم الوثيقة", "Document No")</label>
+        </div>
+        <div class="col-sm-1">
+            @if (lInvStoresMFView.DocNo != null)
+            {
+                 <input class="form-control form-control-sm" required id="DocumentNo" value="@lInvStoresMFView.DocNo" @(IsApproved == true ? "disabled" : "" )/>
+
+            }
+            else
+            {
+                <input class="form-control form-control-sm" required id="DocumentNo" value="1" @(IsApproved == true ? "disabled" : "" )/>
+            }
+         </div>
+        <div class="col-sm-1" style="width: 10rem;">
+            <label for="BU" class="col-form-label col-form-label-sm">@Html.Translate("وحدة العمل", "Business Unit")</label>
+        </div>
+
+        <div class="col-sm-2" style="width: 19rem;">
+            <select class="form-control" id="BU" name="BU" @(IsApproved == true ? "disabled" : "" )>
+                 @foreach (var v in BU)
+                 {
+                    <option value="@v.BusUnitID" name="M_BusUnitID" @(lInvStoresMFView != null && lInvStoresMFView.BusUnitID == v.BusUnitID ? "selected" : "")>
+                        @Html.Translate(v.BusUnitDescAr, v.BusUnitDescEng)
+                    </option> 
+                 }
+            </select>
+        </div>
+    </div>
+</div>
+<div class="form-group" style="margin-bottom: 2rem;">
+    <div class="row">
+        <div class="col-sm-1">
+            <label for="date" class="col-form-label col-form-label-sm">@Html.Translate("التاريخ", "Date")</label>
+        </div>
+        <div class="col-sm-2">
+            <input type="date" class="form-control form-control-sm" required id="date" value="@lInvStoresMFView.OrdDate.ToString("yyyy-MM-dd")" @(IsApproved == true ? "disabled" : "" ) />
+
+        </div>
+        <div class="col-sm-1">
+            <label for="StoreNo" style="width: 88rem;" class="col-form-label col-form-label-sm">@Html.Recource(1)</label>
+        </div>
+        <div class="col-sm-2">
+            <input class="form-control form-control-sm" required id="StoreNo" value="@Html.Recource(41)" disabled />
+        </div>
+        <div class="col-sm-4">
+            <input style="width: 33rem;" class="form-control form-control-sm" required id="StoreDesc" value="@Html.Recource(31)" disabled/>
+        </div>
+        
+    </div>
+</div>
+<div class="form-group" style="margin-bottom: 2rem;">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="col-md-4">
+                <input class="col-form-label col-form-label-sm" id="AdditiveItem"   type="checkbox" onchange="CheckAdditiveItems()" @(lInvStoresMFView != null && lInvStoresMFView.AddititiveItems == true ? "checked" : "") @(IsApproved == true ? "disabled" : "" )/>
+ 
+                <label for="date" class="col-form-label col-form-label-sm">@Html.Translate("الموادالمضافة", "Additive Items")</label>
+            </div>
+            <div class="col-md-2">
+                <input class="col-form-label col-form-label-sm" id="stage" type="checkbox" onchange="toggleDropdown()" @(lInvStoresMFView != null && lInvStoresMFView.ByStage == true? "checked" : "") @(IsApproved == true ? "disabled" : "" )/>
+                <label for="date" class="col-form-label col-form-label-sm">@Html.Translate("المراحل", "Stages")</label>
+
+            </div>
+            <div class="col-md-2" id="stageDropdown" style="display: none;">
+                <select class="col-form-label col-form-label-sm" style="width: 19rem;" id="stageSelect" onchange="handleStageSelection()" @(IsApproved == true ? "disabled" : "" )>
+                     @foreach (var item in LoadStage)
+                    {
+ 
+                        <option value="@item.Stage_code" name="itemStage_code" @(lInvStoresMFView != null && lInvStoresMFView.StageCode == item.Stage_code ? "selected" : "")>
+                            @Html.Translate(item.stage_desc, item.stage_desc)
+                        </option>
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="form-group" style="margin-bottom: 2rem;">
+    <div class="col-md-12" id="LoadTableDefultDiv">
+        <table class="table table-hover" id="LoadTableDefult">
+            <thead>
+                <tr>
+                    <th style="text-align:center;">@Html.Translate("رمز المادة", "Item No")</th>
+                    <th style="text-align:center;">@Html.Translate("الوصف", "desc")</th>
+                    <th style="text-align:center;"></th>
+                    <th style="text-align:center;">@Html.Translate("الوحدة", "Unit Code")</th>
+                    <th style="text-align:center; display:none;" >@Html.Translate("تسلسل الوحدة", "Unit Serial")</th>
+                    <th style="text-align:center;"></th>
+                    <th style="text-align:center;" >@Html.Translate("الحزمة", "Batch")</th>
+                    <th style="text-align:center;">@Html.Translate("الكمية المتوفرة", "AvlQty")</th>
+                   
+                    <th style="text-align:center;">@Html.Translate("الكمية", "Qty")</th>
+                    <th style="text-align:center;">@Html.Translate("ملاحظات المادة", "ItemNotes")</th>
+
+
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="LoadTableDefultItems">
+                    @foreach (DataRow row in Model.Tables["LoadIssueOrderOrDefult"].Rows)
+                    {
+                    <tr>
+                        <td id="ItemNo">@row["ItemNo"]</td>
+                        <td id="ItemDesc">@row["ItemDesc"]</td>
+                        <td><button></button></td>
+                        <td id="UnitCode">@row["UnitCode"]</td>
+                        <td id="UnitSerial" style="display:none;">@row["UnitSerial"]</td>
+                        <td ><button onclick="LoadBatch('@company.comp_num','@row["ItemNo"]','@row["UnitSerial"]')" @(IsApproved == true ? "disabled" : "" )>Batch</button></td>
+                        <td id="batch"><input  id="batchValid" class="batch-input" type="text" value="@row["Batch"]" @(IsApproved == true ? "disabled" : "" )/></td>
+                        <td id="AvlQty">@row["AvlQty"]</td>
+                       
+                        <td><input style="width: 62px  !important;" id="Qty" type="number" value="@row["Qty"]" @(IsApproved == true ? "disabled" : "" )/></td>
+                        <td><input id="ItemNotes" type="text" value="@row["ItemNotes"]" @(IsApproved == true ? "disabled" : "" )/></td>
+                        <td></td>
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+
+
+    </div>
+    <div class="col-md-12" id="LoadTableStageDiv">
+    </div>
+
+</div>
+
+
+
+<script>
+    var selectedRow = null;
+    var startYear = 1999;
+    var endYear = 2050;
+    var currentYear = new Date().getFullYear();
+    var storeNoFromViewBag =@StoreNo;
+    var listData = @Html.Raw(Json.Encode(ListData));
+ 
+    var yearInput = $('#Year');
+    yearInput.attr('value', currentYear);
+
+    yearInput.on('input', function () {
+        let selectedYear = parseInt(yearInput.val());
+        if (selectedYear < startYear) {
+            yearInput.val(startYear);
+        } else if (selectedYear > endYear) {
+            yearInput.val(endYear);
+        }
+    });
+    var TableStageANDadd = $('#TableStageANDAdditiveItems').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+
+    function SelectingStore() {
+        var selectedRow = document.querySelector('#StoreSelectTable tr.selected');
+
+        if (selectedRow) {
+            var storeNo = selectedRow.getAttribute('StoreNo');
+            var storeName = selectedRow.getAttribute('StoreName');
+
+            document.getElementById('StoreNo').value = storeNo;
+            document.getElementById('StoreDesc').value = storeName;
+        }
+
+        $('#Model_Warehouse').modal('hide');
+    }
+    function StoreSelect(row) {
+        var rows = document.querySelectorAll('tr');
+        rows.forEach(function (row) {
+            row.classList.remove('selected');
+        });
+
+        row.classList.add('selected');
+    }
+    var estageCheckbox = document.getElementById("stage");
+    var eAddItemCheckbox = document.getElementById("AdditiveItem");
+      eAddItemCheckbox.addEventListener("change", function () {
+          if (this.checked) {
+
+            estageCheckbox.checked = false;
+
+        }
+    });
+
+ $(document).ready(function() {
+        var estageCheckbox = $("#stage");
+        var estageDropdown = $("#stageDropdown");
+
+        // Function to handle showing/hiding the dropdown
+        function toggleDropdown() {
+            if (estageCheckbox.prop("checked")) {
+                var FormCode = '@FormCode';
+                var CompNo = @company.comp_num;
+
+
+                estageDropdown.css("display", "block");
+                eAddItemCheckbox.checked = false;
+            } else {
+                estageDropdown.css("display", "none");
+            }
+        }
+
+        toggleDropdown();
+    });
+    function toggleDropdown() {
+        var CompNo =@company.comp_num;
+
+        const estageCheckbox = document.getElementById("stage");
+        var estageDropdown = $("#stageDropdown");
+        var FormCode = '@FormCode'
+        if (estageCheckbox.checked) {
+            //$('#estageDropdown').load("../../../ProductionOrdersInProgress/LoadstageDropdown?CompNo=" + CompNo + "&FormCode="+FormCode);
+
+            estageDropdown.css("display", "block");
+            eAddItemCheckbox.checked = false;
+
+        } else {
+            estageDropdown.css("display", "none");
+            var eAdditiveItems = false
+            var CompNo = @company.comp_num;
+            var OrderYear = @OrderYear;
+            var OrderNo = @OrderNo;
+            var StoreNo = @StoreNo;
+            var PackingItems =false
+            //var IsRowMaterial =false
+            //var LoadTableDefultDiv = document.getElementById("LoadTableDefultDiv");
+            //LoadTableDefultDiv.innerHTML = "";
+            ////Execute this block if stageCheckbox is not checked
+            //$('#LoadTableDefultDiv').load("../../../ProductionOrdersInProgress/LoadTableDefult?CompNo=" + CompNo
+            //                   + "&OrderYear=" + OrderYear
+            //                   + "&OrderNo=" + OrderNo
+            //                   +"&StoreNo="+StoreNo
+            //                   + "&PackingItems=" + PackingItems
+            //                   + "&AdditiveItems="+eAdditiveItems
+            //                   +"&IsRowMaterial="+IsRowMaterial
+            //                   );
+
+         }
+    }
+    function handleStageSelection() {
+
+        const selectedStage = document.getElementById("stageSelect").value;
+        var CompNo = @company.comp_num;
+        var OrderYear = @OrderYear;
+        var OrderNo = @OrderNo;
+        var StoreNo = @StoreNo;
+        var PackingItems =false
+        var IsRowMaterial =false
+        var AdditiveItems = document.getElementById('AdditiveItem');
+        const stageCheckbox = document.getElementById("stage");
+
+        //var LoadTableDefultDiv = document.getElementById("LoadTableDefultDiv");
+        //LoadTableDefultDiv.innerHTML = "";
+
+        //$('#LoadTableDefultDiv').load("../../../ProductionOrdersInProgress/LoadTableStage?CompNo=" + CompNo
+        //              + "&OrderYear=" + OrderYear
+        //              + "&OrderNo=" + OrderNo
+        //              +"&StoreNo="+StoreNo
+        //              + "&PackingItems=" + PackingItems
+        //              + "&AdditiveItems="+stageCheckbox.checked
+        //              +"&IsRowMaterial="+IsRowMaterial
+        //              +"&stageID="+selectedStage
+        //);
+
+
+    }
+
+
+    function setInputsBasedOnStoreNo(storeNo) {
+         var storeData = listData.find(function (item) {
+            return item.StoreNo === parseInt(storeNo);;
+        });
+
+        if (storeData) {
+            $('#StoreNo').val(storeData.StoreNo);
+            $('#StoreDesc').val(storeData.StoreName);
+        } else {
+            alert('The warehouse number does not exist.');
+        }
+    }
+
+    setInputsBasedOnStoreNo(storeNoFromViewBag);
+
+    $('#StoreNo').on('change', function () {
+         var newStoreNo = $(this).val();
+        setInputsBasedOnStoreNo(newStoreNo);
+    });
+    function CheckAdditiveItems(){
+         var CompNo = @company.comp_num;
+        var OrderYear = @OrderYear;
+        var OrderNo = @OrderNo;
+        var StoreNo = @StoreNo;
+        var PackingItems =false
+        var IsRowMaterial =false
+        const AdditiveItems = document.getElementById("AdditiveItem");
+        var estageDropdown = $("#stageDropdown");
+        estageDropdown.css("display", "none");
+
+        //var LoadTableDefultDiv = document.getElementById("LoadTableDefultDiv");
+        //LoadTableDefultDiv.innerHTML = "";
+        //$('#LoadTableDefultDiv').load("../../../ProductionOrdersInProgress/LoadTableAdditiveItems?CompNo=" + CompNo
+        //              + "&OrderYear=" + OrderYear
+        //              + "&OrderNo=" + OrderNo
+        //              +"&StoreNo="+StoreNo
+        //              + "&PackingItems=" + PackingItems
+        //              + "&AdditiveItems="+AdditiveItems.checked
+        //              +"&IsRowMaterial="+IsRowMaterial
+        //              );
+
+    }
+
+    function SaveRFI() {
+         var Year = document.getElementById('Year').value;
+        var BU = document.getElementById('BU').value;
+        var DocumentNo = document.getElementById('DocumentNo').value;
+        var StoreNo = document.getElementById('StoreNo').value;
+        var ExchangeOrderNumber = document.getElementById('ExchangeOrderNumber').value;
+
+        if (Year.trim() === '') {
+            alert('@Html.Translate("يرجى ادخال السنة", "Please enter the year")');
+            document.getElementById('Year').focus();
+            return;
+        }
+
+
+
+        if (ExchangeOrderNumber.trim() === '') {
+            alert('@Html.Translate("يرجى إدخال رقم امر الصرف", "Please Enter Exchange Order Number")');
+            document.getElementById('ExchangeOrderNumber').focus();
+            return;
+        }
+        if (BU.trim() === '') {
+            alert('@Html.Translate("يرجى إدخال وحدة العمل", "Please Enter Business Unit")');
+            document.getElementById('BU').focus();
+            return;
+        }
+        if (StoreNo.trim() === '') {
+            alert('@Html.Translate("يرجى إدخال رقم المستودع", "Please Enter Store No")');
+            document.getElementById('BU').focus();
+            return;
+        }
+        var IssueOrderDF = [];
+
+        var CompNo =@company.comp_num;
+        var OrderYear=@OrderYear;
+        var OrderNo =@OrderNo;
+        var UserID = '@me.UserID';
+        var FormCode='@FormCode';
+
+        var year = document.getElementById("Year").value;
+        var exchangeOrderNumber = document.getElementById("ExchangeOrderNumber").value;
+        var documentNo = document.getElementById("DocumentNo").value;
+        var bu = document.getElementById("BU").value;
+        var OrdDate = document.getElementById("date").value;
+        var storeNo = document.getElementById("StoreNo").value;
+
+        var AddititiveItems = document.getElementById("AdditiveItem").checked;
+        var ByStage = document.getElementById("stage").checked;
+        const stageCheckbox = document.getElementById("stage");
+        const AddititiveItemsCheckbox = document.getElementById("AdditiveItem");
+
+        if(stageCheckbox.checked &&(stageSelect!=0)){
+             var stageSelect = document.getElementById("stageSelect");
+            var StageCode = stageSelect.value;
+            var table = document.getElementById("LoadTableDefult");
+        var rows = table.getElementsByTagName("tr");
+
+        for (var i = 1; i < rows.length; i++) {
+             var cells = rows[i].getElementsByTagName("td");
+            var ItemNo = cells[0].innerText;
+            var ItemSer = 1;
+            var UnitCode = cells[3].innerText;
+            var Qtyinput = cells[8].querySelector("#Qty");
+            var Qty =Qtyinput.value.trim();
+            var UnitSerial = cells[4].innerText;
+            var BatchInput = cells[6].querySelector(".batch-input");
+            var Batch = BatchInput.value.trim();
+
+            var ItemNotesInput = cells[9].querySelector("input[type='text']");
+            var ItemNotes = ItemNotesInput.value.trim();
+            if (Qty.trim() === '') {
+                alert('@Html.Translate("يرجى إدخال الكمية", "Please Enter Qty")');
+                return;
+
+            }if(Batch.trim() === ''){
+                alert('@Html.Translate("يرجى إدخال الحزمة ", "Please Enter batch")');
+                return;
+            }
+            var rowData = {
+                ItemNo: ItemNo,
+                ItemSer: ItemSer,
+                UnitCode: UnitCode,
+                Qty: Qty,
+                UnitSerial: UnitSerial,
+                ItemNotes: ItemNotes,
+                Batch:Batch
+
+            };
+
+            IssueOrderDF.push(rowData);
+        }
+        }else if(AddititiveItemsCheckbox.checked){
+             var table = document.getElementById("LoadTableDefult");
+            var rows = table.getElementsByTagName("tr");
+
+            for (var i = 1; i < rows.length; i++) {
+                 var cells = rows[i].getElementsByTagName("td");
+                var ItemNo = cells[0].innerText;
+                var ItemSer = 1;
+                var UnitCode = cells[3].innerText;
+                var Qtyinput = cells[8].querySelector("#Qty");
+                var Qty =Qtyinput.value.trim();
+                var UnitSerial = cells[4].innerText;
+                var BatchInput = cells[6].querySelector(".batch-input");
+                var Batch = BatchInput.value.trim();
+
+                var ItemNotesInput = cells[9].querySelector("input[type='text']");
+                var ItemNotes = ItemNotesInput.value;
+                if (Qty === '' ){
+                    alert('@Html.Translate("يرجى إدخال الكمية", "Please Enter Qty")');
+                    return;
+
+                }if(Batch === ''){
+                    alert('@Html.Translate("يرجى إدخال الحزمة ", "Please Enter batch")');
+                    return;
+                }
+                var rowData = {
+                    ItemNo: ItemNo,
+                    ItemSer: ItemSer,
+                    UnitCode: UnitCode,
+                    Qty: Qty,
+                    UnitSerial: UnitSerial,
+                    ItemNotes: ItemNotes,
+                    Batch:Batch
+
+                };
+
+                IssueOrderDF.push(rowData);
+            }
+        }else if(!AddititiveItemsCheckbox.checked && !stageCheckbox.checked){
+
+            var table = $("#LoadTableDefult");
+            var trs1 = table.find('tbody tr');
+            for (var i = 0; i < trs1.length; i++) {
+                var Qty = $(trs1[i]).find('#Qty')[0].value.trim();
+                var Batch = $(trs1[i]).find('#batchValid')[0].value.trim();
+
+                if (Qty === '') {
+                    alert('@Html.Translate("يرجى إدخال الكمية", "Please Enter Qty")');
+                    return;
+                }
+                if (Batch === '') {
+                    alert('@Html.Translate("يرجى إدخال الحزمة", "Please Enter batch")');
+                    return;
+                }
+
+                IssueOrderDF.push({
+                    ItemNo: $(trs1[i]).find('#ItemNo')[0].innerHTML,
+                    UnitCode: $(trs1[i]).find('#UnitCode')[0].innerHTML,
+                    UnitSerial: $(trs1[i]).find('#UnitSerial')[0].innerHTML,
+                    batch: Batch,
+                    Qty: Qty,
+                    ItemNotes: $(trs1[i]).find('#ItemNotes')[0].value,
+                });
+            }
+         }
+
+         var OderHFData = {
+             OrdYear:year,
+             OrdNo:exchangeOrderNumber,
+             DocNo:documentNo,
+             BusUnitID:bu,
+             OrdDate:OrdDate,
+             StoreNo:storeNo,
+             StageCode:StageCode,
+             AddititiveItems:AddititiveItems,
+             ByStage:ByStage
+         }
+
+
+        wait();
+        if (confirm('@Resources.Resource.ConfirmBOMDef')) {
+            burn({ CompNo: CompNo,OrderYear:OrderYear,OrderNo:OrderNo, OderHFData: OderHFData, IssueOrderDF: IssueOrderDF, UserID: UserID },
+                    '../../../ProductionOrdersInProgress/SaveRFI',
+                    '',
+                    function (response){
+                        ReloadBaseTable(response)
+                        var tableRFIBody = $('#tableRFIBody');
+                        tableRFIBody.innerHTML ="";
+                        $('#tableRFIBody').load('../../../ProductionOrdersInProgress/LoadRFIAll?CompNo='+CompNo+'&OrderYear=' + OrderYear + '&OrderNo=' + OrderNo + '&FormCode=' + FormCode);
+                        $('#ModalLoadIssueOrder').modal('hide');
+                        $('#ModalSelectIssueOrder').modal('hide');
+
+                        done();
+                    },
+                    false
+                    );
+                }
+        else {done();}
+    }
+    function ReloadBaseTable(response)
+    {
+        var message = 'done';
+        if (message) {
+                alert(message);
+            }
+
+        refreshTable()
+    }
+    function LoadBatch(CompNo,ItemNo,UnitSerial){
+          var storeNo = document.getElementById("StoreNo").value;
+
+         $('#LoadBatchBody').load("../../../ProductionOrdersInProgress/LoadBatch?CompNo=" + CompNo
+                               + "&ItemNo=" + ItemNo
+                               + "&StoreNo=" + storeNo
+                               + "&UnitSerial=" + UnitSerial
+                               );
+        $('#ModelLoadBatch').modal('show')
+    }
+
+    function SelectBatch(row) {
+        if (selectedRow) {
+            $(selectedRow).removeClass("selected");
+        }
+
+        selectedRow = row;
+        $(selectedRow).addClass("selected");
+    }
+
+    function SelectingBatch() {
+        if (selectedRow) {
+            var selectedBatchNo = $(selectedRow).attr("BatchNo");
+            $(".batch-input").val(selectedBatchNo);
+            $('#ModelLoadBatch').modal('hide')
+        }
+
+    }
+
+</script>
+
+
+
+
+
+

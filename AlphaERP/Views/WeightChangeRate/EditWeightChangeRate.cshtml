@@ -1,0 +1,202 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    Company company = (Company)Session["company"];
+    int Srial = 1;
+    int OrdYear = ViewBag.OrdYear;
+    int OrderNo = ViewBag.OrderNo;
+    string TawreedNo = ViewBag.TawreedNo;
+    string ShipSer = ViewBag.ShipSer;
+    int Ser = ViewBag.srl;
+    Ord_WeightChangeRate WeightChangeRate = new MDB().Ord_WeightChangeRate.Where(x => x.CompNo == company.comp_num && x.OrderYear == OrdYear && x.OrderNo == OrderNo && x.TawreedNo == TawreedNo && x.ShipSer == ShipSer && x.Ser == Ser).FirstOrDefault();
+}
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(100vh - 210px) !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_eWeightChangeRate_OrdYear">@Html.Recource(3196) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="text" id="MRP_eWeightChangeRate_OrdYear_@Ser" value="@OrdYear" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_WeightChangeRate_OrderNo">@Html.Recource(3197) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:90px !important;" type="text" id="MRP_eWeightChangeRate_OrderNo_@Ser" value="@OrderNo" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_eWeightChangeRate_TawreedNo">@Html.Recource(3797) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:150px !important;" type="text" id="MRP_eWeightChangeRate_TawreedNo_@Ser" value="@TawreedNo" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="MRP_eWeightChangeRate_ShipSer">@Html.Recource(696) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 120px !important; direction: ltr; text-align: right;" type="text" id="MRP_eWeightChangeRate_ShipSer_@Ser" value="@ShipSer" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_eWeightChangeRate_TransNo">@Html.Recource(1871)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 120px !important;" type="text" id="MRP_eWeightChangeRate_TransNo_@Ser" value="@Ser" disabled />
+                    </div>
+                    
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="MRP_eWeightChangeRate_WeightRateDate">@Html.Recource(718) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="date" id="MRP_eWeightChangeRate_WeightRateDate_@Ser" value="@WeightChangeRate.WeightRateDate.Value.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_eWeightChangeRate_WeightRate">@Html.Translate("معدل زيادة الوزن", "Weight Rate") </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="number" id="MRP_eWeightChangeRate_WeightRate_@Ser" value="@WeightChangeRate.WeightRate" onblur="CheckValueWeightRate(this,@Srial)" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_eWeightChangeRate_StandardCost">@Html.Recource(6717)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:120px !important;" type="number" id="MRP_eWeightChangeRate_StandardCost_@Ser" value="@WeightChangeRate.StandardCost" onblur="CheckValueStandardCost(this,@Srial)" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="MRP_eWeightChangeRate_WeightRateNote">@Html.Recource(70)</label>
+                    </div>
+                    <div class="col-md-10">
+                        <textarea required="true" style="width: 100%; height: 25px !important; " id="MRP_eWeightChangeRate_WeightRateNote_@Ser">@WeightChangeRate.WeightRateNote</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="ExcuteEdit_WeightChangeRate(@Ser)" class="btn btn-primary">@Resources.Resource.Save</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function CheckValueWeightRate(e,Serial) {
+        if (e.value < 0) {
+            alert('@Html.Translate("يجب أن يكون معدل زيادة الوزن أكبر من صفر", "The Weight Rate Must be Greater Than Zero")');
+             e.value = 0;
+            e.focus();
+        }
+        if (e.value == "") {
+             e.value = 0;
+        }
+    }
+    function CheckValueStandardCost(e,Serial) {
+        if (e.value < 0) {
+            alert('@Html.Translate("يجب أن يكون تكليف معياري أكبر من صفر", "The Standard Cost Must be Greater Than Zero")');
+             e.value = 0;
+            e.focus();
+        }
+        if (e.value == "") {
+             e.value = 0;
+        }
+    }
+    function CheckValueGrid(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt == 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+        else {
+            if (Amt == '' || Amt == null) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function ExcuteEdit_WeightChangeRate(id) {
+
+        if ($('#MRP_eWeightChangeRate_WeightRate_' + id).val() == "" || $('#MRP_eWeightChangeRate_WeightRate_' + id).val() <= 0) {
+            $('#MRP_eWeightChangeRate_WeightRate_' + id).focus();
+            alert('@Html.Translate("يجب إدخال معدل زيادة الوزن", "You Must Enter Weight Rate")');
+            return;
+        }
+
+        var WeightChangeRate = {
+            CompNo: '@company.comp_num',
+            OrderYear: $('#MRP_eWeightChangeRate_OrdYear_' + id).val(),
+            OrderNo: $('#MRP_eWeightChangeRate_OrderNo_' + id).val(),
+            TawreedNo: $('#MRP_eWeightChangeRate_TawreedNo_' +id).val(),
+            ShipSer: $('#MRP_eWeightChangeRate_ShipSer_' + id).val(),
+            Ser: $('#MRP_eWeightChangeRate_TransNo_' + id).val(),
+            WeightRateDate: $('#MRP_eWeightChangeRate_WeightRateDate_' + id).val(),
+            WeightRate: $('#MRP_eWeightChangeRate_WeightRate_' + id).val(),
+            WeightRateNote: $('#MRP_eWeightChangeRate_WeightRateNote_' + id).val(),
+            StandardCost: $('#MRP_eWeightChangeRate_StandardCost_' + id).val()
+        }
+
+
+        wait();
+        burn({ WeightChangeRate: WeightChangeRate }, '../../../WeightChangeRate/Edit_WeightChangeRate', '', ReloadeWeightChangeRate, false);
+    }
+    function ReloadeWeightChangeRate(r) {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        var TawreedNo = r.TawreedNo;
+        var ShipSer = r.ShipSer;
+        var Ser = r.Ser;
+
+        CloseWindow('/WeightChangeRate/EditWeightChangeRate?OrdYear=' + r.OrdYear + '&OrderNo=' + r.OrdNo + '&TawreedNo=' + TawreedNo + '&ShipSer=' + ShipSer + '&Ser=' + Ser + '')
+
+        var table = $("#WeightRateTable tbody");
+        var trs = table.find('tr');
+
+        for (var i = 0; i < trs.length; i++) {
+            if ($(trs[i])[0].getAttribute('OrdYear') == r.OrdYear && $(trs[i])[0].getAttribute('OrderNo') == r.OrdNo && $(trs[i])[0].getAttribute('TawreedNo') == TawreedNo && $(trs[i])[0].getAttribute('ShipSer') == ShipSer) {
+                var nTr = $(trs[i])[0];
+                wait();
+                $(this).attr("opened", "details_close");
+                var OrdYear = $(trs[i])[0].getAttribute('OrdYear');
+                var OrderNo = $(trs[i])[0].getAttribute('OrderNo');
+                var TawreedNo = $(trs[i])[0].getAttribute('TawreedNo');
+                var ShipSer = $(trs[i])[0].getAttribute('ShipSer');
+
+                $.get("../../../../WeightChangeRate/DetailsWeightChangeRate?OrdYear=" + OrdYear + '&OrderNo=' + OrderNo + '&TawreedNo=' + TawreedNo + '&ShipSer=' + ShipSer, function (data) {
+                    WeightRateTable.fnOpen(nTr, data, 'details');
+                    done();
+                });
+            }
+        }
+    }
+</script>

@@ -1,0 +1,149 @@
+﻿@model IEnumerable<AlphaERP.Models.Ord_RequestDF>
+@using AlphaERP.Models;
+@using System.Data.SqlClient;
+@using System.Data;
+@{
+    Company company = (Company)Session["company"];
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    int Srial = 1;
+}
+
+<div class="col-md-12">
+    <button onclick="EditRowItem()" type="button" class="btn btn-primary">@Html.Recource(32)</button>
+</div>
+
+<div class="col-md-12" style="height:calc(100vh - 480px) !important;overflow-y:auto">
+    <table class="table table-hover" id="EditPurchaseReqItemTable">
+        <thead>
+            <tr>
+                <th style="width: 20%; text-align: center !important;">@Html.Recource(9720)</th>
+                <th style="text-align: center !important;">@Html.Recource(49)</th>
+                <th style="text-align: center !important;">@Html.Translate("السعر المبدئي", "Budgetary Price")</th>
+                <th style="text-align: center !important;">@Html.Recource(68)</th>
+                <th style="text-align: center !important;">@Html.Translate("تاريخ التسليم المطلوب", "Requested Delivery Date")</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tfoot>
+            <tr>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;">Total</th>
+                <th style="text-align: center !important;" id="eTotalAll">0</th>
+                <th style="text-align: center !important;"></th>
+                <th style="text-align: center !important;"></th>
+            </tr>
+        </tfoot>
+        <tbody id="ePurchaseReqItemTBody">
+            @foreach (Ord_RequestDF item in Model)
+            {
+                <tr id="ePurchaseRequest_Serial_@Srial">
+                    <td style="width: 10%; word-wrap: break-word; white-space: normal; text-align: center !important;" hidden>
+                        <input id="ePurchaseRequest_ItemNo" value="@item.ItemNo" type="text" style="width: 90px !important" />
+                    </td>
+                    <td style="text-align: center !important;">
+                        <input id="ePurchaseReques_Notes_@Srial" type="text" style="width: 100%  !important;" value="@item.Note" />
+                    </td>
+                    <td style="text-align: center;">
+                        <input id="ePurchaseRequest_Qty_@Srial" value="@item.Qty.Value.ToString("n2")" type="number" style="width:75px !important" onblur="GetValuebestqty(this,'@Srial')" />
+                        <input id="ePurchaseRequest_Qtyth_@Srial" hidden value="@item.Qty.Value" type="text" style="width:75px !important" onblur="GetValuebestqty(this,'@Srial')" />
+                    </td>
+                    <td style="text-align: center;">
+                        <input id="ePurchaseRequest_Price_@Srial" value="@item.Price.Value.ToString("n2")" type="number" style="width:75px !important" onblur="GetValuePrice(this,'@Srial')" />
+                        <input id="ePurchaseRequest_Priceth_@Srial" hidden value="@item.Price.Value" type="text" style="width:75px !important" onblur="GetValuebestqty(this,'@Srial')" />
+                    </td>
+                    <td style="width: 8%; text-align: center !important;">
+                        <input id="ePurchaseReques_Total_@Srial" value="@item.TotalValue.Value.ToString("n2")" type="number" style="width:75px !important;background-color: cornsilk;" disabled />
+                        <input id="ePurchaseReques_Totalth_@Srial" value="@item.TotalValue.Value" type="text" style="width:75px !important;background-color: cornsilk;" hidden />
+                    </td>
+                    <td style="text-align: center;">
+                        <input type="date" required="true" style="width: 115px !important;" id="ePurchaseRequest_RequestedDeliveryDate_@Srial" value="@item.ReqDeliveryDate.ToString("yyyy-MM-dd")" />
+                    </td>
+                    <td>
+                        <button class="btn-de" onclick="eRemoveRowItem(this)"><i class="fa fa-trash-alt"></i></button>
+                        <input type="hidden" id="eInputSerial" value="@(Srial++)" />
+                    </td>
+                </tr>
+               }
+        </tbody>
+    </table>
+</div>
+
+<script>
+    var table_ = $("#ePurchaseReqItemTBody");
+    var Count = table_.find("tr").length;
+    function EditRowItem() {
+        Count++;
+        var newarray = [];
+        newarray.push('<input id="ePurchaseRequest_ItemNo" value ="SG10001"  type="text" hidden /> <input id="ePurchaseReques_Notes_' + Count + '" type="text" style="width: 100%  !important;" />')
+        newarray.push('<input id="ePurchaseRequest_Qty_' + Count + '" value="0" onblur="GetValuebestqty(this,' + Count + ' )" type="number" style="width: 75px  !important;" />')
+        newarray.push('<input id="ePurchaseRequest_Price_' + Count + '" value="0" onblur="GetValuePrice(this,' + Count + ' )" type="number" style="width: 75px  !important;" />')
+        newarray.push('<input id="ePurchaseRequest_Total_' + Count + '" value="0" type="text" style="width: 85px  !important;background-color: cornsilk;" disabled  />')
+        newarray.push('<input id="ePurchaseRequest_RequestedDeliveryDate_' + Count + '" value="@DateTime.Now.ToString("yyyy-MM-dd")"  type="date" style="width: 115px  !important;" />')
+        newarray.push('<button class="btn-de" onclick="eRemoveRowItem(this,' + Count + ')" type="button"><i class= "fa fa-trash-alt"></i ></button><input type="hidden" id="eInputSerial" value="' + Count + '" />')
+        $("#ePurchaseReqItemTBody").append(
+            GenRowMas(newarray, 'ePurchaseRequest_' + Count)
+        );
+    }
+    function GenRowMas(tds, Id) {
+        var row = '';
+        row = '<tr Id = ' + Id + '>';
+        for (var i = 0; i < tds.length; i++) {
+            row += '<td style="text-align: center;">' + tds[i] + '</td>'
+        }
+        row += '</tr>'
+        return row;
+    }
+    function eRemoveRowItem(e, Count) {
+        if (confirm('@Resources.Resource.DeleteConfirm')) {
+            var p = e.parentNode.parentNode;
+            p.parentNode.parentNode.deleteRow(p.rowIndex);
+            sumTotalAll();
+            return true;
+        }
+        return false;
+    }
+
+    sumTotalAll()
+    function GetValuebestqty(e, IdSerial) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون الكمية اقل من 0", "The value of the Qty may not be less than 0")');
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+        SumTotal(IdSerial)
+    }
+    function GetValuePrice(e, IdSerial) {
+        if (e.value < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون السعر اقل من 0", "The value of the Price may not be less than 0")');
+            e.value = 0;
+            e.focus()
+            return false;
+        }
+        SumTotal(IdSerial)
+    }
+    function SumTotal(IdSerial) {
+        var Total = 0
+        var Qty = 'ePurchaseRequest_Qty_' + IdSerial
+        var Price = 'ePurchaseRequest_Price_' + IdSerial
+        var PurchTotal = 'ePurchaseRequest_Total_' + IdSerial
+    debugger
+        Total = Number(document.getElementById(Qty).value) * Number(document.getElementById(Price).value);
+        document.getElementById(PurchTotal).value = Number(Total).toFixed(3);
+        sumTotalAll()
+    }
+    function sumTotalAll() {
+        var table = $('#ePurchaseReqItemTBody tr');
+        var trs = table;
+        var Totals = 0
+
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#eInputSerial')[0].value
+            Totals += Number($(trs[i]).closest('tr').find('#ePurchaseRequest_Total_' + InputSerial)[0].value);
+        }
+
+        $('#eTotalAll').html(Number(Totals).toFixed(3));
+    }
+</script>

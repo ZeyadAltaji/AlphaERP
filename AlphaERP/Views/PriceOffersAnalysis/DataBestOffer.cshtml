@@ -1,0 +1,297 @@
+﻿@model IEnumerable<AlphaERP.Models.MRP_Web_OrdCopyInfo>
+@using System.Data.SqlClient;
+@using AlphaERP.Models;
+@using System.Data;
+@using System.Collections.Generic;
+
+@{
+    Company company = (Company)Session["company"];
+    List<BusunisUnit> Venders = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("select VendorNo as VenderId ,name as DescAr,Eng_Name as DescEn from Vendors where (comp = '{0}') AND (IsHalt = 0)", company.comp_num)).ToList();
+    List<InvItemsMF> Mf = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num).ToList();
+    List<InvUnitCode> UnitC = new MDB().InvUnitCodes.Where(x => x.CompNo == company.comp_num).ToList();
+    int Srial = 1;
+    MRP_Web_OrdCopyInfo itemNo = Model.FirstOrDefault();
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+
+    List<PayCodes> Currency = new MDB().Database.SqlQuery<PayCodes>("select CurrType as Id ,CurrName as DescAr,isnull(CurrNameE,'No Desc.') as DescEn from CurrType").ToList();
+    List<BusunisUnit> PaymentM = new MDB().Database.SqlQuery<BusunisUnit>(string.Format("select MCode as Id ,[Desc] as DescAr,isnull([EngDesc],'No Desc.') as DescEn from PayMethods where (Comp = '{0}')", company.comp_num)).ToList();
+    List<PayCodes> DlivPlace = new MDB().Database.SqlQuery<PayCodes>(string.Format("select PlaceCode as Id ,Place as DescAr from OrdDlivPlace where (CompNo = '{0}')", company.comp_num)).ToList();
+    DataTable Dt = new DataTable();
+}
+
+
+<div class="col-md-12 wrapperx" id="MRP_PriceOffersAnalysis_Div">
+    <table class="table table-hover MRP_DataBestOffer" id="DataBestOfferTable">
+        <thead>
+            <tr>
+                <th>@Resources.Resource.Supplier</th>
+                <th>@Resources.Resource.ItemNo</th>
+                <th>@Resources.Resource.ItemName</th>
+                <th>@Html.Recource(49)</th>
+                @if (compMF.UseQty2 == true)
+                {
+                    <th>@Html.Recource(72)</th>
+                }
+                else
+                {
+                    <th hidden>@Html.Recource(72)</th>
+                }
+                <th>@Html.Recource(3200)</th>
+                <th>@Html.Recource(215)</th>
+                <th>@Html.Recource(3827)</th>
+                <th>@Html.Recource(1671)</th>
+                <th>@Html.Recource(1600)</th>
+                <th>@Html.Recource(1874)</th>
+                <th>@Html.Recource(3207)</th>
+                <th>@Html.Recource(444)</th>
+                <th>@Html.Translate("ميناء الشحن", "Shipping Port")</th>
+                <th>@Html.Recource(2645)</th>
+                <th>@Resources.Resource.Nomination</th>
+            </tr>
+        </thead>
+        <tbody style="text-align: center;" id="DataBestOfferTBody">
+            @foreach (MRP_Web_OrdCopyInfo item in Model.OrderBy(x => x.VendorNo))
+            {
+                string date = item.DeliveryDate.Value.ToString("yyyy-MM-dd");
+                string VenderName = Venders.Where(x => x.VenderId == item.VendorNo).Select(o => o.DescAr).FirstOrDefault();
+                string VenderNameEn = Venders.Where(x => x.VenderId == item.VendorNo).Select(o => o.DescEn).FirstOrDefault();
+                InvItemsMF itemMf = Mf.Where(x => x.ItemNo == item.ItemNo).FirstOrDefault();
+                string ItemDesc = Html.Translate(itemMf.ItemDesc, itemMf.ItemDesc_Ara).ToString();
+                double ConvertRate = 0;
+                {
+                    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+                    {
+                        Dt = new DataTable();
+                        cn.Open();
+                        using (SqlCommand cmd = new SqlCommand())
+                        {
+                            cmd.Connection = cn;
+                            cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                            cmd.CommandText = "Gln_GetCurrExchRatio";
+                            cmd.Parameters.Add(new SqlParameter("@CompNo", System.Data.SqlDbType.SmallInt)).Value = company.comp_num;
+                            cmd.Parameters.Add(new SqlParameter("@CurrCode", System.Data.SqlDbType.SmallInt)).Value = item.Curr;
+                            cmd.Parameters.Add(new SqlParameter("@VDate", System.Data.SqlDbType.SmallDateTime)).Value = DateTime.Now;
+                            using (SqlDataAdapter DA = new SqlDataAdapter(cmd))
+                            {
+                                DA.Fill(Dt);
+                            }
+                        }
+                    }
+                    foreach (DataRow row in Dt.Rows)
+                    {
+                        ConvertRate = Convert.ToDouble(row["CurrRatio"]);
+                    }
+                }
+                if (item.VendorNo == itemNo.VendorNo)
+                {
+            <tr id="DataBestOffer_@Srial" style="background-color:lightgreen" onclick="myAction(this,'@item.VendorNo')">
+                <td style="width: 10%;" id="EnterVendorOffer_vendor_@Srial" vendor="@item.VendorNo">@Html.Translate(VenderName, VenderNameEn)</td>
+                <td style="width: 20%;" id="EnterVendorOffer_ItemNo">@item.ItemNo</td>
+                <td style="text-align: center !important">@ItemDesc</td>
+                <td style="text-align: center;">@item.Qty</td>
+                @if (compMF.UseQty2 == true)
+                {
+                    <td style="text-align: center;">@item.Qty2</td>
+                }
+                else
+                {
+                    <td style="text-align: center;" hidden>@item.Qty2</td>
+                }
+                <td style="text-align: center;">@item.Bonus</td>
+                <td style="text-align: center;">@item.SellPrice</td>
+                <td style="text-align: center;">@itemMf.LastRecCost.Value.ToString("0.000")</td>
+                <td style="text-align: center;">
+                    <select style="width:100%" class="MRP_PriceOffersAnalysis_CboCurrCode" disabled>
+                        @foreach (var Curr in Currency)
+                        {
+                            if (@item.Curr == Curr.Id)
+                            {
+                                <option value="@Curr.Id" selected>@Html.Translate(Curr.DescAr, Curr.DescEn)</option>
+                            }
+                            else
+                            {
+                                <option value="@Curr.Id">@Html.Translate(Curr.DescAr, Curr.DescEn)</option>
+                            }
+                        }
+                    </select>
+                </td>
+                <td style="text-align: center;">@ConvertRate.ToString("0.000")</td>
+                <td style="text-align: center;">
+                    <select style="width:100%" class="MRP_PriceOffersAnalysis_CboPaymentType" disabled>
+                        @foreach (var Paym in PaymentM)
+                        {
+                            if (@item.Pmethod == Paym.Id)
+                            {
+                                <option value="@Paym.Id" selected>@Html.Translate(Paym.DescAr, Paym.DescEn)</option>
+                            }
+                            else
+                            {
+                                <option value="@Paym.Id">@Html.Translate(Paym.DescAr, Paym.DescEn)</option>
+                            }
+                        }
+                    </select>
+                </td>
+                <td style="text-align: center;">
+                    <select style="width:100%" class="MRP_PriceOffersAnalysis_CboDeliveryPlace" disabled>
+                        @foreach (var s in DlivPlace)
+                        {
+                            if (@item.DeliveryPlace == s.Id)
+                            {
+                                <option value="@s.Id" selected>@s.DescAr</option>
+                            }
+                            else
+                            {
+                                <option value="@s.Id">@s.DescAr</option>
+                            }
+                        }
+                    </select>
+                </td>
+                <td style="text-align: center;">
+                    <input id="MRP_PriceOffersAnalysis_CountryOfOrigin_@Srial" value="@item.CountryOfOrigin" type="text" disabled />
+                </td>
+                <td style="text-align: center;">
+                    <input id="MRP_PriceOffersAnalysis_ShippingPort_@Srial" value="@item.ShippingPort" type="text" disabled />
+                </td>
+                <td style="text-align: center;">@date</td>
+                <td style="text-align: center;">
+                    <input id="MRP_PriceOffersAnalysis_Approval" type="checkbox" onclick="myActionVendore(this,'@item.VendorNo')" checked>
+                </td>
+                <td>
+                    <input type="hidden" id="PriceOffersAnalysis_VendorNo_@item.VendorNo" value="@item.VendorNo" />
+                    <input type="hidden" id="PriceOffersAnalysis_ItemNo_@item.VendorNo" value="@item.ItemNo" />
+                    <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                </td>
+            </tr>
+                }
+                else
+                {
+        <tr id="DataBestOffer_@Srial" onclick="myAction(this,'@item.VendorNo')">
+            <td style="width: 10%;" id="EnterVendorOffer_vendor_@Srial" vendor="@item.VendorNo">@Html.Translate(VenderName, VenderNameEn)</td>
+            <td style="width: 20%;" id="EnterVendorOffer_ItemNo">@item.ItemNo</td>
+            <td style="text-align: center !important">@ItemDesc</td>
+            <td style="text-align: center;">@item.Qty</td>
+            @if (compMF.UseQty2 == true)
+            {
+                <td style="text-align: center;">@item.Qty2</td>
+            }
+            else
+            {
+                <td style="text-align: center;" hidden>@item.Qty2</td>
+            }
+            <td style="text-align: center;">@item.Bonus</td>
+            <td style="text-align: center;">@item.SellPrice</td>
+            <td style="text-align: center;">@itemMf.LastRecCost.Value.ToString("0.000")</td>
+            <td style="text-align: center;">
+                <select style="width:100%" class="MRP_PriceOffersAnalysis_CboCurrCode" disabled>
+                    @foreach (var Curr in Currency)
+                    {
+                        if (@item.Curr == Curr.Id)
+                        {
+                            <option value="@Curr.Id" selected>@Html.Translate(Curr.DescAr, Curr.DescEn)</option>
+                        }
+                        else
+                        {
+                            <option value="@Curr.Id">@Html.Translate(Curr.DescAr, Curr.DescEn)</option>
+                        }
+                    }
+                </select>
+            </td>
+            <td style="text-align: center;">@ConvertRate.ToString("0.000")</td>
+            <td style="text-align: center;">
+                <select style="width:100%" class="MRP_PriceOffersAnalysis_CboPaymentType" disabled>
+                    @foreach (var Paym in PaymentM)
+                    {
+                        if (@item.Pmethod == Paym.Id)
+                        {
+                            <option value="@Paym.Id" selected>@Html.Translate(Paym.DescAr, Paym.DescEn)</option>
+                        }
+                        else
+                        {
+                            <option value="@Paym.Id">@Html.Translate(Paym.DescAr, Paym.DescEn)</option>
+                        }
+                    }
+                </select>
+            </td>
+            <td style="text-align: center;">
+                <select style="width:100%" class="MRP_PriceOffersAnalysis_CboDeliveryPlace" disabled>
+                    @foreach (var s in DlivPlace)
+                    {
+                        if (@item.DeliveryPlace == s.Id)
+                        {
+                            <option value="@s.Id" selected>@s.DescAr</option>
+                        }
+                        else
+                        {
+                            <option value="@s.Id">@s.DescAr</option>
+                        }
+                    }
+                </select>
+            </td>
+            <td style="text-align: center;">
+                <input id="MRP_PriceOffersAnalysis_CountryOfOrigin_@Srial" value="@item.CountryOfOrigin" type="text" disabled />
+            </td>
+            <td style="text-align: center;">
+                <input id="MRP_PriceOffersAnalysis_ShippingPort_@Srial" value="@item.ShippingPort" type="text" disabled />
+            </td>
+            <td style="text-align: center;">@date</td>
+            <td style="text-align: center;">
+                <input id="MRP_PriceOffersAnalysis_Approval" type="checkbox" onclick="myActionVendore(this,'@item.VendorNo')">
+            </td>
+            <td>
+                <input type="hidden" id="PriceOffersAnalysis_VendorNo_@item.VendorNo" value="@item.VendorNo" />
+                <input type="hidden" id="PriceOffersAnalysis_ItemNo_@item.VendorNo" value="@item.ItemNo" />
+                <input type="hidden" id="InputSerial" value="@(Srial++)" />
+            </td>
+        </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $('.MRP_PriceOffersAnalysis_CboCurrCode').select2();
+    $('.MRP_PriceOffersAnalysis_CboPaymentType').select2();
+    $('.MRP_PriceOffersAnalysis_CboDeliveryPlace').select2();
+    function myActionVendore(e, srial) {
+        var table = $('.MRP_DataBestOffer #DataBestOfferTBody tr');
+        var trs = table;
+        var VendorNo = $(trs).find('#PriceOffersAnalysis_VendorNo_' + srial)[0].value
+
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value
+            var vendor = $(trs[i]).closest('tr').find('#EnterVendorOffer_vendor_' + InputSerial)[0].getAttribute('vendor');
+            if ($(trs[i]).closest('tr').find('#PriceOffersAnalysis_VendorNo_' + vendor)[0].value == VendorNo) {
+                if (e.checked == true) {
+                    $(trs[i]).closest('tr').find('#MRP_PriceOffersAnalysis_Approval')[0].checked = true
+                }
+                else {
+                    $(trs[i]).closest('tr').find('#MRP_PriceOffersAnalysis_Approval')[0].checked = false
+                }
+            }
+            else {
+                $(trs[i]).closest('tr').find('#MRP_PriceOffersAnalysis_Approval')[0].checked = false
+            }
+        }
+    }
+    function myAction(e, srial) {
+        var table = $('.MRP_DataBestOffer #DataBestOfferTBody tr');
+        var trs = table;
+        var VendorNo = $(trs).find('#PriceOffersAnalysis_VendorNo_' + srial)[0].value
+
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value
+            var vendor = $(trs[i]).closest('tr').find('#EnterVendorOffer_vendor_' + InputSerial)[0].getAttribute('vendor');
+            if ($(trs[i]).closest('tr').find('#PriceOffersAnalysis_VendorNo_' + vendor)[0].value == VendorNo) {
+                    $(trs[i]).closest('tr').find('#MRP_PriceOffersAnalysis_Approval')[0].checked = true
+            }
+            else {
+                $(trs[i]).closest('tr').find('#MRP_PriceOffersAnalysis_Approval')[0].checked = false
+            }
+        }
+    }
+</script>

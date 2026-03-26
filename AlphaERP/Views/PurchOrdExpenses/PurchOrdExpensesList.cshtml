@@ -1,0 +1,130 @@
+﻿@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+    int OrdYear;
+    if (ViewBag.OrdYear == null)
+    {
+        OrdYear = DateTime.Now.Year;
+    }
+    else
+    {
+        OrdYear = ViewBag.OrdYear;
+    }
+    List<Ord_PurchOrdExpensesHF> ordExpensesHF = new MDB().Ord_PurchOrdExpensesHF.Where(x => x.CompNo == company.comp_num && x.TransYear == OrdYear).ToList();
+}
+
+@if (Session["language"].ToString() == "en")
+{
+    <style>
+        .dataTables_wrapper .dataTables_filter {
+            text-align: center !important;
+            direction: rtl;
+        }
+    </style>
+}
+
+
+
+<table id="PurchaseOrdExpensesTable" class="table table-hover">
+    <thead>
+        <tr>
+            <th style="text-align:center !important">@Html.Recource(3259)</th>
+            <th style="text-align:center !important">@Html.Recource(1871)</th>
+            <th style="text-align: center !important;">@Html.Recource(718)</th>
+            <th style="text-align: center !important;">@Html.Recource(524)</th>
+            <th style="text-align: center !important;">@Html.Translate("الحالة", "Status")</th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (Ord_PurchOrdExpensesHF item in ordExpensesHF)
+        {
+            glactmf gl = new MDB().glactmfs.Where(x => x.acc_comp == company.comp_num && x.acc_num == item.AccNo).FirstOrDefault();
+        <tr>
+            <td style="text-align: center !important" id="PurchOrdExpenses_TransYear" TransYear="@item.TransYear">@item.TransYear</td>
+            <td style="text-align: center !important" id="PurchOrdExpenses_TransNo" TransNo="@item.TransNo">@item.TransNo</td>
+            <td style="text-align: center !important" id="PurchOrdExpenses_TransDate">@item.TransDate.Value.ToString("yyyy-MM-dd")</td>
+            <td style="text-align: center !important;word-wrap: break-word; white-space: normal;" id="PurchOrdExpenses_AccDesc">@Html.Translate(gl.acc_desc, gl.acc_edesc)</td>
+            <td style="text-align:center !important">
+                @if (item.IsPosted == true)
+                {
+                    @Html.Translate("مرحل", "Posted")
+                }
+                else
+                {
+                    @Html.Translate("غير مرحل", "UnPosted")
+                }
+            </td>
+            <td>
+                @if (item.IsPosted == false)
+                {
+                    <button onclick="EditPurchOrdExpenses('@item.TransYear','@item.TransNo')" type="button" class="btn btn-ed ex" title="@Html.Translate("تعديل طلب شراء", "Edit Purchase Request")">
+                        <i class="fa fa-pencil-alt"></i>
+                    </button>
+                    <button id="ePurchOrdExpenses" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                        @Html.Translate("تعديل مصاريف امر شراء", "Edit Purchase Order Expenses")
+                    </button>
+                    <button class="btn-de" onclick="Delete_PurchOrdExpenses('@item.TransYear','@item.TransNo')">
+                        <i class="fa fa-times-circle"></i>
+                    </button>
+                    <button class="btn btn-primary ex" title="ترحيل" onclick="PostedPurchOrdExpenses('@item.TransYear','@item.TransNo')">
+                        <i style="font-weight:100" class="fa fa-folder"></i>
+                        @Html.Translate("ترحيل", "Posted")
+                    </button>
+                }
+                else
+                {
+                    <button disabled type="button" class="btn btn-ed ex" title="@Html.Translate("تعديل طلب شراء", "Edit Purchase Request")">
+                        <i class="fa fa-pencil-alt"></i>
+                    </button>
+                    <button id="ePurchOrdExpenses" class="btn btn-primary btn-block" href="" target="_blank" style="display:none;">
+                        @Html.Translate("تعديل مصاريف امر شراء", "Edit Purchase Order Expenses")
+                    </button>
+                    <button class="btn-de" disabled >
+                        <i class="fa fa-times-circle"></i>
+                    </button>
+                    <button class="btn btn-primary ex" title="ترحيل" disabled >
+                        <i style="font-weight:100" class="fa fa-folder"></i>
+                        @Html.Translate("ترحيل", "Posted")
+                    </button>
+                }
+                <button class="btn btn-default ex" title="@Html.Translate("عرض", "View")" href="/PurchOrdExpenses/InqPurchOrdExpenses?TransYear=@item.TransYear&TransNo=@item.TransNo" target="_blank">
+                    <i style="font-weight:100" class="fa fa-folder"></i>
+                    @item.TransNo
+                </button>
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>
+<br />
+<div class="form-group">
+    <div class="col-md-12">
+        <div class="col-md-4">
+            <button style="width: 35%; height: 40px !important;" class="btn btn-primary btn-block" href="/PurchOrdExpenses/AddPurchOrdExpenses" target="_blank">
+                <i class="fa fa-plus"></i>
+                @Html.Recource(32)
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $('#PurchaseOrdExpensesTable').DataTable({
+        "scrollY": 'calc( 100vh - 338px)',
+        "paging": true,
+        "pageLength": 10,
+        "order": [[0, "desc"]],
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        }
+    });
+
+    function EditPurchOrdExpenses(TransYear, TransNo) {
+        $('#ePurchOrdExpenses').attr("href", '/PurchOrdExpenses/EditPurchOrdExpenses?TransYear=' + TransYear + '&TransNo=' + TransNo + '');
+        $('#ePurchOrdExpenses').click();
+    }
+
+</script>

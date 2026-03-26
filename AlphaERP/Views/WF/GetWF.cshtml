@@ -1,0 +1,128 @@
+﻿@model AlphaERP.Models.MRP_GeneralPlanInfoH
+@using AlphaERP.Models
+@using System.Data.SqlClient
+@{
+    double TotalDays = (Model.EndDate.Value - Model.StartDate.Value).TotalDays;
+    Alpha_WorkFlowLog log = (Alpha_WorkFlowLog)Session["Log_"];
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    BusunisUnit BU = (BusunisUnit)ViewBag.BU;
+        
+    List<TMP_GeneralPlanInfoD> DF = new List<TMP_GeneralPlanInfoD>();
+    string query = string.Format("MRP_WEB_GeneralPlanInfoH {0},{1},{2}", company.comp_num, Model.PlanYear, Model.PlanNo);
+    using (var cn = new SqlConnection(Html.ConnectionString().ToString()))
+    {
+        SqlCommand cmd = new SqlCommand(query, cn);
+        cn.Open();
+        SqlDataReader rdr = cmd.ExecuteReader();
+        if (rdr.HasRows)
+        {
+            while (rdr.Read())
+            {
+                DF.Add(new TMP_GeneralPlanInfoD()
+                {
+                    CompNo = Model.CompNo,
+                    PlanNo = Convert.ToInt32(rdr["PlanNo"].ToString()),
+                    FormulaCode = (string)rdr["FormulaCode"],
+                    ItemNo = (string)rdr["ItemNo"],
+                    UnitCode = (string)rdr["UnitCode"],
+                    PQty = (decimal)rdr["PQty"]
+                });
+            }
+        }
+    }
+    foreach (var df in DF)
+    {
+        df.Formula = new MDB().prod_formula_header_info.Where(x => x.formula_code == df.FormulaCode).FirstOrDefault();
+        df.Item = new MDB().InvItemsMFs.Where(x => x.ItemNo == df.ItemNo && x.CompNo == df.CompNo).FirstOrDefault();
+    }
+
+
+
+}
+
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable">@Resources.Resource.OrderDate </label>
+    </div>
+    <div class="col-md-4" style="margin-bottom: 5px;">
+        <label class="unselectable">@log.DateAdded.ToString("yyyy/MM/dd")</label>
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable">@Resources.Resource.BusinessUnit</label>
+    </div>
+    <div class="col-md-4" style="margin-bottom: 5px;">
+        <label class="unselectable">@Html.Translate(BU.DescAr, BU.DescEn)</label>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable">@Resources.Resource.Year</label>
+    </div>
+    <div class="col-md-4" style="margin-bottom: 5px;">
+        <label class="unselectable">@Model.PlanYear</label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <label class="unselectable" style="padding:0;margin:0">@Resources.Resource.PlanNo : </label>
+        <a class="unselectable" onclick="$('#MRP_GeneralPlanInfoH_view_MRP_GeneralPlanInfoH').modal('show')">{  @Model.PlanNo  }</a>
+    </div>
+
+   
+    <div class="col-md-4" style="margin-bottom: 5px;">
+        <label class="unselectable">@Html.Translate("المُرسل", "Sender") : @log.OwnerUser</label>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable">@Resources.Resource.StartDatePlan </label>
+    </div>
+    <div class="col-md-4" style="margin-bottom: 5px;">
+        <label class="unselectable">@Model.StartDate.Value.ToString("yyyy/MM/dd")</label>
+    </div>
+    <div class="col-md-2">
+        <label class="unselectable">@Resources.Resource.EndDatePlan</label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <label class="unselectable">@Model.EndDate.Value.ToString("yyyy/MM/dd")</label>
+    </div>
+    <div class="col-md-2" style="margin-bottom: 5px;">
+        <label class="unselectable">@TotalDays @Resources.Resource.day</label>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-2">
+        <label class="unselectable">@Resources.Resource.PlanNote</label>
+    </div>
+    <div class="col-md-10" style="margin-bottom: 5px;">
+        <label class="unselectable">@Model.PlanNotes</label>
+    </div>
+</div>
+
+<script>
+    $('#view_MasterSelectItemTableBody').empty();
+    document.getElementById('MRP_GeneralPlanInfoH_view_PlanYear').value = @Model.PlanYear;
+    document.getElementById('MRP_GeneralPlanInfoH_view_PlanNo').value = @Model.PlanNo;
+    document.getElementById('MRP_GeneralPlanInfoH_view_StartDate').value = '@Model.StartDate.Value.ToString("yyyy/MM/dd")';
+    document.getElementById('MRP_GeneralPlanInfoH_view_EndDate').value = '@Model.EndDate.Value.ToString("yyyy/MM/dd")';
+    document.getElementById('MRP_GeneralPlanInfoH_view_PlanNotes').value = '@Model.PlanNotes';
+    document.getElementById('MRP_GeneralPlanInfoH_view_PlanActive').checked = @Model.PlanActive.ToString().ToLower();
+    @foreach (var item in DF)
+    {
+        <text>
+
+    var newarray = [];
+    newarray.push('@item.ItemNo');
+    newarray.push('@Html.Translate(item.Item.ItemDesc_Ara, item.Item.ItemDesc)');
+    newarray.push('@item.FormulaCode');
+    newarray.push('@item.Formula.formula_desc');
+    newarray.push('@item.UnitCode');
+    newarray.push('@item.PQty');
+    newarray.push('');
+    $("#view_MasterSelectItemTableBody").append(
+        GenRow(newarray)
+    );
+            
+        </text>
+    }
+        
+</script>

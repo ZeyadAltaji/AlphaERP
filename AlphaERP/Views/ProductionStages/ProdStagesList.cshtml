@@ -1,0 +1,65 @@
+﻿@model IEnumerable<AlphaERP.Models.Prod_prodstage_infoView>
+@using AlphaERP.Models;
+@{ 
+    Company company = (Company)Session["company"];
+    List<ProdCost_Parameter> LGroub = new MDB().ProdCost_Parameters.Where(x => x.CompNo == company.comp_num && x.ParmID == 2).ToList();
+}
+
+<table id="prodstage_infoTable" class="table table-hover">
+    <thead>
+        <tr>
+            <th>@Html.Recource(2558)</th>
+            <th>@Html.Recource(2559)</th>
+            <th>@Html.Recource(1734)</th>
+            <th>@Html.Recource(70)</th>
+            <th style="text-align: center !important;">@Html.Recource(9587)</th>
+            <th>No Of Boms</th>
+            <th>@Html.Translate("وقت الإعداد", "Setup Time")</th>
+
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            string GroubDesc = LGroub.Where(x => x.ParmCode == item.GroupID).Select(o => o.LocalDesc).FirstOrDefault();
+            string GroubDescEn = LGroub.Where(x => x.ParmCode == item.GroupID).Select(o => o.EngDesc).FirstOrDefault();
+        <tr style="height: 36px !important;">
+            <td>@item.stage_code</td>
+            <td title="@item.stage_desc">@item.stage_desc</td>
+            <td>@Html.Translate(GroubDesc, GroubDescEn)</td>
+            <td>@item.notes</td>
+            <td style="text-align: center !important;">
+                @if (item.QualityControl == true)
+                {
+                    <i class="fa fa-check"></i>
+                }
+                else
+                {
+                    <i class="fa fa-times"></i>
+                }
+            </td>
+            <td>@item.NoOfBoms</td>
+            <td>@Convert.ToInt16(item.SetupTime)</td>
+
+            <td>
+                <button class="btn-ed" onclick="Edit_ProdStages('@item.comp_no', '@item.stage_code')">
+                    <i class="fa fa-pencil-alt"></i>
+                </button>
+                <button class="btn-de" onclick="Del_ProdStages('@item.comp_no', '@item.stage_code')">
+                    <i class="fa fa-trash-alt"></i>
+                </button>
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+    $('#prodstage_infoTable').DataTable({
+        "scrollY": 300,
+        "paging": true,
+        "pageLength": 25
+    });
+</script>

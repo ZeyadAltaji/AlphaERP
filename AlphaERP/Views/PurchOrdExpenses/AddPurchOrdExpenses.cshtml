@@ -1,0 +1,862 @@
+﻿@using AlphaERP.Models
+@using System.Data.SqlClient;
+@using System.Data;
+@using System.Collections.Generic;
+@{
+    User me = (User)Session["me"];
+    Company company = (Company)Session["company"];
+    InvCompMF compMF = new MDB().InvCompMFs.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+
+    if (compMF.UseQty2 == null)
+    {
+        compMF.UseQty2 = false;
+    }
+
+    List<int> Deptid = new List<int>();
+    List<GLN_UsersDept> UsersDept = new MDB().GLN_UsersDept.Where(x => x.CompNo == company.comp_num && x.UserID == me.UserID && x.Permission == true).ToList();
+    Deptid = UsersDept.Select(o => o.DeptID).ToList();
+    List<GLDEPMF> GLDEPMFs = new MDB().GLDEPMFs.Where(x => x.DEP_COMP == company.comp_num && Deptid.Contains(x.DEP_NUM)).ToList();
+
+    List<PayCodes> Currency = new MDB().Database.SqlQuery<PayCodes>("select CurrType as Id ,CurrName as DescAr,isnull(CurrNameE,'No Desc.') as DescEn from CurrType").ToList();
+
+    DataTable Dt = new DataTable();
+ 
+    ClientsActive CActive = new MDB().ClientsActives.Where(x => x.CompNo == company.comp_num).FirstOrDefault();
+}
+
+
+<link href="~/Content/stickytooltip.css" rel="stylesheet" />
+<script src="~/Scripts/stickytooltip.js?s=15"></script>
+
+<style>
+    #Ord_PurchaseOrdExpensesTable span.badge {
+        border: none;
+        position: static;
+        z-index: 20 !important;
+        box-sizing: content-box;
+        visibility: visible;
+        z-index: 9999999999 !important;
+        padding: 1px;
+        font-family: Arial, verdana, tahoma;
+        font-size: 13px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        text-shadow: 1px 1px 1px rgba(0,0,0,.3);
+        background: #ff3019;
+        background: -webkit-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Chrome10+,Safari5.1+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ff3019), color-stop(100%, #cf0404)); /* Chrome,Safari4+ */
+        background: -moz-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* FF3.6+ */
+        background: -ms-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* IE10+ */
+        background: -o-linear-gradient(top, #ff3019 0%, #cf0404 100%); /* Opera 11.10+ */
+        background: linear-gradient(to bottom, #ff3019 0%, #cf0404 100%); /* W3C */
+        width: 18px;
+        height: 18px;
+        line-height: 20px;
+        border-radius: 50%;
+        filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff3019', endColorstr='#cf0404', GradientType=0)"; /* IE6-9 */
+        filter: "progid:DXImageTransform.Microsoft.Shadow(direction=135, strength=2, color=ff0000)"; /* IE10 text shadows */
+        box-shadow: 0 2px 5px rgba(0,0,0,.4);
+    }
+</style>
+
+<style>
+    #Ord_PurchaseOrderExpenses_DIV table th, #Ord_PurchaseOrderExpenses_DIV table td {
+        padding: 4px 15px !important;
+        text-align: center !important;
+    }
+
+    .wrapperx {
+        padding: 0;
+        position: relative;
+        white-space: nowrap;
+    }
+
+    .wrapperxOld {
+        padding: 0;
+        position: relative;
+        overflow: auto;
+        white-space: nowrap;
+    }
+</style>
+
+<style>
+    .modal-body{
+        max-height: 78vh !important;
+    }
+    .modal-title {
+        width: calc(100% - 120px) !important;
+        text-align: center;
+        position: absolute;
+        font-weight: bold;
+    }
+    .form-group{
+        margin-bottom: 1px !important;
+    }
+    .col-md-12{
+        margin-bottom: 3px !important;
+    }
+    hr {
+        margin-top: 3px !important;
+        margin-bottom: 5px !important;
+    }
+</style>
+
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-8" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa MYICON" aria-hidden="true"></i>
+                    MyTilTle
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile">
+        <div class="modal-body row" style="height: calc(100vh - 210px) !important;">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_PurchaseOrderExpenses_TransYear">@Html.Recource(3259)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input onblur="Checkyear()" type="number" id="Ord_PurchaseOrderExpenses_TransYear" value="@DateTime.Now.Year" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="4" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_PurchaseOrderExpenses_TransNo">@Html.Recource(1871)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 125px !important;" type="text" id="Ord_PurchaseOrderExpenses_TransNo"  value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_PurchaseOrderExpenses_TransDate">@Html.Recource(718) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 150px !important;" type="date" id="Ord_PurchaseOrderExpenses_TransDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_PurchaseOrderExpenses_DeptNo">@Html.Recource(220)</label>
+                    </div>
+                    <div class="col-md-6" style="margin-bottom: 5px;">
+                        <input required="true" style="width: 125px !important;" type="text" id="Ord_PurchaseOrderExpenses_DeptNo" value="" onblur="GetDeptName(this.value)" />
+                        <input required="false" style="width: 390px !important;" type="text" id="Ord_PurchaseOrderExpenses_DeptName" value="" disabled />
+                        <button onclick="Serach_Dept()" type="button" class="btn btn-primary">
+                            <i class="fa fa-search" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(1671) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <select style="width:100%" id="Ord_PurchaseOrderExpenses_CboCurrCode" onchange="GetCurrRatio()">
+                            @foreach (var v in Currency)
+                            {
+                                <option value="@v.Id">@Html.Translate(v.DescAr, v.DescEn)</option>
+                            }
+                        </select>
+                    </div>
+                    
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_PurchaseOrderExpenses_AccNo">@Html.Recource(524)</label>
+                    </div>
+                    <div class="col-md-6" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 125px !important;" type="text" id="Ord_PurchaseOrderExpenses_AccNo" value="" onblur="GetVendorName(this.value)" />
+                        <input required="false" style="width: 390px !important;" type="text" id="Ord_PurchaseOrderExpenses_AccName" value="" disabled />
+                        <button onclick="Serach_Acc()" type="button" class="btn btn-primary">
+                            <i class="fa fa-search" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_PurchaseOrderExpenses_ConvertRate">@Html.Recource(1600)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width: 185px !important;" type="text" id="Ord_PurchaseOrderExpenses_ConvertRate" value="" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable">@Html.Recource(773) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:88%" type="number" id="Ord_PurchaseOrderExpenses_TotalAmount" value="0" onblur="CheckAmount(this.value)"  />
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <label class="unselectable" for="Ord_PurchaseOrderExpenses_TotalFrAmount">@Html.Recource(3807)</label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input style="width:88%" type="number" id="Ord_PurchaseOrderExpenses_TotalFrAmount" value="0" onblur="CheckFrAmount(this.value)" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_PurchaseOrderExpenses_Notes">@Html.Recource(70)</label>
+                    </div>
+                    <div class="col-md-10">
+                        <textarea required="true" style="width: 100%;height:58px !important;" id="Ord_PurchaseOrderExpenses_Notes" placeholder="@Html.Recource(70)" />
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="form-group">
+                <div class="col-md-12">
+                    <label class="unselectable">@Html.Recource(4221) :</label>
+                    <button onclick="AddDefineExpenses()" type="button" class="btn btn-default">@Html.Recource(4221)</button>
+                </div>
+            </div>
+            <div class="form-group" style="display: block; height:calc(100vh - 516px) !important;overflow-x: scroll;">
+                <div class="col-md-12 wrapperx" id="Ord_PurchaseOrderExpenses_DIV">
+                    <table class="table table-hover Ord_PurchaseOrdExpenses" id="Ord_PurchaseOrderExpensesTable">
+                        <thead>
+                            <tr>
+                                <th class="first-col">@Html.Recource(3196)</th>
+                                <th class="second-col">@Html.Recource(3197)</th>
+                                <th class="third-col">@Html.Recource(5680)</th>
+                                <th class="four-col">@Html.Recource(1689)</th>
+                                <th class="four-col">@Html.Recource(1877)</th>
+                                <th>@Html.Recource(3806)</th>
+                                <th>@Html.Recource(3807)</th>
+
+                                <th>@Html.Recource(432)</th>
+                                <th>@Html.Recource(3807)</th>
+
+                                <th>@Html.Recource(7121)</th>
+                                <th>@Html.Recource(3807)</th>
+
+
+                                <th>@Html.Recource(8520)</th>
+                                <th>@Html.Recource(3807)</th>
+                                
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody style="text-align: center;" id="Ord_PurchOrdExpensesTBody">
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <hr />
+            @*<div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_PurchaseOrderExpenses_SalesTaxAmount">@Html.Recource(432) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="number" id="Ord_PurchaseOrderExpenses_SalesTaxAmount" value="0" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_PurchaseOrderExpenses_CustomSecretariatsAmount">@Html.Recource(8520) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="number" id="Ord_PurchaseOrderExpenses_CustomSecretariatsAmount" value="0" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_PurchaseOrderExpenses_IncomeTaxAmount">@Html.Recource(7121) </label>
+                    </div>
+                    <div class="col-md-2" style="margin-bottom: 5px;">
+                        <input required="false" style="width:117px !important;" type="number" id="Ord_PurchaseOrderExpenses_IncomeTaxAmount" value="0" />
+                    </div>
+                </div>
+            </div>*@
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_PurchaseOrderExpenses_TotalExpenses">@Html.Recource(4220) </label>
+                    </div>
+                    <div class="col-md-4">
+                        <input required="false" style="width:117px !important;" type="text" id="Ord_PurchaseOrderExpenses_TotalExpenses" value="0" disabled />
+                        <input required="false" style="width:117px !important;" type="text" id="Ord_PurchaseOrderExpenses_TotalExpensesFr" value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_PurchaseOrderExpenses_SalesTaxAmount">@Html.Recource(432) </label>
+                    </div>
+                    <div class="col-md-4">
+                        <input required="false" style="width:117px !important;" type="text" id="Ord_PurchaseOrderExpenses_SalesTaxAmount" value="0" disabled />
+                        <input required="false" style="width:117px !important;" type="text" id="Ord_PurchaseOrderExpenses_SalesTaxAmountFr" value="0" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_PurchaseOrderExpenses_IncomeTaxAmount">@Html.Recource(7121) </label>
+                    </div>
+                    <div class="col-md-4">
+                        <input required="false" style="width:117px !important;" type="text" id="Ord_PurchaseOrderExpenses_IncomeTaxAmount" value="0" disabled />
+                        <input required="false" style="width:117px !important;" type="text" id="Ord_PurchaseOrderExpenses_IncomeTaxAmountFr" value="0" disabled />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="unselectable" for="Ord_PurchaseOrderExpenses_CustomtaxAmount">@Html.Recource(8520) </label>
+                    </div>
+                    <div class="col-md-4">
+                        <input required="false" style="width:117px !important;" type="text" id="Ord_PurchaseOrderExpenses_CustomtaxAmount" value="0" disabled />
+                        <input required="false" style="width:117px !important;" type="text" id="Ord_PurchaseOrderExpenses_CustomtaxAmountFr" value="0" disabled />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="ExcuteSaveOrd_POExpenses()" class="btn btn-primary">@Resources.Resource.Save</button>
+        </div>
+    </div>
+</div>
+
+@*----------------------Dept-----------------------*@
+<div class="modal fade" id="Model_OrdPOExpenses_GLDEPMFs">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(1867)</label>
+            </div>
+            <div class="modal-body row">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <table class="table table-hover" id="Select_OrdExpenses_GLDEPMFsTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">@Html.Recource(110)</th>
+                                    <th style="width: 55%;">@Html.Recource(109)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    foreach (var item in GLDEPMFs)
+                                    {
+                                        <tr onclick="Select_finGLDEPMFs(this)" ondblclick="Select_GLDEPMFs(this)" DEP_NUM="@item.DEP_NUM" DepDesc="@Html.Translate(item.DEP_NAME, item.DEP_ENAME).ToString()">
+                                            <td style="width: 20%;" id="OrdExpenses_DEPNUM">@item.DEP_NUM</td>
+                                            <td style="width: 55%;" id="OrdExpenses_DEPNAME">@Html.Translate(item.DEP_NAME, item.DEP_ENAME).ToString()</td>
+                                            <td></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selecting_OrdPOExpenses_GLDEPMFs()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_OrdPOExpenses_GLDEPMFs').draggable({
+        handle: ".modal-header",
+    });
+    var deptId = 0;
+    var GLDEPMFs = $('#Select_OrdExpenses_GLDEPMFsTable').DataTable({
+        "scrollY": 200,
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+    function Serach_Dept() {
+        $('#Select_OrdExpenses_GLDEPMFsTable tr').removeClass("selected");
+        $('#Model_OrdPOExpenses_GLDEPMFs').modal('show');
+    }
+    function Select_finGLDEPMFs(e) {
+        var trs = GLDEPMFs.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Select_GLDEPMFs(e) {
+        var trs = GLDEPMFs.$('tr[name=selected]');
+        Ord_PurchaseOrderExpenses_DeptNo.value = trs[0].getAttribute('DEP_NUM');
+        Ord_PurchaseOrderExpenses_DeptName.value = trs[0].getAttribute('DepDesc');
+
+        deptId = trs[0].getAttribute('DEP_NUM')
+        Ord_PurchaseOrderExpenses_AccNo.value = null;
+        Ord_PurchaseOrderExpenses_AccName.value = null;
+
+        $('#Model_OrdPOExpenses_GLDEPMFs').modal('hide')
+    }
+    function Selecting_OrdPOExpenses_GLDEPMFs() {
+        var trs = GLDEPMFs.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار دائرة", "Select one Dept")');
+            return;
+        }
+
+        Ord_PurchaseOrderExpenses_DeptNo.value = trs[0].getAttribute('DEP_NUM');
+        Ord_PurchaseOrderExpenses_DeptName.value = trs[0].getAttribute('DepDesc');
+
+        deptId = trs[0].getAttribute('DEP_NUM')
+
+        Ord_PurchaseOrderExpenses_AccNo.value = null;
+        Ord_PurchaseOrderExpenses_AccName.value = null;
+
+        $('#Model_OrdPOExpenses_GLDEPMFs').modal('hide')
+    }
+    function GetDeptName(e) {
+        
+        if (deptId != e) {
+            deptId = e;
+            burn({ DeptNo: e }, '../../../PurchOrdExpenses/GetDeptName', '', LoadDeptName, true);
+        }
+    }
+    function LoadDeptName(r) {
+        if (r.DeptName == "") {
+            Ord_PurchaseOrderExpenses_DeptNo.value = null;
+            Ord_PurchaseOrderExpenses_DeptName.value = null;
+        }
+        else {
+            Ord_PurchaseOrderExpenses_DeptName.value = r.DeptName;
+        }
+        Ord_PurchaseOrderExpenses_AccNo.value = null;
+        Ord_PurchaseOrderExpenses_AccName.value = null;
+    }
+   
+</script>
+@*----------------------ENDDept-----------------------*@
+
+@*----------------------Acc-----------------------*@
+<div class="modal fade" id="Model_OrdPOExpenses_Acc">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(1867)</label>
+            </div>
+            <div class="modal-body row" id="OrdPOExpenses_Accbody">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="Selecting_OrdPOExpenses_Acc()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_OrdPOExpenses_Acc').draggable({
+        handle: ".modal-header",
+    });
+    function CheckValue(ID) {
+        if (document.getElementById(ID).getAttribute('required') == 'true') {
+            if (document.getElementById(ID).value == '') {
+                document.getElementById(ID).focus();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    function Serach_Acc() {
+        if (CheckValue('Ord_PurchaseOrderExpenses_DeptNo')) {
+            alert('@Html.Translate("يجب ادخال الدائرة", "You must enter the Dept")');
+            return;
+        }
+        burn({ DeptId: Ord_PurchaseOrderExpenses_DeptNo.value }, '../../../PurchOrdExpenses/Account', '', ReloadtAcc, true);
+    }
+    function ReloadtAcc(r) {
+        OrdPOExpenses_Accbody.innerHTML = "";
+        $('#OrdPOExpenses_Accbody').html(r);
+        $('#Model_OrdPOExpenses_Acc').modal('show');
+    }
+    function Select_finAcc(e) {
+        var table = $('#OrdPOExpenses_AccTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function Selecting_OrdPOExpenses_Acc() {
+        var table = $('#OrdPOExpenses_AccTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+        if (trs.length == 0) {
+            alert('@Html.Translate("يرجى اختيار حساب", "Select one Acc")');
+            return;
+        }
+
+        Ord_PurchaseOrderExpenses_AccNo.value = trs[0].getAttribute('acc_num');
+        Ord_PurchaseOrderExpenses_AccName.value = trs[0].getAttribute('AccDesc');
+        $('#Model_OrdPOExpenses_Acc').modal('hide')
+    }
+    function Select_Acc(e) {
+        var table = $('#OrdPOExpenses_AccTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+
+        Ord_PurchaseOrderExpenses_AccNo.value = trs[0].getAttribute('acc_num');
+        Ord_PurchaseOrderExpenses_AccName.value = trs[0].getAttribute('AccDesc');
+
+        $('#Model_OrdPOExpenses_Acc').modal('hide')
+    }
+
+    function GetVendorName(e) {
+        burn({ DeptNo: Ord_PurchaseOrderExpenses_DeptNo.value, AccNo: e }, '../../../PurchOrdExpenses/GetVendorName', '', LoadVendorName, true);
+    }
+    function LoadVendorName(r) {
+        if (r.VendorName == "") {
+            alert('@Html.Translate("الحساب غير مربوط بالدائرة", "The Account Is Not Linked To The Department")');
+            Ord_PurchaseOrderExpenses_AccNo.focus();
+            Ord_PurchaseOrderExpenses_AccNo.value = null;
+            Ord_PurchaseOrderExpenses_AccName.value = null;
+        }
+        else {
+            Ord_PurchaseOrderExpenses_AccName.value = r.VendorName;
+        }
+    }
+</script>
+@*----------------------ENDAcc-----------------------*@
+
+@*----------------------ExpCodes-----------------------*@
+<div class="modal fade wide" id="Model_OrdPOExpenses_ExpCodes">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(4221)</label>
+            </div>
+            <div class="modal-body row" id="OrdPOExpenses_ExpCodesbody">
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="SelectingPurchOrdExpenses_ExpCodes()" class="btn btn-primary">@Html.Recource(4599)</button>
+                <button class="btn btn-default pull-left" data-dismiss="modal">@Html.Recource(15)</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#Model_OrdPOExpenses_ExpCodes').draggable({
+        handle: ".modal-header",
+    });
+
+    function AddDefineExpenses() {
+        $('#OrdPOExpenses_ExpCodesTable tr').removeClass("selected");
+        burn({ TransYear: Ord_PurchaseOrderExpenses_TransYear.value }, '../../../PurchOrdExpenses/ExpCodes', '', ReloadtExpCodes, true);
+    }
+    function ReloadtExpCodes(r) {
+        OrdPOExpenses_ExpCodesbody.innerHTML = "";
+        $('#OrdPOExpenses_ExpCodesbody').html(r);
+        $('#Model_OrdPOExpenses_ExpCodes').modal('show');
+    }
+    function Select_ExpCodes(e) {
+        var table_ = $("#Ord_PurchOrdExpensesTBody");
+        var item = new Array();
+        var Added = false;
+        if (table_.find("tr").length != 0) {
+            table_.find("tr").each(function () {
+                var OrdYear_ = $(this).find("#POExpenses_OrdYear").text();
+                var OrderNo_ = $(this).find("#POExpenses_OrderNo").text();
+                var TawreedNo_ = $(this).find("#POExpenses_TawreedNo").text();
+                var ExpID_ = $(this).find("#POExpenses_ExpID").text();
+
+                if (OrdYear_ == e.getAttribute('OrdYear') && OrderNo_ == e.getAttribute('OrderNo') && TawreedNo_ == e.getAttribute('TawreedNo') && ExpID_ == e.getAttribute('ExpID')) {
+                    Added = true;
+                    return false;
+                }
+                else {
+                    Added = false;
+                }
+            });
+            if (!Added) {
+                item.push({
+                    OrdYear: e.getAttribute('OrdYear'),
+                    OrderNo: e.getAttribute('OrderNo'),
+                    TawreedNo: e.getAttribute('TawreedNo'),
+                    ExpID: e.getAttribute('ExpID'),
+                    ExpArDesc: e.getAttribute('ExpDesc')
+                });
+            }
+        }
+        else {
+            item.push({
+                OrdYear: e.getAttribute('OrdYear'),
+                OrderNo: e.getAttribute('OrderNo'),
+                TawreedNo: e.getAttribute('TawreedNo'),
+                ExpID: e.getAttribute('ExpID'),
+                ExpArDesc: e.getAttribute('ExpDesc')
+            });
+        }
+
+        if (item.length != 0) {
+            burn({ items: item, srl: table_.find("tr").length }, '../../../PurchOrdExpenses/PurchOrdExp', '', LoadItemRawMaterial, true);
+        }
+        else {
+            $('#Model_OrdPOExpenses_ExpCodes').modal('hide')
+        }
+    }
+    function SelectingPurchOrdExpenses_ExpCodes(e) {
+        var data = ExpCodesTable.rows('.selected').data();
+        if (data.length == 0) {
+            alert('@Html.Translate("يرجى اختيار مصروف واحدة على الاقل", "Select one ExpCodes at least")');
+            return;
+        }
+        var table_ = $("#Ord_PurchOrdExpensesTBody");
+        var item = new Array();
+        for (var i = 0; i < data.length; i++) {
+            var Added = false;
+            if (table_.find("tr").length != 0) {
+                table_.find("tr").each(function () {
+                    var OrdYear_ = $(this).find("#POExpenses_OrdYear").text();
+                    var OrderNo_ = $(this).find("#POExpenses_OrderNo").text();
+                    var TawreedNo_ = $(this).find("#POExpenses_TawreedNo").text();
+                    var ExpID_ = $(this).find("#POExpenses_ExpID").text();
+
+                    if (OrdYear_ == data[i][0] && OrderNo_ == data[i][1] && TawreedNo_ == data[i][2] && ExpID_ == data[i][3]) {
+                        Added = true;
+                        return false;
+                    }
+                    else {
+                        Added = false;
+                    }
+                });
+                if (!Added) {
+                    item.push({
+                        OrdYear: data[i][0],
+                        OrderNo: data[i][1],
+                        TawreedNo: data[i][2],
+                        ExpID: data[i][3],
+                        ExpArDesc: data[i][4]
+                    });
+                }
+            }
+            else {
+                item.push({
+                    OrdYear: data[i][0],
+                    OrderNo: data[i][1],
+                    TawreedNo: data[i][2],
+                    ExpID: data[i][3],
+                    ExpArDesc: data[i][4]
+                });
+            }
+        }
+        if (item.length != 0) {
+            burn({ items: item, srl: table_.find("tr").length }, '../../../PurchOrdExpenses/PurchOrdExp', '', LoadItemRawMaterial, true);
+        }
+        else {
+            $('#Model_OrdPOExpenses_ExpCodes').modal('hide')
+        }
+    }
+    function LoadItemRawMaterial(r) {
+        $('#Ord_PurchOrdExpensesTBody').append(r);
+        $('#Model_OrdPOExpenses_ExpCodes').modal('hide')
+    }
+</script>
+@*----------------------END ExpCodes-----------------------*@
+
+
+
+
+
+<script>
+    $('#Ord_PurchaseOrderExpenses_CboCurrCode').select2();
+    GetCurrRatio();
+    function GetCurrRatio() {
+        burn({ CurrCode: Ord_PurchaseOrderExpenses_CboCurrCode.value }, '../../../PurchOrdExpenses/GetCurrRatio', '', LoadCurrRatio, true);
+    }
+    function LoadCurrRatio(r) {
+        Ord_PurchaseOrderExpenses_ConvertRate.value = r.CurrRat;
+    }
+   
+    function CheckAmount(e) {
+        if (e < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون القيمة اقل من 0", "The value of the Amount may not be less than 0")');
+            e.value = 0;
+            e.focus();
+            return false;
+        }
+
+        var TotalFrAmount = (Number(e) / Number(Ord_PurchaseOrderExpenses_ConvertRate.value));
+        $('#Ord_PurchaseOrderExpenses_TotalFrAmount').val(Number(TotalFrAmount).toFixed(3));
+    }
+    function CheckFrAmount(e) {
+        Number(Ord_PurchaseOrderExpenses_TotalFrAmount.value).toFixed(3);
+        if (e < 0) {
+            alert('@Html.Translate("لا يجوز ان تكون القيمة بالاجنبي اقل من 0", "The value of the Fr Amount may not be less than 0")');
+            e.value = 0;
+            e.focus();
+            return false;
+        }
+        if (e != Number(Ord_PurchaseOrderExpenses_TotalFrAmount.value).toFixed(3)) {
+            var TotalAmount = (Number(e) * Number(Ord_PurchaseOrderExpenses_ConvertRate.value));
+            $('#Ord_PurchaseOrderExpenses_TotalAmount').val(Number(TotalAmount).toFixed(3));
+        }
+    }
+
+
+    function sumTotalAll() {
+        var table = $('#Ord_PurchOrdExpensesTBody tr');
+        var trs = table;
+        var TotalAmount = 0;
+        var TotalAmountFr = 0;
+        var SalesTaxAmount = 0;
+        var SalesTaxAmountFr = 0;
+        var IncomeTaxAmount = 0;
+        var IncomeTaxAmountFr = 0;
+        var CustomtaxAmount = 0;
+        var CustomtaxAmountFr = 0;
+
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value
+            TotalAmount += Number($(trs[i]).closest('tr').find('#PODF_Amount_' + InputSerial)[0].value);
+            TotalAmountFr += Number($(trs[i]).closest('tr').find('#PODF_FrAmount_' + InputSerial)[0].value);
+            SalesTaxAmount += Number($(trs[i]).closest('tr').find('#PODF_SalesTaxAmount_' + InputSerial)[0].value);
+            SalesTaxAmountFr += Number($(trs[i]).closest('tr').find('#PODF_SalesTaxAmountFr_' + InputSerial)[0].value);
+            IncomeTaxAmount += Number($(trs[i]).closest('tr').find('#PODF_IncomeTaxAmount_' + InputSerial)[0].value);
+            IncomeTaxAmountFr += Number($(trs[i]).closest('tr').find('#PODF_IncomeTaxAmountFr_' + InputSerial)[0].value);
+            CustomtaxAmount += Number($(trs[i]).closest('tr').find('#PODF_CustomtaxAmount_' + InputSerial)[0].value);
+            CustomtaxAmountFr += Number($(trs[i]).closest('tr').find('#PODF_CustomtaxAmountFr_' + InputSerial)[0].value);
+        }
+
+        $('#Ord_PurchaseOrderExpenses_TotalExpenses').val(Number(TotalAmount).toFixed(3));
+        $('#Ord_PurchaseOrderExpenses_TotalExpensesFr').val(Number(TotalAmountFr).toFixed(3));
+        $('#Ord_PurchaseOrderExpenses_SalesTaxAmount').val(Number(SalesTaxAmount).toFixed(3));
+        $('#Ord_PurchaseOrderExpenses_SalesTaxAmountFr').val(Number(SalesTaxAmountFr).toFixed(3));
+        $('#Ord_PurchaseOrderExpenses_IncomeTaxAmount').val(Number(IncomeTaxAmount).toFixed(3));
+        $('#Ord_PurchaseOrderExpenses_IncomeTaxAmountFr').val(Number(IncomeTaxAmountFr).toFixed(3));
+        $('#Ord_PurchaseOrderExpenses_CustomtaxAmount').val(Number(CustomtaxAmount).toFixed(3));
+        $('#Ord_PurchaseOrderExpenses_CustomtaxAmountFr').val(Number(CustomtaxAmountFr).toFixed(3));
+    }
+
+    function CheckValueGrid(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt == 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+        else {
+            if (Amt == '' || Amt == null) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function CheckValueGridTotlal(NotEqualZero, Amt) {
+        if (NotEqualZero == '1') {
+            if (Amt == '' || Amt == null || Amt <= 0) {
+                return true;
+            }
+            else {
+                return false;
+            }
+            return false;
+        }
+    }
+    function ExcuteSaveOrd_POExpenses() {
+
+        if (Ord_PurchaseOrderExpenses_DeptNo.value == "") {
+            alert('@Html.Translate("يجب إدخال الدائرة", "You Must Enter Dept")');
+            return;
+        }
+
+        if (Ord_PurchaseOrderExpenses_AccNo.value == "") {
+            alert('@Html.Translate("يجب إدخال الحساب الدائن", "You Must Enter Credit Acc.")');
+            return;
+        }
+
+        if (Ord_PurchaseOrderExpenses_TotalAmount.value == "") {
+            alert('@Html.Translate("يجب ان تكون القيمة الاجمالية اكبر من 0", "The total Amount must be greater than 0")');
+            return;
+        }
+
+        var table = $('#Ord_PurchOrdExpensesTBody tr');
+        var trs = table;
+
+        if (trs.length == 0) {
+            alert('@Html.Translate("يجب إدخال المصاريف", "Raw Expenses must be entered")');
+            return false;
+        }
+
+        if (Number(Ord_PurchaseOrderExpenses_TotalAmount.value).toFixed(3) != Number(Ord_PurchaseOrderExpenses_TotalExpenses.value).toFixed(3)) {
+            alert('@Html.Translate("يجب ان تكون القيمة الاجمالية تساوي قيمة المصاريف", "The total value must be equal to the value of the expenses")');
+            return false;
+        }
+
+        var POExpensesHF = {
+            CompNo: '@company.comp_num',
+            TransYear: Ord_PurchaseOrderExpenses_TransYear.value,
+            TransNo: 0,
+            TransDate: Ord_PurchaseOrderExpenses_TransDate.value,
+            DeptNo: Ord_PurchaseOrderExpenses_DeptNo.value,
+            AccNo: Ord_PurchaseOrderExpenses_AccNo.value,
+            CurrCode: Ord_PurchaseOrderExpenses_CboCurrCode.value,
+            ExRate: Ord_PurchaseOrderExpenses_ConvertRate.value,
+            TotalAmount: Ord_PurchaseOrderExpenses_TotalAmount.value,
+            FrAmount: Ord_PurchaseOrderExpenses_TotalFrAmount.value,
+            Note: Ord_PurchaseOrderExpenses_Notes.value,
+            IsPosted: false
+        };
+
+        var POExpensesDF = new Array();
+        
+        for (var i = 0; i < trs.length; i++) {
+            var InputSerial = $(trs[i]).closest('tr').find('#InputSerial')[0].value;
+
+            POExpensesDF.push({
+                CompNo: '@company.comp_num',
+                TransYear: Ord_PurchaseOrderExpenses_TransYear.value,
+                TransNo: 0,
+                OrderYear: $(trs[i]).closest('tr').find('#POExpenses_OrdYear')[0].innerHTML,
+                OrderNo: $(trs[i]).closest('tr').find('#POExpenses_OrderNo')[0].innerHTML,
+                TawreedNo: $(trs[i]).closest('tr').find('#POExpenses_TawreedNo')[0].innerHTML,
+                ExpID: $(trs[i]).closest('tr').find('#POExpenses_ExpID')[0].innerHTML,
+                Amount: $(trs[i]).closest('tr').find('#PODF_Amount_' + InputSerial)[0].value,
+                FrAmount: $(trs[i]).closest('tr').find('#PODF_FrAmount_' + InputSerial)[0].value,
+                SalesTaxAmount: $(trs[i]).closest('tr').find('#PODF_SalesTaxAmount_' + InputSerial)[0].value,
+                SalesTaxAmountFr: $(trs[i]).closest('tr').find('#PODF_SalesTaxAmountFr_' + InputSerial)[0].value,
+                IncomeTaxAmount: $(trs[i]).closest('tr').find('#PODF_IncomeTaxAmount_' + InputSerial)[0].value,
+                IncomeTaxAmountFr: $(trs[i]).closest('tr').find('#PODF_IncomeTaxAmountFr_' + InputSerial)[0].value,
+                CustomtaxAmount: $(trs[i]).closest('tr').find('#PODF_CustomtaxAmount_' + InputSerial)[0].value,
+                CustomtaxAmountFr: $(trs[i]).closest('tr').find('#PODF_CustomtaxAmountFr_' + InputSerial)[0].value
+            });
+        }
+
+        wait();
+        burn({ POExpensesHF: POExpensesHF, POExpensesDF: POExpensesDF }, '../../../PurchOrdExpenses/CreatePurchOrdExpenses', '', ReloadPurchaseOrderExpenses, false);
+    }
+    function ReloadPurchaseOrderExpenses(r) {
+        done();
+        MsgBox('@Html.Recource(475)', 'green');
+        CloseWindow('/PurchOrdExpenses/AddPurchOrdExpenses');
+        SerachPurchOrdExpensesInfo();
+    }
+
+</script>

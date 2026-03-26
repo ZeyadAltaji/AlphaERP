@@ -1,0 +1,144 @@
+﻿@model IEnumerable<AlphaERP.Models.MRP_ProdPlanDetails>
+@using AlphaERP.Models
+@{
+    MRP_ProdPlanDetails MRPDet = Model.FirstOrDefault();
+    int daysDiff = ((TimeSpan)(MRPDet.EndDate - MRPDet.StartDate)).Days;
+    Company company = (Company)Session["company"];
+}
+<style>
+    #ProdPlanDetalisTable thead tr th {
+        padding: 8px 15px !important;
+        text-align: center !important;
+    }
+
+   
+
+    #ProdPlanDetalisTable thead tr th, td {
+        white-space: nowrap;
+    }
+
+    #ProdPlanDetalisTable thead tr td:last-child {
+        text-align: right !important
+    }
+
+    .GroupTitle {
+        font-size: 14px;
+        font-weight: bold;
+        margin: 0px -15px;
+    }
+</style>
+
+<div class="modal-body row">
+    <div class="form-group">
+        <div class="col-md-2">
+            <label class="unselectable" for="SAVE_ProdPlanDetails_PlanYear">@Resources.Resource.PlanYear </label>
+        </div>
+        <div class="col-md-2" style="margin-bottom: 5px;">
+            <label class="unselectable" for="SAVE_ProdPlanDetails_PlanYear">
+                @MRPDet.PlanYear
+            </label>
+        </div>
+        <div class="col-md-2">
+            <label class="unselectable" for="SAVE_ProdPlanDetails_PlanNo">@Resources.Resource.PlanNo </label>
+        </div>
+        <div class="col-md-2" style="margin-bottom: 5px;">
+            <label class="unselectable" for="SAVE_ProdPlanDetails_PlanNo">
+                @MRPDet.PlanNo
+            </label>
+        </div>
+        <div class="col-md-2">
+            <label class="unselectable" for="SAVE_ProdPlanDetails_PlanDuration">@Resources.Resource.PlanDuration </label>
+        </div>
+        <div class="col-md-2" style="margin-bottom: 5px;">
+            <label class="unselectable" for="SAVE_ProdPlanDetails_PlanDuration">
+                @daysDiff
+            </label>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-2">
+            <label class="unselectable" for="SAVE_ProdPlanDetails_StartDate">@Resources.Resource.StartDate </label>
+        </div>
+        <div class="col-md-2" style="margin-bottom: 5px;">
+            <label class="unselectable" for="SAVE_ProdPlanDetails_StartDate">
+                @MRPDet.StartDate.Value.ToString("yyyy-MM-dd")
+            </label>
+        </div>
+        <div class="col-md-2">
+            <label class="unselectable" for="SAVE_ProdPlanDetails_EndDate">@Resources.Resource.EndDate </label>
+        </div>
+        <div class="col-md-2" style="margin-bottom: 5px;">
+            <label class="unselectable" for="SAVE_ProdPlanDetails_EndDate">
+                @MRPDet.EndDate.Value.ToString("yyyy-MM-dd")
+            </label>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-2">
+            <label class="unselectable" for="SAVE_ProdPlanDetails_PlanNote">@Resources.Resource.PlanNote </label>
+        </div>
+        <div class="col-md-10" style="margin-bottom: 5px;">
+            <textarea style="width: 100%;height:35px  !important;" id="SAVE_ProdPlanDetails_PlanNote" disabled>@MRPDet.PlanNote</textarea>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-12 GroupTitle">
+            @Resources.Resource.RequestData :
+        </div>
+    </div>
+    <div class="form-group" style="display:block;height:212px;">
+        <div class="col-md-12">
+            <table class="table table-hover" id="ProdPlanDetalisTable">
+                <thead>
+                    <tr>
+                        <th>@Resources.Resource.ItemNo</th>
+                        <th>@Resources.Resource.ItemName</th>
+                        <th>@Html.Recource(4286)</th>
+                        <th>@Html.Recource(283)</th>
+                        <th>@Resources.Resource.MainUnit</th>
+                        <th>@Resources.Resource.QTY</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody style="text-align: center;">
+                    @foreach (MRP_ProdPlanDetails MRPC in Model)
+                    {
+                        <tr>
+                            <td>@MRPC.ItemNo</td>
+                            <td>@ar(MRPC.ItemDesc,MRPC.ItemDesc_Ara)</td>
+                            <td>@MRPC.FormulaCode</td>
+                            <td>@MRPC.formula_desc</td>
+                            <td>@MRPC.UnitDesc</td>
+                            <td>@MRPC.PQty</td>
+                            <td>
+                               @* <button class="btn btn-ed" onclick="EditCustomer('@MRPC.ItemNo',this)">*@
+                                    <button class="btn btn-ed" onclick="AddSubDetalis('@MRPDet.PlanYear', '@MRPDet.PlanNo', '@MRPC.ItemNo',
+                                    '@ar(MRPC.ItemDesc,MRPC.ItemDesc_Ara)', '@MRPC.FormulaCode', '@MRPC.formula_desc',
+                                    '@MRPC.UnitDesc', '@MRPC.PQty','@MRPDet.StartDate.Value.ToString("yyyy-MM-dd")','@MRPDet.EndDate.Value.ToString("yyyy-MM-dd")')" >
+                                        <i class="fa fa-pencil-alt"></i>
+                                    </button>
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+
+
+@functions{
+    string ar(string arabic, string english)
+    {
+        if (Session["language"].ToString() == "en") { return english; } else { return arabic; }
+    }
+}
+
+
+
+
+
+

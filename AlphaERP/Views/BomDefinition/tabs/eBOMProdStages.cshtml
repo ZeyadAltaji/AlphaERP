@@ -1,0 +1,239 @@
+﻿@model IEnumerable<AlphaERP.Models.Prod_ItemStages>
+@using AlphaERP.Models
+@{
+    var sortedModel = Model.OrderBy(item => item.StageSer);
+    string lang = Session["language"].ToString();
+    int itemCount = 1;
+ }
+ 
+
+
+ <style>
+      #eProdItemStagesTBody td:nth-child(1){
+        border-right:1px solid #ccc
+    }
+      #eProdItemStagesTBody td:nth-child(7) {
+        border-right: 3px solid #ccc;
+    }
+    .truncate-text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .popover-container {
+    position: relative;
+    display: inline-block;
+    }
+
+    .popover-content {
+    display: none;
+    position: absolute;
+    top: 2.2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #f0f0f0;
+    padding: 10px;
+    border: 1px solid #000;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    width: 100px;
+    }
+    .popover-content::before {
+    content: "";
+    position: absolute;
+    top: -10px; /* Adjust the value to position the arrow */
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-bottom-color: #000000;
+}
+    .popover-container:hover .popover-content {
+    display: block;
+    z-index:3;
+    }
+ </style>
+<div class="form-group">
+    <div class="col-md-12">
+        <label class="unselectable">@Html.Recource(2551) :</label>
+        <button onclick="Edit_ProdItemStages()" type="button" class="btn btn-default">@Html.Recource(2551)</button>
+    </div>
+    <div class="col-md-12" style="height:270px;max-height:280px;overflow-y:auto">
+        <table class="table table-hover" id="eProdItemStagesTable">
+            <thead>
+                <tr>
+                    <th style="width: 6%;">@Html.Translate("تسلسل", "Ser")</th>
+                    <th style="width: 14%;">@Html.Recource(2558)</th>
+                    <th style="width: 40%;">@Html.Recource(2559)</th>
+                    <th style="width: 10%;text-align: center;">@Html.Recource(2560)</th>
+                    <th style="width: 10%;text-align: center;">@Html.Recource(2561)</th>
+                    <th style="width: 10%;text-align: center;">@Html.Recource(9573)</th>
+                    <th style="width: 10%;text-align: center;">@Html.Recource(9574)</th>
+                    <th style="width: 10%; padding-right:10px;">@Html.Translate("ضبط الجودة", "QC")</th>
+                    <th style="width: 10%;text-align: center;">@Html.Translate("ضمان الجودة", "QA")</th>
+                    <th style="width: 6%; "></th>
+                
+                </tr>
+            </thead>
+            <tbody id="eProdItemStagesTBody">
+                @foreach (var item in sortedModel)
+                {
+                    string stage_desc = new MDB().prod_prodstage_info.Where(x => x.comp_no == item.Comp_no && x.stage_code == item.Stage_code).FirstOrDefault().stage_desc;
+                    var getdata = new MDB();
+                    string qaDesc = getdata.ProdCost_QASetupHF
+                    .Where(qa => qa.CompNo == item.Comp_no && qa.QA_ProcNo == item.QAProc)
+                    .Select(qa => qa.QA_Desc)
+                    .FirstOrDefault();
+                    string getnametest = getdata.ProdCost_FormTest.Where(qa => qa.CompNo == item.Comp_no && qa.FormNo == item.QCFromNo)
+                    .Select(qa => qa.FormDesc)
+                    .FirstOrDefault();
+
+
+                    <tr draggable="true" ondragstart="start()" ondragover="dragover()">
+                        <td style="width: 6%;" id="ProdItemStages_StageSer" StageSer="@item.StageSer">@item.StageSer</td>
+                        <td style="width: 14%;" id="ProdItemStages_StageCode" StageCode="@item.Stage_code">@item.Stage_code</td>
+                        <td style="width: 40%;">@stage_desc</td>
+                        <td style="width: 10%;text-align: center;">
+                            <input id="ProdItemStages_SatndardTimeHr" value="@item.Hr" type="number" style="width:75px !important" />
+                        </td>
+ 
+                        <td style="width: 10%;text-align: center;">
+                            <input id="ProdItemStages_SatndardTimeMin" value="@item.Min" type="number" style="width:75px !important" />
+                        </td>
+                        <td style="width: 10%;text-align: center;">
+                            <label class="unselectable">
+                                @if (@item.FixedTime == true)
+                                {
+                                    <input id="ProdItemStages_FixedTime" type="checkbox" checked />
+                                }
+                                else
+                                {
+                                    <input id="ProdItemStages_FixedTime" type="checkbox" />
+                                }
+                            </label>
+                        </td>
+                        <td style="width: 10%;text-align: center;">
+                            <label class="unselectable">
+                                @if (@item.ClosePStage == true)
+                                {
+                                    <input id="ProdItemStages_ClosePStage" type="checkbox" checked />
+                                }
+                                else
+                                {
+                                    <input id="ProdItemStages_ClosePStage" type="checkbox" />
+                                }
+                            </label>
+                        </td>
+                        <td style="display: none;">
+                            <input type="hidden" id="qaProcNoInput_@item.Stage_code" class="_qaProcNoInput" value="@item.QAProc" />
+                            <input type="hidden" id="oldValue_qaProcNoInput" value="@item.QAProc" />
+                            <input type="hidden" id="QCFromNoInput_@item.Stage_code" class="_QCFromNoInput" value="@item.QCFromNo" />
+                            <input type="hidden" id="oldValue_QCFromNoInput" value="@item.QCFromNo" />
+                            <input type="hidden" id="stageSerInput_@item.Stage_code" value="@item.Stage_code" />
+
+                        </td>
+                        <td style="display: none;">
+                            <input type="hidden" id="formulasCodeInput" />
+
+                        </td>
+                        <td  style="display:flex;">
+                            <div class="popover-container">
+
+                                <button style="width: 100px;" data-original-Test="@Html.Translate("فحص","Test")" id="NameTest_@item.Stage_code" onclick="SelectFormQCTest('@item.Comp_no','@item.Formula_code',@item.Stage_code)" type="button" class="btn btn-primary truncate-text ">
+                                    @if (@getnametest != null)
+                                    {
+                                        @getnametest
+                                    }
+                                    else if (@getnametest == null)
+                                    {
+                                        @Html.Translate("فحص", "Test")
+                                    }
+                                </button>
+                                <div class="popover-content" id="txtpopover_@item.Stage_code" onclick="SelectFormQCTest('@item.Comp_no','@item.Formula_code',@item.Stage_code)" data-original-Test="@Html.Translate("فحص","Test")">
+                                    @if (@getnametest != null)
+                                    {
+                                        @getnametest
+                                    }
+                                    else if (@getnametest == null)
+                                    {
+                                        @Html.Translate("فحص", "Test")
+                                    }
+                                </div>
+                            </div>
+                            <button class="btn-de" id="btn-deQC_@item.Stage_code" type="button" onclick="deleteSelectQC('@item.Stage_code')" style="position: relative; z-index: 2; right: @(lang == "en" ? "2.6rem" : "-2.6rem"); top: -0.4rem;"><i style="color: white !important; font-size:20px !important;" class="fa fa-times-circle"></i></button>
+
+                        </td>
+                        @*<td>
+                            <button class="btn-de" type="button" id="btn-deQC_@item.Stage_code" onclick="edeleteSelectQC('@item.Stage_code')" title="@Html.Translate(" حذف "+@Html.Translate(""+@getnametest+"","")+"","Delete "+@Html.Translate("",""+@getnametest+"")+"")" ><i class="fa fa-trash-alt"></i></button>
+
+                        </td>*@
+                        <td >
+                            <div style="display:flex;">
+                                <div class="popover-container">
+                                    <button style="width: 100px;" id="qaButton_@item.Stage_code" data-original-text="@Html.Translate("أختيار", "Select")" onclick="GetQASetBystage('@item.Comp_no','@item.Formula_code','@item.Stage_code','@item.StageSer')" type="button" class="btn btn-primary truncate-text " value="">
+                                        @if (@qaDesc != null)
+                                        {
+                                            @qaDesc
+                                        }
+                                        else if (@qaDesc == null)
+                                        {
+                                            @Html.Translate("أختيار", "Select")
+                                        }
+                                    </button>
+                                    <div class="popover-content" id="txtpopoveer_@item.Stage_code" data-original-text="@Html.Translate("أختيار", "Select")" onclick="GetQASetBystage('@item.Comp_no','@item.Formula_code','@item.Stage_code','@item.StageSer')">
+                                        @if (@qaDesc != null)
+                                        {
+                                            @qaDesc
+                                        }
+                                        else if (@qaDesc == null)
+                                        {
+                                            @Html.Translate("أختيار", "Select")
+                                        }
+                                    </div>
+
+                                </div>
+                                <button class="btn-de" id="btn-deQA_@item.Stage_code" type="button" onclick="deleteSelectQA('@item.Stage_code')" style="position: relative; z-index: 2; right: @(lang == "en" ? "2.6rem" : "-2.6rem"); top: -0.4rem;"><i style="color: white !important; font-size:20px !important;" class="fa fa-times-circle"></i></button>
+
+                            </div>
+                        </td>
+                        @*<td>
+                    
+                            
+                            <button class="btn-de" type="button" id="btn-deQA_@item.Stage_code"  onclick="edeleteSelectQA('@item.Stage_code')" title="@Html.Translate(""+ @qaDesc+"حذف " +"", "Delete "+@qaDesc )"><i class="fa fa-trash-alt"></i></button>
+                        </td>*@
+ 
+                        <td style="border-left: 1px solid #ccc; width: 6%;">
+                            <button  class="btn-de" type="button" onclick="DeleteRow(this,'@item.Stage_code','@item.StageSer')" title="@Html.Translate(" بالكامل"+ @stage_desc+"حذف صف" +"", "Delete "+@stage_desc+" row in full")"><i class="fa fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                 }
+                </tbody>
+            </table>
+        </div>
+    </div>
+<script>
+    var row;
+    var tableBody = document.getElementById("eProdItemStagesTBody");
+
+    function start() {
+        row = event.target;
+    }
+
+    function dragover() {
+        var e = event;
+        e.preventDefault();
+        let children = Array.from(e.target.parentNode.parentNode.children);
+        if (children.indexOf(e.target.parentNode) > children.indexOf(row)) {
+            e.target.parentNode.after(row);
+        } else {
+            e.target.parentNode.before(row);
+        }
+    }
+
+    // Check if there's only one record and disable drag-and-drop if true
+    if (@Model.Count() <= 1) {
+        tableBody.removeAttribute("draggable");
+        tableBody.removeAttribute("ondragstart");
+        tableBody.removeAttribute("ondragover");
+    }
+</script>

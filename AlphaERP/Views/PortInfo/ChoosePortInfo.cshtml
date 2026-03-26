@@ -1,0 +1,138 @@
+﻿@using System.Data.SqlClient;
+@using AlphaERP.Models
+
+@{
+    int OrdYear = ViewBag.OrdYear;
+    int OrderNo = ViewBag.OrderNo;
+    string TawreedNo = ViewBag.TawreedNo;
+
+    Company company = (Company)Session["company"];
+    List<Ord_OrderShippingHF> ShippingHF = new MDB().Ord_OrderShippingHF.Where(x => x.CompNo == company.comp_num && x.OrderYear == OrdYear && x.OrderNo == OrderNo && x.TawreedNo == TawreedNo).ToList();
+    int Srial = 1;
+}
+
+
+
+<div class="box box-primary">
+    <div class="box-body box-profile">
+        <div class="modal-body row">
+            <div class="form-group">
+                <div class="col-md-12 wrapperx" id="PortInfo_ShipmentsInfo_Div">
+                    <table class="table table-hover PortInfo_ShipmentsInfo" id="PortInfo_ShipmentsInfoTable">
+                        <thead>
+                            <tr>
+                                <th>@Html.Recource(3197)</th>
+                                <th>@Html.Recource(3797)</th>
+                                <th>@Html.Recource(696)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody style="text-align: center;" id="PortInfo_ShipmentsInfoTBody">
+                            @foreach (Ord_OrderShippingHF item in ShippingHF)
+                            {
+                                Ord_PortInfoHF PortInfoHF = new MDB().Ord_PortInfoHF.Where(x => x.CompNo == company.comp_num && x.OrderYear == item.OrderYear && x.OrderNo == item.OrderNo
+                && x.TawreedNo == item.TawreedNo && x.ShipSer == item.ShipSer).FirstOrDefault();
+
+                              <tr id="AShipmentsInfo_@Srial">
+                                  <td id="ShipmentsInfo_OrderNo_@Srial">@item.OrderNo</td>
+                                  <td id="ShipmentsInfo_TawreedNo_@Srial">@item.TawreedNo</td>
+                                  <td style="direction: ltr;" id="ShipmentsInfo_ShipSer_@Srial">@item.ShipSer</td>
+                                  <td>
+                                      @if (PortInfoHF != null)
+                                      {
+                                          if (PortInfoHF.IsApproval == false)
+                                          {
+                                              <button class="btn btn-ed ex" title="@Html.Translate("بيانات الميناء", "Port Info")" href="/PortInfo/GetPortInfo?OrdYear=@item.OrderYear&OrderNo=@item.OrderNo&TawreedNo=@item.TawreedNo&ShipSer=@item.ShipSer" target="_blank">
+                                                  <i class="fa fa-pencil-alt"></i>
+                                              </button>
+                                          }
+                                          else
+                                          {
+                                              <button class="btn btn-ed ex" title="@Html.Translate("بيانات الميناء", "Port Info")" disabled>
+                                                  <i class="fa fa-pencil-alt"></i>
+                                              </button>
+                                          }
+                                      }
+                                      else
+                                      {
+                                          <button class="btn btn-ed ex" title="@Html.Translate("بيانات الميناء", "Port Info")" href="/PortInfo/GetPortInfo?OrdYear=@item.OrderYear&OrderNo=@item.OrderNo&TawreedNo=@item.TawreedNo&ShipSer=@item.ShipSer" target="_blank">
+                                              <i class="fa fa-pencil-alt"></i>
+                                          </button>
+                                      }
+
+
+                                      @if (PortInfoHF != null)
+                                      {
+                                          if (PortInfoHF.IsApproval == false)
+                                          {
+                                              <button class="btn btn-ed ex" title="@Html.Translate("اعتماد", "Approval")" onclick="ApprovalPortInfo(@item.OrderYear,@item.OrderNo,'@item.TawreedNo','@item.ShipSer')">
+                                                  <i class="fa fa-check"  style="color: red;"></i>
+                                              </button>
+                                          }
+                                          else
+                                          {
+                                              <button class="btn btn-ed ex" title="@Html.Translate("اعتماد", "Approval")" disabled>
+                                                  <i class="fa fa-check"  style="color: red;"></i>
+                                              </button>
+                                          }
+
+                                          <button class="btn btn-default ex" title="عرض" href="/PortInfo/ViewPortInfo?OrdYear=@item.OrderYear&OrderNo=@item.OrderNo&TawreedNo=@item.TawreedNo&ShipSer=@item.ShipSer" target="_blank">
+                                              <i style="font-weight:100" class="fa fa-folder"></i>
+                                              @Html.Translate("عرض", "View")
+                                          </button>
+                                      }
+                                      else
+                                      {
+                                          <button class="btn btn-ed ex" title="@Html.Translate("اعتماد", "Approval")" disabled>
+                                              <i class="fa fa-check" style="color: red;"></i>
+                                          </button>
+                                          <button class="btn btn-default ex" title="عرض" disabled>
+                                              <i style="font-weight:100" class="fa fa-folder"></i>
+                                              @Html.Translate("عرض", "View")
+                                          </button>
+                                      }
+                                      <input type="hidden" id="InputSerial" value="@(Srial++)" />
+                                  </td>
+                              </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $('#PortInfo_ShipmentsInfoTable').DataTable({
+        "scrollY": 'calc( 100vh - 355px)',
+        "paging": false,
+        "pageLength": 10,
+        "language": {
+            search: ' <i class="fa fa-search" aria-hidden="true"></i> '
+        },
+    });
+    var OrderYear = 0;
+    var OrdNo = 0;
+    var TawdNo = 0;
+    function ApprovalPortInfo(OrdYear, OrderNo, TawreedNo, ShipSer) {
+        wait();
+        if (confirm('@Resources.Resource.ApprovalShipment')) {
+            OrderYear = OrdYear;
+            OrdNo = OrderNo;
+            TawdNo = TawreedNo
+
+            burn({ OrdYear: OrdYear, OrderNo: OrderNo, TawreedNo: TawreedNo, ShipSer: ShipSer }, '../../../PortInfo/ApprovalPortInfo', '', ReloadApprovalPortInfo, true);
+        }
+        else {
+            done();
+        }
+    }
+    function ReloadApprovalPortInfo() {
+        done();
+        $('#PortInfo_ShipmentsInfoTBody').empty();
+        MsgBox('@Html.Recource(475)', 'green');
+        SelectionPortInfo(OrderYear, OrdNo, TawdNo)
+    }
+</script>
+
+

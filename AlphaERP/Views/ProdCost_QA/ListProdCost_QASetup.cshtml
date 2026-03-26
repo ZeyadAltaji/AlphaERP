@@ -1,0 +1,207 @@
+﻿@model IEnumerable<AlphaERP.Models.ProdCost_QASetup>
+
+<table class="table table-hover" style="width:100%" id="Prod_ProdOrders">
+    <thead>
+        <tr>
+            <th>@Html.Translate("تسلسل", "Ser")</th>
+            <th>@Html.Translate("رقم الطلب", "Order Number")</th>
+            <th>Date</th>
+            <th>Finished Product</th>
+            <th>Formula</th>
+            <th>Unit</th>
+            <th>Stage Serial</th>
+            <th>stage Desc</th>
+            <th>Quantity</th>
+
+        </tr>
+    </thead>
+    <tbody id="StagesQcInProcessTestRTB"></tbody>
+</table>
+<div id="prodCostQARequestsContainer"></div>
+
+
+<div class="modal fade wide" id="Prod_DailyProduction_Model">
+    <div class="modal-dialog">
+        <form class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Recource(475)</label>
+            </div> 
+            <div class="modal-body row">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary btn-Save">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+<style>
+    #Prod_ProdOrders th {
+        text-align: center !important;
+        width: 89.75px;
+    }
+
+    #Prod_ProdOrders td {
+        max-width: 100px; /* Adjust the max-width as needed */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    #GetProdCost_QARequests th {
+        text-align: center !important;
+        width: 89.75px;
+    }
+
+    #GetProdCost_QARequests td {
+        max-width: 100px; /* Adjust the max-width as needed */
+        white-space: nowrap;
+        text-align: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
+
+
+
+
+
+
+<script>
+     function getStatusIcon(RequestStat) {
+         if (RequestStat === true) {
+             return 'Pass';
+         } else if (RequestStat === false) {
+             return 'Fail';
+         } else {
+             return 'Pending';
+         }
+     }
+
+     function formatJsonDate(jsonDate) {
+         var date = new Date(parseInt(jsonDate.substr(6)));
+         return date.toLocaleDateString(); //   format date
+     }
+     $('#Prod_ProdOrders').DataTable({
+         "scrollY": 200,
+          "pageLength": 25,
+         "ordering": false
+     });
+     $('#GetProdCost_QARequests').DataTable({
+         "scrollY": 200,
+         "pageLength": 25,
+         "ordering": false
+     });
+     $(document).ready(function () {
+
+        $.ajax({
+            url: '@Url.Action("GetProdCost_QASetupData", "ProdCost_QA")',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                populateTable(data);
+            },
+            error: function(xhr, status, error) {
+                console.log(error);
+            }
+        });
+    });
+
+    function populateTable(data) {
+        var tbody = $("#StagesQcInProcessTestRTB");
+        tbody.empty();
+
+        // Loop through the JSON data
+        $.each(data, function(index, item) {
+            var row = $("<tr>");
+
+            row.append($("<td>").text(item.CompNo));
+            row.append($("<td>").text(item.QA_ProcNo));
+            row.append($("<td>").text(item.Proc_SubNo));
+            row.append($("<td>").text(item.Description));
+             row.append($("<td>").text(item.UserID));
+
+            tbody.append(row);
+        });
+    }
+    $("#Prod_ProdOrders").on("click", "tbody tr", function () {
+         var compNo = $(this).find("td:first").text();
+         console.log(compNo)
+         getProdCostQARequestsData(compNo);
+    });
+    function getProdCostQARequestsData(compNo) {
+        $.ajax({
+            url: '@Url.Action("GetProdCost_QARequests", "ProdCost_QA")',
+            type: 'GET',
+            data: { compNo: compNo },
+            dataType: 'json',
+            success: function (data) {
+                var content = '<h4>Production Control / Quality inspection movements</h4>';
+                content += '<table class="table table-hover" style="width:100%" id="GetProdCost_QARequests">';
+                content+='<thead>';
+                content += '<tr>';
+                content += '<th>CompNo</th>';
+                content += '<th>OrderYear</th>';
+                content += '<th>OrderNo</th>';
+                content += '<th>ReqNo</th>';
+                content += '<th>QA_ProcNo</th>';
+                content += '<th>ReqDate</th>';
+                content += '<th>StageCode</th>';
+                content += '<th>UserID</th>';
+                content += '<th style="text">RequestStat</th>';
+                content += '</tr>';
+
+
+                content += '</thead>';
+                content += '<tbody>';
+
+                $.each(data, function (index, item) {
+                    content += '<tr>';
+                    content += '<td>' + item.CompNo + '</td>';
+                    content += '<td>' + item.OrderYear + '</td>';
+                    content += '<td>' + item.OrderNo + '</td>';
+                    content += '<td>' + item.ReqNo + '</td>';
+                    content += '<td>' + item.QA_ProcNo + '</td>';
+                    content += '<td>' + formatJsonDate(item.ReqDate) + '</td>';
+                    content += '<td>' + item.StageCode + '</td>';
+                    content += '<td>' + item.UserID + '</td>';
+                    content += '<td>' + getStatusIcon(item.RequestStat)  + '</td>';
+                    content += '</tr>';
+                });
+                content += '</tbody>';
+
+                content += '</table>';
+                content += '<button id="addValueButton" class="btn btn-primary" value="' + compNo + '">Add Value</button>';
+                $('#prodCostQARequestsContainer').html(content);
+
+            },
+            error: function (xhr, status, error) {
+                console.log(error);
+            }
+        });
+    }
+     $(document).on('click', '#addValueButton', function () {
+         var compNo = $(this).val();
+
+         console.log(compNo);
+         $('#Prod_DailyProduction_Model').modal('show');
+         $.ajax({
+             url: '@Url.Action("GetProdCost_QAEvents", "ProdCost_QA")',
+             type: 'GET',
+             data: { compNo: compNo },
+             success: function (data) {
+                 //$('#table').load("../../../ProdCost_QA/LoadListEventsummary?reqNo=" + reqNo + "&QA_ProcNo=" + QA_ProcNo);
+                 @*MsgBox('@Html.Recource(475)', 'green');*@
+             }
+         });
+
+     });
+
+</script>

@@ -1,0 +1,78 @@
+﻿@using System.Data.SqlClient;
+@using AlphaERP.Models
+@{
+    Company company = (Company)Session["company"];
+
+    List<Ord_glactmf> glmf = new MDB().Database.SqlQuery<Ord_glactmf>(string.Format("SELECT acc_num,  dbo.glactmf.acc_desc, dbo.glactmf.acc_edesc   " +
+"from glactmf " +
+"where (glactmf.acc_comp = '{0}') AND (acc_halt Between Case When 2 = 2 Then 0 else 2 end And Case When 2 = 2 Then 1 else 2 end) Order By acc_num ", company.comp_num)).ToList();
+
+}
+
+<table class="table" id="VendorExistAcountInfoTable">
+    <thead>
+        <tr>
+            <th>@Html.Recource(1023)</th>
+            <th>@Html.Recource(256)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="VendorExistAcountTbody">
+        @foreach (Ord_glactmf P in glmf)
+        {
+            <tr onclick="SelectVendorExistAcountInfo(this)" AccountNo="@P.acc_num" AccountName="@P.acc_desc"  AccounteName="@P.acc_edesc">
+                <td>@P.acc_num</td>
+                <td>@Html.Translate(P.acc_desc,P.acc_edesc)</td>
+                <td></td>
+            </tr>
+        }
+    </tbody>
+</table>
+<div class="modal-footer">
+    <button type="button" onclick="SelectionVendorExistAcountDiv()" class="btn btn-primary">@Resources.Resource.Choose</button>
+    <button class="btn btn-default pull-left" data-dismiss="modal">@Resources.Resource.Cancel</button>
+</div>
+
+<script>
+    $('#VendorExistAcountInfoTable').DataTable({
+        "scrollY": TableHeight2(400),
+        "paging": true,
+        "pageLength": 25,
+    });
+
+    function SelectVendorExistAcountInfo(e) {
+        var table = $('#VendorExistAcountInfoTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr');
+        for (var i = 0; i < trs.length; i++) {
+            trs[i].setAttribute('name', '');
+            $(trs[i]).removeClass('selected');
+        }
+        e.setAttribute('name', 'selected');
+        $(e).addClass('selected');
+    }
+    function SelectionVendorExistAcountDiv() {
+        var table = $('#VendorExistAcountInfoTable');
+        var oTable = table.dataTable();
+        var trs = oTable.$('tr[name=selected]');
+
+        if (trs.length == 0) {
+            MsgBox('@Resources.Resource.NoAccountWasChosen', 'red');
+            done();
+            return false
+        }
+
+        var AccountNo = trs[0].getAttribute('AccountNo');
+        var AccountName = trs[0].getAttribute('AccountName');
+        var AccounteName = trs[0].getAttribute('AccounteName');
+
+
+        AddEnterVendorExist(AccountNo, AccountName, AccounteName);
+    }
+</script>
+
+
+
+
+
+
