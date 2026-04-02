@@ -25,6 +25,7 @@ namespace AlphaERP.Controllers
         {
             Captcha captcha = new Captcha();
             Session["captcha"] = captcha.Text;
+
             return File(captcha.ImageAsByteArray, "image/png");
         }
 
