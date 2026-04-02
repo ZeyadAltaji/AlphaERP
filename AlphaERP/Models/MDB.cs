@@ -137,6 +137,7 @@ namespace AlphaERP.Models
         public virtual DbSet<ProdCost_EmpWorkHoursH_Web> ProdCost_EmpWorkHoursH_Web { get; set; }
         public virtual DbSet<ProdCost_QCInspHF> ProdCost_QCInspHF { get; set; }
         public virtual DbSet<Prod_RevisionSetup> Prod_RevisionSetup { get; set; }
+        public virtual DbSet<ProductionOrdersPermission> ProductionOrdersPermissions { get; set; }
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<ProdCost_QASetupHF>()

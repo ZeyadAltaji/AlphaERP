@@ -1,4 +1,4 @@
-﻿@using System.Data.SqlClient
+@using System.Data.SqlClient
 
 <style>
     #ProductionOrdersInProgressDataTable tr:nth-child(old) {
@@ -76,8 +76,28 @@
                             <td>@rdr["UOM"]</td>
                             <td>@Convert.ToDecimal(rdr["QtyReceived"]).ToString("0.00")</td>
                             <td>@Result.ToString("0.00 %")</td>
-                            <td></td>
-
+                            <td>
+                                @{
+                                    var prodPerms = (List<AlphaERP.Models.ProductionOrdersPermission>)Session["ProdOrdersPermissions"] ?? new List<AlphaERP.Models.ProductionOrdersPermission>();
+                                    bool canStages = prodPerms.Any(x => x.ProgID == 1 && x.ProgAccess.Value);
+                                    bool canProd = prodPerms.Any(x => x.ProgID == 2 && x.ProgAccess.Value);
+                                    bool canRaw = prodPerms.Any(x => x.ProgID == 3 && x.ProgAccess.Value);
+                                }
+                                <div style="display:flex; gap: 5px;">
+                                    @if (canStages)
+                                    {
+                                        <button class="btn btn-xs btn-primary" onclick="OpenListStages(this)">@Html.Translate("قائمة المراحل", "List Stages")</button>
+                                    }
+                                    @if (canRaw)
+                                    {
+                                        <button class="btn btn-xs btn-warning" onclick="OpenRawMaterial(this)">@Html.Translate("طلب مواد", "Request for materials")</button>
+                                    }
+                                    @if (canProd)
+                                    {
+                                        <button class="btn btn-xs btn-success" onclick="OpenProduction(this)">@Html.Translate("الانتاج", "Production")</button>
+                                    }
+                                </div>
+                            </td>
                         </tr>
                     }
                 }
@@ -97,6 +117,19 @@
     $('#Prod_Liststage_Model').draggable({
         handle: ".modal-header",
     });
+    $('#Modal_ListStages').draggable({
+        handle: ".modal-header",
+    });
+    $('#Modal_RawMaterial').draggable({
+        handle: ".modal-header",
+    });
+    $('#Modal_Production').draggable({
+        handle: ".modal-header",
+    });
+
+
+
+
     $('#QAEventShowModalInProgress').draggable({
         handle: ".modal-header",
     });

@@ -1,4 +1,4 @@
-﻿@using AlphaERP.Models
+@using AlphaERP.Models
 @{
     User me = (User)Session["me"];
 }
@@ -75,6 +75,13 @@ else
                 <img src="~/Images/menu/unlock.png" />
                 <label>
                     @Html.Recource(493)
+                </label>
+            </a>
+
+            <a class="menu-button" href="~/ProductionPermissions">
+                <img src="~/Images/menu/unlock.png" />
+                <label>
+                    @Html.Translate("صلاحيات أوامر الإنتاج", "Prod Orders Permissions")
                 </label>
             </a>
 

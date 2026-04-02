@@ -106,6 +106,7 @@
     <Compile Include="Controllers\ProdCost_QAController.cs" />
     <Compile Include="Controllers\ProdOrdersController.cs" />
     <Compile Include="Controllers\ProductionOrdersInProgressController.cs" />
+    <Compile Include="Controllers\ProductionPermissionsController.cs" />
     <Compile Include="Controllers\ProductionPlanAnalysisController.cs" />
     <Compile Include="Controllers\ProductionStagesController.cs" />
     <Compile Include="Controllers\PurchaseOrderController.cs" />
@@ -155,7 +156,8 @@
     <Compile Include="Models\BOM_GetFormStagesView.cs" />
     <Compile Include="Models\BOM_PakingInfo.cs" />
     <Compile Include="Models\BusunisUnit.cs" />
-    <Compile Include="Models\cc.cs" />
+    <Compile Include="Models\ProductionOrdersPermission.cs" />
+    <Compile Include="Models\User.cs" />
     <Compile Include="Models\ClientsActive.cs" />
     <Compile Include="Models\Company.cs" />
     <Compile Include="Models\CRequestforQuotation.cs" />
@@ -1462,6 +1464,7 @@
     <Content Include="Views\QATestDefinition\EditQCForm.cshtml" />
     <Content Include="Views\BomDefinition\GetItemsData.cshtml" />
     <Content Include="Views\Shared\_RevisionsModal.cshtml" />
+    <Content Include="Views\ProductionPermissions\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

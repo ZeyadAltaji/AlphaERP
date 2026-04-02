@@ -1,4 +1,4 @@
-﻿using AlphaERP.Models;
+using AlphaERP.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
@@ -91,6 +91,11 @@ namespace AlphaERP.Controllers
 
                 List<Ord_Programs> mm = permiss.Where(x => x.Ord_Programs != null).Select(x => x.Ord_Programs).ToList();
                 Session["company"] = company;
+
+                // Load Production Orders Permissions
+                List<ProductionOrdersPermission> prodPermissions = new MDB().ProductionOrdersPermissions.Where(x => x.UserID == me.UserID && x.CompNo == comp_num).ToList();
+                Session["ProdOrdersPermissions"] = prodPermissions;
+
                 return RedirectToAction("Index", "Home");
             }
             return View();

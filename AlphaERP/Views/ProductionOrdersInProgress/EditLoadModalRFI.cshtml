@@ -1,4 +1,4 @@
-﻿ 
+ 
 @using AlphaERP.Models;
 @using System.Data
  
@@ -123,11 +123,8 @@
                 <tr>
                     <th style="text-align:center;">@Html.Translate("رمز المادة", "Item No")</th>
                     <th style="text-align:center;">@Html.Translate("الوصف", "desc")</th>
-                    <th style="text-align:center;"></th>
                     <th style="text-align:center;">@Html.Translate("الوحدة", "Unit Code")</th>
                     <th style="text-align:center; display:none;" >@Html.Translate("تسلسل الوحدة", "Unit Serial")</th>
-                    <th style="text-align:center;"></th>
-                    <th style="text-align:center;" >@Html.Translate("الحزمة", "Batch")</th>
                     <th style="text-align:center;">@Html.Translate("الكمية المتوفرة", "AvlQty")</th>
                    
                     <th style="text-align:center;">@Html.Translate("الكمية", "Qty")</th>
@@ -141,17 +138,14 @@
                     @foreach (DataRow row in Model.Tables["LoadIssueOrderOrDefult"].Rows)
                     {
                     <tr>
-                        <td id="ItemNo">@row["ItemNo"]</td>
-                        <td id="ItemDesc">@row["ItemDesc"]</td>
-                        <td><button></button></td>
-                        <td id="UnitCode">@row["UnitCode"]</td>
+                        <td id="ItemNo" style="text-align:center;">@row["ItemNo"]</td>
+                        <td id="ItemDesc" style="text-align:center;">@row["ItemDesc"]</td>
+                        <td id="UnitCode" style="text-align:center;">@row["UnitCode"]</td>
                         <td id="UnitSerial" style="display:none;">@row["UnitSerial"]</td>
-                        <td ><button onclick="LoadBatch('@company.comp_num','@row["ItemNo"]','@row["UnitSerial"]')" @(IsApproved == true ? "disabled" : "" )>Batch</button></td>
-                        <td id="batch"><input  id="batchValid" class="batch-input" type="text" value="@row["Batch"]" @(IsApproved == true ? "disabled" : "" )/></td>
-                        <td id="AvlQty">@row["AvlQty"]</td>
+                        <td id="AvlQty" style="text-align:center;">@row["AvlQty"]</td>
                        
-                        <td><input style="width: 62px  !important;" id="Qty" type="number" value="@row["Qty"]" @(IsApproved == true ? "disabled" : "" )/></td>
-                        <td><input id="ItemNotes" type="text" value="@row["ItemNotes"]" @(IsApproved == true ? "disabled" : "" )/></td>
+                        <td style="text-align:center;"><input style="width: 62px  !important;" id="Qty" type="number" value="@row["Qty"]" @(IsApproved == true ? "disabled" : "" )/></td>
+                        <td style="text-align:center;"><input id="ItemNotes" type="text" value="@row["ItemNotes"]" @(IsApproved == true ? "disabled" : "" )/></td>
                         <td></td>
                     </tr>
                 }
@@ -415,21 +409,12 @@
             var ItemSer = 1;
             var UnitCode = cells[3].innerText;
             var Qtyinput = cells[8].querySelector("#Qty");
-            var Qty =Qtyinput.value.trim();
+            var Qty = parseFloat(Qtyinput.value.trim());
             var UnitSerial = cells[4].innerText;
-            var BatchInput = cells[6].querySelector(".batch-input");
-            var Batch = BatchInput.value.trim();
-
             var ItemNotesInput = cells[9].querySelector("input[type='text']");
-            var ItemNotes = ItemNotesInput.value.trim();
-            if (Qty.trim() === '') {
-                alert('@Html.Translate("يرجى إدخال الكمية", "Please Enter Qty")');
-                return;
+            var ItemNotes = ItemNotesInput ? ItemNotesInput.value.trim() : '';
+            if (isNaN(Qty) || Qty === 0) continue; // Skip zero qty rows
 
-            }if(Batch.trim() === ''){
-                alert('@Html.Translate("يرجى إدخال الحزمة ", "Please Enter batch")');
-                return;
-            }
             var rowData = {
                 ItemNo: ItemNo,
                 ItemSer: ItemSer,
@@ -437,10 +422,8 @@
                 Qty: Qty,
                 UnitSerial: UnitSerial,
                 ItemNotes: ItemNotes,
-                Batch:Batch
-
+                Batch: null
             };
-
             IssueOrderDF.push(rowData);
         }
         }else if(AddititiveItemsCheckbox.checked){
@@ -453,21 +436,12 @@
                 var ItemSer = 1;
                 var UnitCode = cells[3].innerText;
                 var Qtyinput = cells[8].querySelector("#Qty");
-                var Qty =Qtyinput.value.trim();
+                var Qty = parseFloat(Qtyinput.value.trim());
                 var UnitSerial = cells[4].innerText;
-                var BatchInput = cells[6].querySelector(".batch-input");
-                var Batch = BatchInput.value.trim();
-
                 var ItemNotesInput = cells[9].querySelector("input[type='text']");
-                var ItemNotes = ItemNotesInput.value;
-                if (Qty === '' ){
-                    alert('@Html.Translate("يرجى إدخال الكمية", "Please Enter Qty")');
-                    return;
+                var ItemNotes = ItemNotesInput ? ItemNotesInput.value.trim() : '';
+                if (isNaN(Qty) || Qty === 0) continue; // Skip zero qty rows
 
-                }if(Batch === ''){
-                    alert('@Html.Translate("يرجى إدخال الحزمة ", "Please Enter batch")');
-                    return;
-                }
                 var rowData = {
                     ItemNo: ItemNo,
                     ItemSer: ItemSer,
@@ -475,10 +449,8 @@
                     Qty: Qty,
                     UnitSerial: UnitSerial,
                     ItemNotes: ItemNotes,
-                    Batch:Batch
-
+                    Batch: null
                 };
-
                 IssueOrderDF.push(rowData);
             }
         }else if(!AddititiveItemsCheckbox.checked && !stageCheckbox.checked){
@@ -486,23 +458,14 @@
             var table = $("#LoadTableDefult");
             var trs1 = table.find('tbody tr');
             for (var i = 0; i < trs1.length; i++) {
-                var Qty = $(trs1[i]).find('#Qty')[0].value.trim();
-                var Batch = $(trs1[i]).find('#batchValid')[0].value.trim();
-
-                if (Qty === '') {
-                    alert('@Html.Translate("يرجى إدخال الكمية", "Please Enter Qty")');
-                    return;
-                }
-                if (Batch === '') {
-                    alert('@Html.Translate("يرجى إدخال الحزمة", "Please Enter batch")');
-                    return;
-                }
+                var Qty = parseFloat($(trs1[i]).find('#Qty')[0].value.trim());
+                if (isNaN(Qty) || Qty === 0) continue; // Skip zero qty rows
 
                 IssueOrderDF.push({
                     ItemNo: $(trs1[i]).find('#ItemNo')[0].innerHTML,
                     UnitCode: $(trs1[i]).find('#UnitCode')[0].innerHTML,
                     UnitSerial: $(trs1[i]).find('#UnitSerial')[0].innerHTML,
-                    batch: Batch,
+                    Batch: null,
                     Qty: Qty,
                     ItemNotes: $(trs1[i]).find('#ItemNotes')[0].value,
                 });
@@ -528,28 +491,24 @@
                     '../../../ProductionOrdersInProgress/SaveRFI',
                     '',
                     function (response){
-                        ReloadBaseTable(response)
-                        var tableRFIBody = $('#tableRFIBody');
-                        tableRFIBody.innerHTML ="";
-                        $('#tableRFIBody').load('../../../ProductionOrdersInProgress/LoadRFIAll?CompNo='+CompNo+'&OrderYear=' + OrderYear + '&OrderNo=' + OrderNo + '&FormCode=' + FormCode);
-                        $('#ModalLoadIssueOrder').modal('hide');
-                        $('#ModalSelectIssueOrder').modal('hide');
-
+                        if (response && response.ok) {
+                            alert('@Html.Translate("تم حفظ أمر الصرف بنجاح", "Exchange order saved successfully")');
+                            var tableRFIBody = $('#tableRFIBody');
+                            tableRFIBody.innerHTML ="";
+                            $('#tableRFIBody').load('../../../ProductionOrdersInProgress/LoadRFIAll?CompNo='+CompNo+'&OrderYear=' + OrderYear + '&OrderNo=' + OrderNo + '&FormCode=' + FormCode);
+                            $('#ModalLoadIssueOrder').modal('hide');
+                            $('#ModalSelectIssueOrder').modal('hide');
+                            refreshTable();
+                        } else {
+                            var errMsg = (response && response.ok) ? response.ok : '@Html.Translate("حدث خطأ أثناء الحفظ", "An error occurred while saving")';
+                            alert(errMsg);
+                        }
                         done();
                     },
                     false
                     );
                 }
         else {done();}
-    }
-    function ReloadBaseTable(response)
-    {
-        var message = 'done';
-        if (message) {
-                alert(message);
-            }
-
-        refreshTable()
     }
     function LoadBatch(CompNo,ItemNo,UnitSerial){
           var storeNo = document.getElementById("StoreNo").value;

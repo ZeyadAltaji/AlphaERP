@@ -1,0 +1,168 @@
+@using AlphaERP.Models
+@{
+    List<User> users = new MDB().Users.ToList();
+    Company company = (Company)Session["company"];
+}
+<style>
+    .tbl-label {
+        padding: 0;
+        margin: 0
+    }
+</style>
+<div class="box box-primary">
+    <div class="box-body box-profile slim">
+        <div>
+            <div class="col-md-10" style="padding:0">
+                <label style="margin:0" class="profile-username text-center">
+                    <i style="margin:0 10px" class="fa fa-lock" aria-hidden="true"></i>
+                    @Html.Translate("صلاحيات أوامر الإنتاج", "Production Orders Permissions")
+                </label>
+            </div>
+            <div class="col-md-2" style="padding:0">
+                <button class="btn btn-primary btn-block" onclick="SetUserProdPerms()">
+                    <i class="fa fa-save"></i> @Html.Translate("حفظ", "Save")
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="box-body box-profile" style="height:calc( 100vh - 165px)">
+        <div>
+            <div class="col-md-4">
+                <table class="table table-hover" style="width:100%" id="ProdPermUsers">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>@Html.Translate("اسم المستخدم", "User Name")</th>
+                            <th>@Html.Translate("متوقف", "Stopped")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in users)
+                        {
+                            <tr onclick="GetUserProdPerms('@user.UserID')">
+                                <td>@user.UserID</td>
+                                <td>@user.UserName</td>
+                                <td>
+                                    @if (user.StoppedUser == true)
+                                    {
+                                        <i class="fa fa-check"></i>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-8">
+                <table style="width:100%;" class="table table-hover" id="ProdPermPrograms">
+                    <thead>
+                        <tr>
+                            <th>@Html.Translate("البرنامج", "Program")</th>
+                            <th>
+                                <label class="tbl-label">
+                                    <input type="checkbox" onclick="SelectUnSelectProd(this,2)" />
+                                    @Html.Translate("صلاحية الدخول", "Access")
+                                </label>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="ProdPermProgramsBD">
+                        <tr data-progid="1">
+                            <td>
+                                <i class="fa fa-list"></i> @Html.Translate("قائمة المراحل", "List Stages")
+                            </td>
+                            <td><input type="checkbox" /></td>
+                        </tr>
+                        <tr data-progid="2">
+                            <td>
+                                <i class="fa fa-industry"></i> @Html.Translate("الانتاج", "Production")
+                            </td>
+                            <td><input type="checkbox" /></td>
+                        </tr>
+                        <tr data-progid="3">
+                            <td>
+                                <i class="fa fa-cubes"></i> @Html.Translate("المواد الخام", "Row Material")
+                            </td>
+                            <td><input type="checkbox" /></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#ProdPermUsers').DataTable({
+        "order": [[1, "asc"], [0, "asc"]],
+        "scrollY": "50vh",
+        "paging": true,
+        "pageLength": 100,
+        "scrollX": true,
+        "autoWidth": false
+    });
+
+    var CurrentUserID = "";
+
+    function GetUserProdPerms(UserID) {
+        CurrentUserID = UserID;
+        // Highlight selected row
+        $('#ProdPermUsers tbody tr').removeClass('highlighted-row');
+        $(event.currentTarget).addClass('highlighted-row');
+
+        wait();
+        $.get('../../../ProductionPermissions/GetPermissions?UserID=' + UserID, function (r) {
+            var tableBody = $("#ProdPermProgramsBD");
+            tableBody.find("tr").each(function () {
+                $(this).find("input").prop("checked", false);
+            });
+
+            $.each(r.permissions, function (i, perm) {
+                tableBody.find("tr[data-progid='" + perm.ProgID + "']").find("input").prop("checked", perm.ProgAccess);
+            });
+            done();
+        });
+    }
+
+    function SelectUnSelectProd(e, col) {
+        $("#ProdPermProgramsBD tr").each(function () {
+            $(this).find("input").prop("checked", e.checked);
+        });
+    }
+
+    function SetUserProdPerms() {
+        if (CurrentUserID == "") {
+            alert("@Html.Translate("يرجى اختيار مستخدم", "Select user please")");
+            return;
+        }
+
+        var permissions = [];
+        $("#ProdPermProgramsBD tr").each(function () {
+            permissions.push({
+                CompNo: "@company.comp_num",
+                UserID: CurrentUserID,
+                ProgID: $(this).data("progid"),
+                ProgAccess: $(this).find("input").prop("checked"),
+                ProgAdd: true,
+                ProgMod: true,
+                ProgDel: true
+            });
+        });
+
+        wait();
+        $.ajax({
+            url: '../../../ProductionPermissions/SetPermissions',
+            type: 'POST',
+            data: JSON.stringify({ UserID: CurrentUserID, permissions: permissions }),
+            contentType: 'application/json',
+            success: function (r) {
+                done();
+                alert('Saved Successfully');
+            },
+            error: function () {
+                done();
+                alert('Error saving permissions');
+            }
+        });
+    }
+</script>

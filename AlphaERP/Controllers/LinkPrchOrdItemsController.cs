@@ -31,7 +31,22 @@ namespace AlphaERP.Controllers
                     ex.SubItemNo = item.SubItemNo;
                     ex.SubTUnit = item.SubTUnit;
                     ex.SubUnitSerial = item.SubUnitSerial;
-                    db.SaveChanges();
+                    try
+                    {
+                        db.SaveChanges();
+                    }
+                    catch (System.Data.Entity.Validation.DbEntityValidationException exp)
+                    {
+                        foreach (var entityValidationErrors in exp.EntityValidationErrors)
+                        {
+                            foreach (var validationError in entityValidationErrors.ValidationErrors)
+                            {
+                                Console.WriteLine("Property: " + validationError.PropertyName);
+                                Console.WriteLine("Error: " + validationError.ErrorMessage);
+                            }
+                        }
+                        throw;
+                    }
                 }
             }
             return Json(new { Ok = "Ok" }, JsonRequestBehavior.AllowGet);

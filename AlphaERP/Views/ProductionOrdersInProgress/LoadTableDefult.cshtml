@@ -10,11 +10,8 @@
         <tr>
             <th style="text-align:center;">@Html.Translate("رمز المادة", "Item No")</th>
             <th style="text-align:center;">@Html.Translate("الوصف", "desc")</th>
-            <th style="text-align:center;"></th>
             <th style="text-align:center;">@Html.Translate("الوحدة", "Unit Code")</th>
             <th style="text-align:center; display:none;">@Html.Translate("تسلسل الوحدة", "Unit Serial")</th>
-            <th style="text-align:center;"></th>
-            <th style="text-align:center;">@Html.Translate("الحزمة", "Batch")</th>
             <th style="text-align:center;">@Html.Translate("الكمية المتوفرة", "AvlQty")</th>
             <th style="text-align:center;">@Html.Translate("الكمية المطلوبة للأمر", "ProdQty")</th>
             <th style="text-align:center;">@Html.Translate("كمية الخلطة", "MixQty")</th>
@@ -35,11 +32,8 @@
             <tr>
                 <td>@row["ItemNo"]</td>
                 <td>@row["ItemDesc"]</td>
-                <td><button></button></td>
                 <td>@row["UnitCode"]</td>
                 <td style="display:none;">@row["UnitSerial"]</td>
-                <td><button onclick="LoadBatch('@company.comp_num','@row["ItemNo"]','@row["UnitSerial"]')">Batch</button></td>
-                <td><input class="batch-input" type="text" value="@row["Batch"]" /></td>
                 <td>@row["AvlQty"]</td>
                 <td>@row["ProdQty"]</td>
                 <td>@row["MixQty"]</td>

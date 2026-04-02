@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualBasic;
+using Microsoft.VisualBasic;
 using AlphaERP.Models;
 using System;
 using System.Collections.Generic;
@@ -55,6 +55,7 @@ namespace AlphaERP.Controllers
         }
         public ActionResult LoadProductionOrder(short CompNo, int OrderYear, int OrderNo, string FormCode )
         {
+            if (!CheckProdPermission(1)) return Content(Translate("ليس لديك صلاحية للدخول لهذه الشاشة", "You don't have permission to access this screen"));
             ViewBag.OrderYear = OrderYear;
             ViewBag.OrderNo = OrderNo;
             ViewBag.FormCode = FormCode;
@@ -79,6 +80,7 @@ namespace AlphaERP.Controllers
         }
         public ActionResult DailyProdListANDAllDailyProduction(short CompNo, int OrderYear, int OrderNo, string FormCode)
         {
+            if (!CheckProdPermission(2)) return Content(Translate("ليس لديك صلاحية للدخول لهذه الشاشة", "You don't have permission to access this screen"));
             List<ProductionReceivingView> DailyProdHf = db.Database.SqlQuery<ProductionReceivingView>("exec ProdCost_OrderCostDetails_CostDriver @CompNo = {0}, @OrderYear = {1}, @OrderNo = {2}", CompNo, OrderYear, OrderNo).ToList();
             List<DailyProductionH> DailyProductionH = db.Database.SqlQuery<DailyProductionH>(string.Format("SELECT ProdCost_DailyProductionH.CompNo, ProdCost_DailyProductionH.ReportYear, ProdCost_DailyProductionH.ReportNo, ProdCost_DailyProductionD.ProdPrepYear, ProdCost_DailyProductionD.ProdPrepNo,ProdCost_DailyProductionH.Prod_Date, ProdCost_DailyProductionH.Closed FROM ProdCost_DailyProductionH INNER JOIN ProdCost_DailyProductionD ON ProdCost_DailyProductionH.CompNo = ProdCost_DailyProductionD.CompNo AND ProdCost_DailyProductionH.ReportYear = ProdCost_DailyProductionD.ReportYear AND ProdCost_DailyProductionH.ReportNo = ProdCost_DailyProductionD.ReportNo GROUP BY ProdCost_DailyProductionH.CompNo, ProdCost_DailyProductionH.ReportYear, ProdCost_DailyProductionH.ReportNo, ProdCost_DailyProductionD.ProdPrepYear, ProdCost_DailyProductionD.ProdPrepNo,ProdCost_DailyProductionH.Prod_Date, ProdCost_DailyProductionH.Closed HAVING(ProdCost_DailyProductionH.CompNo = {0}) AND(ProdCost_DailyProductionD.ProdPrepYear = {1}) AND(ProdCost_DailyProductionD.ProdPrepNo = {2})", CompNo, OrderYear, OrderNo)).ToList();
             ViewBag.OrderYear = OrderYear;
@@ -89,6 +91,7 @@ namespace AlphaERP.Controllers
         }
         public ActionResult LoadViewAndRFITab(short CompNo, int OrderYear, int OrderNo, string FormCode)
         {
+            if (!CheckProdPermission(3)) return Content(Translate("ليس لديك صلاحية للدخول لهذه الشاشة", "You don't have permission to access this screen"));
             short ReqOption = 1;
             List<ViewRawMateria> listData = db.Database.SqlQuery<ViewRawMateria>("exec ProdCost_OrderCostDetails_CostDriver @CompNo = {0}, @OrderYear = {1}, @OrderNo = {2}, @ReqOption = {3}", CompNo, OrderYear, OrderNo, ReqOption).ToList();
             string queryString = "SELECT  CompNo, PrepYear, PrepNo, OrdYear, OrdNo, StoreNo, OrdDate, DocNo, BusUnitID, ByStage,AddititiveItems,IsApproved  FROM  InvT_IssueOrderHF WHERE(CompNo = {0}) AND(PrepYear = {1}) AND(PrepNo = {2})";
@@ -631,9 +634,19 @@ namespace AlphaERP.Controllers
         }
 
 
-        public ActionResult LoadViewRawMateria(short CompNo, short OrderYear, int OrderNo, short ReqOption)
+        public ActionResult LoadViewRawMateria(short CompNo, short OrderYear, int OrderNo, short ReqOption, int? OrdNo)
         {
-            List<ViewRawMateria> listData = db.Database.SqlQuery<ViewRawMateria>("exec ProdCost_OrderCostDetails_CostDriver @CompNo = {0}, @OrderYear = {1}, @OrderNo = {2}, @ReqOption = {3}", CompNo, OrderYear, OrderNo, ReqOption).ToList();
+            List<ViewRawMateria> listData;
+            if (ReqOption == 2 && OrdNo.HasValue)
+            {
+                string UserID = me.UserID;
+                short GLang = (short)(Language == "ar-JO" ? 1 : 2);
+                listData = db.Database.SqlQuery<ViewRawMateria>("exec Invt_LstIssueOrders @CompNo = {0}, @UserID = {1}, @GLang = {2}, @RptType = 2, @OrderYear = {3}, @OrderNo = {4}, @ProdPrepNo = {5}", CompNo, UserID, GLang, OrderYear, OrdNo, OrderNo).ToList();
+            }
+            else
+            {
+                listData = db.Database.SqlQuery<ViewRawMateria>("exec ProdCost_OrderCostDetails_CostDriver @CompNo = {0}, @OrderYear = {1}, @OrderNo = {2}, @ReqOption = {3}", CompNo, OrderYear, OrderNo, ReqOption).ToList();
+            }
 
             return PartialView(listData);
         }
@@ -659,7 +672,11 @@ namespace AlphaERP.Controllers
                 User me = (User)Session["me"];
 
                 ViewBag.FormCode = FormCode;
-                ProdCost_GetProdOrderInfoView GetProdOrderInfo = db.Database.SqlQuery<ProdCost_GetProdOrderInfoView>(string.Format("SELECT  TOP 1 StoreNo FROM  dbo.InvStoreUsers WHERE (CompNo = {0}) AND (AllPerm = 1) AND (UserID = '{1}')", CompNo, me.UserID)).First();
+                ProdCost_GetProdOrderInfoView GetProdOrderInfo = db.Database.SqlQuery<ProdCost_GetProdOrderInfoView>(string.Format("SELECT  TOP 1 StoreNo FROM  dbo.InvStoreUsers WHERE (CompNo = {0}) AND (AllPerm = 1) AND (UserID = '{1}')", CompNo, me.UserID)).FirstOrDefault();
+                if (GetProdOrderInfo == null)
+                {
+                    return Content("<div class='alert alert-danger'>" + Translate("المستخدم غير معرف على مستودع صلاحيات كاملة", "User is not defined on a warehouse with all permissions") + "</div>");
+                }
                 //LoadIssueOrder
                 if (ListData.AddititiveItems == true && ListData.ByStage == false)
                 {
@@ -765,7 +782,11 @@ namespace AlphaERP.Controllers
                 User me = (User)Session["me"];
 
                 ViewBag.FormCode = FormCode;
-                ProdCost_GetProdOrderInfoView GetProdOrderInfo = db.Database.SqlQuery<ProdCost_GetProdOrderInfoView>(string.Format("SELECT  TOP 1 StoreNo FROM  dbo.InvStoreUsers WHERE (CompNo = {0}) AND (AllPerm = 1) AND (UserID = '{1}')", CompNo, me.UserID)).First();
+                ProdCost_GetProdOrderInfoView GetProdOrderInfo = db.Database.SqlQuery<ProdCost_GetProdOrderInfoView>(string.Format("SELECT  TOP 1 StoreNo FROM  dbo.InvStoreUsers WHERE (CompNo = {0}) AND (AllPerm = 1) AND (UserID = '{1}')", CompNo, me.UserID)).FirstOrDefault();
+                if (GetProdOrderInfo == null)
+                {
+                    return Content("<div class='alert alert-danger'>" + Translate("المستخدم غير معرف على مستودع صلاحيات كاملة", "User is not defined on a warehouse with all permissions") + "</div>");
+                }
                 SqlConnection cn = new SqlConnection(ConnectionString());
                 cn.Open();
                 var DsGetPrepDetlForIssueOrder = new DataSet();
@@ -1157,13 +1178,15 @@ namespace AlphaERP.Controllers
 
                         foreach (var row in IssueOrderDF)
                         {
+                            if (row.Qty <= 0) continue; // Skip items with zero quantity
+
                             //if (row.RowState != DataRowState.Deleted)
                             //{
                             DataRow datarow = TmpDtD.NewRow();
 
                             datarow["ItemSer"] = i;
                             datarow["ItemNo"] = row.ItemNo;
-                            datarow["Batch"] = row.Batch;
+                            datarow["Batch"] = "";
                             datarow["UnitCode"] = row.UnitCode;
                             datarow["Qty"] = row.Qty;
                             datarow["UnitSerial"] = row.UnitSerial;
@@ -1222,7 +1245,7 @@ namespace AlphaERP.Controllers
                 catch (Exception ex)
                 {
                     myTrans.Rollback();
-                    return Json(new { ok = ex.Message}, JsonRequestBehavior.AllowGet);
+                    return Json(new { error = ex.Message}, JsonRequestBehavior.AllowGet);
                 }
                 finally
                 {
@@ -1231,6 +1254,53 @@ namespace AlphaERP.Controllers
                 }
                 return Json(new { ok = Resources.Resource.Done }, JsonRequestBehavior.AllowGet);
 
+            }
+        }
+
+        public JsonResult DeleteRFI(short CompNo, short OrdYear, int OrdNo)
+        {
+            using (var cn = new SqlConnection(ConnectionString()))
+            {
+                cn.Open();
+                SqlTransaction myTrans = cn.BeginTransaction();
+                try
+                {
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        cmd.Connection = cn;
+                        cmd.Transaction = myTrans;
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        // Delete Details
+                        cmd.CommandText = "InvT_DelIssueOrderDF";
+                        cmd.Parameters.Add(new SqlParameter("@CompNo", SqlDbType.SmallInt)).Value = CompNo;
+                        cmd.Parameters.Add(new SqlParameter("@OrdYear", SqlDbType.SmallInt)).Value = OrdYear;
+                        cmd.Parameters.Add(new SqlParameter("@OrdNo", SqlDbType.Int)).Value = OrdNo;
+                        cmd.Parameters.Add(new SqlParameter("@ErrNo", SqlDbType.SmallInt)).Direction = ParameterDirection.Output;
+                        cmd.ExecuteNonQuery();
+
+                        // Delete Header
+                        cmd.CommandText = "InvT_DelIssueOrderHF";
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.Add(new SqlParameter("@CompNo", SqlDbType.SmallInt)).Value = CompNo;
+                        cmd.Parameters.Add(new SqlParameter("@OrdYear", SqlDbType.SmallInt)).Value = OrdYear;
+                        cmd.Parameters.Add(new SqlParameter("@OrdNo", SqlDbType.Int)).Value = OrdNo;
+                        cmd.Parameters.Add(new SqlParameter("@ErrNo", SqlDbType.SmallInt)).Direction = ParameterDirection.Output;
+                        cmd.ExecuteNonQuery();
+
+                        myTrans.Commit();
+                        return Json(new { ok = Resources.Resource.Done }, JsonRequestBehavior.AllowGet);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    myTrans.Rollback();
+                    return Json(new { ok = ex.Message }, JsonRequestBehavior.AllowGet);
+                }
+                finally
+                {
+                    cn.Close();
+                }
             }
         }
 
@@ -1408,7 +1478,7 @@ namespace AlphaERP.Controllers
                             datarow["ProdPrepNo"] = rows.ProdPrepNo;
                             datarow["FinCode"] = rows.FinCode;
                             datarow["Prod_Qty"] = rows.Prod_Qty;
-                            datarow["Batch"] = 1;
+                            datarow["Batch"] ="";
                             datarow["ManDate"] = DateTime.Now;
                             datarow["ExpDate"] = DateTime.Now;
                             datarow["Tunit"] = rows.TUnit;

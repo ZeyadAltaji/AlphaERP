@@ -146,14 +146,20 @@
                         string OrderPriorityDeesc = "";
                         double? TatalValue = 0;
                         InvItemsMF M = Mf.Where(x => x.ItemNo == OrdDF.SubItemNo).FirstOrDefault();
-                        InvUnitCode UnitCDesc = UnitC.Where(x => x.UnitCode == M.UnitC1).FirstOrDefault();
+
+                        InvUnitCode UnitCDesc = null;
+
+                        if (M != null && UnitC != null)
+                        {
+                            UnitCDesc = UnitC.Where(x => x.UnitCode == M.UnitC1).FirstOrDefault();
+                        }
                         switch (OrdDF.SubUnitSerial)
                         {
                             case 1:
                                 Qty = OrdDF.Qty;
                                 break;
                             case 2:
-                                Qty = OrdDF.Qty/(Convert.ToDouble(M.Conv2));
+                                Qty = OrdDF.Qty / (Convert.ToDouble(M.Conv2));
                                 break;
                             case 3:
                                 Qty = OrdDF.Qty / (Convert.ToDouble(M.Conv2) * Convert.ToDouble(M.Conv3));
@@ -176,32 +182,36 @@
                                 break;
                         }
                         TatalValue = Qty * OrdDF.Price;
-                        string ItemDesc = Mf.Where(x => x.ItemNo == OrdDF.SubItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
-                    <tr style="height: 25px;" itemNo="@OrdDF.ItemNo">
-                        <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important">@HF.ReqNo</td>
-                        <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important">@HF.ReqDate.Value.ToShortDateString()</td>
-                        <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important">@Html.Translate(BUDESC.DescAr, BUDESC.DescEn)</td>
-                        <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important">@OrderPriorityDeesc</td>
-                        <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important">@u.UserName</td>
-                        <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important" id="OrdDF_ItemNo">@OrdDF.SubItemNo</td>
-                        <td class="sticky-col second-col" data-tooltip="sticky_@i" style="text-align: center !important">@ItemDesc</td>
-                        <td style="text-align: center !important">@UnitCDesc.UnitNameEng</td>
-                        <td style="text-align: center !important" id="OrdDF_Qty">@Qty</td>
-                        <td style="text-align: center !important" id="OrdDF_Price">@OrdDF.Price</td>
-                        <td style="text-align: center !important">@TatalValue</td>
-                        <td style="text-align:center!important">
-                            <input id="MRP_ConItemsToPurchOrd_Action" type="checkbox" checked>
-                        </td>
-                        <td>
-                            <input type="hidden" id="OrdDF_ReqYear" value="@OrdDF.ReqYear" />
-                            <input type="hidden" id="OrdDF_ReqNo" value="@OrdDF.ReqNo" />
-                            <input type="hidden" id="OrdDF_ItemSrl" value="@OrdDF.ItemSr" />
-                        </td>
-                    </tr>
+                        string ItemDesc = M != null
+        ? Html.Translate(M.ItemDesc, M.ItemDesc_Ara)?.ToString() ?? ""
+        : "";
+                       
+                        <tr style="height: 25px;" itemNo="@OrdDF.ItemNo">
+                            <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important">@HF.ReqNo</td>
+                            <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important">@HF.ReqDate.Value.ToShortDateString()</td>
+                            <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important">@Html.Translate(BUDESC.DescAr, BUDESC.DescEn)</td>
+                            <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important">@OrderPriorityDeesc</td>
+                            <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important">@u.UserName</td>
+                            <td class="sticky-col first-col" data-tooltip="sticky_@i" style="text-align: center !important" id="OrdDF_ItemNo">@OrdDF.SubItemNo</td>
+                            <td class="sticky-col second-col" data-tooltip="sticky_@i" style="text-align: center !important">@ItemDesc</td>
+                            <td style="text-align: center !important">@(UnitCDesc == null ? "" : UnitCDesc.UnitNameEng )</td>
+                            <td style="text-align: center !important" id="OrdDF_Qty">@Qty</td>
+                            <td style="text-align: center !important" id="OrdDF_Price">@OrdDF.Price</td>
+                            <td style="text-align: center !important">@TatalValue</td>
+                            <td style="text-align:center!important">
+                                <input id="MRP_ConItemsToPurchOrd_Action" type="checkbox" checked>
+                            </td>
+                            <td>
+                                <input type="hidden" id="OrdDF_ReqYear" value="@OrdDF.ReqYear" />
+                                <input type="hidden" id="OrdDF_ReqNo" value="@OrdDF.ReqNo" />
+                                <input type="hidden" id="OrdDF_ItemSrl" value="@OrdDF.ItemSr" />
+                            </td>
+                        </tr>
                         i++;
                     }
                 </tbody>
             </table>
+
         </div>
 
     </div>
@@ -394,9 +404,9 @@
         }
     }
     function CreatePurchOrder() {
-        if (document.getElementById('MRP_ConItemsToPurchOrd_save_txtDeptNo').value == '') { document.getElementById('MRP_ConItemsToPurchOrd_save_txtDeptNo').focus();alert('@Html.Translate("يرجى اختيار دائرة","Select one Dept")'); return; }
-        if (document.getElementById('MRP_ConItemsToPurchOrd_save_txtVendorNo').value == '') { document.getElementById('MRP_ConItemsToPurchOrd_save_txtVendorNo').focus();alert('@Html.Translate("يرجى اختيار المورد", "Select one Vendor")'); return; }
-        if (document.getElementById('ProdCost_ConItemsToPurchOrd_save_txtReqBU').value == '') { document.getElementById('ProdCost_ConItemsToPurchOrd_save_txtReqBU').focus();alert('@Html.Translate("يرجى اختيار وحدة العمل", "Select one Busunis Unit")'); return; }
+        if (document.getElementById('MRP_ConItemsToPurchOrd_save_txtDeptNo').value == '') { document.getElementById('MRP_ConItemsToPurchOrd_save_txtDeptNo').focus(); alert('@Html.Translate("يرجى اختيار دائرة","Select one Dept")'); return; }
+        if (document.getElementById('MRP_ConItemsToPurchOrd_save_txtVendorNo').value == '') { document.getElementById('MRP_ConItemsToPurchOrd_save_txtVendorNo').focus(); alert('@Html.Translate("يرجى اختيار المورد", "Select one Vendor")'); return; }
+        if (document.getElementById('ProdCost_ConItemsToPurchOrd_save_txtReqBU').value == '') { document.getElementById('ProdCost_ConItemsToPurchOrd_save_txtReqBU').focus(); alert('@Html.Translate("يرجى اختيار وحدة العمل", "Select one Busunis Unit")'); return; }
 
         var OrdReqDF = new Array();
 
@@ -435,7 +445,6 @@
 
 
 </script>
-
 
 
 

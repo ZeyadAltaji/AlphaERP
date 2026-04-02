@@ -1,4 +1,4 @@
-﻿@using AlphaERP.Models
+@using AlphaERP.Models
 @{
     Company company = (Company)Session["company"];
 
@@ -138,58 +138,60 @@
     </div>
 </div>
 
-<div class="modal fade" id="Prod_Liststage_Model" style="left: 123px !important; top:121px !important; width:91.4% !important; overflow-x:auto;">
+<div class="modal fade" id="Modal_ListStages"   style="left: 123px !important; top:121px !important; width:91.4% !important; overflow-x:auto;">
     <div class="modal-dialog" style="width:135rem !important;">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" aria-label="Close" onclick="Pbtnclosemodal()">
+                <button type="button" class="close" aria-label="Close" data-dismiss="modal">
                     <span aria-hidden="true">×</span>
                 </button>
-                <label class="modal-title">@Html.Translate("اوامر الانتاج", "Production Orders")</label>
+                <label class="modal-title">@Html.Translate("قائمة المراحل", "List Stages")</label>
             </div>
-            <div class="modal-body dataListStage row" style="height:67vh!important;max-height: 68vh  !important;">
-                <ul class="nav nav-tabs" role="tablist" id="mySpecificTabs">
-                    <li class="nav-item active">
-                        <a class="nav-link active" data-toggle="tab" href="#ListStageTab" role="tab">
-                            @Html.Translate("قائمة المراحل", "List Stage")
-                        </a>
-                    </li>
-                    <li class="nav-item" id="rowMatNavItem">
-                        <a class="nav-link" data-toggle="tab" href="#RowMatTab" role="tab">
-                            @Html.Translate("المواد الخام", "Row Material")
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" data-toggle="tab" href="#ProductionTab" role="tab">
-                            @Html.Translate("الانتاج", "Production")
-                        </a>
-                    </li>
-
-                </ul>
-                <div class="tab-content" style="height:300px;padding:10px">
-                    <div class="tab-pane active" id="ListStageTab" role="tabpanel">
-                    </div>
-                    <div class="tab-pane" id="RowMatTab" role="tabpanel">
-                    </div>
-                    <div class="tab-pane" id="ProductionTab" role="tabpanel">
-                    </div>
-                </div> 
+            <div class="modal-body row" style="height:67vh!important;max-height: 68vh !important;" id="ListStagesBody">
             </div>
             <div class="modal-footer">
-                <label style="display: none" class="unselectable" id="IssuedQtylbl">@Html.Translate("الكمية المصروفة", "Issued Qty"): </label>
-                <label style="display: none; margin: 0px 45px 0px 45px;" id="issuedQtyVal" class="unselectable">0.00</label>
-                <label style="display: none" class="unselectable" id="StdQtylbl">@Html.Translate("الكمية المعياريه", "Std Qty"): </label>
-                <label style="display: none; margin: 0px 45px 0px 45px;" id="StdQtyVal" class="unselectable">0.00</label>
-                <label style="display: none" class="unselectable" id="QtyVarlbl">@Html.Translate("", "Qty Var"): </label>
-                <label style="display: none; margin: 0px 45px 0px 45px;" id="QtyVarVal" class="unselectable">0.00</label>
-                <label style="display: none" class="unselectable" id="IssueCostlbl">@Html.Translate("كلفة الصرف", "Issue Cost"): </label>
-                <label style="display: none; margin: 0px 45px 0px 45px;" id="IssueCostVal" class="unselectable">0.00</label>
-                <button class="btn btn-primary pull-left" onclick="Pbtnclosemodal()">@Html.Translate("أغلاق", "Close")</button>
+                <button class="btn btn-primary pull-left" data-dismiss="modal">@Html.Translate("أغلاق", "Close")</button>
             </div>
         </div>
     </div>
 </div>
-<div class="modal fade" id="Model_CloseStage" style="left: 24.7rem;top: 6rem;">
+
+<div class="modal fade" id="Modal_RawMaterial"  style="left: 123px !important; top:121px !important; width:91.4% !important; overflow-x:auto;">
+    <div class="modal-dialog" style="width:135rem !important;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" data-dismiss="modal">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("المواد الخام", "Row Material")</label>
+            </div>
+            <div class="modal-body row" style="height:67vh!important;max-height: 68vh !important;" id="RowMaterialBody">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary pull-left" data-dismiss="modal">@Html.Translate("أغلاق", "Close")</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="Modal_Production"  style="left: 123px !important; top:121px !important; width:91.4% !important; overflow-x:auto;">
+    <div class="modal-dialog" style="width:135rem !important;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" data-dismiss="modal">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <label class="modal-title">@Html.Translate("الانتاج", "Production")</label>
+            </div>
+            <div class="modal-body row" style="height:67vh!important;max-height: 68vh !important;" id="ProductionBody">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary pull-left" data-dismiss="modal">@Html.Translate("أغلاق", "Close")</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="Model_CloseStage">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -205,7 +207,7 @@
 </div>
 
 
-<div class="modal fade" id="Model_OpenStage" style="left: 24.7rem;top: 6rem;">
+<div class="modal fade" id="Model_OpenStage"  style="left: 24.7rem;top: 6rem;">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -219,7 +221,7 @@
         </div>
     </div>
 </div>
-<div class="modal fade wideBom" id="QAEventShowModalInProgress" style="left: 20.5rem;top: 11.4rem;">
+<div class="modal fade wideBom" id="QAEventShowModalInProgress"  style="left: 20.5rem;top: 11.4rem;">
     @Html.Partial("~/Views/ProductionOrdersInProgress/ViewQAEventData.cshtml")
 
 
@@ -367,39 +369,39 @@
     <div class="modal-dialog" style="width:123rem !important;">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"  onclick="CancelRFI()">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="CancelRFI()">
                     <span aria-hidden="true">×</span>
                 </button>
                 <label class="modal-title">@Html.Translate("طلب أمر الصرف", "View Request for issue materials")</label>
             </div>
             <div class="modal-body row" id="LoadIssueOrderMBody">
                 @*<div class="row">
-                    <div class="col-md-8">
+                        <div class="col-md-8">
 
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label class="unselectable" for="SelectIssueOrder">@Html.Translate("أوامر الصرف", " Issue Orders")</label>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label class="unselectable" for="SelectIssueOrder">@Html.Translate("أوامر الصرف", " Issue Orders")</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <button class="btn btn-success"  type="button" id="SelectIssueOrder" name="SelectIssueOrder" onclick="handleSelectIssueOrder()">Select Issue Order</button>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <button disabled onclick="Add_Emp_stage()" type="button" class="btn btn-primary"><i class="fa fa-plus"></i>@Resources.Resource.Add </button>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <button class="btn btn-success"  type="button" id="SelectIssueOrder" name="SelectIssueOrder" onclick="handleSelectIssueOrder()">Select Issue Order</button>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <button disabled onclick="Add_Emp_stage()" type="button" class="btn btn-primary"><i class="fa fa-plus"></i>@Resources.Resource.Add </button>
-                            </div>
-                        </div>
+
+
                     </div>
-                 
+                    <hr />
 
-                </div>
-                <hr />
+                    <div id="LoaddataIssueOrder">
 
-                <div id="LoaddataIssueOrder">
-
-                </div>*@
+                    </div>*@
             </div>
             <div class="modal-footer">
 
@@ -724,48 +726,54 @@
             burn({ Id: CID }, '../../../Mrp_YearPlanDetlsD/DeleteMrp_YearPlanDetlsD', '', '', false)
         }
     }
-    $('#ProductionOrdersInProgressDataTable tbody tr').click(function () {
-        var clickedRow = this;
+    function OpenListStages(btn) {
+        var clickedRow = $(btn).closest('tr')[0];
+        var OrderYear = $(clickedRow).attr("OrderYear");
+        var OrderNo = $(clickedRow).attr("OrderNo");
+        var FormCode = $(clickedRow).attr("FormCode");
+        var CompNo = '@company.comp_num';
 
-        if (openedRow !== null) {
-            ProductionOrdersInProgressTable.fnClose(openedRow);
-            $(openedRow).removeClass('highlighted-row');
-            $(openedRow).removeClass('opened-row');
- 
+        wait();
+        $('#ListStagesBody').load('../../../ProductionOrdersInProgress/LoadProductionOrder?CompNo=' + CompNo + '&OrderYear=' + OrderYear + '&OrderNo=' + OrderNo + '&FormCode=' + FormCode, function () {
+            $('#Modal_ListStages').modal('show');
+            done();
+        });
+    }
 
-        }
-        if (openedRow !== clickedRow) {
-            wait();
-            debugger;
-            $(clickedRow).attr("opened", "details_close");
-            var OrderYear = $(clickedRow).attr("OrderYear");
-            var OrderNo = $(clickedRow).attr("OrderNo");
-            var FormCode = $(clickedRow).attr("FormCode");
-            var ItemDesc = $(clickedRow).attr("ItemDesc");
-            var CompNo ='@company.comp_num';
-            //$.get("../../../../ProductionOrdersInProgress/LoadProductionOrder?OrderYear=" + OrderYear + '&OrderNo=' + OrderNo + '&FormCode=' + FormCode + '&ItemDesc=' + ItemDesc, function (data) {
-            //    var modalContent = $('<div>').html(data);
-            //    $('.dataListStage').html(modalContent);
-            //    $('#Prod_Liststage_Model').modal('show');
-            //    $(clickedRow).addClass('highlighted-row');
-            //    $(clickedRow).addClass('opened-row');
-            //    done();
+    function OpenRawMaterial(btn) {
+        debugger
+        var clickedRow = $(btn).closest('tr')[0];
+        var OrderYear = $(clickedRow).attr("OrderYear");
+        var OrderNo = $(clickedRow).attr("OrderNo");
+        var FormCode = $(clickedRow).attr("FormCode");
+        var CompNo = '@company.comp_num';
 
-            //});
-            ProductionTab.innerHTML = "";
-            RowMatTab.innerHTML = "";
-            ListStageTab.innerHTML = "";
-            $('#ProductionTab').load('../../../ProductionOrdersInProgress/DailyProdListANDAllDailyProduction?CompNo='+CompNo+'&OrderYear=' + OrderYear + '&OrderNo=' + OrderNo + '&FormCode=' + FormCode);
-            $('#RowMatTab').load('../../../ProductionOrdersInProgress/LoadViewAndRFITab?CompNo='+CompNo+'&OrderYear=' + OrderYear + '&OrderNo=' + OrderNo + '&FormCode=' + FormCode);
-            $('#ListStageTab').load('../../../ProductionOrdersInProgress/LoadProductionOrder?CompNo='+CompNo+'&OrderYear=' + OrderYear + '&OrderNo=' + OrderNo + '&FormCode=' + FormCode, function() {
-                $('.nav-tabs a[href="#ListStageTab"]').tab('show')
-                 $('#Prod_Liststage_Model').modal('show');
-                done();
-            });
+        wait();
+        $('#RowMaterialBody').load('../../../ProductionOrdersInProgress/LoadViewAndRFITab?CompNo=' + CompNo + '&OrderYear=' + OrderYear + '&OrderNo=' + OrderNo + '&FormCode=' + FormCode, function () {
+            debugger
+            $('#Modal_RawMaterial').modal('show');
+            done();
+        });
+    }
 
-        }
-        $(".opacity").addClass('Overlay');
+    function OpenProduction(btn) {
+        var clickedRow = $(btn).closest('tr')[0];
+        var OrderYear = $(clickedRow).attr("OrderYear");
+        var OrderNo = $(clickedRow).attr("OrderNo");
+        var FormCode = $(clickedRow).attr("FormCode");
+        var CompNo = '@company.comp_num';
 
-    });
+        wait();
+        $('#ProductionBody').load('../../../ProductionOrdersInProgress/DailyProdListANDAllDailyProduction?CompNo=' + CompNo + '&OrderYear=' + OrderYear + '&OrderNo=' + OrderNo + '&FormCode=' + FormCode, function () {
+            $('#Modal_Production').modal('show');
+            done();
+        });
+    }
+
+    function OpenProductionOrder(btn) {
+        // Kept for backward compatibility if any, but now replaced by OpenListStages, OpenRawMaterial, OpenProduction
+        OpenListStages(btn);
+    }
+
 
 </script>

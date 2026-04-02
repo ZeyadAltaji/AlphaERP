@@ -1,4 +1,4 @@
-﻿@using AlphaERP.Models;
+@using AlphaERP.Models;
 
 @model List<AlphaERP.Models.ProductionReceivingView>
 @{
@@ -10,8 +10,7 @@
 
 }
 <div class="form-group">
-    <div class="col-md-12">
-
+    <div class="col-md-12" id="DailyProdListContainer">
         <table id="DailyProdListTB" class="LoadViewRawMateriaTB table dataTable table table-hover">
             <thead>
                 <tr>
@@ -140,6 +139,23 @@
         });
 
         row.classList.add('selected');
+
+        @*var ReportYear = row.querySelector('#ReportYear').innerHTML.trim();
+        var ReportNo = row.querySelector('#ReportNo').innerHTML.trim();
+        var CompNo = @company.comp_num;
+        
+        wait();
+        $('#DailyProdListContainer').load('../../../ProductionOrdersInProgress/DailyProdListView?CompNo=' + CompNo + '&OrderYear=' + ReportYear + '&OrderNo=' + ReportNo, function () {
+            $('#DailyProdListTB').DataTable({
+                "scrollY": '18vh',
+                "paging": false,
+                "searching": false,
+                "pageLength": 100,
+                "scrollX": true,
+                "autoWidth": false
+            });
+            done();
+        });*@
     }
     function SelectingDailyProduction() {
         var selectedRow = document.querySelector('#listAllDailyProduction tr.selected');

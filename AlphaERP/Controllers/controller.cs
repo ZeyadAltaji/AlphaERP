@@ -1,4 +1,4 @@
-﻿using AlphaERP.Models;
+using AlphaERP.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Web;
 using System.Web.Mvc;
+using System.Linq;
 namespace AlphaERP.Controllers
 {
     public class controller : Controller
@@ -168,6 +169,14 @@ namespace AlphaERP.Controllers
         public bool checkView(int ProgID)
         {
             return true;
+        }
+
+        public bool CheckProdPermission(int progID)
+        {
+            if (Session["ProdOrdersPermissions"] == null) return false;
+            var permissions = (List<ProductionOrdersPermission>)Session["ProdOrdersPermissions"];
+            var perm = permissions.FirstOrDefault(x => x.ProgID == progID);
+            return perm != null && perm.ProgAccess == true;
         }
 
         public string Dummy = "";

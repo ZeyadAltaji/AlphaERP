@@ -1,4 +1,4 @@
-﻿@using AlphaERP.Models
+@using AlphaERP.Models
 @{
     LicensedModule licensed = new MDB().LicensedModules.Where(x => x.ModuleID == 10).FirstOrDefault();
     if (licensed == null)

@@ -10,10 +10,9 @@
  
         @foreach (var item in Model)
         {
-            <tr style="height: 26px;" onclick="OrderSelect(this)"  ondblclick="DoubleOrderSelect(this)">
+            <tr style="height: 26px; text-align:center !important;" onclick="OrderSelect(this)" ondblclick="DoubleOrderSelect(this)" >
 
-                <td style="text-align:center !important;"></td>
-                <td id="OrdYear" style="display:none;">@item.OrdYear</td>
+                <td id="OrdYear" style="display:none; text-align:center !important;">@item.OrdYear</td>
                 <td style="text-align:center !important;" id="OrdNo">@item.OrdNo</td>
                 <td style="text-align:center !important;">@item.OrdDate.ToString("yyyy-MM-dd")</td>
                 <td style="text-align:center !important;">
@@ -24,8 +23,24 @@
                     }
                     else
                     {
-                        <span  class="badge badge-danger">@Html.Translate("غير موافق", "Non Approved")</span>
+                        <span class="badge badge-danger">@Html.Translate("غير موافق", "Non Approved")</span>
                     }
+                </td>
+                <td style="text-align:center !important;">
+                    <button class="btn-vw" onclick="ViewOrderSelect(@item.OrdYear, @item.OrdNo)">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                    @if (item.IsApproved != true)
+                    {
+                        <button class="btn-ed" onclick="EditOrderSelect(@item.OrdYear, @item.OrdNo)">
+                            <i class="fa fa-pencil-alt"></i>
+                        </button>
+                        <button class="btn-de" onclick="deleteOrder(@item.OrdYear, @item.OrdNo)">
+                            <i class="fa fa-trash-alt"></i>
+                        </button>
+                    }
+                  
+
                 </td>
              </tr>
         }

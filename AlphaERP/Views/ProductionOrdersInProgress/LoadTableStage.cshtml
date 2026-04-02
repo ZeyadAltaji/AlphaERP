@@ -10,11 +10,8 @@
         <tr>
             <th style="text-align:center;">@Html.Translate("رمز المادة", "Item No")</th>
             <th style="text-align:center;">@Html.Translate("الوصف", "Description")</th>
-            <th style="text-align:center;"></th>
             <th style="text-align:center;">@Html.Translate("الوحدة", "Unit Code")</th>
             <td style="display:none;"></td>
-            <th style="text-align:center;"></th>
-            <th style="text-align:center;">@Html.Translate("الحزمة", "Batch")</th>
             <th style="text-align:center;">@Html.Translate("الكمية المتوفرة", "Avl Qty")</th>
             <th style="text-align:center;">@Html.Translate("الكمية المطلوبة ", "Prod Qty")</th>
             <th style="text-align:center;">@Html.Translate("الكمية المصروفة", "Issued Qty")</th>
@@ -27,18 +24,15 @@
         @foreach (DataRow Dr in Model.Tables["LoadTableStage"].Rows)
         {
             <tr>
-                <td>@Dr["ItemNo"]</td>
-                <td>@Dr["ItemDesc"]</td>
-                <td><button></button></td>
-                <td>@Dr["UnitCode"]</td>
-                <td style="display:none;">@Dr["UnitSerial"]</td>
-                <td><button onclick="LoadBatch('@company.comp_num','@Dr["ItemNo"]','@Dr["UnitSerial"]')">Batch</button></td>
-                <td><input class="batch-input" type="text" value="@Dr["Batch"]" /></td>
-                <td>@Dr["AvlQty"]</td>
-                <td>@Dr["ProdQty"]</td>
-                <td>@Dr["IssuedQty"]</td>
-                <td>@Dr["RemQty"]</td>
-                <td><input style="width: 33px !important;" id="Qty" type="number" value="@Dr["Qty"]" /></td>
+                <td style="text-align:center;">@Dr["ItemNo"]</td>
+                <td style="text-align:center;">@Dr["ItemDesc"]</td>
+                <td style="text-align:center;">@Dr["UnitCode"]</td>
+                <td  style="display:none;">@Dr["UnitSerial"]</td>
+                <td style="text-align:center;">@Dr["AvlQty"]</td>
+                <td style="text-align:center;">@Dr["ProdQty"]</td>
+                <td style="text-align:center;">@Dr["IssuedQty"]</td>
+                <td style="text-align:center;">@Dr["RemQty"]</td>
+                <td style="text-align:center;"><input style="width: 33px !important;" id="Qty" type="number" value="@Dr["Qty"]" /></td>
                 <td></td>
 
              </tr>

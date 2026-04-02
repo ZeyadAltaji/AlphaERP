@@ -135,14 +135,17 @@
                             foreach (Ord_RequestDF item in df)
                             {
                                 string ItemDesc = "";
-                                if (item.ItemNo == "PKSTI00000002383")
+
+                                var itemObj = Mf.FirstOrDefault(x => x.ItemNo ==
+                                    (item.ItemNo == "PKSTI00000002383" ? "PKSTI00000002383" : item.SubItemNo));
+
+                                if (itemObj != null)
                                 {
-                                    List<InvItemsMF> Mf1 = new MDB().InvItemsMFs.Where(x => x.CompNo == company.comp_num && x.ItemNo == "PKSTI00000002383").ToList();
-                                    ItemDesc = Mf1.Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                                    ItemDesc = Html.Translate(itemObj.ItemDesc, itemObj.ItemDesc_Ara).ToString();
                                 }
-                                else {
-                                    InvItemsMF M = new MDB().InvItemsMFs.Where(x => x.ItemNo == item.SubItemNo).FirstOrDefault();
-                                    ItemDesc = Mf.Where(x => x.ItemNo == item.SubItemNo).Select(O => Html.Translate(O.ItemDesc, O.ItemDesc_Ara)).FirstOrDefault().ToString();
+                                else
+                                {
+                                    ItemDesc = "";
                                 }
 
                                 <tr>

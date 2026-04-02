@@ -2,7 +2,7 @@
 @{
     Company company = (Company)Session["company"];
 
-    List<Ord_RequestHF> OrdRequestHF = new MDB().Database.SqlQuery<Ord_RequestHF>(string.Format("SELECT  CompNo, ReqYear, ReqNo, ReqDate,ReqDeliveryDate, ReqBU, AuthBU, UserID, ReqStatus, Note, DeptNo, AccNo,RejectReason,OrderPriority,CurrNo,RefNo,OrderType,Purpose,ReqStatusPO  " +
+    List<Ord_RequestHF> OrdRequestHF = new MDB().Database.SqlQuery<Ord_RequestHF>(string.Format("SELECT  CompNo, ReqYear, ReqNo, ReqDate,ReqDeliveryDate, ReqBU, AuthBU, UserID, ReqStatus, Note, DeptNo, AccNo,RejectReason,OrderPriority,CurrNo,RefNo,OrderType,Purpose,ReqStatusPO , UserIDApprovel " +
     "from Ord_RequestHF " +
     "Where (CompNo = '{0}') AND (ReqStatus in ('1')) order by cast(REPLACE(ReqNo, '0000', '') as int) Desc", company.comp_num)).ToList();
     List<Ord_RequestDF> lOrdReqDF = new MDB().Ord_RequestDF.Where(x => x.CompNo == company.comp_num).ToList();

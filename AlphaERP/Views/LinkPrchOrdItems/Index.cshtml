@@ -204,7 +204,7 @@
                 ItemSr: $(trs[i]).closest('tr').find('#ItemSrl_' + InputSerial)[0].value,
                 ItemNo: $(trs[i]).closest('tr').find('#LinkPrchOrdItems_ItemNo_' + InputSerial)[0].innerHTML,
                 SubItemNo: $(trs[i]).closest('tr').find('#LinkPrchOrdItems_SubItemNo_' + InputSerial)[0].innerHTML,
-                SubTUnit: $(trs[i]).closest('tr').find('.LinkPrchOrdItems_Item_SubUnit option:Selected')[0].text,
+                SubTUnit: $(trs[i]).closest('tr').find('.LinkPrchOrdItems_Item_SubUnit option:Selected')[0].value,
                 SubUnitSerial: $(trs[i]).closest('tr').find('.LinkPrchOrdItems_Item_SubUnit')[0].value,
             });
         }

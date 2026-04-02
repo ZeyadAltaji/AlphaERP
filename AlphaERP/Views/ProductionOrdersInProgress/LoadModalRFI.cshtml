@@ -1,19 +1,20 @@
-﻿@using AlphaERP.Models;
+@using AlphaERP.Models;
 @using System.Data
 
 @{
     Company company = (Company)Session["company"];
     User me = (User)Session["me"];
 
-    List<Alpha_BusinessUnitDef> BU = new MDB().Database.SqlQuery<Alpha_BusinessUnitDef>("SELECT CompNo , BusUnitID, BusUnitDescAr, BusUnitDescEng  FROM Alpha_BusinessUnitDef  WHERE CompNo = {0}  AND BusUnitID IN (SELECT BusUnit From Alpha_BusUnitUserPermissions  WHERE (CompNo = {1} ) AND (UserID = {2} ) AND ((AllPerm = 1) OR (ItemIssueOrder = 1)))", company.comp_num, company.comp_num, me.UserID).ToList();
+    List<Alpha_BusinessUnitDef> BU = new MDB().Database.SqlQuery<Alpha_BusinessUnitDef>("SELECT CompNo , BusUnitID, BusUnitDescAr, BusUnitDescEng  FROM Alpha_BusinessUnitDef  WHERE CompNo = {0}  AND BusUnitID IN (SELECT BusUnit From Alpha_BusUnitUserPermissions  WHERE (CompNo = {1} ) AND (UserID = {2} ) AND ((AllPerm = 1) OR (ItemIssueOrder = 1)))",
+company.comp_num, company.comp_num, me.UserID).ToList();
     List<AlphaERP.Models.ProdCost_EmpWorkHoursD_WebView> lProdCost_EmpWorkHoursD_WebView = ViewBag.ListTestDF;
     string FormCode = ViewBag.FormCode;
     int StoreNo = ViewBag.StoreNo;
     List<ViewWarehouseData> ListData = new MDB().Database.SqlQuery<ViewWarehouseData>("SELECT StoreNo, StoreName, StoreNameEng FROM InvStoresMF WHERE(CompNo = {0}) ORDER BY StoreNo", company.comp_num).ToList();
     int OrderYear = ViewBag.OrderYear;
     int OrderNo = ViewBag.OrderNo;
- 
 
+ 
 }
 <div class="form-group" style="margin-bottom: 2rem;">
     <div class="row">
@@ -21,30 +22,33 @@
             <label for="Year" class="col-form-label col-form-label-sm">@Html.Translate("السنة", "Year")</label>
         </div>
         <div class="col-sm-2">
-            <input type="number" class="form-control form-control-sm" id="Year" min="1999" max="2050" style="width: 100%;">
+            <input type="number" class="form-control form-control-sm" id="Year" min="1999" max="2050"
+                   style="width: 100%;">
         </div>
         <div class="col-sm-2" style="width: 16rem;">
-            <label for="ExchangeOrderNumber" style="width: 88rem;" class="col-form-label col-form-label-sm">@Html.Translate("رقم أمر الصرف", "Exchange Order Number")</label>
+            <label for="ExchangeOrderNumber" style="width: 88rem;"
+                   class="col-form-label col-form-label-sm">@Html.Translate("رقم أمر الصرف", "Exchange Order Number")</label>
         </div>
         <div class="col-sm-1">
-                <input class="form-control form-control-sm" required id="ExchangeOrderNumber" value="0" disabled/>
-            </div>
+            <input class="form-control form-control-sm" required id="ExchangeOrderNumber" value="0" disabled />
+        </div>
         <div class="col-sm-2" style="width: 10rem;">
             <label for="DocumentNo" style="width: 88rem;" class="col-form-label col-form-label-sm">@Html.Translate("رقم الوثيقة", "Document No")</label>
         </div>
-        <div class="col-sm-1"> 
+        <div class="col-sm-1">
             <input class="form-control form-control-sm" required id="DocumentNo" value="1" />
-         </div>
+        </div>
         <div class="col-sm-1" style="width: 10rem;">
             <label for="BU" class="col-form-label col-form-label-sm">@Html.Translate("وحدة العمل", "Business Unit")</label>
         </div>
 
         <div class="col-sm-2" style="width: 19rem;">
             <select class="form-control" id="BU" name="BU">
-                 @foreach (var v in BU)
-                 {
-                    <option value="@v.BusUnitID" name="M_BusUnitID">@Html.Translate(v.BusUnitDescAr, v.BusUnitDescEng)</option>
-                 }
+                @foreach (var v in BU)
+                {
+                    <option value="@v.BusUnitID" name="M_BusUnitID">@Html.Translate(v.BusUnitDescAr, v.BusUnitDescEng)
+                    </option>
+                }
             </select>
         </div>
     </div>
@@ -55,17 +59,20 @@
             <label for="date" class="col-form-label col-form-label-sm">@Html.Translate("التاريخ", "Date")</label>
         </div>
         <div class="col-sm-2">
-            <input type="date" class="form-control form-control-sm" required id="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+            <input type="date" class="form-control form-control-sm" required id="date"
+                   value="@DateTime.Now.ToString("yyyy-MM-dd")" />
 
         </div>
         <div class="col-sm-1">
-            <label for="StoreNo" style="width: 88rem;" class="col-form-label col-form-label-sm">@Html.Recource(1)</label>
+            <label for="StoreNo" style="width: 88rem;"
+                   class="col-form-label col-form-label-sm">@Html.Recource(1)</label>
         </div>
         <div class="col-sm-2">
-            <input class="form-control form-control-sm" required id="StoreNo" value="@Html.Recource(41)"  />
+            <input class="form-control form-control-sm" required id="StoreNo" value="@Html.Recource(41)" />
         </div>
         <div class="col-sm-4">
-            <input style="width: 33rem;" class="form-control form-control-sm" required id="StoreDesc" value="@Html.Recource(31)" />
+            <input style="width: 33rem;" class="form-control form-control-sm" required id="StoreDesc"
+                   value="@Html.Recource(31)" />
         </div>
         <div class="col-sm-1">
             <button style="width:68px;" type="button" class="btn btn-success btn-block" onclick="Searchwarehouse()">
@@ -78,18 +85,20 @@
     <div class="row">
         <div class="col-md-8">
             <div class="col-md-4">
-                <input class="col-form-label col-form-label-sm" id="AdditiveItem" type="checkbox" onchange="CheckAdditiveItems()"/>
+                <input class="col-form-label col-form-label-sm" id="AdditiveItem" type="checkbox"
+                       onchange="CheckAdditiveItems()" />
 
                 <label for="date" class="col-form-label col-form-label-sm">@Html.Translate("الموادالمضافة", "Additive Items")</label>
             </div>
             <div class="col-md-2">
-                <input class="col-form-label col-form-label-sm" id="stage" type="checkbox" onchange="toggleDropdown()" />
+                <input class="col-form-label col-form-label-sm" id="stage" type="checkbox"
+                       onchange="toggleDropdown()" />
                 <label for="date" class="col-form-label col-form-label-sm">@Html.Translate("المراحل", "Stages")</label>
 
             </div>
             <div class="col-md-2" id="stageDropdown" style="display: none;">
-             
 
+             
             </div>
         </div>
     </div>
@@ -102,11 +111,8 @@
                 <tr>
                     <th style="text-align:center;">@Html.Translate("رمز المادة", "Item No")</th>
                     <th style="text-align:center;">@Html.Translate("الوصف", "desc")</th>
-                    <th style="text-align:center;"></th>
                     <th style="text-align:center;">@Html.Translate("الوحدة", "Unit Code")</th>
-                    <th style="text-align:center; display:none;" >@Html.Translate("تسلسل الوحدة", "Unit Serial")</th>
-                    <th style="text-align:center;"></th>
-                    <th style="text-align:center;">@Html.Translate("الحزمة", "Batch")</th>
+                    <th style="text-align:center; display:none;">@Html.Translate("تسلسل الوحدة", "Unit Serial")</th>
                     <th style="text-align:center;">@Html.Translate("الكمية المتوفرة", "AvlQty")</th>
                     <th style="text-align:center;">@Html.Translate("الكمية المطلوبة للأمر", "ProdQty")</th>
                     <th style="text-align:center;">@Html.Translate("كمية الخلطة", "MixQty")</th>
@@ -122,25 +128,22 @@
                 </tr>
             </thead>
             <tbody id="LoadTableDefultItems">
-                    @foreach (DataRow row in Model.Tables["GetPrepDetlForIssueOrder"].Rows)
-                    {
+                @foreach (DataRow row in Model.Tables["GetPrepDetlForIssueOrder"].Rows)
+                {
                     <tr>
-                        <td id="ItemNo">@row["ItemNo"]</td>
-                        <td>@row["ItemDesc"]</td>
-                        <td><button></button></td>
-                        <td id="UnitCode">@row["UnitCode"]</td>
+                        <td id="ItemNo" style="text-align:center;">@row["ItemNo"]</td>
+                        <td style="text-align:center;">@row["ItemDesc"]</td>
+                        <td id="UnitCode" style="text-align:center;">@row["UnitCode"]</td>
                         <td id="UnitSerial" style="display:none;">@row["UnitSerial"]</td>
-                        <td><button onclick="LoadBatch('@company.comp_num','@row["ItemNo"]','@row["UnitSerial"]')">Batch</button></td>
-                        <td><input id="batchValid" class="batch-input" type="text" value="@row["Batch"]" /></td>
-                        <td>@row["AvlQty"]</td>
-                        <td>@row["ProdQty"]</td>
-                        <td>@row["MixQty"]</td>
-                        <td>@row["IssuedQty"]</td>
-                        <td>@row["PreviousQty"]</td>
-                        <td>@row["TranQty"]</td>
-                        <td>@row["RemQty"]</td>
-                        <td ><input style="width: 33px !important;" id="Qty" type="number" value="@row["Qty"]"/></td>
-                        <td ><input type="text" id="ItemNotes" value="@row["ItemNotes"]"/></td>
+                        <td style="text-align:center;">@row["AvlQty"]</td>
+                        <td style="text-align:center;">@row["ProdQty"]</td>
+                        <td style="text-align:center;">@row["MixQty"]</td>
+                        <td style="text-align:center;">@row["IssuedQty"]</td>
+                        <td style="text-align:center;">@row["PreviousQty"]</td>
+                        <td style="text-align:center;">@row["TranQty"]</td>
+                        <td style="text-align:center;">@row["RemQty"]</td>
+                        <td style="text-align:center;"><input style="width: 33px !important;" id="Qty" type="number" value="@row["Qty"]" /></td>
+                        <td style="text-align:center;"><input type="text" id="ItemNotes" value="@row["ItemNotes"]" /></td>
                     </tr>
                 }
 
@@ -219,7 +222,7 @@
             AddItemCheckbox.checked = false;
         }
     });
-    $(document).ready(function() {
+    $(document).ready(function () {
         var estageCheckbox = $("#stage");
         var estageDropdown = $("#stageDropdown");
 
@@ -246,7 +249,7 @@
         const stageDropdown = document.getElementById("stageDropdown");
         var FormCode = '@FormCode'
         if (stageCheckbox.checked) {
-            $('#stageDropdown').load("../../../ProductionOrdersInProgress/LoadstageDropdown?CompNo=" + CompNo + "&FormCode="+FormCode);
+            $('#stageDropdown').load("../../../ProductionOrdersInProgress/LoadstageDropdown?CompNo=" + CompNo + "&FormCode=" + FormCode);
 
             stageDropdown.style.display = "block";
         } else {
@@ -256,19 +259,19 @@
             var OrderYear = @OrderYear;
             var OrderNo = @OrderNo;
             var StoreNo = @StoreNo;
-            var PackingItems =false
-            var IsRowMaterial =false
+            var PackingItems = false
+            var IsRowMaterial = false
             var LoadTableDefultDiv = document.getElementById("LoadTableDefultDiv");
             LoadTableDefultDiv.innerHTML = "";
             //Execute this block if stageCheckbox is not checked
             $('#LoadTableDefultDiv').load("../../../ProductionOrdersInProgress/LoadTableDefult?CompNo=" + CompNo
-                               + "&OrderYear=" + OrderYear
-                               + "&OrderNo=" + OrderNo
-                               +"&StoreNo="+StoreNo
-                               + "&PackingItems=" + PackingItems
-                               + "&AdditiveItems="+AdditiveItems
-                               +"&IsRowMaterial="+IsRowMaterial
-                               );
+                + "&OrderYear=" + OrderYear
+                + "&OrderNo=" + OrderNo
+                + "&StoreNo=" + StoreNo
+                + "&PackingItems=" + PackingItems
+                + "&AdditiveItems=" + AdditiveItems
+                + "&IsRowMaterial=" + IsRowMaterial
+            );
 
         }
     }
@@ -278,8 +281,8 @@
         var OrderYear = @OrderYear;
         var OrderNo = @OrderNo;
         var StoreNo = @StoreNo;
-        var PackingItems =false
-        var IsRowMaterial =false
+        var PackingItems = false
+        var IsRowMaterial = false
         var AdditiveItems = document.getElementById('AdditiveItem');
         const stageCheckbox = document.getElementById("stage");
 
@@ -287,13 +290,13 @@
         LoadTableDefultDiv.innerHTML = "";
 
         $('#LoadTableDefultDiv').load("../../../ProductionOrdersInProgress/LoadTableStage?CompNo=" + CompNo
-                      + "&OrderYear=" + OrderYear
-                      + "&OrderNo=" + OrderNo
-                      +"&StoreNo="+StoreNo
-                      + "&PackingItems=" + PackingItems
-                      + "&AdditiveItems="+stageCheckbox.checked
-                      +"&IsRowMaterial="+IsRowMaterial
-                      +"&stageID="+selectedStage
+            + "&OrderYear=" + OrderYear
+            + "&OrderNo=" + OrderNo
+            + "&StoreNo=" + StoreNo
+            + "&PackingItems=" + PackingItems
+            + "&AdditiveItems=" + stageCheckbox.checked
+            + "&IsRowMaterial=" + IsRowMaterial
+            + "&stageID=" + selectedStage
         );
 
 
@@ -319,27 +322,27 @@
         var newStoreNo = $(this).val();
         setInputsBasedOnStoreNo(newStoreNo);
     });
-    function CheckAdditiveItems(){
+    function CheckAdditiveItems() {
 
         var CompNo = @company.comp_num;
         var OrderYear = @OrderYear;
         var OrderNo = @OrderNo;
         var StoreNo = @StoreNo;
-        var PackingItems =false
-        var IsRowMaterial =false
+        var PackingItems = false
+        var IsRowMaterial = false
         const AdditiveItems = document.getElementById("AdditiveItem");
         var estageDropdown = $("#stageDropdown");
         estageDropdown.css("display", "none");
         var LoadTableDefultDiv = document.getElementById("LoadTableDefultDiv");
         LoadTableDefultDiv.innerHTML = "";
         $('#LoadTableDefultDiv').load("../../../ProductionOrdersInProgress/LoadTableAdditiveItems?CompNo=" + CompNo
-                      + "&OrderYear=" + OrderYear
-                      + "&OrderNo=" + OrderNo
-                      +"&StoreNo="+StoreNo
-                      + "&PackingItems=" + PackingItems
-                      + "&AdditiveItems="+AdditiveItems.checked
-                      +"&IsRowMaterial="+IsRowMaterial
-                      );
+            + "&OrderYear=" + OrderYear
+            + "&OrderNo=" + OrderNo
+            + "&StoreNo=" + StoreNo
+            + "&PackingItems=" + PackingItems
+            + "&AdditiveItems=" + AdditiveItems.checked
+            + "&IsRowMaterial=" + IsRowMaterial
+        );
 
     }
 
@@ -377,10 +380,10 @@
         var IssueOrderDF = [];
 
         var CompNo =@company.comp_num;
-        var OrderYear=@OrderYear;
+        var OrderYear =@OrderYear;
         var OrderNo =@OrderNo;
         var UserID = '@me.UserID';
-        var FormCode='@FormCode';
+        var FormCode = '@FormCode';
         var year = document.getElementById("Year").value;
         var exchangeOrderNumber = document.getElementById("ExchangeOrderNumber").value;
         var documentNo = document.getElementById("DocumentNo").value;
@@ -394,7 +397,7 @@
         const stageCheckbox = document.getElementById("stage");
         const AddititiveItemsCheckbox = document.getElementById("AdditiveItem");
 
-        if(stageCheckbox.checked &&(stageSelect!=0)){
+        if (stageCheckbox.checked && (stageSelect != 0)) {
             var stageSelect = document.getElementById("stageSelect");
             var StageCode = stageSelect.value;
             var table = document.getElementById("LoadTableStage");
@@ -405,18 +408,9 @@
                 var ItemSer = 1;
                 var UnitCode = cells[3].innerText;
                 var Qtyinput = cells[11].querySelector("#Qty");
-                var Qty =Qtyinput.value.trim();
+                var Qty = parseFloat(Qtyinput.value.trim());
                 var UnitSerial = cells[4].innerText;
-                var BatchInput = cells[6].querySelector(".batch-input");
-                var Batch = BatchInput.value.trim();
-                if (Qty === "") {
-                    alert('@Html.Translate("يرجى إدخال الكمية", "Please Enter Qty")');
-                    return;
-
-                }if(Batch === ""){
-                    alert('@Html.Translate("يرجى إدخال الحزمة ", "Please Enter batch")');
-                    return;
-                }
+                if (isNaN(Qty) || Qty === 0) continue; // Skip zero qty rows
 
                 var rowData = {
                     ItemNo: ItemNo,
@@ -424,13 +418,11 @@
                     UnitCode: UnitCode,
                     Qty: Qty,
                     UnitSerial: UnitSerial,
-                    Batch:Batch
-
+                    Batch: null
                 };
-
                 IssueOrderDF.push(rowData);
             }
-        }else if(AddititiveItemsCheckbox.checked){
+        } else if (AddititiveItemsCheckbox.checked) {
 
             var table = document.getElementById("LoadTableAdditiveItems");
             var rows = table.getElementsByTagName("tr");
@@ -440,21 +432,12 @@
                 var ItemSer = 1;
                 var UnitCode = cells[3].innerText;
                 var Qtyinput = cells[14].querySelector("#Qty");
-                var Qty =Qtyinput.value.trim();
+                var Qty = parseFloat(Qtyinput.value.trim());
                 var UnitSerial = cells[4].innerText;
-                var BatchInput = cells[6].querySelector(".batch-input");
-                var Batch = BatchInput.value.trim();
-
                 var ItemNotesInput = cells[15].querySelector("input[type='text']");
-                var ItemNotes = ItemNotesInput.value.trim();
-                if (Qty.trim() === '') {
-                    alert('@Html.Translate("يرجى إدخال الكمية", "Please Enter Qty")');
-                    return;
+                var ItemNotes = ItemNotesInput ? ItemNotesInput.value.trim() : '';
+                if (isNaN(Qty) || Qty === 0) continue; // Skip zero qty rows
 
-                }if(Batch.trim() === ''){
-                    alert('@Html.Translate("يرجى إدخال الحزمة ", "Please Enter batch")');
-                    return;
-                }
                 var rowData = {
                     ItemNo: ItemNo,
                     ItemSer: ItemSer,
@@ -462,35 +445,22 @@
                     Qty: Qty,
                     UnitSerial: UnitSerial,
                     ItemNotes: ItemNotes,
-                    Batch:Batch
-
+                    Batch: null
                 };
-
                 IssueOrderDF.push(rowData);
             }
-        }else if(!AddititiveItemsCheckbox.checked && !stageCheckbox.checked){
-            debugger;
+        } else if (!AddititiveItemsCheckbox.checked && !stageCheckbox.checked) {
             var table = $("#LoadTableDefult");
             var trs1 = table.find('tbody tr');
             for (var i = 0; i < trs1.length; i++) {
-                var Qty = $(trs1[i]).find('#Qty')[0].value.trim();
-                var batchInput = $(trs1[i]).find('#batchValid')[0];
-                console.log("batchInput:", batchInput);
-                var Batch = batchInput ? batchInput.value.trim() : '';
-                if (Qty === '') {
-                    alert('@Html.Translate("يرجى إدخال الكمية", "Please Enter Qty")');
-                    return;
-                }
-                if (Batch === '') {
-                    alert('@Html.Translate("يرجى إدخال الحزمة", "Please Enter batch")');
-                    return;
-                }
+                var Qty = parseFloat($(trs1[i]).find('#Qty')[0].value.trim());
+                if (isNaN(Qty) || Qty === 0) continue; // Skip zero qty rows
 
                 IssueOrderDF.push({
                     ItemNo: $(trs1[i]).find('#ItemNo')[0].innerHTML,
                     UnitCode: $(trs1[i]).find('#UnitCode')[0].innerHTML,
                     UnitSerial: $(trs1[i]).find('#UnitSerial')[0].innerHTML,
-                    batch: Batch,
+                    Batch: null,
                     Qty: Qty,
                     ItemNotes: $(trs1[i]).find('#ItemNotes')[0].value,
                 });
@@ -498,55 +468,52 @@
         }
 
         var OderHFData = {
-            OrdYear:year,
-            OrdNo:exchangeOrderNumber,
-            DocNo:documentNo,
-            BusUnitID:bu,
-            OrdDate:OrdDate,
-            StoreNo:storeNo,
-            StageCode:StageCode,
-            AddititiveItems:AddititiveItems,
-            ByStage:ByStage
+            OrdYear: year,
+            OrdNo: exchangeOrderNumber,
+            DocNo: documentNo,
+            BusUnitID: bu,
+            OrdDate: OrdDate,
+            StoreNo: storeNo,
+            StageCode: StageCode,
+            AddititiveItems: AddititiveItems,
+            ByStage: ByStage
         }
 
 
         wait();
         if (confirm('@Resources.Resource.ConfirmBOMDef')) {
-            burn({ CompNo: CompNo,OrderYear:OrderYear,OrderNo:OrderNo, OderHFData: OderHFData, IssueOrderDF: IssueOrderDF, UserID: UserID },
-                    '../../../ProductionOrdersInProgress/SaveRFI',
-                    '',
-                    function (response){
-                        reloadbasetable(response)
+            burn({ CompNo: CompNo, OrderYear: OrderYear, OrderNo: OrderNo, OderHFData: OderHFData, IssueOrderDF: IssueOrderDF, UserID: UserID },
+                '../../../ProductionOrdersInProgress/SaveRFI',
+                '',
+                function (response) {
+                    if (response && response.ok) {
+                        alert('@Html.Translate("تم حفظ أمر الصرف بنجاح", "Exchange order saved successfully")');
                         var tableRFIBody = $('#tableRFIBody');
-                        tableRFIBody.innerHTML ="";
-                        $('#tableRFIBody').load('../../../ProductionOrdersInProgress/LoadRFIAll?CompNo='+CompNo+'&OrderYear=' + OrderYear + '&OrderNo=' + OrderNo + '&FormCode=' + FormCode);
+                        tableRFIBody.innerHTML = "";
+                        $('#tableRFIBody').load('../../../ProductionOrdersInProgress/LoadRFIAll?CompNo=@company.comp_num&OrderYear=@OrderYear&OrderNo=@OrderNo&FormCode=@FormCode');
                         $('#ModalLoadIssueOrder').modal('hide');
                         $('#ModalSelectIssueOrder').modal('hide');
-                        reloadbasetable();
-                        done();
-                    },
-                    false
-                    );
+                        refreshTable();
+                    } else {
+                        var errMsg = (response && response.ok) ? response.ok : '@Html.Translate("حدث خطأ أثناء الحفظ", "An error occurred while saving")';
+                        alert(errMsg);
+                    }
+                    done();
+                },
+                false
+            );
         }
-        else {done();}
+        else { done(); }
     }
-    function reloadbasetable(response)
-    {
-        var message = 'done';
-        if (message) {
-            alert(message);
-        }
-
-    }
-    function LoadBatch(CompNo,ItemNo,UnitSerial){
+    function LoadBatch(CompNo, ItemNo, UnitSerial) {
 
         var storeNo = document.getElementById("StoreNo").value;
 
         $('#LoadBatchBody').load("../../../ProductionOrdersInProgress/LoadBatch?CompNo=" + CompNo
-                              + "&ItemNo=" + ItemNo
-                              + "&StoreNo=" + storeNo
-                              + "&UnitSerial=" + UnitSerial
-                              );
+            + "&ItemNo=" + ItemNo
+            + "&StoreNo=" + storeNo
+            + "&UnitSerial=" + UnitSerial
+        );
         $('#ModelLoadBatch').modal('show')
     }
 
